@@ -491,10 +491,6 @@ ISR(TIMER1_COMPA_vect)
     {
       bool z_min = 0;
       bool p_min = 0;
-/*      if(current_block->active_extruder == 0){ z_min = READ(Z_MIN_PIN); }
-      else if(current_block->active_extruder == 1) {z_min = READ(Z_MIN_PIN); }
-  else {z_min = READ(P_MIN_PIN) | READ(Z_MIN_PIN) | READ(Z_MIN_PIN); } //VOLTERA - GET RID OF !
-*/
 
     z_min = READ(Z_MIN_PIN);
     p_min = READ(P_MIN_PIN);
