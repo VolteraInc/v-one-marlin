@@ -26,6 +26,9 @@
 // This determines the communication speed of the printer
 #define BAUDRATE 250000
 
+// The printer dies if it receives this character
+#define KILL_CHAR 0x14
+
 // This enables the serial port associated to the Bluetooth interface
 //#define BTENABLED              // Enable BT interface on AT90USB devices
 

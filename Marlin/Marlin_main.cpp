@@ -525,6 +525,8 @@ void get_command()
 {
   while( MYSERIAL.available() > 0  && buflen < BUFSIZE) {
     serial_char = MYSERIAL.read();
+    // Check for E-stop over serial
+    if (serial_char == KILL_CHAR) kill();
     if(serial_char == '\n' ||
        serial_char == '\r' ||
        (serial_char == ':' && comment_mode == false) ||
@@ -3186,6 +3188,9 @@ void manage_inactivity()
       handle_status_leds();
   #endif
   check_axes_activity();
+
+  // Check for E-stop over serial
+  if (MYSERIAL.available() && MYSERIAL.peek() == KILL_CHAR) kill();
 }
 
 #ifdef VOLTERA
