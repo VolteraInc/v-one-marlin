@@ -1687,7 +1687,7 @@ void process_commands()
         break;
         }
      // #if defined(TEMP_0_PIN) && TEMP_0_PIN > -1
-        SERIAL_PROTOCOLPGM("ok T:");
+        SERIAL_PROTOCOLPGM("T:");
         SERIAL_PROTOCOL_F(0.0,1);
         //SERIAL_PROTOCOL_F(degHotend(tmp_extruder),1);
         SERIAL_PROTOCOLPGM(" /");
@@ -1746,7 +1746,6 @@ void process_commands()
         #endif
 
         SERIAL_PROTOCOLLN("");
-      return;
       break;
     case 109:
     {// M109 - Wait for extruder heater to reach target.
