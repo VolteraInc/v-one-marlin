@@ -42,7 +42,7 @@
 	#endif
 
 // Default firmware set to Mendel
-	#define FIRMWARE_URL "https://github.com/ErikZalm/Marlin/"
+	#define FIRMWARE_URL "http://voltera.io"
 #endif
 
 
