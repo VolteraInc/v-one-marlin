@@ -2097,7 +2097,9 @@ void process_commands()
       SERIAL_PROTOCOL(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS]);
 
       SERIAL_PROTOCOLLN("");
-      break;
+      // Bail early, so we don't reset previous_millis_cmd
+      SERIAL_PROTOCOLLNPGM(MSG_OK);
+      return;
     case 120: // M120 - Added by VOLTERA
       st_synchronize();
       enable_endstops(false) ;
