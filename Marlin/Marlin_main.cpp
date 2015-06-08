@@ -344,6 +344,8 @@ boolean chdkActive = false;
 //=============================Routines======================================
 //===========================================================================
 
+void checkBufferEmpty();
+
 void get_arc_coordinates();
 bool setTargetedHotend(int code);
 
@@ -518,6 +520,7 @@ void loop()
   manage_heater();
   manage_inactivity();
   checkHitEndstops();
+  checkBufferEmpty();
   lcd_update();
 }
 
@@ -2096,6 +2099,10 @@ void process_commands()
       SERIAL_PROTOCOLPGM(" Z:");
       SERIAL_PROTOCOL(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS]);
 
+      // # of moves queued in buffer
+      SERIAL_PROTOCOLPGM(" B:");
+      SERIAL_PROTOCOL(movesplanned());
+
       SERIAL_PROTOCOLLN("");
       // Bail early, so we don't reset previous_millis_cmd
       SERIAL_PROTOCOLLNPGM(MSG_OK);
@@ -3189,6 +3196,15 @@ void manage_inactivity()
       handle_status_leds();
   #endif
   check_axes_activity();
+}
+
+void checkBufferEmpty() {
+  static uint8_t buffer_fill = 0;
+  uint8_t new_buffer_fill = movesplanned();
+  if (buffer_fill && !new_buffer_fill) {
+    SERIAL_PROTOCOLLN("empty");
+  }
+  buffer_fill = new_buffer_fill;
 }
 
 #ifdef VOLTERA
