@@ -1519,7 +1519,7 @@ void process_commands()
           current_position[X_AXIS] = st_get_position_mm(X_AXIS);
           plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
           // Output the trigger position in X in microns. 
-          SERIAL_PROTOCOL(float(current_position[X_AXIS]));
+          SERIAL_PROTOCOL(float(current_position[X_AXIS]*1000));
           SERIAL_PROTOCOLPGM("\n");
       }
       break;
@@ -1536,10 +1536,11 @@ void process_commands()
           current_position[X_AXIS] = st_get_position_mm(X_AXIS);
           plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
           // Output the trigger position in X in microns. 
-          SERIAL_PROTOCOL(float(current_position[X_AXIS]));
+          SERIAL_PROTOCOL(float(current_position[X_AXIS]*1000));
           SERIAL_PROTOCOLPGM("\n");
       }
       break;
+
 
     case 22: // XYPositioner Y1 - Move in +Y until a switch is triggered
       {
@@ -1550,15 +1551,15 @@ void process_commands()
           st_synchronize();
 
           // we have to let the planner know where we are right now as it is not where we said to go.
-          current_position[X_AXIS] = st_get_position_mm(X_AXIS);
+          current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
           plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
           // Output the trigger position in Y in microns. 
-          SERIAL_PROTOCOL(float(current_position[Y_AXIS]));
+          SERIAL_PROTOCOL(float(current_position[Y_AXIS]*1000));
           SERIAL_PROTOCOLPGM("\n");
       }
       break;
 
-    case 23: // XYPositioner Y2 - Move in -Y until a switch is triggered
+      case 23: // XYPositioner Y2 - Move in -Y until a switch is triggered
       {
           // move in -Y until a switch is triggered
           feedrate = homing_feedrate[Y_AXIS]/(6);
@@ -1567,10 +1568,10 @@ void process_commands()
           st_synchronize();
 
           // we have to let the planner know where we are right now as it is not where we said to go.
-          current_position[X_AXIS] = st_get_position_mm(X_AXIS);
+          current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
           plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-          // Output the trigger position in Y in microns. 
-          SERIAL_PROTOCOL(float(current_position[Y_AXIS]));
+          SERIAL_PROTOCOLPGM("Y: ");
+          SERIAL_PROTOCOL(float(current_position[Y_AXIS]*1000));
           SERIAL_PROTOCOLPGM("\n");
       }
       break;
