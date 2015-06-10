@@ -75,9 +75,23 @@
 // G4  - Dwell S<seconds> or P<milliseconds>
 // G10 - retract filament according to settings of M207
 // G11 - retract recover filament according to settings of M208
+
+/// XYPOSITIONER
+// G20 - Trigger in +X
+// G21 - Trigger in -X
+// G22 - Trigger in +Y
+// G23 - Trigger in -Y
+
+// AUTOTESTING
+// G24 - Test the zMIN endstop trigger position 
+// G25 - Test the xAxis endstop trigger position 
+// G26 - Test the yAxis endstop trigger position
+// G27 - Test the zMAX trigger position
+
 // G28 - Home all Axis
 // G29 - Detailed Z-Probe, probes the bed at 3 or more points.  Will fail if you haven't homed yet.
 // G30 - Single Z Probe, probes bed at current XY location.
+// G33 - Homes the Z axis to the bottom Z switch.
 // G90 - Use Absolute Coordinates
 // G91 - Use Relative Coordinates
 // G92 - Set current position to coordinates given
@@ -1492,6 +1506,74 @@ void process_commands()
             plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
         }
         break;
+
+    case 20: //XYPositioner X1 - Move in +X until a switch is triggered
+      {
+          // move in +X until a switch is triggered
+          feedrate = homing_feedrate[X_AXIS]/(6);
+          float xPosition = 300;
+          plan_buffer_line(xPosition, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
+          st_synchronize();
+
+          // we have to let the planner know where we are right now as it is not where we said to go.
+          current_position[X_AXIS] = st_get_position_mm(X_AXIS);
+          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
+          // Output the trigger position in X in microns. 
+          SERIAL_PROTOCOL(float(current_position[X_AXIS]));
+          SERIAL_PROTOCOLPGM("\n");
+      }
+      break;
+
+    case 21: // XYPositioner X2 - Move in -X until switch triggered
+      {
+          // move in -X until a switch is triggered
+          feedrate = homing_feedrate[X_AXIS]/(6);
+          float xPosition = -10;
+          plan_buffer_line(xPosition, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
+          st_synchronize();
+
+          // we have to let the planner know where we are right now as it is not where we said to go.
+          current_position[X_AXIS] = st_get_position_mm(X_AXIS);
+          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
+          // Output the trigger position in X in microns. 
+          SERIAL_PROTOCOL(float(current_position[X_AXIS]));
+          SERIAL_PROTOCOLPGM("\n");
+      }
+      break;
+
+    case 22: // XYPositioner Y1 - Move in +Y until a switch is triggered
+      {
+          // move in +Y until a switch is triggered
+          feedrate = homing_feedrate[X_AXIS]/(6);
+          float yPosition = 300;
+          plan_buffer_line(current_position[X_AXIS], yPosition, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
+          st_synchronize();
+
+          // we have to let the planner know where we are right now as it is not where we said to go.
+          current_position[X_AXIS] = st_get_position_mm(X_AXIS);
+          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
+          // Output the trigger position in Y in microns. 
+          SERIAL_PROTOCOL(float(current_position[Y_AXIS]));
+          SERIAL_PROTOCOLPGM("\n");
+      }
+      break;
+
+    case 23: // XYPositioner Y2 - Move in -Y until a switch is triggered
+      {
+          // move in -Y until a switch is triggered
+          feedrate = homing_feedrate[Y_AXIS]/(6);
+          float yPosition = -10;
+          plan_buffer_line(current_position[X_AXIS], yPosition, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
+          st_synchronize();
+
+          // we have to let the planner know where we are right now as it is not where we said to go.
+          current_position[X_AXIS] = st_get_position_mm(X_AXIS);
+          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
+          // Output the trigger position in Y in microns. 
+          SERIAL_PROTOCOL(float(current_position[Y_AXIS]));
+          SERIAL_PROTOCOLPGM("\n");
+      }
+      break;
 
     case 24: //Test the zAxis - move to impossible position, and report where limit switch triggered.
       {
