@@ -2101,7 +2101,7 @@ void process_commands()
 
       // # of moves queued in buffer
       SERIAL_PROTOCOLPGM(" B:");
-      SERIAL_PROTOCOL(movesplanned());
+      SERIAL_PROTOCOL_F(movesplanned(), DEC);
 
       SERIAL_PROTOCOLLN("");
       // Bail early, so we don't reset previous_millis_cmd
