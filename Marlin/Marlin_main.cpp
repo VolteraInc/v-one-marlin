@@ -233,7 +233,7 @@ int fanSpeed=0;
 unsigned long ledRedTimer = 0;
 unsigned long ledGreenTimer = 0;
 unsigned long ledBlueTimer = 0;
-bool glowPause = false;
+bool glow_override = false;
 int glowLengthTime = 15;
 int glowLightState = -1;
 int ledRedCount = 0;
@@ -1886,41 +1886,17 @@ void process_commands()
         case 107:
           fanOff();
           break;*/
-        case 93:
-          // Turn on Red LEDs
-          analogWrite(LED_RED_PIN, 255);
-          analogWrite(LED_GREEN_PIN, 0);
-          analogWrite(LED_BLUE_PIN, 0);
-          glowPause = true;
-          break;
-        case 94:
-          // Turn on Green LEDs
-          analogWrite(LED_RED_PIN, 0);
-          analogWrite(LED_GREEN_PIN, 255);
-          analogWrite(LED_BLUE_PIN, 0);
-          glowPause = true;
-          break;
-        case 95:
-          // Turn on Blue LEDs
-          analogWrite(LED_RED_PIN, 0);
-          analogWrite(LED_GREEN_PIN, 0);
-          analogWrite(LED_BLUE_PIN, 255);
-          glowPause = true;
-          break;
-        case 96:
-          // Turn on All / White LEDs
-          analogWrite(LED_RED_PIN, 255);
-          analogWrite(LED_GREEN_PIN, 255);
-          analogWrite(LED_BLUE_PIN, 255);
-          glowPause = true;
-          break;
-        case 97:
-          // Turn on All / White LEDs
-          analogWrite(LED_RED_PIN, 0);
-          analogWrite(LED_GREEN_PIN, 0);
-          analogWrite(LED_BLUE_PIN, 0);
-          glowPause = false;
-          break;
+        case 93: // M93 Manually control LEDs
+          // Syntax is M93 R:nnn V:nnn B:nnn (0 <= nnn <= 255)
+          // V because vert (using 'G' derails the parser, unsurprisingly)
+          // (Call with no arguments to release LEDs)
+
+          if (code_seen('R')) analogWrite(LED_RED_PIN, constrain(code_value(), 0, 255));
+          if (code_seen('V')) analogWrite(LED_GREEN_PIN, constrain(code_value(), 0, 255));
+          if (code_seen('B')) analogWrite(LED_BLUE_PIN, constrain(code_value(), 0, 255));
+
+          glow_override = code_seen('R') || code_seen('V') || code_seen('B');
+        break;
 
       #endif
 
@@ -3222,7 +3198,7 @@ void checkBufferEmpty() {
 #ifdef VOLTERA
 void handle_glow_leds(){
 
-  if (glowPause == true){
+  if (glow_override == true){
     return;
   }
 
