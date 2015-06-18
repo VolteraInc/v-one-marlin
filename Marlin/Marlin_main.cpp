@@ -2124,7 +2124,13 @@ void process_commands()
     case 122: //M122 - We let the planner know where we are. -  Added by VOLTERA
         {
           st_synchronize();
-          current_position[Z_AXIS]  = st_get_position_mm(Z_AXIS);
+          // If no axes are specified, we reset the Z axis (for compat with the old software)
+          // Otherwise, we reset the specified axes
+          bool z_default = !((code_seen(axis_codes[X_AXIS])) || (code_seen(axis_codes[Y_AXIS])) || (code_seen(axis_codes[Z_AXIS]))|| (code_seen(axis_codes[E_AXIS])));
+          if (code_seen(axis_codes[X_AXIS])) current_position[X_AXIS] = st_get_position_mm(X_AXIS);
+          if (code_seen(axis_codes[Y_AXIS])) current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
+          if (code_seen(axis_codes[Z_AXIS]) || z_default) current_position[Z_AXIS]  = st_get_position_mm(Z_AXIS);
+          if (code_seen(axis_codes[E_AXIS])) current_position[E_AXIS] = st_get_position_mm(E_AXIS);
           plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
         }
         break;
