@@ -230,15 +230,8 @@ float extruder_offset[NUM_EXTRUDER_OFFSETS][EXTRUDERS] = {
 #endif
 uint8_t active_extruder = 0;
 int fanSpeed=0;
-unsigned long ledRedTimer = 0;
-unsigned long ledGreenTimer = 0;
-unsigned long ledBlueTimer = 0;
-bool glow_override = false;
-int glowLengthTime = 15;
-int glowLightState = -1;
-int ledRedCount = 0;
-int ledGreenCount = 0;
-int ledBlueCount = 0;
+
+bool glow_led_override = false;
 
 bool override_p_min = false;
 
@@ -332,6 +325,7 @@ bool Stopped=false;
 #endif
 
 bool CooldownNoWait = true;
+bool pending_temp_change = false;
 bool target_direction;
 
 //Insert variables if CHDK is defined
@@ -1790,6 +1784,7 @@ void process_commands()
 
       /* See if we are heating up or cooling down */
       target_direction = isHeatingHotend(tmp_extruder); // true if heating, false if cooling
+      pending_temp_change = true;
 
       #ifdef TEMP_RESIDENCY_TIME
         long residencyStart;
@@ -1837,6 +1832,7 @@ void process_commands()
           }
         #endif //TEMP_RESIDENCY_TIME
         }
+        pending_temp_change = false;
         LCD_MESSAGEPGM(MSG_HEATING_COMPLETE);
         starttime=millis();
         previous_millis_cmd = millis();
@@ -1855,6 +1851,7 @@ void process_commands()
         codenum = millis();
 
         target_direction = isHeatingBed(); // true if heating, false if cooling
+        pending_temp_change = true;
 
         while ( target_direction ? (isHeatingBed()) : (isCoolingBed()&&(CooldownNoWait==false)) )
         {
@@ -1874,6 +1871,7 @@ void process_commands()
           manage_inactivity();
           lcd_update();
         }
+        pending_temp_change = false;
         LCD_MESSAGEPGM(MSG_BED_DONE);
         previous_millis_cmd = millis();
     #endif
@@ -1895,7 +1893,7 @@ void process_commands()
           if (code_seen('V')) analogWrite(LED_GREEN_PIN, constrain(code_value(), 0, 255));
           if (code_seen('B')) analogWrite(LED_BLUE_PIN, constrain(code_value(), 0, 255));
 
-          glow_override = code_seen('R') || code_seen('V') || code_seen('B');
+          glow_led_override = code_seen('R') || code_seen('V') || code_seen('B');
         break;
 
       #endif
@@ -3197,165 +3195,87 @@ void checkBufferEmpty() {
 
 #ifdef VOLTERA
 void handle_glow_leds(){
-
-  if (glow_override == true){
+  #define GLOW_LED_COUNT 3
+  #define TEMP_PACE_CURVE max((-5 * bedTemp) / 42 + 36, 5)
+  static const char glow_led_pins[GLOW_LED_COUNT] = {LED_RED_PIN, LED_GREEN_PIN, LED_BLUE_PIN};
+  static const unsigned char sin_lookup[256] = {0,0,0,0,1,1,1,2,2,3,4,5,5,6,7,9,10,11,12,14,15,17,18,20,21,23,25,27,29,31,33,35,37,40,42,44,47,49,52,54,57,59,62,65,67,70,73,76,79,82,85,88,90,93,97,100,103,106,109,112,115,118,121,124,128,131,134,137,140,143,146,149,152,155,158,162,165,167,170,173,176,179,182,185,188,190,193,196,198,201,203,206,208,211,213,215,218,220,222,224,226,228,230,232,234,235,237,238,240,241,243,244,245,246,248,249,250,250,251,252,253,253,254,254,254,255,255,255,255,255,255,255,254,254,254,253,253,252,251,250,250,249,248,246,245,244,243,241,240,238,237,235,234,232,230,228,226,224,222,220,218,215,213,211,208,206,203,201,198,196,193,190,188,185,182,179,176,173,170,167,165,162,158,155,152,149,146,143,140,137,134,131,128,124,121,118,115,112,109,106,103,100,97,93,90,88,85,82,79,76,73,70,67,65,62,59,57,54,52,49,47,44,42,40,37,35,33,31,29,27,25,23,21,20,18,17,15,14,12,11,10,9,7,6,5,5,4,3,2,2,1,1,1,0,0,0};
+  static unsigned char glow_led_states[GLOW_LED_COUNT]; // These are prescale values - set to the max you want the LED to hit during the cycle
+  static unsigned char glow_led_states_hold[GLOW_LED_COUNT];
+  static unsigned short glow_led_counter;
+  static unsigned long glow_led_last_tick;
+  static unsigned short glow_led_pace; // ms/step
+  if (glow_led_override){
+    // Set this to 0 so we start from 0 when glow_led_override is unset
+    glow_led_counter = 0;
     return;
   }
 
   /*
-  Status  -
-  0 - Turn On / Idle       -  Green
-  1 - Printing      - Purple
-  2 - Heating < 60  - White
-  3 - Too Hot > 60  - Red
-
+  (in order of precedence)
+  Idle                      - Green
+  Receiving motion commands - Purple
+  Bed temp falling (M190)   - Blue
+  Bed temp rising (M190)    - Orange
+  Bed temp >= 50degC        - Red
   */
+  bool quick_change = false;
+  bool ramp_down_now = false;
+
   float bedTemp = degBed();
-
-
-  if(bedTemp > 40.0){
-
-    // Check if it is cooling:
-    float refTemp = degTargetBed();
-
-    if ((refTemp < bedTemp) && (bedTemp - refTemp) > 10){
-
-      glowLengthTime = max(-22.5/140.0 * bedTemp + 31.428, 2.5);
-
-      if (glowLightState != 3){
-
-        // Change our status.
-        glowLightState = 3;
-
-        // Glow Blue
-        ledRedTimer = 0;
-        ledGreenTimer = 0;
-        ledBlueTimer = 1;
-
-        // Start our blue timer
-        ledBlueCount = 0;
-
-        analogWrite(LED_RED_PIN,0);
-        analogWrite(LED_GREEN_PIN,0);
-      }
+  if(bedTemp > 50.0){
+    glow_led_states[0] = 255;
+    glow_led_states[1] = 0;
+    glow_led_states[2] = 0;
+    glow_led_pace = TEMP_PACE_CURVE;
+  } else if (pending_temp_change) {
+    if (isCoolingBed()) {
+      glow_led_states[0] = 0;
+      glow_led_states[1] = 0;
+      glow_led_states[2] = 255;
+    } else {
+      glow_led_states[0] = 255;
+      glow_led_states[1] = 40;
+      glow_led_states[2] = 0;
     }
-
-    // Then we are heating
-    else{
-
-      // Basically we want to extrapolate
-      // Calculate every time
-      glowLengthTime = max(-22.5/140.0 * bedTemp + 31.428, 2.5);
-
-      if (glowLightState != 2){
-
-        // Change our status.
-        glowLightState = 2;
-
-        // Glow Red
-        ledRedTimer = 1;
-        ledGreenTimer = 0;
-        ledBlueTimer = 0;
-
-        // Start red at zero, and turn off other colors
-        ledRedCount = 0;
-
-        analogWrite(LED_BLUE_PIN,0);
-        analogWrite(LED_GREEN_PIN,0);
-      }
-
-    }
-
+    glow_led_pace = TEMP_PACE_CURVE;
+  } else if (millis() - previous_millis_cmd < stepper_inactive_time && previous_millis_cmd !=0){
+    glow_led_states[0] = 255;
+    glow_led_states[1] = 0;
+    glow_led_states[2] = 255;
+    glow_led_pace = 30;
+    quick_change = true;
+  } else {
+    glow_led_states[0] = 0;
+    glow_led_states[1] = 255;
+    glow_led_states[2] = 0;
+    glow_led_pace = 30;
   }
 
-  else if (millis() - previous_millis_cmd < stepper_inactive_time && previous_millis_cmd !=0){
-
-    // Only Update if we haven't been here before.
-    if (glowLightState !=1){
-
-      glowLightState = 1;
-      glowLengthTime  = 15;
-
-      // Glow Purple
-      ledRedTimer = 1;
-      ledGreenTimer = 0;
-      ledBlueTimer = 1;
-
-      // Start all 3 colors at zero.
-      ledRedCount = 0;
-      ledBlueCount = 0;
-
-      // Turn off green.
-      analogWrite(LED_GREEN_PIN,0);
-    }
-
+  if (quick_change && memcmp(glow_led_states, glow_led_states_hold, sizeof(glow_led_states))) {
+    // Go fast till we hit 0 (and glow_led_states is copied into glow_led_states_hold)
+    glow_led_pace /= 10;
+    ramp_down_now = true;
   }
 
-  else if(bedTemp < 40.0){
-
-    if(glowLightState != 0){
-
-      glowLightState = 0;
-      glowLengthTime  = 15;
-
-      // Glow Green
-      ledRedTimer = 0;
-      ledGreenTimer = 1;
-      ledBlueTimer = 0;
-
-      // Start all 3 colors at zero
-      ledGreenCount = 0;
-
-      analogWrite(LED_RED_PIN,0);
-      analogWrite(LED_BLUE_PIN,0);
-
-   }
+  if ((millis() - glow_led_last_tick) > glow_led_pace) {
+    glow_led_last_tick = millis();
+    if (glow_led_counter == 0) {
+      // To avoid abrupt changes, we wait for zero-crossing before updating the actual state (_hold) from the input
+      memcpy(glow_led_states_hold, glow_led_states, sizeof(glow_led_states));
+      ramp_down_now = false; // We're at 0, don't go any further backwards...
+    }
+    // Wrap the counter
+    glow_led_counter += ramp_down_now ? (glow_led_counter > 128 ? 1 : -1) : 1;
+    if (glow_led_counter >= 256) {
+      glow_led_counter = 0;
+    }
+    // Remap into a sine wave
+    // "wow, this circuit printer's indicator LEDs follow a sine wave!" - nobody
+    unsigned short glow_led_wrap = sin_lookup[glow_led_counter];
+    for (char i = 0; i < GLOW_LED_COUNT; ++i) {
+      analogWrite(glow_led_pins[i], (glow_led_wrap * glow_led_states_hold[i]) / 256);
+    }
   }
-
-  // Controls the pulsing of the colors.
-    if(ledRedTimer > 0 && (millis() - ledRedTimer) > glowLengthTime){
-
-      //Cap if we've exceeded.
-      if (ledRedCount >= 512)
-        ledRedCount = 0;
-
-      if (ledRedCount < 256)
-        analogWrite(LED_RED_PIN, ledRedCount);
-      else
-        analogWrite(LED_RED_PIN, 511 - ledRedCount);
-
-      ledRedCount = ledRedCount + 1;
-      ledRedTimer = millis();
-    }
-
-    if(ledGreenTimer > 0 && (millis() - ledGreenTimer) > glowLengthTime){
-
-      //Cap if we've exceeded.
-      if (ledGreenCount >= 512)
-        ledGreenCount = 0;
-
-      if (ledGreenCount < 256)
-        analogWrite(LED_GREEN_PIN, ledGreenCount);
-      else
-        analogWrite(LED_GREEN_PIN, 511 - ledGreenCount);
-
-      ledGreenCount = ledGreenCount + 1;
-      ledGreenTimer = millis();
-    }
-
-    if(ledBlueTimer > 0 && (millis() - ledBlueTimer) > glowLengthTime){
-      //Cap if we've exceeded.
-      if (ledBlueCount >= 512)
-        ledBlueCount = 0;
-
-      if (ledBlueCount < 256)
-        analogWrite(LED_BLUE_PIN, ledBlueCount);
-      else
-        analogWrite(LED_BLUE_PIN, 511 - ledBlueCount);
-
-      ledBlueCount = ledBlueCount + 1;
-      ledBlueTimer = millis();
-    }
 }
 #endif
 
