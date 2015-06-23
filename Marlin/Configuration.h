@@ -340,7 +340,11 @@ const bool P_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define X_MIN_POS 0
 #define Y_MAX_POS 165
 #define Y_MIN_POS 0
-#define Z_MAX_POS 23
+// This is intentionally 1mm less than the actual axis length (~23mm)
+// Otherwise it's possible to drive the z carriage into the bottom of the printhead assembly before we hit the soft endstop
+// It has no impact on actual printing, as in that case we zero to the bottom limit switch and never attempt to reach the maximum again
+// (if we did, we'd hit the bottom limit switch, since with the tool attached the axis length is reduced significantly)
+#define Z_MAX_POS 22
 #define Z_MIN_POS 0
 
 #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
