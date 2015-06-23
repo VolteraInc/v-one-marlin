@@ -169,6 +169,9 @@
   #define ENABLE_STEPPER_DRIVER_INTERRUPT()  TIMSK1 |= (1<<OCIE1A)
   #define DISABLE_STEPPER_DRIVER_INTERRUPT() TIMSK1 &= ~(1<<OCIE1A)
 
+  bool didHitEndstops() {
+    return endstop_x_hit || endstop_y_hit || endstop_z_hit;
+  }
 
   void checkHitEndstops()
   {

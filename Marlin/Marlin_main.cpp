@@ -1020,13 +1020,27 @@ static void homeaxis(int axis, bool flip) {
       axis_home_dir = axis_home_dir*-1 ;
     }
 
-    current_position[axis] = 0;
+    if (!axis_known_position[axis]) current_position[axis] = 0;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 
-    destination[axis] = 1.5 * max_length(axis) * axis_home_dir;
+    // If we already know roughly where we are, don't go too far past the known extent
+    // (e.g. if tool isn't mounted and we're trying to home z bottom after having homed z top)
+    destination[axis] = axis_known_position[axis] ? (axis_home_dir > 0 ? max_pos : min_pos)[axis] : 1.5 * max_length(axis) * axis_home_dir;
     feedrate = homing_feedrate[axis];
+    endstops_hit_on_purpose(); // Clear endstop flags
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
+
+    if (!didHitEndstops()) {
+      SERIAL_ERROR_START;
+      SERIAL_ERRORPGM(" home ");
+      SERIAL_ERROR(axis_codes[axis]);
+      SERIAL_ERRORLNPGM(" failed - no limit hit");
+      // We don't actually know if this is where we are (maybe it stalled)
+      // ...so this error should probably be followed with another homing attempt
+      current_position[axis] = destination[axis];
+      return;
+    }
 
     current_position[axis] = 0;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
