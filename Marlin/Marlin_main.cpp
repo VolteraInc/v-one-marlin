@@ -2078,20 +2078,20 @@ void process_commands()
 
     case 114: // M114
       SERIAL_PROTOCOLPGM("X:");
-      SERIAL_PROTOCOL(current_position[X_AXIS]);
+      SERIAL_PROTOCOL_F(current_position[X_AXIS], 6);
       SERIAL_PROTOCOLPGM(" Y:");
-      SERIAL_PROTOCOL(current_position[Y_AXIS]);
+      SERIAL_PROTOCOL_F(current_position[Y_AXIS], 6);
       SERIAL_PROTOCOLPGM(" Z:");
-      SERIAL_PROTOCOL(current_position[Z_AXIS]);
+      SERIAL_PROTOCOL_F(current_position[Z_AXIS], 6);
       SERIAL_PROTOCOLPGM(" E:");
-      SERIAL_PROTOCOL(current_position[E_AXIS]);
+      SERIAL_PROTOCOL_F(current_position[E_AXIS], 6);
 
       SERIAL_PROTOCOLPGM(MSG_COUNT_X);
-      SERIAL_PROTOCOL(float(st_get_position(X_AXIS))/axis_steps_per_unit[X_AXIS]);
+      SERIAL_PROTOCOL_F(float(st_get_position(X_AXIS))/axis_steps_per_unit[X_AXIS], 6);
       SERIAL_PROTOCOLPGM(" Y:");
-      SERIAL_PROTOCOL(float(st_get_position(Y_AXIS))/axis_steps_per_unit[Y_AXIS]);
+      SERIAL_PROTOCOL_F(float(st_get_position(Y_AXIS))/axis_steps_per_unit[Y_AXIS], 6);
       SERIAL_PROTOCOLPGM(" Z:");
-      SERIAL_PROTOCOL(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS]);
+      SERIAL_PROTOCOL_F(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS], 6);
 
       // # of moves queued in buffer
       SERIAL_PROTOCOLPGM(" B:");
