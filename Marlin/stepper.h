@@ -94,11 +94,13 @@ extern block_t *current_block;  // A pointer to the block currently being traced
 
 void quickStop();
 
-void digitalPotWrite(uint8_t address, uint8_t value);
+void digiPotInit();
+void digiPotSetCurrent(uint8_t axis, uint8_t current);
+uint8_t digiPotGetCurrent(uint8_t axis);
+void digiPotWrite(uint8_t address, uint8_t value);
+uint8_t digiPotRead(uint8_t address);
 void microstep_ms(uint8_t driver, int8_t ms1, int8_t ms2);
 void microstep_mode(uint8_t driver, uint8_t stepping);
-void digipot_init();
-void digipot_current(uint8_t driver, uint8_t current);
 void microstep_init();
 void microstep_readings();
 
