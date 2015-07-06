@@ -108,6 +108,9 @@
     #define HEATER_BED_PIN   3
     #define TEMP_BED_PIN     1   // ANALOG NUMBERING
 
+    #define DIGIPOTSS_PIN 36
+    #define DIGIPOT_ADDRESS {0x00,0x03,0x02,0x01} // X Y Z E digipot channels to stepper driver mapping
+    // Refer to http://www.intersil.com/content/dam/Intersil/documents/isl2/isl23448.pdf
   #endif
 
   #define SDPOWER            -1

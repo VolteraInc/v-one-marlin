@@ -493,13 +493,14 @@ void setup()
   st_init();    // Initialize stepper, this enables interrupts!
 
 
-  #if defined(CONTROLLERFAN_PIN) && CONTROLLERFAN_PIN > -1
-    SET_OUTPUT(CONTROLLERFAN_PIN); //Set pin used for driver cooling fan
-  #endif
 
-  #ifdef DIGIPOT_I2C
+/*  #if defined(CONTROLLERFAN_PIN) && CONTROLLERFAN_PIN > -1
+    SET_OUTPUT(CONTROLLERFAN_PIN); //Set pin used for driver cooling fan
+  #endif*/
+
+/*  #ifdef DIGIPOT_I2C
     digipot_i2c_init();
-  #endif
+  #endif*/
 }
 
 
@@ -2758,27 +2759,29 @@ void process_commands()
     break;
     #endif //DUAL_X_CARRIAGE
 
+      case 906: // M906 Get all digital potentiometer values.
+      {
+
+      #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
+        SERIAL_PROTOCOLLN("Stepper Driver Currents (Max: 127)");
+        SERIAL_PROTOCOLPGM("X:");
+        SERIAL_PROTOCOL((int)digiPotGetCurrent(X_AXIS));
+        SERIAL_PROTOCOLPGM("  Y:");
+        SERIAL_PROTOCOL((int)digiPotGetCurrent(Y_AXIS));
+        SERIAL_PROTOCOLPGM("  Z:");
+        SERIAL_PROTOCOL((int)digiPotGetCurrent(Z_AXIS));
+        SERIAL_PROTOCOLPGM("  E:");
+        SERIAL_PROTOCOLLN((int)digiPotGetCurrent(E_AXIS));
+        /*SERIAL_PROTOCOLPGM("\n");*/
+
+      #endif
+      }
+      break;
+
     case 907: // M907 Set digital trimpot motor current using axis codes.
     {
       #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
-        for(int i=0;i<NUM_AXIS;i++) if(code_seen(axis_codes[i])) digipot_current(i,code_value());
-        if(code_seen('B')) digipot_current(4,code_value());
-        if(code_seen('S')) for(int i=0;i<=4;i++) digipot_current(i,code_value());
-      #endif
-      #ifdef MOTOR_CURRENT_PWM_XY_PIN
-        if(code_seen('X')) digipot_current(0, code_value());
-      #endif
-      #ifdef MOTOR_CURRENT_PWM_Z_PIN
-        if(code_seen('Z')) digipot_current(1, code_value());
-      #endif
-      #ifdef MOTOR_CURRENT_PWM_E_PIN
-        if(code_seen('E')) digipot_current(2, code_value());
-      #endif
-      #ifdef DIGIPOT_I2C
-        // this one uses actual amps in floating point
-        for(int i=0;i<NUM_AXIS;i++) if(code_seen(axis_codes[i])) digipot_i2c_set_current(i, code_value());
-        // for each additional extruder (named B,C,D,E..., channels 4,5,6,7...)
-        for(int i=NUM_AXIS;i<DIGIPOT_I2C_NUM_CHANNELS;i++) if(code_seen('B'+i-NUM_AXIS)) digipot_i2c_set_current(i, code_value());
+        for(int i=0;i<NUM_AXIS;i++) if(code_seen(axis_codes[i])) digiPotSetCurrent(i,code_value());
       #endif
     }
     break;
@@ -2788,7 +2791,7 @@ void process_commands()
         uint8_t channel,current;
         if(code_seen('P')) channel=code_value();
         if(code_seen('S')) current=code_value();
-        digitalPotWrite(channel, current);
+        digiPotWrite(channel, current);
       #endif
     }
     break;

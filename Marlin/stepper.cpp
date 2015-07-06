@@ -686,7 +686,7 @@ if (step_events_completed >= current_block->step_event_count) {
 
 void st_init()
 {
-  //digipot_init(); //Initialize Digipot Motor Current
+  digiPotInit(); //Initialize Digipot Motor Current
   //microstep_init(); //Initialize Microstepping Pins
 
   //Initialize Dir Pins
@@ -956,53 +956,59 @@ void quickStop()
   current_block = NULL;
   ENABLE_STEPPER_DRIVER_INTERRUPT();
 }
+#if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
 
-  void digitalPotWrite(int address, int value) // From Arduino DigitalPotControl example
-  {
-  #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
+void digiPotInit(){ //Initialize Digipot Motor Current
+
+    const uint8_t digipot_motor_current[] = DIGIPOT_MOTOR_CURRENT;
+    SPI.begin();
+    pinMode(DIGIPOTSS_PIN, OUTPUT);
+
+    // Cycle the SS pin - make sure digiPot initializes correctly.
+    digitalWrite(DIGIPOTSS_PIN,LOW);
+    digitalWrite(DIGIPOTSS_PIN,HIGH);
+
+    for(int i=0;i<4;i++)
+      digiPotSetCurrent(i,digipot_motor_current[i]);
+}
+
+void digiPotSetCurrent(uint8_t axis, uint8_t current){
+    const uint8_t digipot_addrs[] = DIGIPOT_ADDRESS;
+    digiPotWrite(digipot_addrs[axis], current);
+}
+
+uint8_t digiPotGetCurrent(uint8_t axis){
+    const uint8_t digipot_addrs[] = DIGIPOT_ADDRESS;
+    return digiPotRead(digipot_addrs[axis]);
+}
+
+void digiPotWrite(uint8_t address, uint8_t value){ // From Arduino DigitalPotControl example
+  // Refer to http://www.intersil.com/content/dam/Intersil/documents/isl2/isl23448.pdf
+
+  address = address + 0xC0; // Adjust address for the ISL23448
+  SPI.beginTransaction(SPISettings(3000000, MSBFIRST, SPI_MODE0));
   digitalWrite(DIGIPOTSS_PIN,LOW); // take the SS pin low to select the chip
   SPI.transfer(address); //  send in the address and value via SPI:
   SPI.transfer(value);
   digitalWrite(DIGIPOTSS_PIN,HIGH); // take the SS pin high to de-select the chip:
-  //delay(10);
-  #endif
+  SPI.endTransaction();
 }
 
-  void digipot_init() //Initialize Digipot Motor Current
+uint8_t digiPotRead(uint8_t address)
   {
-  #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
-    const uint8_t digipot_motor_current[] = DIGIPOT_MOTOR_CURRENT;
+  address = address + 0x80; // Refer to http://www.intersil.com/content/dam/Intersil/documents/isl2/isl23448.pdf
+  SPI.beginTransaction(SPISettings(3000000, MSBFIRST, SPI_MODE0));
+  digitalWrite(DIGIPOTSS_PIN,LOW); // take the SS pin low to select the chip
+  SPI.transfer(address); //  send in the address and value via SPI:
+  SPI.transfer(0x00); //Send dummy
+  SPI.transfer(0x00); //Send NOP
+  uint8_t val = SPI.transfer(0x00); //Send dummy and get value.
+  digitalWrite(DIGIPOTSS_PIN,HIGH); // take the SS pin high to de-select the chip:
+  SPI.endTransaction();
+  return val;
+}
 
-    SPI.begin();
-    pinMode(DIGIPOTSS_PIN, OUTPUT);
-    for(int i=0;i<=4;i++)
-  //digitalPotWrite(digipot_ch[i], digipot_motor_current[i]);
-      digipot_current(i,digipot_motor_current[i]);
-  #endif
-  #ifdef MOTOR_CURRENT_PWM_XY_PIN
-    pinMode(MOTOR_CURRENT_PWM_XY_PIN, OUTPUT);
-    pinMode(MOTOR_CURRENT_PWM_Z_PIN, OUTPUT);
-    pinMode(MOTOR_CURRENT_PWM_E_PIN, OUTPUT);
-    digipot_current(0, motor_current_setting[0]);
-    digipot_current(1, motor_current_setting[1]);
-    digipot_current(2, motor_current_setting[2]);
-  //Set timer5 to 31khz so the PWM of the motor power is as constant as possible. (removes a buzzing noise)
-    TCCR5B = (TCCR5B & ~(_BV(CS50) | _BV(CS51) | _BV(CS52))) | _BV(CS50);
-  #endif
-  }
-
-  void digipot_current(uint8_t driver, int current)
-  {
-  #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
-    const uint8_t digipot_ch[] = DIGIPOT_CHANNELS;
-    digitalPotWrite(digipot_ch[driver], current);
-  #endif
-  #ifdef MOTOR_CURRENT_PWM_XY_PIN
-    if (driver == 0) analogWrite(MOTOR_CURRENT_PWM_XY_PIN, (long)current * 255L / (long)MOTOR_CURRENT_PWM_RANGE);
-    if (driver == 1) analogWrite(MOTOR_CURRENT_PWM_Z_PIN, (long)current * 255L / (long)MOTOR_CURRENT_PWM_RANGE);
-    if (driver == 2) analogWrite(MOTOR_CURRENT_PWM_E_PIN, (long)current * 255L / (long)MOTOR_CURRENT_PWM_RANGE);
-  #endif
-  }
+#endif
 
   void microstep_init()
   {
