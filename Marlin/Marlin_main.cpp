@@ -606,7 +606,7 @@ void get_command()
               if(card.saving)
                 break;
           #endif //SDSUPPORT
-              SERIAL_PROTOCOLLNPGM(MSG_OK);
+              ACK_CMD
             }
             else {
               SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
@@ -1639,7 +1639,9 @@ void process_commands()
         break;
         }
      // #if defined(TEMP_0_PIN) && TEMP_0_PIN > -1
-        SERIAL_PROTOCOLPGM("ok T:");
+        SERIAL_PROTOCOLPGM(MSG_OK " ");
+        SERIAL_PROTOCOL(gcode_N);
+        SERIAL_PROTOCOLPGM(" T:");
         SERIAL_PROTOCOL_F(0.0,1);
         //SERIAL_PROTOCOL_F(degHotend(tmp_extruder),1);
         SERIAL_PROTOCOLPGM(" /");
@@ -2040,7 +2042,7 @@ void process_commands()
 
       SERIAL_PROTOCOLLN("");
       // Bail early, so we don't reset previous_millis_cmd
-      SERIAL_PROTOCOLLNPGM(MSG_OK);
+      ACK_CMD
       return;
     case 120: // M120 - Added by VOLTERA
       st_synchronize();
@@ -2406,7 +2408,7 @@ void process_commands()
           }
         }
         else if (servo_index >= 0) {
-          SERIAL_PROTOCOL(MSG_OK);
+          ACK_CMD
           SERIAL_PROTOCOL(" Servo ");
           SERIAL_PROTOCOL(servo_index);
           SERIAL_PROTOCOL(": ");
@@ -2454,7 +2456,7 @@ void process_commands()
         #endif
 
         updatePID();
-        SERIAL_PROTOCOL(MSG_OK);
+        ACK_CMD
         SERIAL_PROTOCOL(" p:");
         SERIAL_PROTOCOL(Kp);
         SERIAL_PROTOCOL(" i:");
@@ -2478,7 +2480,7 @@ void process_commands()
         if(code_seen('D')) bedKd = scalePID_d(code_value());
 
         updatePID();
-        SERIAL_PROTOCOL(MSG_OK);
+        ACK_CMD
         SERIAL_PROTOCOL(" p:");
         SERIAL_PROTOCOL(bedKp);
         SERIAL_PROTOCOL(" i:");
@@ -2921,7 +2923,7 @@ void ClearToSend()
   if(fromsd[bufindr])
     return;
   #endif //SDSUPPORT
-  SERIAL_PROTOCOLLNPGM(MSG_OK);
+  ACK_CMD
 }
 
 void get_coordinates()
