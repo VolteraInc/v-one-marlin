@@ -99,6 +99,11 @@
     #define E0_DIR_PIN         14
     #define E0_ENABLE_PIN      29
 
+
+    #define XY_MIN_X_PIN      64
+    #define XY_MAX_X_PIN      62
+    #define XY_MIN_Y_PIN      60
+    #define XY_MAX_Y_PIN      66
     #define P_MIN_PIN          34
 
     #define LED_RED_PIN        5
@@ -108,6 +113,9 @@
     #define HEATER_BED_PIN   3
     #define TEMP_BED_PIN     1   // ANALOG NUMBERING
 
+    #define DIGIPOTSS_PIN 36
+    #define DIGIPOT_ADDRESS {0x00,0x03,0x02,0x01} // X Y Z E digipot channels to stepper driver mapping
+    // Refer to http://www.intersil.com/content/dam/Intersil/documents/isl2/isl23448.pdf
   #endif
 
   #define SDPOWER            -1
@@ -210,7 +218,7 @@
 #ifdef DISABLE_MIN_ENDSTOPS
 #define X_MIN_PIN          -1
 #define Y_MIN_PIN          -1
-//#define Z_MIN_PIN          -1
+#define Z_MIN_PIN          -1
 #endif
 
 #define SENSITIVE_PINS {0, 1, X_STEP_PIN, X_DIR_PIN, X_ENABLE_PIN, X_MIN_PIN, X_MAX_PIN, Y_STEP_PIN, Y_DIR_PIN, Y_ENABLE_PIN, Y_MIN_PIN, Y_MAX_PIN, Z_STEP_PIN, Z_DIR_PIN, Z_ENABLE_PIN, Z_MIN_PIN, Z_MAX_PIN, PS_ON_PIN, \

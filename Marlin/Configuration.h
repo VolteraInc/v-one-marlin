@@ -257,28 +257,6 @@
 // Uncomment the following line to enable CoreXY kinematics
 //#define COREXY
 
-// coarse Endstop Settings
-#define ENDSTOPPULLUPS // Comment this out (using // at the start of the line) to disable the endstop pullup resistors
-
-#ifndef ENDSTOPPULLUPS
-  // fine endstop settings: Individual pullups. will be ignored if ENDSTOPPULLUPS is defined
-  // #define ENDSTOPPULLUP_XMAX
-  // #define ENDSTOPPULLUP_YMAX
-  // #define ENDSTOPPULLUP_ZMAX
-  // #define ENDSTOPPULLUP_XMIN
-  // #define ENDSTOPPULLUP_YMIN
-  // #define ENDSTOPPULLUP_ZMIN
-#endif
-
-#ifdef ENDSTOPPULLUPS
-  #define ENDSTOPPULLUP_XMAX
-  #define ENDSTOPPULLUP_YMAX
-  #define ENDSTOPPULLUP_ZMAX
-  #define ENDSTOPPULLUP_XMIN
-  #define ENDSTOPPULLUP_YMIN
-  #define ENDSTOPPULLUP_ZMIN
-#endif
-
 // The pullups are needed if you directly connect a mechanical endswitch between the signal and ground pins.
 const bool X_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Y_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
@@ -291,6 +269,11 @@ const bool X_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 const bool Y_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool P_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+
+const bool XY_MIN_X_ENDSTOP_INVERTING = true;
+const bool XY_MAX_X_ENDSTOP_INVERTING = true;
+const bool XY_MIN_Y_ENDSTOP_INVERTING = true;
+const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 //#define DISABLE_MAX_ENDSTOPS
 //#define DISABLE_MIN_ENDSTOPS
 
@@ -340,7 +323,11 @@ const bool P_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define X_MIN_POS 0
 #define Y_MAX_POS 165
 #define Y_MIN_POS 0
-#define Z_MAX_POS 23
+// This is intentionally 1mm less than the actual axis length (~23mm)
+// Otherwise it's possible to drive the z carriage into the bottom of the printhead assembly before we hit the soft endstop
+// It has no impact on actual printing, as in that case we zero to the bottom limit switch and never attempt to reach the maximum again
+// (if we did, we'd hit the bottom limit switch, since with the tool attached the axis length is reduced significantly)
+#define Z_MAX_POS 22
 #define Z_MIN_POS 0
 
 #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
