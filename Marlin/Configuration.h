@@ -257,28 +257,6 @@
 // Uncomment the following line to enable CoreXY kinematics
 //#define COREXY
 
-// coarse Endstop Settings
-//#define ENDSTOPPULLUPS // Comment this out (using // at the start of the line) to disable the endstop pullup resistors
-
-#ifndef ENDSTOPPULLUPS
-  // fine endstop settings: Individual pullups. will be ignored if ENDSTOPPULLUPS is defined
-  // #define ENDSTOPPULLUP_XMAX
-  // #define ENDSTOPPULLUP_YMAX
-  // #define ENDSTOPPULLUP_ZMAX
-  // #define ENDSTOPPULLUP_XMIN
-  // #define ENDSTOPPULLUP_YMIN
-  // #define ENDSTOPPULLUP_ZMIN
-#endif
-
-#ifdef ENDSTOPPULLUPS
-  #define ENDSTOPPULLUP_XMAX
-  #define ENDSTOPPULLUP_YMAX
-  #define ENDSTOPPULLUP_ZMAX
-  #define ENDSTOPPULLUP_XMIN
-  #define ENDSTOPPULLUP_YMIN
-  #define ENDSTOPPULLUP_ZMIN
-#endif
-
 // The pullups are needed if you directly connect a mechanical endswitch between the signal and ground pins.
 const bool X_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Y_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
@@ -321,7 +299,7 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #else
 #define INVERT_X_DIR true    // for Mendel set to false, for Orca set to true
 #endif
-#define INVERT_Y_DIR true   // for Mendel set to true, for Orca set to false
+#define INVERT_Y_DIR false   // for Mendel set to true, for Orca set to false
 #if VOLTERA_PIN_VERSION == 0
 #define INVERT_Z_DIR false     // for Mendel set to false, for Orca set to true
 #else
