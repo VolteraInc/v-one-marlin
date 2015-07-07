@@ -413,11 +413,6 @@ ISR(TIMER1_COMPA_vect)
   #endif
     CHECK_ENDSTOPS
     {
-  #ifdef DUAL_X_CARRIAGE
-  // with 2 x-carriages, endstops are only checked in the homing direction for the active extruder
-      if ((current_block->active_extruder == 0 && X_HOME_DIR == -1)
-        || (current_block->active_extruder != 0 && X2_HOME_DIR == -1))
-  #endif
       {
   #if defined(X_MIN_PIN) && X_MIN_PIN > -1
         bool x_min_endstop=(READ(X_MIN_PIN) != X_MIN_ENDSTOP_INVERTING);
@@ -434,11 +429,6 @@ ISR(TIMER1_COMPA_vect)
   else { // +direction
     CHECK_ENDSTOPS
     {
-  #ifdef DUAL_X_CARRIAGE
-  // with 2 x-carriages, endstops are only checked in the homing direction for the active extruder
-      if ((current_block->active_extruder == 0 && X_HOME_DIR == 1)
-        || (current_block->active_extruder != 0 && X2_HOME_DIR == 1))
-  #endif
       {
   #if defined(X_MAX_PIN) && X_MAX_PIN > -1
         bool x_max_endstop=(READ(X_MAX_PIN) != X_MAX_ENDSTOP_INVERTING);
@@ -752,51 +742,46 @@ void st_init()
 
   #if defined(X_MIN_PIN) && X_MIN_PIN > -1
   SET_INPUT(X_MIN_PIN);
-  #ifdef ENDSTOPPULLUP_XMIN
-  WRITE(X_MIN_PIN,HIGH);
-  #endif
   #endif
 
   #if defined(Y_MIN_PIN) && Y_MIN_PIN > -1
   SET_INPUT(Y_MIN_PIN);
-  #ifdef ENDSTOPPULLUP_YMIN
-  WRITE(Y_MIN_PIN,HIGH);
-  #endif
   #endif
 
   #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
   SET_INPUT(Z_MIN_PIN);
-  #ifdef ENDSTOPPULLUP_ZMIN
-  WRITE(Z_MIN_PIN,HIGH);
-  #endif
   #endif
 
   #if defined(P_MIN_PIN) && P_MIN_PIN > -1
   SET_INPUT(P_MIN_PIN);
-    #ifdef ENDSTOPPULLUP_ZMIN
-  WRITE(P_MIN_PIN,HIGH);
-    #endif
   #endif
 
   #if defined(X_MAX_PIN) && X_MAX_PIN > -1
   SET_INPUT(X_MAX_PIN);
-  #ifdef ENDSTOPPULLUP_XMAX
-  WRITE(X_MAX_PIN,HIGH);
-  #endif
   #endif
 
   #if defined(Y_MAX_PIN) && Y_MAX_PIN > -1
   SET_INPUT(Y_MAX_PIN);
-  #ifdef ENDSTOPPULLUP_YMAX
-  WRITE(Y_MAX_PIN,HIGH);
-  #endif
   #endif
 
   #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
   SET_INPUT(Z_MAX_PIN);
-  #ifdef ENDSTOPPULLUP_ZMAX
-  WRITE(Z_MAX_PIN,HIGH);
   #endif
+
+  #if defined(XY_MIN_X_PIN) && XY_MIN_X_PIN > -1
+  SET_INPUT(XY_MIN_X_PIN);
+  #endif
+
+  #if defined(XY_MAX_X_PIN) && XY_MAX_X_PIN > -1
+  SET_INPUT(XY_MAX_X_PIN);
+  #endif
+
+  #if defined(XY_MIN_Y_PIN) && XY_MIN_Y_PIN > -1
+  SET_INPUT(XY_MIN_Y_PIN);
+  #endif
+
+  #if defined(XY_MAX_Y_PIN) && XY_MAX_Y_PIN > -1
+  SET_INPUT(XY_MAX_Y_PIN);
   #endif
 
   //LED Pins

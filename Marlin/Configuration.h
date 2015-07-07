@@ -258,7 +258,7 @@
 //#define COREXY
 
 // coarse Endstop Settings
-#define ENDSTOPPULLUPS // Comment this out (using // at the start of the line) to disable the endstop pullup resistors
+//#define ENDSTOPPULLUPS // Comment this out (using // at the start of the line) to disable the endstop pullup resistors
 
 #ifndef ENDSTOPPULLUPS
   // fine endstop settings: Individual pullups. will be ignored if ENDSTOPPULLUPS is defined
@@ -291,6 +291,11 @@ const bool X_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 const bool Y_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool P_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+
+const bool XY_MIN_X_ENDSTOP_INVERTING = true;
+const bool XY_MAX_X_ENDSTOP_INVERTING = true;
+const bool XY_MIN_Y_ENDSTOP_INVERTING = true;
+const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 //#define DISABLE_MAX_ENDSTOPS
 //#define DISABLE_MIN_ENDSTOPS
 
@@ -316,7 +321,7 @@ const bool P_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #else
 #define INVERT_X_DIR true    // for Mendel set to false, for Orca set to true
 #endif
-#define INVERT_Y_DIR false   // for Mendel set to true, for Orca set to false
+#define INVERT_Y_DIR true   // for Mendel set to true, for Orca set to false
 #if VOLTERA_PIN_VERSION == 0
 #define INVERT_Z_DIR false     // for Mendel set to false, for Orca set to true
 #else
