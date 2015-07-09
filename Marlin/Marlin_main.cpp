@@ -1524,6 +1524,12 @@ void process_commands()
             feedrate = homing_feedrate[Z_AXIS];
 
             run_z_probe();
+
+            if (!didHitEndstops()) {
+              SERIAL_ERROR_START;
+              SERIAL_ERRORLNPGM(" probe failed - no limit hit");
+            }
+
             SERIAL_PROTOCOLPGM(MSG_BED);
             SERIAL_PROTOCOLPGM(" X: ");
             SERIAL_PROTOCOL(current_position[X_AXIS]);
