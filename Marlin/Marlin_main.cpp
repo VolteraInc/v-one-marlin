@@ -3178,7 +3178,7 @@ void checkBufferEmpty() {
   static uint8_t buffer_fill = 0;
   uint8_t new_buffer_fill = movesplanned();
   if (buffer_fill && !new_buffer_fill) {
-    SERIAL_PROTOCOLLN("empty");
+    SERIAL_PROTOCOLLNPGM("empty");
   }
   buffer_fill = new_buffer_fill;
 }
@@ -3207,17 +3207,21 @@ void handle_glow_leds(){
   Bed temp falling (M190)   - Blue
   Bed temp rising (M190)    - Orange
   Bed temp >= 50degC        - Red
+
+  Blue/orange are also triggered when the target temperature or bed temperature are otherwise notable
+  Short of having the desktop software send explicit commands to say "cooling begin" or "cooling end," this is OK
   */
   bool quick_change = false;
   bool ramp_down_now = false;
 
   float bedTemp = degBed();
+  float targetTemp = degTargetBed();
   if(bedTemp > 50.0){
     glow_led_states[0] = 255;
     glow_led_states[1] = 0;
     glow_led_states[2] = 0;
     glow_led_pace = TEMP_PACE_CURVE;
-  } else if (pending_temp_change) {
+  } else if (pending_temp_change || targetTemp > 0 || bedTemp > 40) {
     if (isCoolingBed()) {
       glow_led_states[0] = 0;
       glow_led_states[1] = 0;
