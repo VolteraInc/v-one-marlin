@@ -82,6 +82,9 @@
 // Define this to set a custom name for your generic Mendel,
 #define CUSTOM_MENDEL_NAME "V-ONE"
 
+// It's nice to have the ack specify the line it's acking
+#define ACK_CMD {SERIAL_PROTOCOLPGM(MSG_OK " "); SERIAL_PROTOCOLLN(gcode_N);}
+
 // Define this to set a unique identifier for this printer, (Used by some programs to differentiate between machines)
 // You can use an online service to generate a random UUID. (eg http://www.uuidgenerator.net/version4)
 // #define MACHINE_UUID "00000000-0000-0000-0000-000000000000"

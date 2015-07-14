@@ -246,6 +246,7 @@ uint8_t active_extruder = 0;
 int fanSpeed=0;
 
 bool glow_led_override = false;
+bool glow_force_green = false; // For taking pictures of the printer without a PC attached.
 
 bool override_p_min = false;
 
@@ -322,7 +323,8 @@ const int sensitive_pins[] = SENSITIVE_PINS; // Sensitive pin list for M42
 //static float bt = 0;
 
 //Inactivity shutdown variables
-static unsigned long previous_millis_cmd = 0;
+static unsigned long previous_millis_serial_rx = 0;
+static unsigned long previous_millis_active_cmd = 0;
 static unsigned long max_inactive_time = 0;
 static unsigned long stepper_inactive_time = DEFAULT_STEPPER_DEACTIVE_TIME*1000l;
 
@@ -515,6 +517,8 @@ void setup()
 /*  #ifdef DIGIPOT_I2C
     digipot_i2c_init();
   #endif*/
+
+  glow_force_green = READ(Z_MIN_PIN)^Z_MIN_ENDSTOP_INVERTING;
 }
 
 
@@ -524,6 +528,7 @@ void loop()
     get_command();
   if(buflen)
   {
+    previous_millis_serial_rx = millis();
     process_commands();
     buflen = (buflen-1);
     bufindr = (bufindr + 1)%BUFSIZE;
@@ -620,7 +625,7 @@ void get_command()
               if(card.saving)
                 break;
           #endif //SDSUPPORT
-              SERIAL_PROTOCOLLNPGM(MSG_OK);
+              ACK_CMD
             }
             else {
               SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
@@ -918,7 +923,7 @@ static void setup_for_endstop_move() {
     saved_feedrate = feedrate;
     saved_feedmultiply = feedmultiply;
     feedmultiply = 100;
-    previous_millis_cmd = millis();
+    previous_millis_active_cmd = millis();
 
     enable_endstops(true);
 }
@@ -930,7 +935,7 @@ static void clean_up_after_endstop_move() {
 
     feedrate = saved_feedrate;
     feedmultiply = saved_feedmultiply;
-    previous_millis_cmd = millis();
+    previous_millis_active_cmd = millis();
 }
 
 static void engage_z_probe() {
@@ -1080,7 +1085,7 @@ static void homeaxis(int axis, bool flip) {
 
 void refresh_cmd_timeout(void)
 {
-  previous_millis_cmd = millis();
+  previous_millis_active_cmd = millis();
 }
 
 #ifdef FWRETRACT
@@ -1199,7 +1204,7 @@ void process_commands()
 
       st_synchronize();
       codenum += millis();  // keep track of when we started waiting
-      previous_millis_cmd = millis();
+      previous_millis_active_cmd = millis();
       while(millis()  < codenum ){
         manage_heater();
         manage_inactivity();
@@ -1218,7 +1223,7 @@ void process_commands()
     case 33: // G33 Homes the Z axis to the other switch.
 
       saved_feedrate = feedrate;
-      previous_millis_cmd = millis();
+      previous_millis_active_cmd = millis();
       enable_endstops(true);
 
       for(int8_t i=0; i < NUM_AXIS; i++) {
@@ -1234,7 +1239,7 @@ void process_commands()
       #endif
 
       feedrate = saved_feedrate;
-      previous_millis_cmd = millis();
+      previous_millis_active_cmd = millis();
       endstops_hit_on_purpose();
       break;
 
@@ -1248,7 +1253,7 @@ void process_commands()
       saved_feedrate = feedrate;
       saved_feedmultiply = feedmultiply;
       feedmultiply = 100;
-      previous_millis_cmd = millis();
+      previous_millis_active_cmd = millis();
 
       enable_endstops(true);
 
@@ -1308,7 +1313,7 @@ void process_commands()
 
       feedrate = saved_feedrate;
       feedmultiply = saved_feedmultiply;
-      previous_millis_cmd = millis();
+      previous_millis_active_cmd = millis();
       endstops_hit_on_purpose();
       break;
 
@@ -1607,6 +1612,12 @@ void process_commands()
             feedrate = homing_feedrate[Z_AXIS];
 
             run_z_probe();
+
+            if (!didHitEndstops()) {
+              SERIAL_ERROR_START;
+              SERIAL_ERRORLNPGM(" probe failed - no limit hit");
+            }
+
             SERIAL_PROTOCOLPGM(MSG_BED);
             SERIAL_PROTOCOLPGM(" X: ");
             SERIAL_PROTOCOL(current_position[X_AXIS]);
@@ -1644,6 +1655,7 @@ void process_commands()
       }
       break;
     }
+    previous_millis_active_cmd = millis();
   }
 
   else if(code_seen('M'))
@@ -1715,6 +1727,7 @@ void process_commands()
       setWatch();
       break;
     case 140: // M140 set bed temp
+      previous_millis_active_cmd = millis();
       if (code_seen('S')) setTargetBed(code_value());
       break;
     case 105 : // M105
@@ -1722,7 +1735,9 @@ void process_commands()
         break;
         }
      // #if defined(TEMP_0_PIN) && TEMP_0_PIN > -1
-        SERIAL_PROTOCOLPGM("ok T:");
+        SERIAL_PROTOCOLPGM(MSG_OK " ");
+        SERIAL_PROTOCOL(gcode_N);
+        SERIAL_PROTOCOLPGM(" T:");
         SERIAL_PROTOCOL_F(0.0,1);
         //SERIAL_PROTOCOL_F(degHotend(tmp_extruder),1);
         SERIAL_PROTOCOLPGM(" /");
@@ -1873,7 +1888,7 @@ void process_commands()
         pending_temp_change = false;
         LCD_MESSAGEPGM(MSG_HEATING_COMPLETE);
         starttime=millis();
-        previous_millis_cmd = millis();
+        previous_millis_active_cmd = millis();
       }
       break;
     case 190: // M190 - Wait for bed heater to reach target.
@@ -1911,7 +1926,7 @@ void process_commands()
         }
         pending_temp_change = false;
         LCD_MESSAGEPGM(MSG_BED_DONE);
-        previous_millis_cmd = millis();
+        previous_millis_active_cmd = millis();
     #endif
         break;
 
@@ -2122,9 +2137,7 @@ void process_commands()
       SERIAL_PROTOCOL_F(movesplanned(), DEC);
 
       SERIAL_PROTOCOLLN("");
-      // Bail early, so we don't reset previous_millis_cmd
-      SERIAL_PROTOCOLLNPGM(MSG_OK);
-      return;
+      break;
     case 120: // M120 - Added by VOLTERA
       st_synchronize();
       enable_endstops(false) ;
@@ -2489,7 +2502,7 @@ void process_commands()
           }
         }
         else if (servo_index >= 0) {
-          SERIAL_PROTOCOL(MSG_OK);
+          ACK_CMD
           SERIAL_PROTOCOL(" Servo ");
           SERIAL_PROTOCOL(servo_index);
           SERIAL_PROTOCOL(": ");
@@ -2537,7 +2550,7 @@ void process_commands()
         #endif
 
         updatePID();
-        SERIAL_PROTOCOL(MSG_OK);
+        ACK_CMD
         SERIAL_PROTOCOL(" p:");
         SERIAL_PROTOCOL(Kp);
         SERIAL_PROTOCOL(" i:");
@@ -2561,7 +2574,7 @@ void process_commands()
         if(code_seen('D')) bedKd = scalePID_d(code_value());
 
         updatePID();
-        SERIAL_PROTOCOL(MSG_OK);
+        ACK_CMD
         SERIAL_PROTOCOL(" p:");
         SERIAL_PROTOCOL(bedKp);
         SERIAL_PROTOCOL(" i:");
@@ -2999,12 +3012,11 @@ void FlushSerialRequestResend()
 
 void ClearToSend()
 {
-  previous_millis_cmd = millis();
   #ifdef SDSUPPORT
   if(fromsd[bufindr])
     return;
   #endif //SDSUPPORT
-  SERIAL_PROTOCOLLNPGM(MSG_OK);
+  ACK_CMD
 }
 
 void get_coordinates()
@@ -3106,7 +3118,7 @@ void prepare_move()
 {
   clamp_to_software_endstops(destination);
 
-  previous_millis_cmd = millis();
+  previous_millis_active_cmd = millis();
 
   if (ensure_homed_enable) {
     ensure_homed(current_position[X_AXIS] != destination[X_AXIS], current_position[Y_AXIS] != destination[Y_AXIS], current_position[Z_AXIS] != destination[Z_AXIS]);
@@ -3136,7 +3148,7 @@ void prepare_arc_move(char isclockwise) {
   for(int8_t i=0; i < NUM_AXIS; i++) {
     current_position[i] = destination[i];
   }
-  previous_millis_cmd = millis();
+  previous_millis_active_cmd = millis();
 }
 
 #if defined(CONTROLLERFAN_PIN) && CONTROLLERFAN_PIN > -1
@@ -3221,11 +3233,11 @@ void handle_status_leds(void) {
 
 void manage_inactivity()
 {
-  if( (millis() - previous_millis_cmd) >  max_inactive_time )
+  if( (millis() - previous_millis_active_cmd) >  max_inactive_time )
     if(max_inactive_time)
       kill();
   if(stepper_inactive_time)  {
-    if( (millis() - previous_millis_cmd) >  stepper_inactive_time ){
+    if( (millis() - previous_millis_active_cmd) >  stepper_inactive_time ){
       if(blocks_queued() == false){
         disable_x();
         disable_y();
@@ -3259,7 +3271,7 @@ void checkBufferEmpty() {
   static uint8_t buffer_fill = 0;
   uint8_t new_buffer_fill = movesplanned();
   if (buffer_fill && !new_buffer_fill) {
-    SERIAL_PROTOCOLLN("empty");
+    SERIAL_PROTOCOLLNPGM("empty");
   }
   buffer_fill = new_buffer_fill;
 }
@@ -3283,22 +3295,27 @@ void handle_glow_leds(){
 
   /*
   (in order of precedence)
+  White                     - No Connection
   Idle                      - Green
   Receiving motion commands - Purple
   Bed temp falling (M190)   - Blue
   Bed temp rising (M190)    - Orange
   Bed temp >= 50degC        - Red
+
+  Blue/orange are also triggered when the target temperature or bed temperature are otherwise notable
+  Short of having the desktop software send explicit commands to say "cooling begin" or "cooling end," this is OK
   */
   bool quick_change = false;
   bool ramp_down_now = false;
 
   float bedTemp = degBed();
+  float targetTemp = degTargetBed();
   if(bedTemp > 50.0){
     glow_led_states[0] = 255;
     glow_led_states[1] = 0;
     glow_led_states[2] = 0;
     glow_led_pace = TEMP_PACE_CURVE;
-  } else if (pending_temp_change) {
+  } else if (pending_temp_change || targetTemp > 0 || bedTemp > 40) {
     if (isCoolingBed()) {
       glow_led_states[0] = 0;
       glow_led_states[1] = 0;
@@ -3309,16 +3326,22 @@ void handle_glow_leds(){
       glow_led_states[2] = 0;
     }
     glow_led_pace = TEMP_PACE_CURVE;
-  } else if (millis() - previous_millis_cmd < stepper_inactive_time && previous_millis_cmd !=0){
+  } else if (millis() - previous_millis_active_cmd < stepper_inactive_time && previous_millis_active_cmd !=0){
     glow_led_states[0] = 255;
     glow_led_states[1] = 0;
     glow_led_states[2] = 255;
     glow_led_pace = 30;
     quick_change = true;
-  } else {
+  } else if (glow_force_green || (millis() - previous_millis_serial_rx < 1000 && previous_millis_serial_rx != 0)) {
     glow_led_states[0] = 0;
     glow_led_states[1] = 255;
     glow_led_states[2] = 0;
+    glow_led_pace = 30;
+    quick_change = true;
+  } else {
+    glow_led_states[0] = 255;
+    glow_led_states[1] = 255;
+    glow_led_states[2] = 255;
     glow_led_pace = 30;
   }
 
