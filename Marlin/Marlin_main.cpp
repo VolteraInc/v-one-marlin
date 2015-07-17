@@ -1112,7 +1112,8 @@ void refresh_cmd_timeout(void)
 
 void ensure_homed(bool need_x, bool need_y, bool need_z) {
   static float saved_destination[NUM_AXIS];
-  if (ensure_homed_preemptive_all_axis) {
+  // We don't want to preemptive home if it's just the e axis (i.e. not xyz) moving
+  if (ensure_homed_preemptive_all_axis && (need_x || need_y || need_z)) {
     need_x = need_y = need_z = true;
   }
 
