@@ -874,7 +874,7 @@ static void set_bed_level_equation_3pts(float z_at_pt_1, float z_at_pt_2, float 
 static void run_z_probe() {
 
     plan_bed_level_matrix.set_to_identity();
-    feedrate = homing_feedrate[Z_AXIS];
+    feedrate = homing_feedrate[Z_AXIS]*5;
 
     // move down until you find the bed
     float zPosition = -10;
@@ -885,16 +885,16 @@ static void run_z_probe() {
     zPosition = st_get_position_mm(Z_AXIS);
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS]);
 
-    // move up the retract distance
-    zPosition += home_retract_mm(Z_AXIS);
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
-    st_synchronize();
+    // // move up the retract distance
+    // zPosition += home_retract_mm(Z_AXIS);
+    // plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
+    // st_synchronize();
 
-    // move back down slowly to find bed
-    feedrate = homing_feedrate[Z_AXIS]/6.0; //VOLTERA (ORIGINALLY 2)
-    zPosition -= home_retract_mm(Z_AXIS) * 2;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
-    st_synchronize();
+    // // move back down slowly to find bed
+    // feedrate = homing_feedrate[Z_AXIS]/6.0; //VOLTERA (ORIGINALLY 2)
+    // zPosition -= home_retract_mm(Z_AXIS) * 2;
+    // plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
+    // st_synchronize();
 
     current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
     // make sure the planner knows where we are as it may be a bit different than we last said to move to
