@@ -1048,7 +1048,9 @@ static void homeaxis(int axis, bool flip) {
 
     // If we already know roughly where we are, don't go too far past the known extent
     // (e.g. if tool isn't mounted and we're trying to home z bottom after having homed z top)
-    destination[axis] = axis_known_position[axis] ? (axis_home_dir > 0 ? max_pos : min_pos)[axis] + axis_home_dir : 1.5 * max_length(axis) * axis_home_dir;
+    // Only do this in Z because no other axis has double endstops
+    bool soft_limit_home = axis == Z_AXIS;
+    destination[axis] = soft_limit_home && axis_known_position[axis] ? (axis_home_dir > 0 ? max_pos : min_pos)[axis] + axis_home_dir : 1.5 * max_length(axis) * axis_home_dir;
     feedrate = homing_feedrate[axis];
     endstops_hit_on_purpose(); // Clear endstop flags
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
