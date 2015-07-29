@@ -1471,6 +1471,7 @@ void process_commands()
           float yPosition = 300;
           plan_buffer_line(current_position[X_AXIS], yPosition, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
+     
 
           // we have to let the planner know where we are right now as it is not where we said to go.
           current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
@@ -1478,7 +1479,12 @@ void process_commands()
           // Output the trigger position in Y in microns. 
           SERIAL_PROTOCOL(float(current_position[Y_AXIS]*1000));
           SERIAL_PROTOCOLPGM("\n");
-      }
+          enable_endstops(false);
+          plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS]-2.0, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
+          st_synchronize();
+          enable_endstops(true);
+          
+    }
       break;
 
       case 19: // G19: XYPositioner Y2 - Move in -Y until a switch is triggered
@@ -1495,6 +1501,10 @@ void process_commands()
           SERIAL_PROTOCOLPGM("Y: ");
           SERIAL_PROTOCOL(float(current_position[Y_AXIS]*1000));
           SERIAL_PROTOCOLPGM("\n");
+          enable_endstops(false);
+          plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS]+2.0, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
+          st_synchronize();
+          enable_endstops(true);
       }
       break;
 
@@ -1514,6 +1524,10 @@ void process_commands()
           // Output the trigger position in X in microns. 
           SERIAL_PROTOCOL(float(current_position[X_AXIS]*1000));
           SERIAL_PROTOCOLPGM("\n");
+          enable_endstops(false);
+          plan_buffer_line(current_position[X_AXIS]-2.0, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
+          st_synchronize();
+          enable_endstops(true);
       }
       break;
 
@@ -1531,6 +1545,10 @@ void process_commands()
           // Output the trigger position in X in microns. 
           SERIAL_PROTOCOL(float(current_position[X_AXIS]*1000));
           SERIAL_PROTOCOLPGM("\n");
+          enable_endstops(false);
+          plan_buffer_line(current_position[X_AXIS]+2.0, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
+          st_synchronize();
+          enable_endstops(true);
       }
       break;
 
