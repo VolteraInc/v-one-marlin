@@ -226,7 +226,8 @@ float endstop_adj[3]={0,0,0};
 #endif
 float min_pos[3] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS };
 float max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
-bool axis_known_position[3] = {false, false, false};
+#define HOMED_NONE 0
+signed char axis_homed_state[3] = {HOMED_NONE, HOMED_NONE, HOMED_NONE};
 float zprobe_zoffset;
 
 // Extruder offset
@@ -1030,7 +1031,7 @@ static float countToHome(int axis){
   plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
   feedrate = homing_feedrate[axis];
   endstops_hit_on_purpose();
-  axis_known_position[axis] = true;
+  axis_homed_state[axis] = axis_home_dir;
 
   return pos;
 }
@@ -1043,14 +1044,14 @@ static void homeaxis(int axis, bool flip) {
       axis_home_dir = axis_home_dir*-1 ;
     }
 
-    if (!axis_known_position[axis]) current_position[axis] = 0;
+    if (!axis_homed_state[axis]) current_position[axis] = 0;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 
     // If we already know roughly where we are, don't go too far past the known extent
     // (e.g. if tool isn't mounted and we're trying to home z bottom after having homed z top)
     // Only do this in Z because no other axis has double endstops
     bool soft_limit_home = axis == Z_AXIS;
-    destination[axis] = soft_limit_home && axis_known_position[axis] ? (axis_home_dir > 0 ? max_pos : min_pos)[axis] + axis_home_dir : 1.5 * max_length(axis) * axis_home_dir;
+    destination[axis] = soft_limit_home && axis_homed_state[axis] ? (axis_home_dir > 0 ? max_pos : min_pos)[axis] + axis_home_dir : 1.5 * max_length(axis) * axis_home_dir;
     feedrate = homing_feedrate[axis];
     endstops_hit_on_purpose(); // Clear endstop flags
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
@@ -1081,7 +1082,7 @@ static void homeaxis(int axis, bool flip) {
     destination[axis] = current_position[axis];
     feedrate = 0.0;
     endstops_hit_on_purpose();
-    axis_known_position[axis] = true;
+    axis_homed_state[axis] = axis_home_dir;
 
 }
 
@@ -1133,9 +1134,9 @@ void ensure_homed(bool need_x, bool need_y, bool need_z) {
     need_x = need_y = need_z = true;
   }
 
-  bool home_x = need_x && !axis_known_position[X_AXIS];
-  bool home_y = need_y && !axis_known_position[Y_AXIS];
-  bool home_z = need_z && !axis_known_position[Z_AXIS];
+  bool home_x = need_x && !axis_homed_state[X_AXIS];
+  bool home_y = need_y && !axis_homed_state[Y_AXIS];
+  bool home_z = need_z && !axis_homed_state[Z_AXIS];
 
   if (!home_x && !home_y && !home_z) return;
 
@@ -1328,7 +1329,7 @@ void process_commands()
             #endif
 
             // Prevent user from running a G29 without first homing in X and Y
-            if (! (axis_known_position[X_AXIS] && axis_known_position[Y_AXIS]) )
+            if (! (axis_homed_state[X_AXIS] && axis_homed_state[Y_AXIS]) )
             {
                 LCD_MESSAGEPGM(MSG_POSITION_UNKNOWN);
                 SERIAL_ECHO_START;
@@ -2140,6 +2141,15 @@ void process_commands()
       // # of moves queued in buffer
       SERIAL_PROTOCOLPGM(" B:");
       SERIAL_PROTOCOL_F(movesplanned(), DEC);
+
+      // Homing state on each axis
+      // 0 = not homed, -1 = homed to top, 1 = homed to bottom
+      SERIAL_PROTOCOLPGM(" H:");
+      SERIAL_PROTOCOL(axis_homed_state[X_AXIS]);
+      SERIAL_PROTOCOL(',');
+      SERIAL_PROTOCOL(axis_homed_state[Y_AXIS]);
+      SERIAL_PROTOCOL(',');
+      SERIAL_PROTOCOL(axis_homed_state[Z_AXIS]);
 
       SERIAL_PROTOCOLLN("");
       break;
