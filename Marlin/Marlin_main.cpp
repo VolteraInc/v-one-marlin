@@ -136,6 +136,7 @@
 // M115 - Capabilities string
 // M117 - display message
 // M119 - Output Endstop status to serial port
+// M125 - Output current Probe status to serial port
 // M126 - Solenoid Air Valve Open (BariCUDA support by jmil)
 // M127 - Solenoid Air Valve Closed (BariCUDA vent to atmospheric pressure by jmil)
 // M128 - EtoP Open (BariCUDA EtoP = electricity to air pressure transducer by jmil)
@@ -1472,7 +1473,6 @@ void process_commands()
           float yPosition = 300;
           plan_buffer_line(current_position[X_AXIS], yPosition, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
-     
 
           // we have to let the planner know where we are right now as it is not where we said to go.
           current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
@@ -1773,19 +1773,6 @@ void process_commands()
           SERIAL_PROTOCOLPGM(" /");
           SERIAL_PROTOCOL_F(degTargetBed(),1);
         #endif //TEMP_BED_PIN
-/*        for (int8_t cur_extruder = 0; cur_extruder < EXTRUDERS; ++cur_extruder) {
-          SERIAL_PROTOCOLPGM(" T");
-          SERIAL_PROTOCOL(cur_extruder);
-          SERIAL_PROTOCOLPGM(":");
-          SERIAL_PROTOCOL_F(degHotend(cur_extruder),1);
-          SERIAL_PROTOCOLPGM(" /");
-          SERIAL_PROTOCOL_F(degTargetHotend(cur_extruder),1);
-        }*/
-/*      #else
-        SERIAL_ERROR_START;
-        SERIAL_ERRORLNPGM(MSG_ERR_NO_THERMISTORS);
-      #endif*/
-
         SERIAL_PROTOCOLPGM(" @:");
       #ifdef EXTRUDER_WATTS
         SERIAL_PROTOCOL((EXTRUDER_WATTS * getHeaterPower(tmp_extruder))/127);
@@ -2252,6 +2239,22 @@ void process_commands()
       #endif
       break;
       //TODO: update for all axis, use for loop
+
+    case 125:
+    {
+      #if defined(PROBE_STATUS_PIN) && PROBE_STATUS_PIN > -1
+      int probeVoltage = analogRead(PROBE_STATUS_PIN);
+      SERIAL_PROTOCOLPGM("Probe State:");
+
+      if (probeVoltage < 1.0)
+          SERIAL_PROTOCOLLN("OFF");
+      else if(probeVoltage >= 1.0 && probeVoltage <= 2.0)
+          SERIAL_PROTOCOLLN("ON");
+      else
+          SERIAL_PROTOCOLLN("TRIGGERED");
+      #endif 
+      break;
+    }
 
     case 200: // M200 D<millimeters> set filament diameter and set E axis units to cubic millimeters (use S0 to set back to millimeters).
       {
