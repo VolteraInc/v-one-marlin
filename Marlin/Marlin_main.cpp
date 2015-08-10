@@ -2243,7 +2243,7 @@ void process_commands()
     case 125:
     {
       #if defined(PROBE_STATUS_PIN) && PROBE_STATUS_PIN > -1
-      int probeVoltage = analogRead(PROBE_STATUS_PIN);
+      int probeVoltage = analogRead(PROBE_STATUS_PIN)/1024*5.0;
       SERIAL_PROTOCOLPGM("Probe State:");
 
       if (probeVoltage < 1.0)
