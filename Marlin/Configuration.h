@@ -302,7 +302,7 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #else
 #define INVERT_X_DIR true    // for Mendel set to false, for Orca set to true
 #endif
-#define INVERT_Y_DIR false   // for Mendel set to true, for Orca set to false
+#define INVERT_Y_DIR true   // for Mendel set to true, for Orca set to false
 #if VOLTERA_PIN_VERSION == 0
 #define INVERT_Z_DIR false     // for Mendel set to false, for Orca set to true
 #else
