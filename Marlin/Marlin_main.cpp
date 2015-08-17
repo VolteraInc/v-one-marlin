@@ -1468,40 +1468,52 @@ void process_commands()
 
     case 18: // G18:  XYPositioner Y1 - Move in +Y until a switch is triggered
       {
+          enable_endstops(true);
           // move in +Y until a switch is triggered
           feedrate = homing_feedrate[X_AXIS]/(2);
-          float yPosition = 300;
+          float yPosition = current_position[Y_AXIS] + 10;
           plan_buffer_line(current_position[X_AXIS], yPosition, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
 
           // we have to let the planner know where we are right now as it is not where we said to go.
           current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
+          SERIAL_PROTOCOLPGM("xypos Y: ");
           plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
+
+          if (!didHitEndstops()) {
+            SERIAL_ERROR_START;
+            SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
+          }
+
           // Output the trigger position in Y in microns. 
-          SERIAL_PROTOCOL(float(current_position[Y_AXIS]*1000));
-          SERIAL_PROTOCOLPGM("\n");
+          SERIAL_PROTOCOLLN(float(current_position[Y_AXIS]*1000));
           enable_endstops(false);
           plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS]-2.0, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
           enable_endstops(true);
-          
     }
       break;
 
       case 19: // G19: XYPositioner Y2 - Move in -Y until a switch is triggered
       {
+          enable_endstops(true);
           // move in -Y until a switch is triggered
           feedrate = homing_feedrate[Y_AXIS]/(2);
-          float yPosition = -10;
+          float yPosition = current_position[Y_AXIS] - 10;
           plan_buffer_line(current_position[X_AXIS], yPosition, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
 
           // we have to let the planner know where we are right now as it is not where we said to go.
           current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
           plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-          SERIAL_PROTOCOLPGM("Y: ");
-          SERIAL_PROTOCOL(float(current_position[Y_AXIS]*1000));
-          SERIAL_PROTOCOLPGM("\n");
+
+          if (!didHitEndstops()) {
+            SERIAL_ERROR_START;
+            SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
+          }
+
+          SERIAL_PROTOCOLPGM("xypos Y: ");
+          SERIAL_PROTOCOLLN(float(current_position[Y_AXIS]*1000));
           enable_endstops(false);
           plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS]+2.0, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
@@ -1513,18 +1525,25 @@ void process_commands()
 
     case 20: // G20: XYPositioner X1 - Move in +X until a switch is triggered
       {
+          enable_endstops(true);
           // move in +X until a switch is triggered
           feedrate = homing_feedrate[X_AXIS]/(2);
-          float xPosition = 300;
+          float xPosition = current_position[X_AXIS] + 10;
           plan_buffer_line(xPosition, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
 
           // we have to let the planner know where we are right now as it is not where we said to go.
           current_position[X_AXIS] = st_get_position_mm(X_AXIS);
           plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
+
+          if (!didHitEndstops()) {
+            SERIAL_ERROR_START;
+            SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
+          }
+
           // Output the trigger position in X in microns. 
-          SERIAL_PROTOCOL(float(current_position[X_AXIS]*1000));
-          SERIAL_PROTOCOLPGM("\n");
+          SERIAL_PROTOCOLPGM("xypos X: ");
+          SERIAL_PROTOCOLLN(float(current_position[X_AXIS]*1000));
           enable_endstops(false);
           plan_buffer_line(current_position[X_AXIS]-2.0, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
@@ -1534,18 +1553,25 @@ void process_commands()
 
     case 21: // G21: XYPositioner X2 - Move in -X until switch triggered
       {
+          enable_endstops(true);
           // move in -X until a switch is triggered
           feedrate = homing_feedrate[X_AXIS]/(2);
-          float xPosition = -10;
+          float xPosition = current_position[X_AXIS] - 10;
           plan_buffer_line(xPosition, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
 
           // we have to let the planner know where we are right now as it is not where we said to go.
           current_position[X_AXIS] = st_get_position_mm(X_AXIS);
           plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
+
+          if (!didHitEndstops()) {
+            SERIAL_ERROR_START;
+            SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
+          }
+
           // Output the trigger position in X in microns. 
-          SERIAL_PROTOCOL(float(current_position[X_AXIS]*1000));
-          SERIAL_PROTOCOLPGM("\n");
+          SERIAL_PROTOCOLPGM("xypos X: ");
+          SERIAL_PROTOCOLLN(float(current_position[X_AXIS]*1000));
           enable_endstops(false);
           plan_buffer_line(current_position[X_AXIS]+2.0, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
