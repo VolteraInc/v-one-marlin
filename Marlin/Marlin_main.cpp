@@ -1169,6 +1169,27 @@ void ensure_homed(bool need_x, bool need_y, bool need_z) {
   feedmultiply = saved_feedmultiply;
 }
 
+bool ensure_requested_homing(void) {
+  // You can specify H#,#,# on a movement command to ensure that the printer is homed to a particular endstop before moving
+  // If it isn't, it'll bail (it *won't* implicitly home)
+  // Note that the parsing is super sketch, probably best not to pass malformed syntax
+  // This exists soley because the Z axis coordinate system shifts ~15mm depending on whether we're homed to bottom or top Z
+  if (code_seen('H')) {
+    signed char home_x = code_value_long();
+    strchr_pointer += (home_x < 0 ? 2 : 1) + 1;
+    signed char home_y = code_value_long();
+    strchr_pointer += (home_y < 0 ? 2 : 1) + 1;
+    signed char home_z = code_value_long();
+
+    if ((home_x && axis_homed_state[X_AXIS] != home_x) || (home_y && axis_homed_state[Y_AXIS] != home_y) || (home_z && axis_homed_state[Z_AXIS] != home_z)) {
+      SERIAL_ERROR_START;
+      SERIAL_ERRORLNPGM(" move failed - printer not homed as requested");
+      return false;
+    }
+  }
+  return true;
+}
+
 void process_commands()
 {
   unsigned long codenum; //throw away variable
@@ -3185,6 +3206,8 @@ void prepare_move()
   if (ensure_homed_enable) {
     ensure_homed(current_position[X_AXIS] != destination[X_AXIS], current_position[Y_AXIS] != destination[Y_AXIS], current_position[Z_AXIS] != destination[Z_AXIS]);
   }
+
+  if (!ensure_requested_homing()) return;
 
   // Do not use feedmultiply for E or Z only moves
   if( (current_position[X_AXIS] == destination [X_AXIS]) && (current_position[Y_AXIS] == destination [Y_AXIS])) {
