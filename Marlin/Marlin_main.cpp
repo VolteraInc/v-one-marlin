@@ -327,7 +327,8 @@ const int sensitive_pins[] = SENSITIVE_PINS; // Sensitive pin list for M42
 //Inactivity shutdown variables
 static unsigned long previous_millis_serial_rx = 0;
 static unsigned long previous_millis_active_cmd = 0;
-static unsigned long max_inactive_time = 0;
+// After this long without serial traffic *and* no movement, everything shuts down
+static unsigned long max_no_serial_no_movement_time = 60000;
 static unsigned long stepper_inactive_time = DEFAULT_STEPPER_DEACTIVE_TIME*1000l;
 
 unsigned long starttime=0;
@@ -2101,7 +2102,7 @@ void process_commands()
       break;
     case 85: // M85
       code_seen('S');
-      max_inactive_time = code_value() * 1000;
+      max_no_serial_no_movement_time = code_value() * 1000;
       break;
     case 92: // M92
       for(int8_t i=0; i < NUM_AXIS; i++)
@@ -3318,9 +3319,6 @@ void handle_status_leds(void) {
 
 void manage_inactivity()
 {
-  if( (millis() - previous_millis_active_cmd) >  max_inactive_time )
-    if(max_inactive_time)
-      kill();
   if(stepper_inactive_time)  {
     if( (millis() - previous_millis_active_cmd) >  stepper_inactive_time ){
       if(blocks_queued() == false){
@@ -3331,6 +3329,19 @@ void manage_inactivity()
         disable_e1();
         disable_e2();
       }
+    }
+  }
+
+  // Power down everything if serial traffic has stopped in addition to a lack of movement
+  if (!stepper_inactive_time || !previous_millis_active_cmd || (millis() - previous_millis_active_cmd) >  stepper_inactive_time) {
+    if (millis() - previous_millis_serial_rx > max_no_serial_no_movement_time && previous_millis_serial_rx && max_no_serial_no_movement_time) {
+      disable_x();
+      disable_y();
+      disable_z();
+      disable_e0();
+      disable_e1();
+      disable_e2();
+      disable_heater();
     }
   }
 
