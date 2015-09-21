@@ -271,7 +271,7 @@
 #define MICROSTEP_MODES {16,16,16,16,16} // [1,2,4,8,16]
 
 // Motor Current setting (Only functional when motor driver current ref pins are connected to a digital trimpot on supported boards)
-#define DIGIPOT_MOTOR_CURRENT {60,50,100,70} // Values 0-127
+#define DIGIPOT_MOTOR_CURRENT {60,60,100,70} // Values 0-127 (x, y, z, e)
 
 // uncomment to enable an I2C based DIGIPOT like on the Azteeg X3 Pro
 //#define DIGIPOT_I2C

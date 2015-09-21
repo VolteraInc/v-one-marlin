@@ -462,9 +462,9 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 #if VOLTERA_PIN_VERSION == 0
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {100,80,1600,1714.2857142857144}  // default steps per unit for Ultimaker
 #else
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {80,80,1600,1714.2857142857144}  // default steps per unit for Ultimaker
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {80,80,1600,1714.2857142857144}  // default steps per unit for Ultimaker. For 1.8deg/step, use 80. 0.9deg/step, use 160.
 #endif
-#define DEFAULT_MAX_FEEDRATE          {500, 115, (251.0/60.0),(141/60.0)}    // (mm/sec)
+#define DEFAULT_MAX_FEEDRATE          {500, (5000.0/60.0), (251.0/60.0),(141.0/60.0)}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {1500,700,100,50}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
 
 #define DEFAULT_ACCELERATION          1000    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
