@@ -327,7 +327,8 @@ const int sensitive_pins[] = SENSITIVE_PINS; // Sensitive pin list for M42
 //Inactivity shutdown variables
 static unsigned long previous_millis_serial_rx = 0;
 static unsigned long previous_millis_active_cmd = 0;
-static unsigned long max_inactive_time = 0;
+// After this long without serial traffic *and* no movement, everything shuts down
+static unsigned long max_no_serial_no_movement_time = 60000;
 static unsigned long stepper_inactive_time = DEFAULT_STEPPER_DEACTIVE_TIME*1000l;
 
 unsigned long starttime=0;
@@ -1169,6 +1170,27 @@ void ensure_homed(bool need_x, bool need_y, bool need_z) {
   feedmultiply = saved_feedmultiply;
 }
 
+bool ensure_requested_homing(void) {
+  // You can specify H#,#,# on a movement command to ensure that the printer is homed to a particular endstop before moving
+  // If it isn't, it'll bail (it *won't* implicitly home)
+  // Note that the parsing is super sketch, probably best not to pass malformed syntax
+  // This exists soley because the Z axis coordinate system shifts ~15mm depending on whether we're homed to bottom or top Z
+  if (code_seen('H')) {
+    signed char home_x = code_value_long();
+    strchr_pointer += (home_x < 0 ? 2 : 1) + 1;
+    signed char home_y = code_value_long();
+    strchr_pointer += (home_y < 0 ? 2 : 1) + 1;
+    signed char home_z = code_value_long();
+
+    if ((home_x && axis_homed_state[X_AXIS] != home_x) || (home_y && axis_homed_state[Y_AXIS] != home_y) || (home_z && axis_homed_state[Z_AXIS] != home_z)) {
+      SERIAL_ERROR_START;
+      SERIAL_ERRORLNPGM(" move failed - printer not homed as requested");
+      return false;
+    }
+  }
+  return true;
+}
+
 void process_commands()
 {
   unsigned long codenum; //throw away variable
@@ -1468,40 +1490,52 @@ void process_commands()
 
     case 18: // G18:  XYPositioner Y1 - Move in +Y until a switch is triggered
       {
+          enable_endstops(true);
           // move in +Y until a switch is triggered
           feedrate = homing_feedrate[X_AXIS]/(2);
-          float yPosition = 300;
+          float yPosition = current_position[Y_AXIS] + 10;
           plan_buffer_line(current_position[X_AXIS], yPosition, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
 
           // we have to let the planner know where we are right now as it is not where we said to go.
           current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
+          SERIAL_PROTOCOLPGM("xypos Y: ");
           plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
+
+          if (!didHitEndstops()) {
+            SERIAL_ERROR_START;
+            SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
+          }
+
           // Output the trigger position in Y in microns. 
-          SERIAL_PROTOCOL(float(current_position[Y_AXIS]*1000));
-          SERIAL_PROTOCOLPGM("\n");
+          SERIAL_PROTOCOLLN(float(current_position[Y_AXIS]*1000));
           enable_endstops(false);
           plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS]-2.0, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
           enable_endstops(true);
-          
     }
       break;
 
       case 19: // G19: XYPositioner Y2 - Move in -Y until a switch is triggered
       {
+          enable_endstops(true);
           // move in -Y until a switch is triggered
           feedrate = homing_feedrate[Y_AXIS]/(2);
-          float yPosition = -10;
+          float yPosition = current_position[Y_AXIS] - 10;
           plan_buffer_line(current_position[X_AXIS], yPosition, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
 
           // we have to let the planner know where we are right now as it is not where we said to go.
           current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
           plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-          SERIAL_PROTOCOLPGM("Y: ");
-          SERIAL_PROTOCOL(float(current_position[Y_AXIS]*1000));
-          SERIAL_PROTOCOLPGM("\n");
+
+          if (!didHitEndstops()) {
+            SERIAL_ERROR_START;
+            SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
+          }
+
+          SERIAL_PROTOCOLPGM("xypos Y: ");
+          SERIAL_PROTOCOLLN(float(current_position[Y_AXIS]*1000));
           enable_endstops(false);
           plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS]+2.0, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
@@ -1513,18 +1547,25 @@ void process_commands()
 
     case 20: // G20: XYPositioner X1 - Move in +X until a switch is triggered
       {
+          enable_endstops(true);
           // move in +X until a switch is triggered
           feedrate = homing_feedrate[X_AXIS]/(2);
-          float xPosition = 300;
+          float xPosition = current_position[X_AXIS] + 10;
           plan_buffer_line(xPosition, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
 
           // we have to let the planner know where we are right now as it is not where we said to go.
           current_position[X_AXIS] = st_get_position_mm(X_AXIS);
           plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
+
+          if (!didHitEndstops()) {
+            SERIAL_ERROR_START;
+            SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
+          }
+
           // Output the trigger position in X in microns. 
-          SERIAL_PROTOCOL(float(current_position[X_AXIS]*1000));
-          SERIAL_PROTOCOLPGM("\n");
+          SERIAL_PROTOCOLPGM("xypos X: ");
+          SERIAL_PROTOCOLLN(float(current_position[X_AXIS]*1000));
           enable_endstops(false);
           plan_buffer_line(current_position[X_AXIS]-2.0, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
@@ -1534,18 +1575,25 @@ void process_commands()
 
     case 21: // G21: XYPositioner X2 - Move in -X until switch triggered
       {
+          enable_endstops(true);
           // move in -X until a switch is triggered
           feedrate = homing_feedrate[X_AXIS]/(2);
-          float xPosition = -10;
+          float xPosition = current_position[X_AXIS] - 10;
           plan_buffer_line(xPosition, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
 
           // we have to let the planner know where we are right now as it is not where we said to go.
           current_position[X_AXIS] = st_get_position_mm(X_AXIS);
           plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
+
+          if (!didHitEndstops()) {
+            SERIAL_ERROR_START;
+            SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
+          }
+
           // Output the trigger position in X in microns. 
-          SERIAL_PROTOCOL(float(current_position[X_AXIS]*1000));
-          SERIAL_PROTOCOLPGM("\n");
+          SERIAL_PROTOCOLPGM("xypos X: ");
+          SERIAL_PROTOCOLLN(float(current_position[X_AXIS]*1000));
           enable_endstops(false);
           plan_buffer_line(current_position[X_AXIS]+2.0, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
@@ -2054,7 +2102,7 @@ void process_commands()
       break;
     case 85: // M85
       code_seen('S');
-      max_inactive_time = code_value() * 1000;
+      max_no_serial_no_movement_time = code_value() * 1000;
       break;
     case 92: // M92
       for(int8_t i=0; i < NUM_AXIS; i++)
@@ -3160,6 +3208,8 @@ void prepare_move()
     ensure_homed(current_position[X_AXIS] != destination[X_AXIS], current_position[Y_AXIS] != destination[Y_AXIS], current_position[Z_AXIS] != destination[Z_AXIS]);
   }
 
+  if (!ensure_requested_homing()) return;
+
   // Do not use feedmultiply for E or Z only moves
   if( (current_position[X_AXIS] == destination [X_AXIS]) && (current_position[Y_AXIS] == destination [Y_AXIS])) {
       plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
@@ -3269,9 +3319,6 @@ void handle_status_leds(void) {
 
 void manage_inactivity()
 {
-  if( (millis() - previous_millis_active_cmd) >  max_inactive_time )
-    if(max_inactive_time)
-      kill();
   if(stepper_inactive_time)  {
     if( (millis() - previous_millis_active_cmd) >  stepper_inactive_time ){
       if(blocks_queued() == false){
@@ -3282,6 +3329,19 @@ void manage_inactivity()
         disable_e1();
         disable_e2();
       }
+    }
+  }
+
+  // Power down everything if serial traffic has stopped in addition to a lack of movement
+  if (!stepper_inactive_time || !previous_millis_active_cmd || (millis() - previous_millis_active_cmd) >  stepper_inactive_time) {
+    if (millis() - previous_millis_serial_rx > max_no_serial_no_movement_time && previous_millis_serial_rx && max_no_serial_no_movement_time) {
+      disable_x();
+      disable_y();
+      disable_z();
+      disable_e0();
+      disable_e1();
+      disable_e2();
+      disable_heater();
     }
   }
 
