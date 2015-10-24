@@ -250,17 +250,12 @@ int fanSpeed=0;
 
 bool glow_led_override = false;
 bool glow_force_green = false; // For taking pictures of the printer without a PC attached.
-
 bool override_p_min = false;
+float min_z_x_pos= 3.0;
+float min_z_y_pos= 3.0;
+float z_probe_offset = 1.0;
+unsigned long product_serial_number = 9999999999;
 
-#ifdef SERVO_ENDSTOPS
-  int servo_endstops[] = SERVO_ENDSTOPS;
-  int servo_endstop_angles[] = SERVO_ENDSTOP_ANGLES;
-#endif
-#ifdef BARICUDA
-int ValvePressure=0;
-int EtoPPressure=0;
-#endif
 
 #ifdef FWRETRACT
   bool autoretract_enabled=false;
@@ -272,30 +267,6 @@ int EtoPPressure=0;
   float retract_recover_feedrate = RETRACT_RECOVER_FEEDRATE;
 #endif
 
-#ifdef ULTIPANEL
-  #ifdef PS_DEFAULT_OFF
-    bool powersupply = false;
-  #else
-	  bool powersupply = true;
-  #endif
-#endif
-
-#ifdef DELTA
-  float delta[3] = {0.0, 0.0, 0.0};
-  #define SIN_60 0.8660254037844386
-  #define COS_60 0.5
-  // these are the default values, can be overriden with M665
-  float delta_radius= DELTA_RADIUS;
-  float delta_tower1_x= -SIN_60*delta_radius; // front left tower
-  float delta_tower1_y= -COS_60*delta_radius;
-  float delta_tower2_x=  SIN_60*delta_radius; // front right tower
-  float delta_tower2_y= -COS_60*delta_radius;
-  float delta_tower3_x= 0.0;                  // back middle tower
-  float delta_tower3_y= delta_radius;
-  float delta_diagonal_rod= DELTA_DIAGONAL_ROD;
-  float delta_diagonal_rod_2= sq(delta_diagonal_rod);
-  float delta_segments_per_second= DELTA_SEGMENTS_PER_SECOND;
-#endif
 
 //===========================================================================
 //=============================Private Variables=============================
@@ -1991,12 +1962,6 @@ void process_commands()
         break;
 
       #ifdef VOLTERA
-/*        case 106:
-          fanOn();
-          break;
-        case 107:
-          fanOff();
-          break;*/
         case 93: // M93 Manually control LEDs
           // Syntax is M93 R:nnn V:nnn B:nnn (0 <= nnn <= 255)
           // V because vert (using 'G' derails the parser, unsurprisingly)
@@ -2771,6 +2736,27 @@ void process_commands()
     case 503: // M503 print settings currently in memory
     {
         Config_PrintSettings();
+    }
+    break;
+    case 504: // M504 // Store Z-Min XY Coordinates
+    {
+      if(code_seen('S')) product_serial_number = code_value();
+      if(code_seen('X')) min_z_x_pos = code_value();
+      if(code_seen('Y')) min_z_y_pos = code_value();
+      if(code_seen('P')) z_probe_offset = code_value();
+      Config_StoreOffsets();
+    }
+    break;
+    case 505:
+    {
+      Config_RetrieveOffsetsAndSerial();
+      Config_PrintOffsets();
+    }
+    break;
+    case 506:
+    {
+      Config_RetrieveOffsetsAndSerial();
+      Config_PrintSerial();
     }
     break;
     #ifdef ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED

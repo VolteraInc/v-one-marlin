@@ -30,18 +30,33 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 
 
 #define EEPROM_OFFSET 100
-
+#define EEPROM_OFFSET_CALIB 50
+#define EEPROM_VERSION "V10"
 
 // IMPORTANT:  Whenever there are changes made to the variables stored in EEPROM
 // in the functions below, also increment the version number. This makes sure that
 // the default values are used whenever there is a change to the data, to prevent
 // wrong data being written to the variables.
 // ALSO:  always make sure the variables in the Store and retrieve sections are in the same order.
-#ifdef DELTA
-#define EEPROM_VERSION "V11"
-#else
-#define EEPROM_VERSION "V10"
-#endif
+
+
+void Config_StoreOffsets(){
+
+  char ver[4]= "000";
+  int i=EEPROM_OFFSET_CALIB;
+  EEPROM_WRITE_VAR(i,ver); // invalidate data first 
+  EEPROM_WRITE_VAR(i,product_serial_number);
+  EEPROM_WRITE_VAR(i,min_z_x_pos);  
+  EEPROM_WRITE_VAR(i,min_z_y_pos);  
+  EEPROM_WRITE_VAR(i,z_probe_offset);
+  
+  //We think we wrote everything fine, so validate offsets by writing the eeprom version.
+  char ver2[4]=EEPROM_VERSION;
+  i=EEPROM_OFFSET_CALIB;
+  EEPROM_WRITE_VAR(i,ver2); // validate data
+  SERIAL_ECHO_START;
+  SERIAL_ECHOLNPGM("Offsets Stored");
+}
 
 #ifdef EEPROM_SETTINGS
 void Config_StoreSettings() 
@@ -184,6 +199,42 @@ void Config_PrintSettings()
 } 
 #endif
 
+// Print out the XY offsets (and serial number)
+void Config_PrintSerial(){
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("Serial No.:",product_serial_number);
+    SERIAL_ECHOLN("");
+}
+void Config_PrintOffsets(){
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Calibration Offsets:");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("X:", min_z_x_pos);
+    SERIAL_ECHOPAIR(" Y:", min_z_y_pos);
+    SERIAL_ECHOPAIR(" P:", z_probe_offset);
+    SERIAL_ECHOLN("");
+}
+
+void Config_RetrieveOffsetsAndSerial()
+{
+    int i=EEPROM_OFFSET_CALIB;
+    char stored_ver[4];
+    char ver[4]=EEPROM_VERSION;
+    EEPROM_READ_VAR(i,stored_ver); //read stored version
+    if (strncmp(ver,stored_ver,3) == 0)
+    {
+        // version number match
+        EEPROM_READ_VAR(i,product_serial_number);  
+        EEPROM_READ_VAR(i,min_z_x_pos);  
+        EEPROM_READ_VAR(i,min_z_y_pos);  
+        EEPROM_READ_VAR(i,z_probe_offset);  
+
+        SERIAL_ECHO_START;
+        SERIAL_ECHOLNPGM("Calibration Offsets and Serial Retrieved.");
+    }
+}
+
+
 
 #ifdef EEPROM_SETTINGS
 void Config_RetrieveSettings()
@@ -201,7 +252,7 @@ void Config_RetrieveSettings()
         EEPROM_READ_VAR(i,max_acceleration_units_per_sq_second);
         
         // steps per sq second need to be updated to agree with the units per sq second (as they are what is used in the planner)
-		reset_acceleration_rates();
+    reset_acceleration_rates();
         
         EEPROM_READ_VAR(i,acceleration);
         EEPROM_READ_VAR(i,retract_acceleration);

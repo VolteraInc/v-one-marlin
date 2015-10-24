@@ -11,6 +11,13 @@ void Config_PrintSettings();
 FORCE_INLINE void Config_PrintSettings() {}
 #endif
 
+#ifdef VOLTERA
+void Config_RetrieveOffsetsAndSerial();
+void Config_PrintOffsets();
+void Config_PrintSerial();
+void Config_StoreOffsets();
+#endif
+
 #ifdef EEPROM_SETTINGS
 void Config_StoreSettings();
 void Config_RetrieveSettings();
