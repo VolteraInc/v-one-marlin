@@ -202,7 +202,7 @@ void Config_PrintSettings()
 // Print out the XY offsets (and serial number)
 void Config_PrintSerial(){
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("Serial No.:",product_serial_number);
+    SERIAL_ECHOPAIR("Serial No:", product_serial_number);
     SERIAL_ECHOLN("");
 }
 void Config_PrintOffsets(){
@@ -228,9 +228,10 @@ void Config_RetrieveOffsetsAndSerial()
         EEPROM_READ_VAR(i,min_z_x_pos);  
         EEPROM_READ_VAR(i,min_z_y_pos);  
         EEPROM_READ_VAR(i,z_probe_offset);  
-
+    }
+    else{
         SERIAL_ECHO_START;
-        SERIAL_ECHOLNPGM("Calibration Offsets and Serial Retrieved.");
+        SERIAL_ECHOLNPGM("ERROR - FAILED TO RETRIEVE OFFSETS AND SERIAL");
     }
 }
 
