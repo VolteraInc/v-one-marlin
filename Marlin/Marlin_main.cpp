@@ -257,7 +257,7 @@ bool override_p_min = false;
 float min_z_x_pos= 3.0;
 float min_z_y_pos= 3.0;
 float z_probe_offset = 1.0;
-unsigned long product_serial_number = 9999999999;
+char product_serial_number[11] = "V0-00-0000";
 
 
 #ifdef FWRETRACT
@@ -690,7 +690,6 @@ void get_command()
   #endif //SDSUPPORT
 
 }
-
 
 float code_value()
 {
@@ -2743,7 +2742,7 @@ void process_commands()
     break;
     case 504: // M504 // Store Z-Min XY Coordinates
     {
-      if(code_seen('S')) product_serial_number = code_value();
+      if(code_seen('S')) memcpy(product_serial_number, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], sizeof(product_serial_number));
       if(code_seen('X')) min_z_x_pos = code_value();
       if(code_seen('Y')) min_z_y_pos = code_value();
       if(code_seen('P')) z_probe_offset = code_value();

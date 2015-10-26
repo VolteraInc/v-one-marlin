@@ -45,10 +45,10 @@ void Config_StoreOffsets(){
   char ver[4]= "000";
   int i=EEPROM_OFFSET_CALIB;
   EEPROM_WRITE_VAR(i,ver); // invalidate data first 
-  EEPROM_WRITE_VAR(i,product_serial_number);
-  EEPROM_WRITE_VAR(i,min_z_x_pos);  
-  EEPROM_WRITE_VAR(i,min_z_y_pos);  
-  EEPROM_WRITE_VAR(i,z_probe_offset);
+  EEPROM_WRITE_VAR(i, min_z_x_pos);  
+  EEPROM_WRITE_VAR(i, min_z_y_pos);  
+  EEPROM_WRITE_VAR(i, z_probe_offset);
+  EEPROM_WRITE_VAR(i, product_serial_number);
   
   //We think we wrote everything fine, so validate offsets by writing the eeprom version.
   char ver2[4]=EEPROM_VERSION;
@@ -202,8 +202,9 @@ void Config_PrintSettings()
 // Print out the XY offsets (and serial number)
 void Config_PrintSerial(){
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("Serial No:", product_serial_number);
-    SERIAL_ECHOLN("");
+    SERIAL_ECHOPGM("Serial No:");
+    SERIAL_ECHOLN(product_serial_number);
+
 }
 void Config_PrintOffsets(){
     SERIAL_ECHO_START;
@@ -224,10 +225,10 @@ void Config_RetrieveOffsetsAndSerial()
     if (strncmp(ver,stored_ver,3) == 0)
     {
         // version number match
-        EEPROM_READ_VAR(i,product_serial_number);  
         EEPROM_READ_VAR(i,min_z_x_pos);  
         EEPROM_READ_VAR(i,min_z_y_pos);  
         EEPROM_READ_VAR(i,z_probe_offset);  
+        EEPROM_READ_VAR(i,product_serial_number);  
     }
     else{
         SERIAL_ECHO_START;

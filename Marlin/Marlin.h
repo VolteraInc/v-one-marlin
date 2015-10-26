@@ -217,7 +217,7 @@ extern bool override_p_min;
 extern float min_z_x_pos;
 extern float min_z_y_pos;
 extern float z_probe_offset;
-extern unsigned long product_serial_number;
+extern char product_serial_number[11];
 
 #ifdef FAN_SOFT_PWM
 extern unsigned char fanSpeedSoftPwm;
