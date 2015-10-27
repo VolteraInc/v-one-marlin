@@ -2742,10 +2742,15 @@ void process_commands()
     break;
     case 504: // M504 // Store Z-Min XY Coordinates
     {
+      //Before writing, read existing values to make sure we don't overwrite anything. 
+      Config_RetrieveOffsetsAndSerial();
       if(code_seen('S')) memcpy(product_serial_number, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], sizeof(product_serial_number));
       if(code_seen('X')) min_z_x_pos = code_value();
       if(code_seen('Y')) min_z_y_pos = code_value();
       if(code_seen('P')) z_probe_offset = code_value();
+
+      //Terminate the string.
+      product_serial_number[10] = '\0';
       Config_StoreOffsets();
     }
     break;
