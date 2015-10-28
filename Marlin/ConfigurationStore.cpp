@@ -76,12 +76,6 @@ void Config_StoreSettings()
   EEPROM_WRITE_VAR(i,max_z_jerk);
   EEPROM_WRITE_VAR(i,max_e_jerk);
   EEPROM_WRITE_VAR(i,add_homeing);
-  #ifdef DELTA
-  EEPROM_WRITE_VAR(i,endstop_adj);
-  EEPROM_WRITE_VAR(i,delta_radius);
-  EEPROM_WRITE_VAR(i,delta_diagonal_rod);
-  EEPROM_WRITE_VAR(i,delta_segments_per_second);
-  #endif
   #ifndef ULTIPANEL
   int plaPreheatHotendTemp = PLA_PREHEAT_HOTEND_TEMP, plaPreheatHPBTemp = PLA_PREHEAT_HPB_TEMP, plaPreheatFanSpeed = PLA_PREHEAT_FAN_SPEED;
   int absPreheatHotendTemp = ABS_PREHEAT_HOTEND_TEMP, absPreheatHPBTemp = ABS_PREHEAT_HPB_TEMP, absPreheatFanSpeed = ABS_PREHEAT_FAN_SPEED;
@@ -216,6 +210,7 @@ void Config_PrintOffsets(){
     SERIAL_ECHOLN("");
 }
 
+// Attempts to load from EEPROM, reverts to default if not possible. 
 void Config_RetrieveOffsetsAndSerial()
 {
     int i=EEPROM_OFFSET_CALIB;
@@ -231,8 +226,13 @@ void Config_RetrieveOffsetsAndSerial()
         EEPROM_READ_VAR(i,product_serial_number);  
     }
     else{
+        //Print an error and revert to default.
         SERIAL_ECHO_START;
-        SERIAL_ECHOLNPGM("ERROR - FAILED TO RETRIEVE OFFSETS AND SERIAL");
+        SERIAL_ECHOLNPGM("Error. EEPROM Offsets missing. Is the unit calibrated?");
+        min_z_x_pos= MIN_Z_X_POS;
+        min_z_y_pos= MIN_Z_Y_POS;
+        z_probe_offset = Z_PROBE_OFFSET;
+        strcpy(product_serial_number, PRODUCT_SERIAL);
     }
 }
 
@@ -254,7 +254,7 @@ void Config_RetrieveSettings()
         EEPROM_READ_VAR(i,max_acceleration_units_per_sq_second);
         
         // steps per sq second need to be updated to agree with the units per sq second (as they are what is used in the planner)
-    reset_acceleration_rates();
+        reset_acceleration_rates();
         
         EEPROM_READ_VAR(i,acceleration);
         EEPROM_READ_VAR(i,retract_acceleration);
@@ -266,10 +266,10 @@ void Config_RetrieveSettings()
         EEPROM_READ_VAR(i,max_e_jerk);
         EEPROM_READ_VAR(i,add_homeing);
         #ifdef DELTA
-		EEPROM_READ_VAR(i,endstop_adj);
-		EEPROM_READ_VAR(i,delta_radius);
-		EEPROM_READ_VAR(i,delta_diagonal_rod);
-		EEPROM_READ_VAR(i,delta_segments_per_second);
+    		EEPROM_READ_VAR(i,endstop_adj);
+    		EEPROM_READ_VAR(i,delta_radius);
+    		EEPROM_READ_VAR(i,delta_diagonal_rod);
+    		EEPROM_READ_VAR(i,delta_segments_per_second);
         #endif
         #ifndef ULTIPANEL
         int plaPreheatHotendTemp, plaPreheatHPBTemp, plaPreheatFanSpeed;
@@ -294,8 +294,8 @@ void Config_RetrieveSettings()
         #endif
         EEPROM_READ_VAR(i,lcd_contrast);
 
-		// Call updatePID (similar to when we have processed M301)
-		updatePID();
+		    // Call updatePID (similar to when we have processed M301)
+		    updatePID();
         SERIAL_ECHO_START;
         SERIAL_ECHOLNPGM("Stored settings retrieved");
     }

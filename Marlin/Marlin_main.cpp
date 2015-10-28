@@ -254,11 +254,10 @@ int fanSpeed=0;
 bool glow_led_override = false;
 bool glow_force_green = false; // For taking pictures of the printer without a PC attached.
 bool override_p_min = false;
-float min_z_x_pos= 3.0;
-float min_z_y_pos= 3.0;
-float z_probe_offset = 1.0;
-char product_serial_number[11] = "V0-00-0000";
-
+float min_z_x_pos= MIN_Z_X_POS;
+float min_z_y_pos= MIN_Z_Y_POS;
+float z_probe_offset = Z_PROBE_OFFSET;
+char product_serial_number[11] = PRODUCT_SERIAL;
 
 #ifdef FWRETRACT
   bool autoretract_enabled=false;
@@ -480,6 +479,7 @@ void setup()
 
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
+  Config_RetrieveOffsetsAndSerial();
 
   tp_init();    // Initialize temperature loop
   plan_init();  // Initialize planner;
@@ -2743,7 +2743,6 @@ void process_commands()
     case 504: // M504 // Store Z-Min XY Coordinates
     {
       //Before writing, read existing values to make sure we don't overwrite anything. 
-      Config_RetrieveOffsetsAndSerial();
       if(code_seen('S')) memcpy(product_serial_number, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], sizeof(product_serial_number));
       if(code_seen('X')) min_z_x_pos = code_value();
       if(code_seen('Y')) min_z_y_pos = code_value();
@@ -2754,15 +2753,16 @@ void process_commands()
       Config_StoreOffsets();
     }
     break;
+    //Print Offsets
     case 505:
     {
-      Config_RetrieveOffsetsAndSerial();
       Config_PrintOffsets();
     }
     break;
+
+    //Print Serial
     case 506:
     {
-      Config_RetrieveOffsetsAndSerial();
       Config_PrintSerial();
     }
     break;

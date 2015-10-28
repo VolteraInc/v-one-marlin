@@ -74,10 +74,18 @@
 #define MOTHERBOARD 33
 #endif
 
-#define VOLTERA  1
-#define VOLTERA_PIN_VERSION 1
 // VOLTERA_pinVersion 0 -> version 3 (the one we came back from HAX with)
 // VOLTERA_pinVersion 1 -> version 4
+#define VOLTERA  1
+#define VOLTERA_PIN_VERSION 1
+
+//Default Calibration offsets for the Voltera -V-One
+#define MIN_Z_X_POS       (4.38)
+#define MIN_Z_Y_POS       (3.50)
+#define Z_PROBE_OFFSET    (0.1) 
+//Default Serial number for the Voltera V-One
+#define PRODUCT_SERIAL    ("V0-00-0000")
+
 
 // Define this to set a custom name for your generic Mendel,
 #define CUSTOM_MENDEL_NAME "V-ONE"
@@ -493,7 +501,7 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 // M501 - reads parameters from EEPROM (if you need reset them after you changed them temporarily).
 // M502 - reverts to the default "factory settings".  You still need to store them in EEPROM afterwards if you want to.
 //define this to enable EEPROM support
-//#define EEPROM_SETTINGS
+#define EEPROM_SETTINGS
 //to disable EEPROM Serial responses and decrease program space by ~1700 byte: comment this out:
 // please keep turned on if you can.
 //#define EEPROM_CHITCHAT
