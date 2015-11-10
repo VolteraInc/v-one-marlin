@@ -83,8 +83,8 @@
 // G21 - Trigger in -X
 
 // AUTOTESTING
-// G24 - Test the zMIN endstop trigger position 
-// G25 - Test the xAxis endstop trigger position 
+// G24 - Test the zMIN endstop trigger position
+// G25 - Test the xAxis endstop trigger position
 // G26 - Test the yAxis endstop trigger position
 // G27 - Test the zMAX trigger position
 
@@ -126,6 +126,7 @@
 //        or use S<seconds> to specify an inactivity timeout, after which the steppers will be disabled.  S0 to disable the timeout.
 // M85  - Set inactivity shutdown timer with parameter S<seconds>. To disable set zero (default)
 // M92  - Set axis_steps_per_unit - same syntax as G92
+// M93  - Set the RGB LEDs using R[1-255] V[1-255] B[1-255] (uses V instead of G for green)
 // M104 - Set extruder target temp
 // M105 - Read current temp
 // M106 - Fan on
@@ -257,7 +258,10 @@ bool override_p_min = false;
 float min_z_x_pos= MIN_Z_X_POS;
 float min_z_y_pos= MIN_Z_Y_POS;
 float z_probe_offset = Z_PROBE_OFFSET;
+float xypos_x_pos = XYPOS_X_POS;
+float xypos_y_pos = XYPOS_Y_POS;
 char product_serial_number[11] = PRODUCT_SERIAL;
+
 
 #ifdef FWRETRACT
   bool autoretract_enabled=false;
@@ -1481,7 +1485,7 @@ void process_commands()
             SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
           }
 
-          // Output the trigger position in Y in microns. 
+          // Output the trigger position in Y in microns.
           SERIAL_PROTOCOLLN(float(current_position[Y_AXIS]*1000));
           enable_endstops(false);
           plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS]-2.0, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
@@ -1537,7 +1541,7 @@ void process_commands()
             SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
           }
 
-          // Output the trigger position in X in microns. 
+          // Output the trigger position in X in microns.
           SERIAL_PROTOCOLPGM("xypos X: ");
           SERIAL_PROTOCOLLN(float(current_position[X_AXIS]*1000));
           enable_endstops(false);
@@ -1565,7 +1569,7 @@ void process_commands()
             SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
           }
 
-          // Output the trigger position in X in microns. 
+          // Output the trigger position in X in microns.
           SERIAL_PROTOCOLPGM("xypos X: ");
           SERIAL_PROTOCOLLN(float(current_position[X_AXIS]*1000));
           enable_endstops(false);
@@ -2268,7 +2272,7 @@ void process_commands()
           SERIAL_PROTOCOLLN("ON");
       else
           SERIAL_PROTOCOLLN("TRIGGERED");
-      #endif 
+      #endif
       break;
     }
 
@@ -2742,10 +2746,12 @@ void process_commands()
     break;
     case 504: // M504 // Store Z-Min XY Coordinates
     {
-      //Before writing, read existing values to make sure we don't overwrite anything. 
+      //Before writing, read existing values to make sure we don't overwrite anything.
       if(code_seen('S')) memcpy(product_serial_number, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], sizeof(product_serial_number));
       if(code_seen('X')) min_z_x_pos = code_value();
       if(code_seen('Y')) min_z_y_pos = code_value();
+      if(code_seen('I')) xypos_x_pos = code_value();
+      if(code_seen('J')) xypos_y_pos = code_value();
       if(code_seen('P')) z_probe_offset = code_value();
 
       //Terminate the string.

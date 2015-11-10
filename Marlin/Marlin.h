@@ -216,6 +216,8 @@ extern int fanSpeed;
 extern bool override_p_min;
 extern float min_z_x_pos;
 extern float min_z_y_pos;
+extern float xypos_x_pos;
+extern float xypos_y_pos;
 extern float z_probe_offset;
 extern char product_serial_number[11];
 
