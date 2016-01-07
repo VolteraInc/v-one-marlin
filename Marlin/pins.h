@@ -138,12 +138,6 @@
   #define LED_PIN            -1
   #define FAN_PIN            -1 // IO pin. Buffer needed
 
-  #if defined(REPRAP_DISCOUNT_SMART_CONTROLLER) || defined(G3D_PANEL)
-    #define KILL_PIN           41
-  #else
-    #define KILL_PIN           -1
-  #endif
-
   #if MOTHERBOARD == 35
     #define HEATER_0_PIN       8
   #else
