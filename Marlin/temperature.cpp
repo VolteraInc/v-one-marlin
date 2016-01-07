@@ -733,23 +733,6 @@ void tp_init()
     #endif
   #endif
 
-/*  #ifdef HEATER_0_USES_MAX6675
-    #ifndef SDSUPPORT
-    #error 1
-      SET_OUTPUT(MAX_SCK_PIN);
-      WRITE(MAX_SCK_PIN,0);
-
-      SET_OUTPUT(MAX_MOSI_PIN);
-      WRITE(MAX_MOSI_PIN,1);
-
-      SET_INPUT(MAX_MISO_PIN);
-      WRITE(MAX_MISO_PIN,1);
-    #endif
-
-    SET_OUTPUT(MAX6675_SS);
-    WRITE(MAX6675_SS,1);
-  #endif
-*/
   // Set analog inputs
   ADCSRA = 1<<ADEN | 1<<ADSC | 1<<ADIF | 0x07;
   DIDR0 = 0;

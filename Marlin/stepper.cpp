@@ -349,37 +349,11 @@ ISR(TIMER1_COMPA_vect)
 
   // Set the direction bits (X_AXIS=A_AXIS and Y_AXIS=B_AXIS for COREXY)
     if((out_bits & (1<<X_AXIS))!=0){
-  #ifdef DUAL_X_CARRIAGE
-      if (extruder_duplication_enabled){
-        WRITE(X_DIR_PIN, INVERT_X_DIR);
-        WRITE(X2_DIR_PIN, INVERT_X_DIR);
-      }
-      else{
-        if (current_block->active_extruder != 0)
-          WRITE(X2_DIR_PIN, INVERT_X_DIR);
-        else
-          WRITE(X_DIR_PIN, INVERT_X_DIR);
-      }
-  #else
       WRITE(X_DIR_PIN, INVERT_X_DIR);
-  #endif
       count_direction[X_AXIS]=-1;
     }
     else{
-  #ifdef DUAL_X_CARRIAGE
-      if (extruder_duplication_enabled){
-        WRITE(X_DIR_PIN, !INVERT_X_DIR);
-        WRITE(X2_DIR_PIN, !INVERT_X_DIR);
-      }
-      else{
-        if (current_block->active_extruder != 0)
-          WRITE(X2_DIR_PIN, !INVERT_X_DIR);
-        else
-          WRITE(X_DIR_PIN, !INVERT_X_DIR);
-      }
-  #else
       WRITE(X_DIR_PIN, !INVERT_X_DIR);
-  #endif
       count_direction[X_AXIS]=1;
     }
     if((out_bits & (1<<Y_AXIS))!=0){
@@ -544,36 +518,10 @@ ISR(TIMER1_COMPA_vect)
 
   counter_x += current_block->steps_x;
   if (counter_x > 0) {
-  #ifdef DUAL_X_CARRIAGE
-    if (extruder_duplication_enabled){
-      WRITE(X_STEP_PIN, !INVERT_X_STEP_PIN);
-      WRITE(X2_STEP_PIN, !INVERT_X_STEP_PIN);
-    }
-    else {
-      if (current_block->active_extruder != 0)
-        WRITE(X2_STEP_PIN, !INVERT_X_STEP_PIN);
-      else
-        WRITE(X_STEP_PIN, !INVERT_X_STEP_PIN);
-    }
-  #else
     WRITE(X_STEP_PIN, !INVERT_X_STEP_PIN);
-  #endif
     counter_x -= current_block->step_event_count;
     count_position[X_AXIS]+=count_direction[X_AXIS];
-  #ifdef DUAL_X_CARRIAGE
-    if (extruder_duplication_enabled){
-      WRITE(X_STEP_PIN, INVERT_X_STEP_PIN);
-      WRITE(X2_STEP_PIN, INVERT_X_STEP_PIN);
-    }
-    else {
-      if (current_block->active_extruder != 0)
-        WRITE(X2_STEP_PIN, INVERT_X_STEP_PIN);
-      else
-        WRITE(X_STEP_PIN, INVERT_X_STEP_PIN);
-    }
-  #else
     WRITE(X_STEP_PIN, INVERT_X_STEP_PIN);
-  #endif
   }
 
   counter_y += current_block->steps_y;
@@ -836,16 +784,6 @@ void st_init()
   WRITE(E0_STEP_PIN,INVERT_E_STEP_PIN);
   disable_e0();
   #endif
-  #if defined(E1_STEP_PIN) && (E1_STEP_PIN > -1)
-  SET_OUTPUT(E1_STEP_PIN);
-  WRITE(E1_STEP_PIN,INVERT_E_STEP_PIN);
-  disable_e1();
-  #endif
-  #if defined(E2_STEP_PIN) && (E2_STEP_PIN > -1)
-  SET_OUTPUT(E2_STEP_PIN);
-  WRITE(E2_STEP_PIN,INVERT_E_STEP_PIN);
-  disable_e2();
-  #endif
 
   // waveform generation = 0100 = CTC
   TCCR1B &= ~(1<<WGM13);
@@ -932,8 +870,6 @@ void finishAndDisableSteppers()
   disable_y();
   disable_z();
   disable_e0();
-  disable_e1();
-  disable_e2();
 }
 
 void quickStop()

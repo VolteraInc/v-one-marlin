@@ -165,53 +165,6 @@
   #error "You cannot have dual drivers for both Y and Z"
 #endif
 
-// Enable this for dual x-carriage printers.
-// A dual x-carriage design has the advantage that the inactive extruder can be parked which
-// prevents hot-end ooze contaminating the print. It also reduces the weight of each x-carriage
-// allowing faster printing speeds.
-//#define DUAL_X_CARRIAGE
-#ifdef DUAL_X_CARRIAGE
-// Configuration for second X-carriage
-// Note: the first x-carriage is defined as the x-carriage which homes to the minimum endstop;
-// the second x-carriage always homes to the maximum endstop.
-#define X2_MIN_POS 80     // set minimum to ensure second x-carriage doesn't hit the parked first X-carriage
-#define X2_MAX_POS 353    // set maximum to the distance between toolheads when both heads are homed
-#define X2_HOME_DIR 1     // the second X-carriage always homes to the maximum endstop position
-#define X2_HOME_POS X2_MAX_POS // default home position is the maximum carriage position
-    // However: In this mode the EXTRUDER_OFFSET_X value for the second extruder provides a software
-    // override for X2_HOME_POS. This also allow recalibration of the distance between the two endstops
-    // without modifying the firmware (through the "M218 T1 X???" command).
-    // Remember: you should set the second extruder x-offset to 0 in your slicer.
-
-// Pins for second x-carriage stepper driver (defined here to avoid further complicating pins.h)
-#define X2_ENABLE_PIN 29
-#define X2_STEP_PIN 25
-#define X2_DIR_PIN 23
-
-// There are a few selectable movement modes for dual x-carriages using M605 S<mode>
-//    Mode 0: Full control. The slicer has full control over both x-carriages and can achieve optimal travel results
-//                           as long as it supports dual x-carriages. (M605 S0)
-//    Mode 1: Auto-park mode. The firmware will automatically park and unpark the x-carriages on tool changes so
-//                           that additional slicer support is not required. (M605 S1)
-//    Mode 2: Duplication mode. The firmware will transparently make the second x-carriage and extruder copy all
-//                           actions of the first x-carriage. This allows the printer to print 2 arbitrary items at
-//                           once. (2nd extruder x offset and temp offset are set using: M605 S2 [Xnnn] [Rmmm])
-
-// This is the default power-up mode which can be later using M605.
-#define DEFAULT_DUAL_X_CARRIAGE_MODE 0
-
-// As the x-carriages are independent we can now account for any relative Z offset
-#define EXTRUDER1_Z_OFFSET 0.0           // z offset relative to extruder 0
-
-// Default settings in "Auto-park Mode"
-#define TOOLCHANGE_PARK_ZLIFT   0.2      // the distance to raise Z axis when parking an extruder
-#define TOOLCHANGE_UNPARK_ZLIFT 1        // the distance to raise Z axis when unparking an extruder
-
-// Default x offset in duplication mode (typically set to half print bed width)
-#define DEFAULT_DUPLICATION_X_OFFSET 100
-
-#endif //DUAL_X_CARRIAGE
-
 //homing hits the endstop, then retracts by this distance, before it tries to slowly bump again:
 #define X_HOME_RETRACT_MM 3
 #define Y_HOME_RETRACT_MM 3
@@ -287,9 +240,6 @@
 //===========================================================================
 //=============================Additional Features===========================
 //===========================================================================
-
-//#define CHDK 4        //Pin for triggering CHDK to take a picture see how to use it here http://captain-slow.dk/2014/03/09/3d-printing-timelapses/
-#define CHDK_DELAY 50 //How long in ms the pin should stay HIGH before going LOW again
 
 #define SD_FINISHED_STEPPERRELEASE true  //if sd support and the file is finished: disable steppers?
 #define SD_FINISHED_RELEASECOMMAND "M84 X Y Z E" // You might want to keep the z enabled so your bed stays in place.
@@ -376,11 +326,7 @@ const unsigned int dropsegments=1; //everything with less than this number of st
 
 // The number of linear motions that can be in the plan at any give time.
 // THE BLOCK_BUFFER_SIZE NEEDS TO BE A POWER OF 2, i.g. 8,16,32 because shifts and ors are used to do the ring-buffering.
-#if defined SDSUPPORT
-  #define BLOCK_BUFFER_SIZE 8   // SD,LCD,Buttons take more memory, block buffer needs to be smaller
-#else
-  #define BLOCK_BUFFER_SIZE 8 // maximize block buffer
-#endif
+#define BLOCK_BUFFER_SIZE 16 // maximize block buffer
 
 
 //The ASCII buffer for receiving from the serial:
