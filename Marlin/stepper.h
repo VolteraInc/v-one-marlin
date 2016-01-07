@@ -23,27 +23,14 @@
 
 #include "planner.h"
 
-#ifdef VOLTERA
-    // Mod by VOLTERA
-    #define WRITE_Z_STEP(v) WRITE(Z_STEP_PIN, v)
-    #define NORM_Z_DIR() WRITE(Z_DIR_PIN, !INVERT_Z_DIR)
-    #define REV_Z_DIR() WRITE(Z_DIR_PIN, INVERT_Z_DIR)
-#endif
-/*
-#if EXTRUDERS > 2
-  #define WRITE_E_STEP(v) { if(current_block->active_extruder == 2) { WRITE(E2_STEP_PIN, v); } else { if(current_block->active_extruder == 1) { WRITE(E1_STEP_PIN, v); } else { WRITE(E0_STEP_PIN, v); }}}
-  #define NORM_E_DIR() { if(current_block->active_extruder == 2) { WRITE(E2_DIR_PIN, !INVERT_E2_DIR); } else { if(current_block->active_extruder == 1) { WRITE(E1_DIR_PIN, !INVERT_E1_DIR); } else { WRITE(E0_DIR_PIN, !INVERT_E0_DIR); }}}
-  #define REV_E_DIR() { if(current_block->active_extruder == 2) { WRITE(E2_DIR_PIN, INVERT_E2_DIR); } else { if(current_block->active_extruder == 1) { WRITE(E1_DIR_PIN, INVERT_E1_DIR); } else { WRITE(E0_DIR_PIN, INVERT_E0_DIR); }}}
-*/
-#if EXTRUDERS > 1
-    #define WRITE_E_STEP(v) { if(current_block->active_extruder == 1) { WRITE(E1_STEP_PIN, v); } else { WRITE(E0_STEP_PIN, v); }}
-    #define NORM_E_DIR() { if(current_block->active_extruder == 1) { WRITE(E1_DIR_PIN, !INVERT_E1_DIR); } else { WRITE(E0_DIR_PIN, !INVERT_E0_DIR); }}
-    #define REV_E_DIR() { if(current_block->active_extruder == 1) { WRITE(E1_DIR_PIN, INVERT_E1_DIR); } else { WRITE(E0_DIR_PIN, INVERT_E0_DIR); }}
-#else
-  #define WRITE_E_STEP(v) WRITE(E0_STEP_PIN, v)
-  #define NORM_E_DIR() WRITE(E0_DIR_PIN, !INVERT_E0_DIR)
-  #define REV_E_DIR() WRITE(E0_DIR_PIN, INVERT_E0_DIR)
-#endif
+// Mod by VOLTERA
+#define WRITE_Z_STEP(v) WRITE(Z_STEP_PIN, v)
+#define NORM_Z_DIR() WRITE(Z_DIR_PIN, !INVERT_Z_DIR)
+#define REV_Z_DIR() WRITE(Z_DIR_PIN, INVERT_Z_DIR)
+
+#define WRITE_E_STEP(v) WRITE(E0_STEP_PIN, v)
+#define NORM_E_DIR() WRITE(E0_DIR_PIN, !INVERT_E0_DIR)
+#define REV_E_DIR() WRITE(E0_DIR_PIN, INVERT_E0_DIR)
 
 #ifdef ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED
 extern bool abort_on_endstop_hit;
@@ -86,10 +73,6 @@ void digiPotSetCurrent(uint8_t axis, uint8_t current);
 uint8_t digiPotGetCurrent(uint8_t axis);
 void digiPotWrite(uint8_t address, uint8_t value);
 uint8_t digiPotRead(uint8_t address);
-void microstep_ms(uint8_t driver, int8_t ms1, int8_t ms2);
-void microstep_mode(uint8_t driver, uint8_t stepping);
-void microstep_init();
-void microstep_readings();
 
 #ifdef BABYSTEPPING
   void babystep(const uint8_t axis,const bool direction); // perform a short step with a single stepper motor, outside of any convention

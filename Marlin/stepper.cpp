@@ -333,10 +333,6 @@ ISR(TIMER1_COMPA_vect)
           return;
         }
       #endif
-
-      //      #ifdef ADVANCE
-      //      e_steps[current_block->active_extruder] = 0;
-      //      #endif
       }
       else {
       OCR1A=2000; // 1kHz.
@@ -627,7 +623,6 @@ if (step_events_completed >= current_block->step_event_count) {
 void st_init()
 {
   digiPotInit(); //Initialize Digipot Motor Current
-  //microstep_init(); //Initialize Microstepping Pins
 
   //Initialize Dir Pins
   #if defined(X_DIR_PIN) && X_DIR_PIN > -1
@@ -960,69 +955,3 @@ uint8_t digiPotRead(uint8_t address){
 #endif
 //End below ends: #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
 #endif
-
-  void microstep_init()
-  {
-  #if defined(X_MS1_PIN) && X_MS1_PIN > -1
-    const uint8_t microstep_modes[] = MICROSTEP_MODES;
-    pinMode(X_MS2_PIN,OUTPUT);
-    pinMode(Y_MS2_PIN,OUTPUT);
-    pinMode(Z_MS2_PIN,OUTPUT);
-    pinMode(E0_MS2_PIN,OUTPUT);
-    pinMode(E1_MS2_PIN,OUTPUT);
-    for(int i=0;i<=4;i++) microstep_mode(i,microstep_modes[i]);
-  #endif
-}
-
-void microstep_ms(uint8_t driver, int8_t ms1, int8_t ms2)
-{
-  if(ms1 > -1) switch(driver)
-  {
-    case 0: digitalWrite( X_MS1_PIN,ms1); break;
-    case 1: digitalWrite( Y_MS1_PIN,ms1); break;
-    case 2: digitalWrite( Z_MS1_PIN,ms1); break;
-    case 3: digitalWrite(E0_MS1_PIN,ms1); break;
-    case 4: digitalWrite(E1_MS1_PIN,ms1); break;
-  }
-  if(ms2 > -1) switch(driver)
-  {
-    case 0: digitalWrite( X_MS2_PIN,ms2); break;
-    case 1: digitalWrite( Y_MS2_PIN,ms2); break;
-    case 2: digitalWrite( Z_MS2_PIN,ms2); break;
-    case 3: digitalWrite(E0_MS2_PIN,ms2); break;
-    case 4: digitalWrite(E1_MS2_PIN,ms2); break;
-  }
-}
-
-void microstep_mode(uint8_t driver, uint8_t stepping_mode)
-{
-  switch(stepping_mode)
-  {
-    case 1: microstep_ms(driver,MICROSTEP1); break;
-    case 2: microstep_ms(driver,MICROSTEP2); break;
-    case 4: microstep_ms(driver,MICROSTEP4); break;
-    case 8: microstep_ms(driver,MICROSTEP8); break;
-    case 16: microstep_ms(driver,MICROSTEP16); break;
-  }
-}
-
-void microstep_readings()
-{
-  SERIAL_PROTOCOLPGM("MS1,MS2 Pins\n");
-  SERIAL_PROTOCOLPGM("X: ");
-  SERIAL_PROTOCOL(   digitalRead(X_MS1_PIN));
-  SERIAL_PROTOCOLLN( digitalRead(X_MS2_PIN));
-  SERIAL_PROTOCOLPGM("Y: ");
-  SERIAL_PROTOCOL(   digitalRead(Y_MS1_PIN));
-  SERIAL_PROTOCOLLN( digitalRead(Y_MS2_PIN));
-  SERIAL_PROTOCOLPGM("Z: ");
-  SERIAL_PROTOCOL(   digitalRead(Z_MS1_PIN));
-  SERIAL_PROTOCOLLN( digitalRead(Z_MS2_PIN));
-  SERIAL_PROTOCOLPGM("E0: ");
-  SERIAL_PROTOCOL(   digitalRead(E0_MS1_PIN));
-  SERIAL_PROTOCOLLN( digitalRead(E0_MS2_PIN));
-  SERIAL_PROTOCOLPGM("E1: ");
-  SERIAL_PROTOCOL(   digitalRead(E1_MS1_PIN));
-  SERIAL_PROTOCOLLN( digitalRead(E1_MS2_PIN));
-}
-
