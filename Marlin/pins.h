@@ -156,23 +156,6 @@
   #define TEMP_1_PIN         -1   // ANALOG NUMBERING
   #define TEMP_2_PIN         -1   // ANALOG NUMBERING
 
-
-  #ifdef NUM_SERVOS
-    #define SERVO0_PIN         11
-
-    #if NUM_SERVOS > 1
-      #define SERVO1_PIN         6
-    #endif
-
-    #if NUM_SERVOS > 2
-      #define SERVO2_PIN         5
-    #endif
-
-    #if NUM_SERVOS > 3
-      #define SERVO3_PIN         4
-    #endif
-  #endif
-
   #if MOTHERBOARD == 68
     #define BEEPER 33
   #endif
