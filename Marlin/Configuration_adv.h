@@ -367,22 +367,6 @@ const unsigned int dropsegments=1; //everything with less than this number of st
  #undef SDCARDDETECTINVERTED
 #endif
 
-// Power Signal Control Definitions
-// By default use ATX definition
-#ifndef POWER_SUPPLY
-  #define POWER_SUPPLY 1
-#endif
-// 1 = ATX
-#if (POWER_SUPPLY == 1)
-  #define PS_ON_AWAKE  LOW
-  #define PS_ON_ASLEEP HIGH
-#endif
-// 2 = X-Box 360 203W
-#if (POWER_SUPPLY == 2)
-  #define PS_ON_AWAKE  HIGH
-  #define PS_ON_ASLEEP LOW
-#endif
-
 // Control heater 0 and heater 1 in parallel.
 //#define HEATERS_PARALLEL
 
@@ -402,23 +386,6 @@ const unsigned int dropsegments=1; //everything with less than this number of st
 //The ASCII buffer for receiving from the serial:
 #define MAX_CMD_SIZE 96
 #define BUFSIZE 4
-
-
-// Firmware based and LCD controlled retract
-// M207 and M208 can be used to define parameters for the retraction.
-// The retraction can be called by the slicer using G10 and G11
-// until then, intended retractions can be detected by moves that only extrude and the direction.
-// the moves are than replaced by the firmware controlled ones.
-
-// #define FWRETRACT  //ONLY PARTIALLY TESTED
-#ifdef FWRETRACT
-  #define MIN_RETRACT 0.1                //minimum extruded mm to accept a automatic gcode retraction attempt
-  #define RETRACT_LENGTH 3               //default retract length (positive mm)
-  #define RETRACT_FEEDRATE 80*60         //default feedrate for retracting
-  #define RETRACT_ZLIFT 0                //default retract Z-lift
-  #define RETRACT_RECOVER_LENGTH 0       //default additional recover length (mm, added to retract length when recovering)
-  #define RETRACT_RECOVER_FEEDRATE 8*60  //default feedrate for recovering from retraction
-#endif
 
 //adds support for experimental filament exchange support M600; requires display
 #ifdef ULTIPANEL

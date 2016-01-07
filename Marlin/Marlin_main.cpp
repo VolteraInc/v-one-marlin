@@ -262,18 +262,6 @@ float xypos_x_pos = XYPOS_X_POS;
 float xypos_y_pos = XYPOS_Y_POS;
 char product_serial_number[11] = PRODUCT_SERIAL;
 
-
-#ifdef FWRETRACT
-  bool autoretract_enabled=false;
-  bool retracted=false;
-  float retract_length = RETRACT_LENGTH;
-  float retract_feedrate = RETRACT_FEEDRATE;
-  float retract_zlift = RETRACT_ZLIFT;
-  float retract_recover_length = RETRACT_RECOVER_LENGTH;
-  float retract_recover_feedrate = RETRACT_RECOVER_FEEDRATE;
-#endif
-
-
 //===========================================================================
 //=============================Private Variables=============================
 //===========================================================================
@@ -408,43 +396,9 @@ void setup_killpin()
   #endif
 }
 
-void setup_photpin()
-{
-  #if defined(PHOTOGRAPH_PIN) && PHOTOGRAPH_PIN > -1
-    SET_OUTPUT(PHOTOGRAPH_PIN);
-    WRITE(PHOTOGRAPH_PIN, LOW);
-  #endif
-}
-
-void setup_powerhold()
-{
-  #if defined(SUICIDE_PIN) && SUICIDE_PIN > -1
-    SET_OUTPUT(SUICIDE_PIN);
-    WRITE(SUICIDE_PIN, HIGH);
-  #endif
-  #if defined(PS_ON_PIN) && PS_ON_PIN > -1
-    SET_OUTPUT(PS_ON_PIN);
-	#if defined(PS_DEFAULT_OFF)
-	  WRITE(PS_ON_PIN, PS_ON_ASLEEP);
-    #else
-	  WRITE(PS_ON_PIN, PS_ON_AWAKE);
-	#endif
-  #endif
-}
-
-void suicide()
-{
-  #if defined(SUICIDE_PIN) && SUICIDE_PIN > -1
-    SET_OUTPUT(SUICIDE_PIN);
-    WRITE(SUICIDE_PIN, LOW);
-  #endif
-}
-
-
 void setup()
 {
   setup_killpin();
-  setup_powerhold();
   MYSERIAL.begin(BAUDRATE);
   SERIAL_PROTOCOLLNPGM("start");
   SERIAL_ECHO_START;
@@ -1030,41 +984,6 @@ void refresh_cmd_timeout(void)
   previous_millis_active_cmd = millis();
 }
 
-#ifdef FWRETRACT
-  void retract(bool retracting) {
-    if(retracting && !retracted) {
-      destination[X_AXIS]=current_position[X_AXIS];
-      destination[Y_AXIS]=current_position[Y_AXIS];
-      destination[Z_AXIS]=current_position[Z_AXIS];
-      destination[E_AXIS]=current_position[E_AXIS];
-      current_position[E_AXIS]+=retract_length/volumetric_multiplier[active_extruder];
-      plan_set_e_position(current_position[E_AXIS]);
-      float oldFeedrate = feedrate;
-      feedrate=retract_feedrate;
-      retracted=true;
-      prepare_move();
-      current_position[Z_AXIS]-=retract_zlift;
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-      prepare_move();
-      feedrate = oldFeedrate;
-    } else if(!retracting && retracted) {
-      destination[X_AXIS]=current_position[X_AXIS];
-      destination[Y_AXIS]=current_position[Y_AXIS];
-      destination[Z_AXIS]=current_position[Z_AXIS];
-      destination[E_AXIS]=current_position[E_AXIS];
-      current_position[Z_AXIS]+=retract_zlift;
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-      //prepare_move();
-      current_position[E_AXIS]-=(retract_length+retract_recover_length)/volumetric_multiplier[active_extruder];
-      plan_set_e_position(current_position[E_AXIS]);
-      float oldFeedrate = feedrate;
-      feedrate=retract_recover_feedrate;
-      retracted=false;
-      prepare_move();
-      feedrate = oldFeedrate;
-    }
-  } //retract
-#endif //FWRETRACT
 
 void ensure_homed(bool need_x, bool need_y, bool need_z) {
   static float saved_destination[NUM_AXIS];
@@ -1175,14 +1094,6 @@ void process_commands()
         lcd_update();
       }
       break;
-      #ifdef FWRETRACT
-      case 10: // G10 retract
-        retract(true);
-      break;
-      case 11: // G11 retract_recover
-        retract(false);
-      break;
-      #endif //FWRETRACT
 
     case 33: // G33 Homes the Z axis to the other switch.
 
@@ -1955,45 +1866,12 @@ void process_commands()
         break;
     #endif //FAN_PIN
 
-    #if defined(PS_ON_PIN) && PS_ON_PIN > -1
-      case 80: // M80 - Turn on Power Supply
-        SET_OUTPUT(PS_ON_PIN); //GND
-        WRITE(PS_ON_PIN, PS_ON_AWAKE);
-
-        // If you have a switch on suicide pin, this is useful
-        // if you want to start another print with suicide feature after
-        // a print without suicide...
-        #if defined SUICIDE_PIN && SUICIDE_PIN > -1
-            SET_OUTPUT(SUICIDE_PIN);
-            WRITE(SUICIDE_PIN, HIGH);
-        #endif
-
-        #ifdef ULTIPANEL
-          powersupply = true;
-          LCD_MESSAGEPGM(WELCOME_MSG);
-          lcd_update();
-        #endif
-        break;
-      #endif
-
       case 81: // M81 - Turn off Power Supply
         disable_heater();
         st_synchronize();
         finishAndDisableSteppers();
         fanSpeed = 0;
         delay(1000); // Wait a little before to switch off
-      #if defined(SUICIDE_PIN) && SUICIDE_PIN > -1
-        st_synchronize();
-        suicide();
-      #elif defined(PS_ON_PIN) && PS_ON_PIN > -1
-        SET_OUTPUT(PS_ON_PIN);
-        WRITE(PS_ON_PIN, PS_ON_ASLEEP);
-      #endif
-      #ifdef ULTIPANEL
-        powersupply = false;
-        LCD_MESSAGEPGM(MACHINE_NAME" "MSG_OFF".");
-        lcd_update();
-      #endif
 	  break;
 
     case 82:
@@ -2211,7 +2089,6 @@ void process_commands()
       #if defined(P_TOP_STATE_PIN) && P_TOP_STATE_PIN > -1
       float probeVoltage = analogRead(P_TOP_STATE_PIN)/1024.0*5.0;
       SERIAL_PROTOCOLPGM("Probe: ");
-      SERIAL_PROTO
 
       if (probeVoltage < 1.0)
           SERIAL_PROTOCOLLNPGM("TRIGGERED");
@@ -2317,52 +2194,7 @@ void process_commands()
       }
       break;
     #endif
-    #ifdef FWRETRACT
-    case 207: //M207 - set retract length S[positive mm] F[feedrate mm/sec] Z[additional zlift/hop]
-    {
-      if(code_seen('S'))
-      {
-        retract_length = code_value() ;
-      }
-      if(code_seen('F'))
-      {
-        retract_feedrate = code_value() ;
-      }
-      if(code_seen('Z'))
-      {
-        retract_zlift = code_value() ;
-      }
-    }break;
-    case 208: // M208 - set retract recover length S[positive mm surplus to the M207 S*] F[feedrate mm/sec]
-    {
-      if(code_seen('S'))
-      {
-        retract_recover_length = code_value() ;
-      }
-      if(code_seen('F'))
-      {
-        retract_recover_feedrate = code_value() ;
-      }
-    }break;
-    case 209: // M209 - S<1=true/0=false> enable automatic retract detect if the slicer did not support G10/11: every normal extrude-only move will be classified as retract depending on the direction.
-    {
-      if(code_seen('S'))
-      {
-        int t= code_value() ;
-        switch(t)
-        {
-          case 0: autoretract_enabled=false;retracted=false;break;
-          case 1: autoretract_enabled=true;retracted=false;break;
-          default:
-            SERIAL_ECHO_START;
-            SERIAL_ECHOPGM(MSG_UNKNOWN_COMMAND);
-            SERIAL_ECHO(cmdbuffer[bufindr]);
-            SERIAL_ECHOLNPGM("\"");
-        }
-      }
 
-    }break;
-    #endif // FWRETRACT
     #if EXTRUDERS > 1
     case 218: // M218 - set hotend offset (in mm), T<extruder_number> X<offset_on_X> Y<offset_on_Y>
     {
@@ -2619,18 +2451,6 @@ void process_commands()
       #endif //chdk end if
      }
     break;
-#ifdef DOGLCD
-    case 250: // M250  Set LCD contrast value: C<value> (value 0..63)
-     {
-	  if (code_seen('C')) {
-	   lcd_setcontrast( ((int)code_value())&63 );
-          }
-          SERIAL_PROTOCOLPGM("lcd contrast value: ");
-          SERIAL_PROTOCOL(lcd_contrast);
-          SERIAL_PROTOCOLLN("");
-     }
-    break;
-#endif
     #ifdef PREVENT_DANGEROUS_EXTRUDE
     case 302: // allow cold extrudes, or set the minimum extrude temperature
     {
@@ -3427,13 +3247,9 @@ void kill()
   disable_e1();
   disable_e2();
 
-#if defined(PS_ON_PIN) && PS_ON_PIN > -1
-  pinMode(PS_ON_PIN,INPUT);
-#endif
   SERIAL_ERROR_START;
   SERIAL_ERRORLNPGM(MSG_ERR_KILLED);
   LCD_ALERTMESSAGEPGM(MSG_KILLED);
-  suicide();
   while(1) { /* Intentionally left empty */ } // Wait for reset
 }
 
