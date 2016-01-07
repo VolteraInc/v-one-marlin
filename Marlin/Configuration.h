@@ -85,7 +85,6 @@
 #define MIN_Z_Y_POS       (3.50)
 #define XYPOS_X_POS       (35.38)
 #define XYPOS_Y_POS       (6.5)
-#define Z_PROBE_OFFSET    (0.1)
 
 //Default Serial number for the Voltera V-One
 #define PRODUCT_SERIAL    ("V0-00-0000")

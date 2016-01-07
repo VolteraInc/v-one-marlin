@@ -44,10 +44,9 @@ void Config_StoreOffsets(){
   char ver[4]= "000";
   int i=EEPROM_OFFSET_CALIB;
   EEPROM_WRITE_VAR(i,ver); // invalidate data first
-  EEPROM_WRITE_VAR(i, min_z_x_pos);
-  EEPROM_WRITE_VAR(i, min_z_y_pos);
-  EEPROM_WRITE_VAR(i, z_probe_offset);
   EEPROM_WRITE_VAR(i, product_serial_number);
+  EEPROM_WRITE_VAR(i, min_z_x_pos);
+  EEPROM_WRITE_VAR(i, min_z_y_pos);;
   EEPROM_WRITE_VAR(i, xypos_x_pos);
   EEPROM_WRITE_VAR(i, xypos_y_pos);
   //The write order pisses my OCD off.
@@ -208,7 +207,6 @@ void Config_PrintOffsets(){
     SERIAL_ECHOPAIR(" Y:", min_z_y_pos);
     SERIAL_ECHOPAIR(" I:", xypos_x_pos);
     SERIAL_ECHOPAIR(" J:", xypos_y_pos);
-    SERIAL_ECHOPAIR(" P:", z_probe_offset);
     SERIAL_ECHOLN("");
 }
 
@@ -222,10 +220,9 @@ void Config_RetrieveOffsetsAndSerial()
     if (strncmp(ver,stored_ver,3) == 0)
     {
         // version number match
+        EEPROM_READ_VAR(i,product_serial_number);
         EEPROM_READ_VAR(i,min_z_x_pos);
         EEPROM_READ_VAR(i,min_z_y_pos);
-        EEPROM_READ_VAR(i,z_probe_offset);
-        EEPROM_READ_VAR(i,product_serial_number);
         EEPROM_READ_VAR(i,xypos_x_pos);
         EEPROM_READ_VAR(i,xypos_y_pos);
     }
@@ -233,12 +230,11 @@ void Config_RetrieveOffsetsAndSerial()
         //Print an error and revert to default.
         SERIAL_ECHO_START;
         SERIAL_ECHOLNPGM("Error. EEPROM Offsets missing. Is the unit calibrated?");
+        strcpy(product_serial_number, PRODUCT_SERIAL);
         min_z_x_pos= MIN_Z_X_POS;
         min_z_y_pos= MIN_Z_Y_POS;
         xypos_x_pos= XYPOS_X_POS;
         xypos_y_pos= XYPOS_Y_POS;
-        z_probe_offset = Z_PROBE_OFFSET;
-        strcpy(product_serial_number, PRODUCT_SERIAL);
     }
 }
 
