@@ -254,7 +254,7 @@ int fanSpeed=0;
 
 bool glow_led_override = false;
 bool glow_force_green = false; // For taking pictures of the printer without a PC attached.
-bool override_p_min = false;
+bool override_p_bot = false;
 float min_z_x_pos= MIN_Z_X_POS;
 float min_z_y_pos= MIN_Z_Y_POS;
 float z_probe_offset = Z_PROBE_OFFSET;
@@ -974,47 +974,6 @@ static float probe_pt(float x, float y, float z_before) {
 }
 
 #endif // #ifdef ENABLE_AUTO_BED_LEVELING
-
-static float countToHome(int axis){
-  //Returns how many steps it took to get home.
-  int axis_home_dir = home_dir(axis);
-
-  current_position[axis]  = 0;
-  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-
-  destination[axis] = 1.5 * max_length(axis) * axis_home_dir;
-  feedrate = homing_feedrate[axis];
-  plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
-  st_synchronize();
-
-  // Get the position we were at before hitting.
-  current_position[axis] = st_get_position_mm(axis);
-  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-
-  // Lets back up
-  destination[axis] = current_position[axis] - home_retract_mm(axis) * axis_home_dir;
-  plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
-  st_synchronize();
-
-  //We've backed up. Lets move in slowly.
-  destination[axis] = current_position[axis] + 2*home_retract_mm(axis) * axis_home_dir;
-  feedrate = homing_feedrate[axis]/(2);
-  plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
-  st_synchronize();
-
-  //Get the position we were in before we backed up.
-  float pos = abs(st_get_position_mm(axis));
-
-  // Sets the position to home. Lowers endstop flag and cleans up feedrate.
-  axis_is_at_home(axis, false);
-  destination[axis] = current_position[axis];
-  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-  feedrate = homing_feedrate[axis];
-  endstops_hit_on_purpose();
-  axis_homed_state[axis] = axis_home_dir;
-
-  return pos;
-}
 
 static void homeaxis(int axis, bool flip) {
 
@@ -2109,29 +2068,11 @@ void process_commands()
         plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
         break;
 
-      case 100:{
-        st_synchronize();
-        enable_endstops(true);
-        float pos = countToHome(X_AXIS);
-        SERIAL_PROTOCOLPGM("X:");
-        SERIAL_PROTOCOL(pos);
-        SERIAL_PROTOCOLPGM("\n");
-        }
-        break;
-      case 101:{
-        st_synchronize();
-        enable_endstops(true);
-        float pos = countToHome(Y_AXIS);
-        SERIAL_PROTOCOLPGM("Y:");
-        SERIAL_PROTOCOL(pos);
-        SERIAL_PROTOCOLPGM("\n");
-      }
-      break;
       case 102:
-        override_p_min = true;
+        override_p_bot = true;
         break;
       case 103:
-        override_p_min = false;
+        override_p_bot = false;
         break;
 
     #endif
@@ -2237,9 +2178,13 @@ void process_commands()
         SERIAL_PROTOCOLPGM(MSG_Z_MAX);
         SERIAL_PROTOCOLLN(((READ(Z_MAX_PIN)^Z_MAX_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
       #endif
-      #if defined(P_MIN_PIN) && P_MIN_PIN > -1
-        SERIAL_PROTOCOLPGM(MSG_P_MIN);
-        SERIAL_PROTOCOLLN(((READ(P_MIN_PIN)^P_MIN_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+      #if defined(P_TOP_PIN) && P_TOP_PIN > -1
+        SERIAL_PROTOCOLPGM(MSG_P_TOP);
+        SERIAL_PROTOCOLLN(((READ(P_TOP_PIN)^P_TOP_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+      #endif
+        #if defined(P_BOT_PIN) && P_BOT_PIN > -1
+        SERIAL_PROTOCOLPGM(MSG_P_BOT);
+        SERIAL_PROTOCOLLN(((READ(P_BOT_PIN)^P_BOT_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
       #endif
       #if defined(XY_MIN_X_PIN) && XY_MIN_X_PIN > -1
         SERIAL_PROTOCOLPGM(MSG_XY_MIN_X);
@@ -2262,16 +2207,18 @@ void process_commands()
 
     case 125:
     {
-      #if defined(PROBE_STATUS_PIN) && PROBE_STATUS_PIN > -1
-      int probeVoltage = analogRead(PROBE_STATUS_PIN)/1024*5.0;
-      SERIAL_PROTOCOLPGM("Probe State:");
+      // Reports the current state of the Probe
+      #if defined(P_TOP_STATE_PIN) && P_TOP_STATE_PIN > -1
+      float probeVoltage = analogRead(P_TOP_STATE_PIN)/1024.0*5.0;
+      SERIAL_PROTOCOLPGM("Probe: ");
+      SERIAL_PROTO
 
       if (probeVoltage < 1.0)
-          SERIAL_PROTOCOLLN("OFF");
-      else if(probeVoltage >= 1.0 && probeVoltage <= 2.0)
-          SERIAL_PROTOCOLLN("ON");
+          SERIAL_PROTOCOLLNPGM("TRIGGERED");
+      else if(probeVoltage >= 1.0 && probeVoltage <= 4.0)
+          SERIAL_PROTOCOLLNPGM("ON");
       else
-          SERIAL_PROTOCOLLN("TRIGGERED");
+          SERIAL_PROTOCOLLNPGM("OFF");
       #endif
       break;
     }
@@ -2958,24 +2905,23 @@ void process_commands()
       case 906: // M906 Get all digital potentiometer values.
       {
 
-      #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
-        SERIAL_PROTOCOLLN("Stepper Driver Currents (Max: 127)");
-        SERIAL_PROTOCOLPGM("X:");
-        SERIAL_PROTOCOL((int)digiPotGetCurrent(X_AXIS));
-        SERIAL_PROTOCOLPGM("  Y:");
-        SERIAL_PROTOCOL((int)digiPotGetCurrent(Y_AXIS));
-        SERIAL_PROTOCOLPGM("  Z:");
-        SERIAL_PROTOCOL((int)digiPotGetCurrent(Z_AXIS));
-        SERIAL_PROTOCOLPGM("  E:");
-        SERIAL_PROTOCOLLN((int)digiPotGetCurrent(E_AXIS));
-        /*SERIAL_PROTOCOLPGM("\n");*/
-
-      #endif
+        #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
+          SERIAL_PROTOCOLLN("Stepper Driver Currents (Max: 255)");
+          SERIAL_PROTOCOLPGM("X:");
+          SERIAL_PROTOCOL((int)digiPotGetCurrent(X_AXIS));
+          SERIAL_PROTOCOLPGM("  Y:");
+          SERIAL_PROTOCOL((int)digiPotGetCurrent(Y_AXIS));
+          SERIAL_PROTOCOLPGM("  Z:");
+          SERIAL_PROTOCOL((int)digiPotGetCurrent(Z_AXIS));
+          SERIAL_PROTOCOLPGM("  E:");
+          SERIAL_PROTOCOLLN((int)digiPotGetCurrent(E_AXIS));
+        #endif
       }
       break;
 
     case 907: // M907 Set digital trimpot motor current using axis codes.
     {
+
       #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
         for(int i=0;i<NUM_AXIS;i++) if(code_seen(axis_codes[i])) digiPotSetCurrent(i,code_value());
       #endif

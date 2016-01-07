@@ -75,9 +75,10 @@
 #endif
 
 // VOLTERA_pinVersion 0 -> version 3 (the one we came back from HAX with)
-// VOLTERA_pinVersion 1 -> version 4
+// VOLTERA_pinVersion 1 -> What B1 Shipped with
+// VOLTERA_pinVersion 2 -> B2 Prototype
 #define VOLTERA  1
-#define VOLTERA_PIN_VERSION 1
+#define VOLTERA_PIN_VERSION 2
 
 //Default Calibration offsets for the Voltera -V-One
 #define MIN_Z_X_POS       (4.38)
@@ -274,17 +275,20 @@
 //#define COREXY
 
 // The pullups are needed if you directly connect a mechanical endswitch between the signal and ground pins.
+#if VOLTERA_PIN_VERSION == 1
 const bool X_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-const bool Y_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-#if VOLTERA_PIN_VERSION == 0
-const bool Z_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-#else
-const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+#elif VOLTERA_PIN_VERSION == 2
+const bool X_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
+const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 #endif
+const bool Y_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
+const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool X_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Y_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-const bool P_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+
+const bool P_TOP_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
+const bool P_BOT_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 
 const bool XY_MIN_X_ENDSTOP_INVERTING = true;
 const bool XY_MAX_X_ENDSTOP_INVERTING = true;
@@ -310,17 +314,9 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #define DISABLE_Z false
 #define DISABLE_E false // For all extruders
 
-#if VOLTERA_PIN_VERSION == 0
-#define INVERT_X_DIR false    // for Mendel set to false, for Orca set to true
-#else
 #define INVERT_X_DIR true    // for Mendel set to false, for Orca set to true
-#endif
 #define INVERT_Y_DIR true   // for Mendel set to true, for Orca set to false
-#if VOLTERA_PIN_VERSION == 0
-#define INVERT_Z_DIR false     // for Mendel set to false, for Orca set to true
-#else
 #define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
-#endif
 #define INVERT_E0_DIR true   // for direct drive extruder v9 set to true, for geared extruder set to false
 #define INVERT_E1_DIR false    // for direct drive extruder v9 set to true, for geared extruder set to false
 #define INVERT_E2_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
@@ -472,10 +468,10 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 1/16 6857.142857142858
 */
 
-#if VOLTERA_PIN_VERSION == 0
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {100,80,1600,1714.2857142857144}  // default steps per unit for Ultimaker
-#else
+#if VOLTERA_PIN_VERSION == 1
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {80,80,1600,1714.2857142857144}  // default steps per unit for Ultimaker. For 1.8deg/step, use 80. 0.9deg/step, use 160.
+#elif VOLTERA_PIN_VERSION == 2
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {80,200,1600,1714.2857142857144}  // default steps per unit for Ultimaker. For 1.8deg/step, use 80. 0.9deg/step, use 160.
 #endif
 #define DEFAULT_MAX_FEEDRATE          {500, (3500.0/60.0), (251.0/60.0),(141.0/60.0)}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {1500,700,100,50}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.

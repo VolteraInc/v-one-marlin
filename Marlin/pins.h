@@ -41,41 +41,7 @@
   #define Y2_DIR_PIN         -1
   #define Y2_ENABLE_PIN      -1
 
-  #if VOLTERA_PIN_VERSION == 0
-    #error 'Wrong Pin Version'
-
-    #define X_STEP_PIN         38//42
-    #define X_DIR_PIN          21
-    #define X_ENABLE_PIN       43
-    #define X_MIN_PIN          11
-    #define X_MAX_PIN          -1
-
-    #define Y_STEP_PIN         40
-    #define Y_DIR_PIN          41
-    #define Y_ENABLE_PIN       37
-    #define Y_MIN_PIN          35
-    #define Y_MAX_PIN          -1
-
-    #define Z_STEP_PIN        19
-    #define Z_DIR_PIN         18
-    #define Z_ENABLE_PIN      20
-    #define Z_MIN_PIN         34
-    #define Z_MAX_PIN         10
-
-    #define E0_STEP_PIN        33
-    #define E0_DIR_PIN         32
-    #define E0_ENABLE_PIN      36
-
-    #define P_MIN_PIN          12
-
-    #define LED_RED_PIN            45
-    #define LED_GREEN_PIN          46
-    #define LED_BLUE_PIN           44
-
-    #define HEATER_BED_PIN   47
-    #define TEMP_BED_PIN     15   // ANALOG NUMBERING
-
-  #elif VOLTERA_PIN_VERSION == 1 //Pinout for version 3.
+  #if VOLTERA_PIN_VERSION == 1 //Pinout for version 1. (What B1 Shipped with)
 
     #define X_STEP_PIN         30
     #define X_DIR_PIN          31
@@ -104,8 +70,7 @@
     #define XY_MAX_X_PIN      62
     #define XY_MIN_Y_PIN      60
     #define XY_MAX_Y_PIN      66
-    #define P_MIN_PIN          34
-    #define PROBE_STATUS_PIN   3 // Analog NUMBERING
+    #define P_BOT_PIN          34
 
     #define LED_RED_PIN        5
     #define LED_GREEN_PIN      2
@@ -117,7 +82,56 @@
     #define DIGIPOTSS_PIN 36
     #define DIGIPOT_ADDRESS {0x00,0x03,0x02,0x01} // X Y Z E digipot channels to stepper driver mapping
     // Refer to http://www.intersil.com/content/dam/Intersil/documents/isl2/isl23448.pdf
+
+  #elif VOLTERA_PIN_VERSION == 2 //Pinout for version 3. (What B1 Shipped with)
+
+    #define X_STEP_PIN         30
+    #define X_DIR_PIN          31
+    #define X_ENABLE_PIN       15
+    #define X_MIN_PIN          34
+    #define X_MAX_PIN          -1
+
+    #define Y_STEP_PIN         24
+    #define Y_DIR_PIN          25
+    #define Y_ENABLE_PIN       23
+    #define Y_MIN_PIN          22
+    #define Y_MAX_PIN          -1
+
+    #define Z_STEP_PIN        27
+    #define Z_DIR_PIN         28
+    #define Z_ENABLE_PIN      26
+    #define Z_MIN_PIN         69
+    #define Z_MAX_PIN         33
+
+    #define E0_STEP_PIN        39
+    #define E0_DIR_PIN         14
+    #define E0_ENABLE_PIN      29
+
+
+    #define XY_MIN_X_PIN      64
+    #define XY_MAX_X_PIN      60
+    #define XY_MIN_Y_PIN      62
+    #define XY_MAX_Y_PIN      66
+    #define P_BOT_PIN         54
+    #define P_TOP_PIN         56
+    #define P_TOP_STATE_PIN   2 // Analog NUMBERING
+
+    //The probe pin is measured in both digital and analog,
+    // P_TOP_STATE_MIN is used to get ON, OFF, TRIGGERED status.
+    // P_TOP_MIN is used probing
+
+    #define LED_RED_PIN        5
+    #define LED_GREEN_PIN      2
+    #define LED_BLUE_PIN       4
+
+    #define HEATER_BED_PIN   3
+    #define TEMP_BED_PIN     1   // ANALOG NUMBERING
+
+    #define DIGIPOTSS_PIN 36
+    #define DIGIPOT_ADDRESS {0x70,0x60,0x00,0x10} // X Y Z E digipot channels to stepper driver mapping
+    // Refer to http://ww1.microchip.com/downloads/en/DeviceDoc/22242A.pdf
   #endif
+
 
   #define SDPOWER            -1
   #define SDSS               -1

@@ -213,7 +213,7 @@ extern float max_pos[3];
 extern signed char axis_homed_state[3];
 extern float zprobe_zoffset;
 extern int fanSpeed;
-extern bool override_p_min;
+extern bool override_p_bot;
 extern float min_z_x_pos;
 extern float min_z_y_pos;
 extern float xypos_x_pos;

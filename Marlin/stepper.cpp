@@ -331,8 +331,8 @@ ISR(TIMER1_COMPA_vect)
       step_events_completed = 0;
 
       #ifdef Z_LATE_ENABLE
-        if(current_block->steps_z > 0) {
-          enable_z();
+      if(current_block->steps_z > 0) {
+        enable_z();
           OCR1A = 2000; //1ms wait
           return;
         }
@@ -341,8 +341,8 @@ ISR(TIMER1_COMPA_vect)
       //      #ifdef ADVANCE
       //      e_steps[current_block->active_extruder] = 0;
       //      #endif
-    }
-    else {
+      }
+      else {
       OCR1A=2000; // 1kHz.
     }
   }
@@ -352,58 +352,58 @@ ISR(TIMER1_COMPA_vect)
     out_bits = current_block->direction_bits;
 
   // Set the direction bits (X_AXIS=A_AXIS and Y_AXIS=B_AXIS for COREXY)
-  if((out_bits & (1<<X_AXIS))!=0){
+    if((out_bits & (1<<X_AXIS))!=0){
   #ifdef DUAL_X_CARRIAGE
-    if (extruder_duplication_enabled){
-      WRITE(X_DIR_PIN, INVERT_X_DIR);
-      WRITE(X2_DIR_PIN, INVERT_X_DIR);
-    }
-    else{
-      if (current_block->active_extruder != 0)
-        WRITE(X2_DIR_PIN, INVERT_X_DIR);
-      else
+      if (extruder_duplication_enabled){
         WRITE(X_DIR_PIN, INVERT_X_DIR);
-    }
+        WRITE(X2_DIR_PIN, INVERT_X_DIR);
+      }
+      else{
+        if (current_block->active_extruder != 0)
+          WRITE(X2_DIR_PIN, INVERT_X_DIR);
+        else
+          WRITE(X_DIR_PIN, INVERT_X_DIR);
+      }
   #else
-    WRITE(X_DIR_PIN, INVERT_X_DIR);
+      WRITE(X_DIR_PIN, INVERT_X_DIR);
   #endif
-    count_direction[X_AXIS]=-1;
-  }
-  else{
-  #ifdef DUAL_X_CARRIAGE
-    if (extruder_duplication_enabled){
-      WRITE(X_DIR_PIN, !INVERT_X_DIR);
-      WRITE(X2_DIR_PIN, !INVERT_X_DIR);
+      count_direction[X_AXIS]=-1;
     }
     else{
-      if (current_block->active_extruder != 0)
-        WRITE(X2_DIR_PIN, !INVERT_X_DIR);
-      else
+  #ifdef DUAL_X_CARRIAGE
+      if (extruder_duplication_enabled){
         WRITE(X_DIR_PIN, !INVERT_X_DIR);
-    }
+        WRITE(X2_DIR_PIN, !INVERT_X_DIR);
+      }
+      else{
+        if (current_block->active_extruder != 0)
+          WRITE(X2_DIR_PIN, !INVERT_X_DIR);
+        else
+          WRITE(X_DIR_PIN, !INVERT_X_DIR);
+      }
   #else
-    WRITE(X_DIR_PIN, !INVERT_X_DIR);
+      WRITE(X_DIR_PIN, !INVERT_X_DIR);
   #endif
-    count_direction[X_AXIS]=1;
-  }
-  if((out_bits & (1<<Y_AXIS))!=0){
-    WRITE(Y_DIR_PIN, INVERT_Y_DIR);
+      count_direction[X_AXIS]=1;
+    }
+    if((out_bits & (1<<Y_AXIS))!=0){
+      WRITE(Y_DIR_PIN, INVERT_Y_DIR);
 
   #ifdef Y_DUAL_STEPPER_DRIVERS
-    WRITE(Y2_DIR_PIN, !(INVERT_Y_DIR == INVERT_Y2_VS_Y_DIR));
+      WRITE(Y2_DIR_PIN, !(INVERT_Y_DIR == INVERT_Y2_VS_Y_DIR));
   #endif
 
-    count_direction[Y_AXIS]=-1;
-  }
-  else{
-    WRITE(Y_DIR_PIN, !INVERT_Y_DIR);
+      count_direction[Y_AXIS]=-1;
+    }
+    else{
+      WRITE(Y_DIR_PIN, !INVERT_Y_DIR);
 
   #ifdef Y_DUAL_STEPPER_DRIVERS
-    WRITE(Y2_DIR_PIN, (INVERT_Y_DIR == INVERT_Y2_VS_Y_DIR));
+      WRITE(Y2_DIR_PIN, (INVERT_Y_DIR == INVERT_Y2_VS_Y_DIR));
   #endif
 
-    count_direction[Y_AXIS]=1;
-  }
+      count_direction[Y_AXIS]=1;
+    }
 
   // Set direction to check limit switches / endstops. XY positioner adjustments made here to monitor the correct limit switches
 
@@ -433,7 +433,7 @@ ISR(TIMER1_COMPA_vect)
     {
       {
 
-  // #if defined(X_MAX_PIN) && X_MAX_PIN > -1 
+  // #if defined(X_MAX_PIN) && X_MAX_PIN > -1
         bool x_max_endstop=(READ(XY_MAX_X_PIN)!=XY_MAX_X_ENDSTOP_INVERTING); // X+ direction, also monitors XY_max_X
         if(x_max_endstop && old_x_max_endstop && (current_block->steps_x > 0)){
           endstops_trigsteps[X_AXIS] = count_position[X_AXIS];
@@ -487,31 +487,24 @@ ISR(TIMER1_COMPA_vect)
     CHECK_ENDSTOPS
     {
       bool z_min = 0;
-      bool p_min = 0;
+      bool p_top = 0;
+      bool p_bot = 0;
 
-    z_min = READ(Z_MIN_PIN);
-    p_min = READ(P_MIN_PIN);
+      z_min = READ(Z_MIN_PIN);
+      p_top = READ(P_TOP_PIN);
+      p_bot = READ(P_BOT_PIN);
 
-  if (override_p_min){
-    p_min = P_MIN_ENDSTOP_INVERTING;
-  }
+      if (override_p_bot){
+        p_bot = P_BOT_ENDSTOP_INVERTING;
+      }
 
-  bool z_min_endstop=(z_min!= Z_MIN_ENDSTOP_INVERTING || p_min!= P_MIN_ENDSTOP_INVERTING);
+  bool z_min_endstop=(z_min!= Z_MIN_ENDSTOP_INVERTING) || (p_top!= P_TOP_ENDSTOP_INVERTING) || (p_bot!= P_BOT_ENDSTOP_INVERTING);
   if(z_min_endstop && old_z_min_endstop && (current_block->steps_z > 0)) {
     endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
     endstop_z_hit=true;
     step_events_completed = current_block->step_event_count;
   }
   old_z_min_endstop = z_min_endstop;
-
- 
-
-  // if(z_min_endstop && old_z_min_endstop && (current_block->steps_z > 0)) {
-  //   endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
-  //   endstop_z_hit=true;
-  //   step_events_completed = current_block->step_event_count;
-  // }
-
 
 }
 }
@@ -521,16 +514,16 @@ ISR(TIMER1_COMPA_vect)
     CHECK_ENDSTOPS
     {
       #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
-        bool z_max = 0;
-        z_max = READ(Z_MAX_PIN);
+      bool z_max = 0;
+      z_max = READ(Z_MAX_PIN);
 
-        bool z_max_endstop=(z_max != Z_MAX_ENDSTOP_INVERTING);
-        if(z_max_endstop && old_z_max_endstop && (current_block->steps_z > 0)) {
-          endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
-          endstop_z_hit=true;
-          step_events_completed = current_block->step_event_count;
-        }
-        old_z_max_endstop = z_max_endstop;
+      bool z_max_endstop=(z_max != Z_MAX_ENDSTOP_INVERTING);
+      if(z_max_endstop && old_z_max_endstop && (current_block->steps_z > 0)) {
+        endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
+        endstop_z_hit=true;
+        step_events_completed = current_block->step_event_count;
+      }
+      old_z_max_endstop = z_max_endstop;
       #endif
     }
   }
@@ -765,8 +758,12 @@ void st_init()
   SET_INPUT(Z_MIN_PIN);
   #endif
 
-  #if defined(P_MIN_PIN) && P_MIN_PIN > -1
-  SET_INPUT(P_MIN_PIN);
+  #if defined(P_TOP_PIN) && P_TOP_PIN > -1
+  SET_INPUT(P_TOP_PIN);
+  #endif
+
+  #if defined(P_BOT_PIN) && P_BOT_PIN > -1
+  SET_INPUT(P_BOT_PIN);
   #endif
 
   #if defined(X_MAX_PIN) && X_MAX_PIN > -1
@@ -958,28 +955,29 @@ void quickStop()
 
 void digiPotInit(){ //Initialize Digipot Motor Current
 
-    const uint8_t digipot_motor_current[] = DIGIPOT_MOTOR_CURRENT;
-    SPI.begin();
-    pinMode(DIGIPOTSS_PIN, OUTPUT);
+  const uint8_t digipot_motor_current[] = DIGIPOT_MOTOR_CURRENT;
+  SPI.begin();
+  pinMode(DIGIPOTSS_PIN, OUTPUT);
 
     // Cycle the SS pin - make sure digiPot initializes correctly.
-    digitalWrite(DIGIPOTSS_PIN,LOW);
-    digitalWrite(DIGIPOTSS_PIN,HIGH);
+  digitalWrite(DIGIPOTSS_PIN,LOW);
+  digitalWrite(DIGIPOTSS_PIN,HIGH);
 
-    for(int i=0;i<4;i++)
-      digiPotSetCurrent(i,digipot_motor_current[i]);
+  for(int i=0;i<4;i++)
+    digiPotSetCurrent(i,digipot_motor_current[i]);
 }
 
 void digiPotSetCurrent(uint8_t axis, uint8_t current){
-    const uint8_t digipot_addrs[] = DIGIPOT_ADDRESS;
-    digiPotWrite(digipot_addrs[axis], current);
+  const uint8_t digipot_addrs[] = DIGIPOT_ADDRESS;
+  digiPotWrite(digipot_addrs[axis], current);
 }
 
 uint8_t digiPotGetCurrent(uint8_t axis){
-    const uint8_t digipot_addrs[] = DIGIPOT_ADDRESS;
-    return digiPotRead(digipot_addrs[axis]);
+  const uint8_t digipot_addrs[] = DIGIPOT_ADDRESS;
+  return digiPotRead(digipot_addrs[axis]);
 }
 
+#if VOLTERA_PIN_VERSION == 1
 void digiPotWrite(uint8_t address, uint8_t value){ // From Arduino DigitalPotControl example
   // Refer to http://www.intersil.com/content/dam/Intersil/documents/isl2/isl23448.pdf
 
@@ -993,7 +991,7 @@ void digiPotWrite(uint8_t address, uint8_t value){ // From Arduino DigitalPotCon
 }
 
 uint8_t digiPotRead(uint8_t address)
-  {
+{
   address = address + 0x80; // Refer to http://www.intersil.com/content/dam/Intersil/documents/isl2/isl23448.pdf
   SPI.beginTransaction(SPISettings(3000000, MSBFIRST, SPI_MODE0));
   digitalWrite(DIGIPOTSS_PIN,LOW); // take the SS pin low to select the chip
@@ -1005,7 +1003,33 @@ uint8_t digiPotRead(uint8_t address)
   SPI.endTransaction();
   return val;
 }
+#elif VOLTERA_PIN_VERSION == 2
+// Refer to http://ww1.microchip.com/downloads/en/DeviceDoc/22242A.pdf
+// To get understanding of write/read codes and addresses.
 
+void digiPotWrite(uint8_t address, uint8_t value){
+  address = address + 0x00; // 0x00 adds 'write' code. (no action here...)
+  SPI.beginTransaction(SPISettings(3000000, MSBFIRST, SPI_MODE0));
+  digitalWrite(DIGIPOTSS_PIN,LOW); // take the SS pin low to select the chip
+  SPI.transfer(address); //  send in the address and value via SPI:
+  SPI.transfer(value);
+  digitalWrite(DIGIPOTSS_PIN,HIGH); // take the SS pin high to de-select the chip:
+  SPI.endTransaction();
+}
+
+uint8_t digiPotRead(uint8_t address){
+  address =  address + 0x0C; // 0x0C adds 'read' code.
+  SPI.beginTransaction(SPISettings(3000000, MSBFIRST, SPI_MODE0));
+  digitalWrite(DIGIPOTSS_PIN,LOW); // take the SS pin low to select the chip
+  SPI.transfer(address);
+  uint8_t val = SPI.transfer(0x00); // Send dummy to clock in value.:
+  digitalWrite(DIGIPOTSS_PIN,HIGH); // take the SS pin high to de-select the chip:
+  SPI.endTransaction();
+  return val;
+}
+
+#endif
+//End below ends: #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
 #endif
 
   void microstep_init()
@@ -1019,7 +1043,7 @@ uint8_t digiPotRead(uint8_t address)
     pinMode(E1_MS2_PIN,OUTPUT);
     for(int i=0;i<=4;i++) microstep_mode(i,microstep_modes[i]);
   #endif
-  }
+}
 
 void microstep_ms(uint8_t driver, int8_t ms1, int8_t ms2)
 {
