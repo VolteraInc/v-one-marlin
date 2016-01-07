@@ -646,7 +646,6 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
   #endif
 #endif
 
-
 // Increase the FAN pwm frequency. Removes the PWM noise but increases heating in the FET/Arduino
 //#define FAST_PWM_FAN
 
