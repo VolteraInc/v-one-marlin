@@ -32,7 +32,6 @@
 #include "stepper.h"
 #include "temperature.h"
 #include "motion_control.h"
-#include "cardreader.h"
 #include "watchdog.h"
 #include "ConfigurationStore.h"
 #include "language.h"
@@ -205,7 +204,6 @@ bool glow_force_green = false; // For taking pictures of the printer without a P
 bool override_p_bot = false;
 float min_z_x_pos= MIN_Z_X_POS;
 float min_z_y_pos= MIN_Z_Y_POS;
-float z_probe_offset = Z_PROBE_OFFSET;
 float xypos_x_pos = XYPOS_X_POS;
 float xypos_y_pos = XYPOS_Y_POS;
 char product_serial_number[11] = PRODUCT_SERIAL;
@@ -899,8 +897,6 @@ void process_commands()
       }
       break;
 
-
-
     case 20: // G20: XYPositioner X1 - Move in +X until a switch is triggered
       {
           enable_endstops(true);
@@ -957,10 +953,8 @@ void process_commands()
       }
       break;
 
-
     case 24: //Test the zAxis - move to impossible position, and report where limit switch triggered.
       {
-
           feedrate = homing_feedrate[Z_AXIS]/(6);
           // move down until you find the bed
           float zPosition = -10;
@@ -1042,16 +1036,50 @@ void process_commands()
             }
 
             SERIAL_PROTOCOLPGM(MSG_BED);
-            SERIAL_PROTOCOLPGM(" X: ");
-            SERIAL_PROTOCOL(current_position[X_AXIS]);
-            SERIAL_PROTOCOLPGM(" Y: ");
-            SERIAL_PROTOCOL(current_position[Y_AXIS]);
             SERIAL_PROTOCOLPGM(" Z: ");
             SERIAL_PROTOCOL(1000*current_position[Z_AXIS]);
             SERIAL_PROTOCOLPGM("\n");
 
             clean_up_after_endstop_move();
         }
+      break;
+
+      case 31: //G31 Reports the Probe Offset
+      {
+         feedrate = homing_feedrate[Z_AXIS];
+          // move down until you find the bed
+          float zPosition = -10;
+          plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
+          st_synchronize();
+
+          if (!didHitEndstops()) {
+              SERIAL_ERROR_START;
+              SERIAL_ERRORLNPGM(" probe bottom pad failed - no limit hit");
+          }
+
+          // We hit the bed, tell the planner know where we are right now as it is not where we said to go.
+          current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
+          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
+
+          // Copy this value,  this is the height of our GOLD pad (p_bot)
+          float p_bot_height = current_position[Z_AXIS] * 1000;
+
+          // Override the p_bot, we will continue to go down until the probe triggers
+          override_p_bot = true;
+          plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
+          st_synchronize();
+
+          // Stop overriding it, we are moving up now. Tell the planner where we are right now.
+          override_p_bot = false;
+          current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
+          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
+
+          float z_probe_offset = p_bot_height - current_position[Z_AXIS]*1000;
+
+          SERIAL_PROTOCOLPGM("Probe Offset: ");
+          SERIAL_PROTOCOL(z_probe_offset);
+          SERIAL_PROTOCOLPGM("\n");
+      }
       break;
     case 90: // G90
       relative_mode = false;
@@ -1391,6 +1419,23 @@ void process_commands()
       if (code_seen('A')) ensure_homed_preemptive_all_axis = code_value_long() != 0;
       break;
 
+    case 125:
+    {
+      // Reports the current state of the Probe
+      #if defined(P_TOP_STATE_PIN) && P_TOP_STATE_PIN > -1
+      float probeVoltage = analogRead(P_TOP_STATE_PIN)/1024.0*5.0;
+      SERIAL_PROTOCOLPGM("Probe: ");
+
+      if (probeVoltage < 1.0)
+          SERIAL_PROTOCOLLNPGM("TRIGGERED");
+      else if(probeVoltage >= 1.0 && probeVoltage <= 4.0)
+          SERIAL_PROTOCOLLNPGM("ON");
+      else
+          SERIAL_PROTOCOLLNPGM("OFF");
+      #endif
+      break;
+    }
+
     case 119: // M119
     SERIAL_PROTOCOLLN(MSG_M119_REPORT);
       #if defined(X_MIN_PIN) && X_MIN_PIN > -1
@@ -1443,23 +1488,6 @@ void process_commands()
       #endif
       break;
       //TODO: update for all axis, use for loop
-
-    case 125:
-    {
-      // Reports the current state of the Probe
-      #if defined(P_TOP_STATE_PIN) && P_TOP_STATE_PIN > -1
-      float probeVoltage = analogRead(P_TOP_STATE_PIN)/1024.0*5.0;
-      SERIAL_PROTOCOLPGM("Probe: ");
-
-      if (probeVoltage < 1.0)
-          SERIAL_PROTOCOLLNPGM("TRIGGERED");
-      else if(probeVoltage >= 1.0 && probeVoltage <= 4.0)
-          SERIAL_PROTOCOLLNPGM("ON");
-      else
-          SERIAL_PROTOCOLLNPGM("OFF");
-      #endif
-      break;
-    }
 
     case 200: // M200 D<millimeters> set filament diameter and set E axis units to cubic millimeters (use S0 to set back to millimeters).
       {
@@ -1687,7 +1715,6 @@ void process_commands()
       if(code_seen('Y')) min_z_y_pos = code_value();
       if(code_seen('I')) xypos_x_pos = code_value();
       if(code_seen('J')) xypos_y_pos = code_value();
-      if(code_seen('P')) z_probe_offset = code_value();
 
       //Terminate the string.
       product_serial_number[10] = '\0';

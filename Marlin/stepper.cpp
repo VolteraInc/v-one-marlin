@@ -26,7 +26,6 @@
   #include "planner.h"
   #include "temperature.h"
   #include "language.h"
-  #include "cardreader.h"
   #include "speed_lookuptable.h"
   #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
   #include <SPI.h>
@@ -460,6 +459,7 @@ ISR(TIMER1_COMPA_vect)
       p_top = READ(P_TOP_PIN);
       p_bot = READ(P_BOT_PIN);
 
+      // We bypass p_bot when calculating the probe_offset
       if (override_p_bot){
         p_bot = P_BOT_ENDSTOP_INVERTING;
       }
