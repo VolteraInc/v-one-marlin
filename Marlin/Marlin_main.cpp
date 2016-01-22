@@ -1728,7 +1728,6 @@ void process_commands()
       if(code_seen('Y')) min_z_y_pos = code_value();
       if(code_seen('I')) xypos_x_pos = code_value();
       if(code_seen('J')) xypos_y_pos = code_value();
-      if(code_seen('P')) z_probe_offset = code_value();
       Config_StoreCalibration();
     }
     break;
