@@ -12,10 +12,9 @@ FORCE_INLINE void Config_PrintSettings() {}
 #endif
 
 #ifdef VOLTERA
-void Config_RetrieveOffsetsAndSerial();
-void Config_PrintOffsets();
-void Config_PrintSerial();
-void Config_StoreOffsets();
+void Config_RetrieveCalibration();
+void Config_PrintCalibration();
+void Config_StoreCalibration();
 #endif
 
 #ifdef EEPROM_SETTINGS

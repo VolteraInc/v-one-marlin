@@ -39,7 +39,7 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 // ALSO:  always make sure the variables in the Store and retrieve sections are in the same order.
 
 
-void Config_StoreOffsets(){
+void Config_StoreCalibration(){
 
   char ver[4]= "000";
   int i=EEPROM_OFFSET_CALIB;
@@ -49,6 +49,10 @@ void Config_StoreOffsets(){
   EEPROM_WRITE_VAR(i, min_z_y_pos);;
   EEPROM_WRITE_VAR(i, xypos_x_pos);
   EEPROM_WRITE_VAR(i, xypos_y_pos);
+  EEPROM_WRITE_VAR(i, calib_x_scale);
+  EEPROM_WRITE_VAR(i, calib_y_scale);
+  EEPROM_WRITE_VAR(i, calib_cos_theta);
+  EEPROM_WRITE_VAR(i, calib_tan_theta);
   //The write order pisses my OCD off.
 
   //We think we wrote everything fine, so validate offsets by writing the eeprom version.
@@ -192,26 +196,35 @@ void Config_PrintSettings()
 }
 #endif
 
-// Print out the XY offsets (and serial number)
-void Config_PrintSerial(){
+void Config_PrintCalibration(){
+
     SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Serial No:");
+    SERIAL_ECHOLNPGM("Serial No:");
+    SERIAL_ECHO_START;
+    SERIAL_ECHO(" M504 S:");
     SERIAL_ECHOLN(product_serial_number);
 
-}
-void Config_PrintOffsets(){
     SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Calibration Offsets:");
+    SERIAL_ECHOLNPGM("Offsets:");
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("X:", min_z_x_pos);
+    SERIAL_ECHOPAIR(" M505 X:", min_z_x_pos);
     SERIAL_ECHOPAIR(" Y:", min_z_y_pos);
     SERIAL_ECHOPAIR(" I:", xypos_x_pos);
     SERIAL_ECHOPAIR(" J:", xypos_y_pos);
     SERIAL_ECHOLN("");
+
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Scaling and Skew x1000 (A in degrees):");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("  M506 X",calib_x_scale*1000);
+    SERIAL_ECHOPAIR(" Y",calib_y_scale*1000);
+    SERIAL_ECHOPAIR(" A",atan(calib_tan_theta)*180/PI*1000); //We use atan because it preserves the sign.
+    SERIAL_ECHOLN("");
+
 }
 
 // Attempts to load from EEPROM, reverts to default if not possible.
-void Config_RetrieveOffsetsAndSerial()
+void Config_RetrieveCalibration()
 {
     int i=EEPROM_OFFSET_CALIB;
     char stored_ver[4];
@@ -225,6 +238,10 @@ void Config_RetrieveOffsetsAndSerial()
         EEPROM_READ_VAR(i,min_z_y_pos);
         EEPROM_READ_VAR(i,xypos_x_pos);
         EEPROM_READ_VAR(i,xypos_y_pos);
+        EEPROM_READ_VAR(i,calib_x_scale);
+        EEPROM_READ_VAR(i,calib_y_scale);
+        EEPROM_READ_VAR(i,calib_cos_theta);
+        EEPROM_READ_VAR(i,calib_tan_theta);
     }
     else{
         //Print an error and revert to default.
@@ -235,6 +252,11 @@ void Config_RetrieveOffsetsAndSerial()
         min_z_y_pos= MIN_Z_Y_POS;
         xypos_x_pos= XYPOS_X_POS;
         xypos_y_pos= XYPOS_Y_POS;
+        calib_x_scale = CALIB_X_SCALE;
+        calib_y_scale = CALIB_Y_SCALE;
+        calib_cos_theta = CALIB_COS_THETA;
+        calib_tan_theta = CALIB_TAN_THETA;
+        strcpy(product_serial_number, PRODUCT_SERIAL);
     }
 }
 

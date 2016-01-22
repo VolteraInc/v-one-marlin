@@ -105,8 +105,11 @@ extern unsigned long axis_steps_per_sqr_second[NUM_AXIS];
     extern float autotemp_factor;
 #endif
 
-
-
+// Parameters added by Voltera for autocalibration and axis skew compensation.
+extern float calib_x_scale;
+extern float calib_y_scale;
+extern float calib_cos_theta;
+extern float calib_tan_theta;
 
 extern block_t block_buffer[BLOCK_BUFFER_SIZE];            // A ring buffer for motion instfructions
 extern volatile unsigned char block_buffer_head;           // Index of the next block to be pushed

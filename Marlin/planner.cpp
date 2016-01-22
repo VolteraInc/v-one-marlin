@@ -72,6 +72,13 @@ float max_xy_jerk; //speed than can be stopped at once, if i understand correctl
 float max_z_jerk;
 float max_e_jerk;
 float mintravelfeedrate;
+
+// Parameters added by voltera.
+float calib_x_scale;
+float calib_y_scale;
+float calib_cos_theta;
+float calib_tan_theta;
+
 unsigned long axis_steps_per_sqr_second[NUM_AXIS];
 
 // The current position of the tool in absolute steps
@@ -553,23 +560,35 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
   // Prepare to set up new block
   block_t *block = &block_buffer[block_buffer_head];
 
-  // Mark block as not busy (Not executed by the stepper interrupt)
+  // Mark block as not busy (Not executed bM50y the stepper interrupt)
   block->busy = false;
 
-  // Number of steps for each axis
+// Number of steps for each axis
 
-
-
-#ifndef COREXY
-// default non-h-bot planning
-block->steps_x = labs(target[X_AXIS]-position[X_AXIS]);
-block->steps_y = labs(target[Y_AXIS]-position[Y_AXIS]);
-#else
-// corexy planning
-// these equations follow the form of the dA and dB equations on http://www.corexy.com/theory.html
+// corexy planning - these equations follow the form of the dA and dB equations on http://www.corexy.com/theory.html
+#if defined COREXY
 block->steps_x = labs((target[X_AXIS]-position[X_AXIS]) + (target[Y_AXIS]-position[Y_AXIS]));
 block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-position[Y_AXIS]));
+
+// Using VOLTERA calibration values.
+#else
+float cos_theta = calib_cos_theta;
+float tan_theta = calib_tan_theta;
+
+// Because the AXIS are skewed. Homing becomes tricky because when you are homing one axis, both axis are actually moving
+// This produces unexpected results. i.e - Y axis triggers when you are homing X axis.
+// This is undesirable behaviour. If we are homing the axis, disable the skew check by overwriting our theta values.
+if(homing_axis){
+  cos_theta = 1;
+  tan_theta = 0;
+}
+
+float steps_x_signed = (target[X_AXIS] - position[X_AXIS])/(cos_theta*calib_x_scale);
+float steps_y_signed = ((target[Y_AXIS] - position[Y_AXIS]) - (target[X_AXIS] - position[X_AXIS])*tan_theta)/calib_y_scale;
+block->steps_x = labs(steps_x_signed);
+block->steps_y = labs(steps_y_signed);
 #endif
+
   block->steps_z = labs(target[Z_AXIS]-position[Z_AXIS]);
   block->steps_e = labs(target[E_AXIS]-position[E_AXIS]);
   block->steps_e *= volumetric_multiplier[active_extruder];
@@ -591,16 +610,9 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
 
   // Compute direction bits for this block
   block->direction_bits = 0;
-#ifndef COREXY
-  if (target[X_AXIS] < position[X_AXIS])
-  {
-    block->direction_bits |= (1<<X_AXIS);
-  }
-  if (target[Y_AXIS] < position[Y_AXIS])
-  {
-    block->direction_bits |= (1<<Y_AXIS);
-  }
-#else
+
+// Core XY
+#ifdef COREXY
   if ((target[X_AXIS]-position[X_AXIS]) + (target[Y_AXIS]-position[Y_AXIS]) < 0)
   {
     block->direction_bits |= (1<<X_AXIS);
@@ -609,7 +621,20 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   {
     block->direction_bits |= (1<<Y_AXIS);
   }
+
+// Voltera Calibration
+#else
+  if (steps_x_signed < 0)
+  {
+    block->direction_bits |= (1<<X_AXIS);
+  }
+  if (steps_y_signed < 0)
+  {
+    block->direction_bits |= (1<<Y_AXIS);
+  }
+
 #endif
+
   if (target[Z_AXIS] < position[Z_AXIS])
   {
     block->direction_bits |= (1<<Z_AXIS);
@@ -655,13 +680,17 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   }
 
   float delta_mm[4];
-  #ifndef COREXY
-    delta_mm[X_AXIS] = (target[X_AXIS]-position[X_AXIS])/axis_steps_per_unit[X_AXIS];
-    delta_mm[Y_AXIS] = (target[Y_AXIS]-position[Y_AXIS])/axis_steps_per_unit[Y_AXIS];
-  #else
+
+  #ifdef COREXY
     delta_mm[X_AXIS] = (((target[X_AXIS]-position[X_AXIS]) + (target[Y_AXIS]-position[Y_AXIS]))/axis_steps_per_unit[X_AXIS])/sqrt(2);
     delta_mm[Y_AXIS] = (((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-position[Y_AXIS]))/axis_steps_per_unit[Y_AXIS])/sqrt(2);
+
+  // Voltera Calibration
+  #else
+    delta_mm[X_AXIS] = steps_x_signed/axis_steps_per_unit[X_AXIS];
+    delta_mm[Y_AXIS] = steps_y_signed/axis_steps_per_unit[Y_AXIS];
   #endif
+
   delta_mm[Z_AXIS] = (target[Z_AXIS]-position[Z_AXIS])/axis_steps_per_unit[Z_AXIS];
   delta_mm[E_AXIS] = ((target[E_AXIS]-position[E_AXIS])/axis_steps_per_unit[E_AXIS])*volumetric_multiplier[active_extruder]*extrudemultiply/100.0;
 
