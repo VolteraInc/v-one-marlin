@@ -204,6 +204,7 @@
 #ifdef SDSUPPORT
 CardReader card;
 #endif
+bool homing_axis = false;
 float homing_feedrate[] = HOMING_FEEDRATE;
 bool axis_relative_modes[] = AXIS_RELATIVE_MODES;
 int feedmultiply=100; //100->1 200->2
@@ -255,11 +256,11 @@ int fanSpeed=0;
 bool glow_led_override = false;
 bool glow_force_green = false; // For taking pictures of the printer without a PC attached.
 bool override_p_min = false;
-float min_z_x_pos= MIN_Z_X_POS;
-float min_z_y_pos= MIN_Z_Y_POS;
-float z_probe_offset = Z_PROBE_OFFSET;
-float xypos_x_pos = XYPOS_X_POS;
-float xypos_y_pos = XYPOS_Y_POS;
+float min_z_x_pos;
+float min_z_y_pos;
+float z_probe_offset;
+float xypos_x_pos;
+float xypos_y_pos;
 char product_serial_number[11] = PRODUCT_SERIAL;
 
 
@@ -483,7 +484,7 @@ void setup()
 
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
-  Config_RetrieveOffsetsAndSerial();
+  Config_RetrieveCalibration();
 
   tp_init();    // Initialize temperature loop
   plan_init();  // Initialize planner;
@@ -1018,6 +1019,7 @@ static float countToHome(int axis){
 
 static void homeaxis(int axis, bool flip) {
 
+    homing_axis = true; // Raise flag to let planner know we are homing and axis so it ignores skew adjustments.
     int axis_home_dir = home_dir(axis);
 
     if (flip){
@@ -1034,6 +1036,7 @@ static void homeaxis(int axis, bool flip) {
     destination[axis] = soft_limit_home && axis_homed_state[axis] ? (axis_home_dir > 0 ? max_pos : min_pos)[axis] + axis_home_dir : 1.5 * max_length(axis) * axis_home_dir;
     feedrate = homing_feedrate[axis];
     endstops_hit_on_purpose(); // Clear endstop flags
+
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
 
@@ -1063,6 +1066,8 @@ static void homeaxis(int axis, bool flip) {
     feedrate = 0.0;
     endstops_hit_on_purpose();
     axis_homed_state[axis] = axis_home_dir;
+
+    homing_axis = false; //Lower flag to indicate homing was finished. It doesn't matter if it was not sucessful.
 
 }
 
@@ -2744,32 +2749,43 @@ void process_commands()
         Config_PrintSettings();
     }
     break;
-    case 504: // M504 // Store Z-Min XY Coordinates
+
+    case 504: //M504 - Store the Serial Number.
     {
-      //Before writing, read existing values to make sure we don't overwrite anything.
       if(code_seen('S')) memcpy(product_serial_number, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], sizeof(product_serial_number));
+
+      //Terminate the string.
+      product_serial_number[10] = '\0';
+      Config_StoreCalibration();
+    }
+    break;
+    case 505: // M505 Store No. Min X, Min Y, XY Positioner locations.
+    {
       if(code_seen('X')) min_z_x_pos = code_value();
       if(code_seen('Y')) min_z_y_pos = code_value();
       if(code_seen('I')) xypos_x_pos = code_value();
       if(code_seen('J')) xypos_y_pos = code_value();
       if(code_seen('P')) z_probe_offset = code_value();
-
-      //Terminate the string.
-      product_serial_number[10] = '\0';
-      Config_StoreOffsets();
-    }
-    break;
-    //Print Offsets
-    case 505:
-    {
-      Config_PrintOffsets();
+      Config_StoreCalibration();
     }
     break;
 
-    //Print Serial
-    case 506:
+    case 506: // Store the axis scaling and axis skew.
     {
-      Config_PrintSerial();
+      if(code_seen('X')) calib_x_scale = code_value();
+      if(code_seen('Y')) calib_y_scale = code_value();
+      if(code_seen('A')){// Read the Axis Skew.
+        float theta_rad = code_value()*PI/180; // Save it, convert into radians and save to EEPROM
+        calib_cos_theta = cos(theta_rad);
+        calib_tan_theta = tan(theta_rad);
+      }
+      Config_StoreCalibration();
+    }
+      break;
+    //Print Offsets, Calibration, and Serial Number
+    case 507:
+    {
+      Config_PrintCalibration();
     }
     break;
     #ifdef ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED

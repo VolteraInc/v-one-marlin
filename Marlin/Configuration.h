@@ -85,6 +85,10 @@
 #define XYPOS_X_POS       (35.38)
 #define XYPOS_Y_POS       (6.5)
 #define Z_PROBE_OFFSET    (0.1)
+#define CALIB_X_SCALE     (1.0)
+#define CALIB_Y_SCALE     (1.0)
+#define CALIB_COS_THETA   (1.0)
+#define CALIB_TAN_THETA   (0.0)
 
 //Default Serial number for the Voltera V-One
 #define PRODUCT_SERIAL    ("V0-00-0000")
