@@ -854,8 +854,23 @@ long st_get_position(uint8_t axis)
 
 float st_get_position_mm(uint8_t axis)
 {
-  float steper_position_in_steps = st_get_position(axis);
-  return steper_position_in_steps / axis_steps_per_unit[axis];
+  //To get our actual global position in mm based on our number of steps we need to consider X and Y axis and do reverse transformations
+  float position_mm = 0.0;
+  if(axis == X_AXIS){
+    float steps_x = st_get_position(X_AXIS);
+    position_mm = steps_x * calib_x_scale * calib_cos_theta / axis_steps_per_unit[X_AXIS];
+  }
+  else if(axis == Y_AXIS){
+    float steps_x = st_get_position(X_AXIS);
+    float steps_y = st_get_position(Y_AXIS);
+    position_mm = calib_x_scale * steps_x * sin(atan(calib_tan_theta)) / axis_steps_per_unit[X_AXIS] + calib_y_scale * steps_y / axis_steps_per_unit[Y_AXIS];
+  }
+  // Same case for both Z and E
+  else{
+    position_mm = st_get_position(axis) / axis_steps_per_unit[axis];
+  }
+
+  return position_mm;
 }
 
 void finishAndDisableSteppers()

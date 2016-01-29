@@ -28,7 +28,7 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 
 
 
-#define EEPROM_OFFSET 100
+#define EEPROM_OFFSET 200
 #define EEPROM_OFFSET_CALIB 50
 #define EEPROM_VERSION "V10"
 
@@ -214,11 +214,14 @@ void Config_PrintCalibration(){
     SERIAL_ECHOLN("");
 
     SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Scaling and Skew x1000 (A in degrees):");
+    SERIAL_ECHOLNPGM("Scaling and Skew (A in radians):");
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M506 X",calib_x_scale*1000);
-    SERIAL_ECHOPAIR(" Y",calib_y_scale*1000);
-    SERIAL_ECHOPAIR(" A",atan(calib_tan_theta)*180/PI*1000); //We use atan because it preserves the sign.
+    SERIAL_ECHO("  M506 X");
+    SERIAL_PROTOCOL_F(calib_x_scale, 6);
+    SERIAL_ECHO(" Y");
+    SERIAL_PROTOCOL_F(calib_y_scale, 6);
+    SERIAL_ECHO(" A");
+    SERIAL_PROTOCOL_F(atan(calib_tan_theta),6); //We use atan because it preserves the sign.
     SERIAL_ECHOLN("");
 
 }
