@@ -2162,11 +2162,16 @@ void process_commands()
       SERIAL_PROTOCOL_F(current_position[E_AXIS], 6);
 
       SERIAL_PROTOCOLPGM(MSG_COUNT_X);
-      SERIAL_PROTOCOL_F(float(st_get_position(X_AXIS))/axis_steps_per_unit[X_AXIS], 6);
+      SERIAL_PROTOCOL_F(st_get_position_mm(X_AXIS), 6);
       SERIAL_PROTOCOLPGM(" Y:");
-      SERIAL_PROTOCOL_F(float(st_get_position(Y_AXIS))/axis_steps_per_unit[Y_AXIS], 6);
+      SERIAL_PROTOCOL_F(st_get_position_mm(Y_AXIS), 6);
       SERIAL_PROTOCOLPGM(" Z:");
-      SERIAL_PROTOCOL_F(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS], 6);
+      SERIAL_PROTOCOL_F(st_get_position_mm(Z_AXIS), 6);
+
+      SERIAL_PROTOCOLPGM(" Absolute X:");
+      SERIAL_PROTOCOL(st_get_position(X_AXIS));
+      SERIAL_PROTOCOLPGM(" Y:");
+      SERIAL_PROTOCOL(st_get_position(Y_AXIS));
 
       // # of moves queued in buffer
       SERIAL_PROTOCOLPGM(" B:");
@@ -2759,7 +2764,23 @@ void process_commands()
       Config_StoreCalibration();
     }
     break;
-    case 505: // M505 Store No. Min X, Min Y, XY Positioner locations.
+
+    case 505:
+    {
+           SERIAL_ECHO_START;
+          SERIAL_ECHOLNPGM("Calibration Offsets:");
+           SERIAL_ECHO_START;
+          SERIAL_ECHOPAIR("X:", min_z_x_pos);
+           SERIAL_ECHOPAIR(" Y:", min_z_y_pos);
+           SERIAL_ECHOPAIR(" I:", xypos_x_pos);
+           SERIAL_ECHOPAIR(" J:", xypos_y_pos);
+           SERIAL_ECHOPAIR(" P:", z_probe_offset);
+           SERIAL_ECHOLN("");
+
+
+    }
+    break;
+    case 508: // M505 Store No. Min X, Min Y, XY Positioner locations.
     {
       if(code_seen('X')) min_z_x_pos = code_value();
       if(code_seen('Y')) min_z_y_pos = code_value();
@@ -2775,7 +2796,7 @@ void process_commands()
       if(code_seen('X')) calib_x_scale = code_value();
       if(code_seen('Y')) calib_y_scale = code_value();
       if(code_seen('A')){// Read the Axis Skew.
-        float theta_rad = code_value()*PI/180; // Save it, convert into radians and save to EEPROM
+        float theta_rad = code_value(); // Save it, as radians save to EEPROM
         calib_cos_theta = cos(theta_rad);
         calib_tan_theta = tan(theta_rad);
       }

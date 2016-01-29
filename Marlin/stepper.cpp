@@ -433,7 +433,7 @@ ISR(TIMER1_COMPA_vect)
     {
       {
 
-  // #if defined(X_MAX_PIN) && X_MAX_PIN > -1 
+  // #if defined(X_MAX_PIN) && X_MAX_PIN > -1
         bool x_max_endstop=(READ(XY_MAX_X_PIN)!=XY_MAX_X_ENDSTOP_INVERTING); // X+ direction, also monitors XY_max_X
         if(x_max_endstop && old_x_max_endstop && (current_block->steps_x > 0)){
           endstops_trigsteps[X_AXIS] = count_position[X_AXIS];
@@ -504,7 +504,7 @@ ISR(TIMER1_COMPA_vect)
   }
   old_z_min_endstop = z_min_endstop;
 
- 
+
 
   // if(z_min_endstop && old_z_min_endstop && (current_block->steps_z > 0)) {
   //   endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
@@ -930,8 +930,23 @@ long st_get_position(uint8_t axis)
   #ifdef ENABLE_AUTO_BED_LEVELING
 float st_get_position_mm(uint8_t axis)
 {
-  float steper_position_in_steps = st_get_position(axis);
-  return steper_position_in_steps / axis_steps_per_unit[axis];
+  //To get our actual global position in mm based on our number of steps we need to consider X and Y axis and do reverse transformations
+  float position_mm = 0.0;
+  if(axis == X_AXIS){
+    float steps_x = st_get_position(X_AXIS);
+    position_mm = steps_x * calib_x_scale * calib_cos_theta / axis_steps_per_unit[X_AXIS];
+  }
+  else if(axis == Y_AXIS){
+    float steps_x = st_get_position(X_AXIS);
+    float steps_y = st_get_position(Y_AXIS);
+    position_mm = calib_x_scale * steps_x * sin(atan(calib_tan_theta)) / axis_steps_per_unit[X_AXIS] + calib_y_scale * steps_y / axis_steps_per_unit[Y_AXIS];
+  }
+  // Same case for both Z and E
+  else{
+    position_mm = st_get_position(axis) / axis_steps_per_unit[axis];
+  }
+
+  return position_mm;
 }
   #endif  // ENABLE_AUTO_BED_LEVELING
 

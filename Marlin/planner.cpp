@@ -550,32 +550,27 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
   // The target position of the tool in absolute steps
   // Calculate target position in absolute steps
   //this should be done after the wait, because otherwise a M92 code within the gcode disrupts this calculation somehow
+
+  //Given the coordinates we want to go to. Target will indicate the number of steps we need to get there.
+
+
+float cos_theta = calib_cos_theta;
+float tan_theta = calib_tan_theta;
+// Because the AXIS are skewed. Homing becomes tricky because when you are homing one axis, both axis are actually moving
+// This produces unexpected results. i.e - Y axis triggers when you are homing X axis.
+// This is undesirable behaviour. If we are homing the axis, disable the skew check by overwriting our theta values.
+if(homing_axis){
+  cos_theta = 1;
+  tan_theta = 0;
+}
+
+  //Target tells us the desired local x and y coordinates to meet the global X and Y. We take into account skew and scaling.
   long target[4];
-  target[X_AXIS] = lround(x*axis_steps_per_unit[X_AXIS]);
-  target[Y_AXIS] = lround(y*axis_steps_per_unit[Y_AXIS]);
+  target[X_AXIS] = lround(x*axis_steps_per_unit[X_AXIS]/(calib_x_scale*cos_theta));
+  target[Y_AXIS] = lround((y-x*tan_theta)*axis_steps_per_unit[Y_AXIS]/calib_y_scale);
   target[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);
   target[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]);
 
-  #ifdef PREVENT_DANGEROUS_EXTRUDE
-  if(target[E_AXIS]!=position[E_AXIS])
-  {
-    if(degHotend(active_extruder)<extrude_min_temp)
-    {
-      position[E_AXIS]=target[E_AXIS]; //behave as if the move really took place, but ignore E part
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM(MSG_ERR_COLD_EXTRUDE_STOP);
-    }
-
-    #ifdef PREVENT_LENGTHY_EXTRUDE
-    if(labs(target[E_AXIS]-position[E_AXIS])>axis_steps_per_unit[E_AXIS]*EXTRUDE_MAXLENGTH)
-    {
-      position[E_AXIS]=target[E_AXIS]; //behave as if the move really took place, but ignore E part
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM(MSG_ERR_LONG_EXTRUDE_STOP);
-    }
-    #endif
-  }
-  #endif
 
   // Prepare to set up new block
   block_t *block = &block_buffer[block_buffer_head];
@@ -587,24 +582,18 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
 
 // corexy planning - these equations follow the form of the dA and dB equations on http://www.corexy.com/theory.html
 #if defined COREXY
+  #error 1
 block->steps_x = labs((target[X_AXIS]-position[X_AXIS]) + (target[Y_AXIS]-position[Y_AXIS]));
 block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-position[Y_AXIS]));
 
 // Using VOLTERA calibration values.
 #else
-float cos_theta = calib_cos_theta;
-float tan_theta = calib_tan_theta;
 
-// Because the AXIS are skewed. Homing becomes tricky because when you are homing one axis, both axis are actually moving
-// This produces unexpected results. i.e - Y axis triggers when you are homing X axis.
-// This is undesirable behaviour. If we are homing the axis, disable the skew check by overwriting our theta values.
-if(homing_axis){
-  cos_theta = 1;
-  tan_theta = 0;
-}
+// Given our local target and our old position we just calculate the difference in steps.
+// Position is updated before.
 
-float steps_x_signed = (target[X_AXIS] - position[X_AXIS])/(cos_theta*calib_x_scale);
-float steps_y_signed = ((target[Y_AXIS] - position[Y_AXIS]) - (target[X_AXIS] - position[X_AXIS])*tan_theta)/calib_y_scale;
+float steps_x_signed = target[X_AXIS] - position[X_AXIS];
+float steps_y_signed = target[Y_AXIS] - position[Y_AXIS];
 block->steps_x = labs(steps_x_signed);
 block->steps_y = labs(steps_y_signed);
 #endif
@@ -623,10 +612,6 @@ block->steps_y = labs(steps_y_signed);
   }
 
   block->fan_speed = fanSpeed;
-  #ifdef BARICUDA
-  block->valve_pressure = ValvePressure;
-  block->e_to_p_pressure = EtoPPressure;
-  #endif
 
   // Compute direction bits for this block
   block->direction_bits = 0;
@@ -701,16 +686,18 @@ block->steps_y = labs(steps_y_signed);
     if(feed_rate<minimumfeedrate) feed_rate=minimumfeedrate;
   }
 
+  //Delta_mm is the mm that our axis will actually move to meet the global coordinates.
+
   float delta_mm[4];
 
   #ifdef COREXY
     delta_mm[X_AXIS] = (((target[X_AXIS]-position[X_AXIS]) + (target[Y_AXIS]-position[Y_AXIS]))/axis_steps_per_unit[X_AXIS])/sqrt(2);
     delta_mm[Y_AXIS] = (((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-position[Y_AXIS]))/axis_steps_per_unit[Y_AXIS])/sqrt(2);
 
-  // Voltera Calibration
+  // Voltera Calibration - target and position already take into account our corrections.
   #else
-    delta_mm[X_AXIS] = steps_x_signed/axis_steps_per_unit[X_AXIS];
-    delta_mm[Y_AXIS] = steps_y_signed/axis_steps_per_unit[Y_AXIS];
+    delta_mm[X_AXIS] = steps_x_signed/(axis_steps_per_unit[X_AXIS]);
+    delta_mm[Y_AXIS] = steps_y_signed/(axis_steps_per_unit[Y_AXIS]);
   #endif
 
   delta_mm[Z_AXIS] = (target[Z_AXIS]-position[Z_AXIS])/axis_steps_per_unit[Z_AXIS];
@@ -775,41 +762,6 @@ block->steps_y = labs(steps_y_signed);
   }
 
 
-  // Max segement time in us.
-#ifdef XY_FREQUENCY_LIMIT
-  #define MAX_FREQ_TIME (1000000.0/XY_FREQUENCY_LIMIT)
-    // Check and limit the xy direction change frequency
-    unsigned char direction_change = block->direction_bits ^ old_direction_bits;
-    old_direction_bits = block->direction_bits;
-    segment_time = lround((float)segment_time / speed_factor);
-
-    if((direction_change & (1<<X_AXIS)) == 0)
-    {
-      x_segment_time[0] += segment_time;
-    }
-    else
-    {
-      x_segment_time[2] = x_segment_time[1];
-      x_segment_time[1] = x_segment_time[0];
-      x_segment_time[0] = segment_time;
-    }
-    if((direction_change & (1<<Y_AXIS)) == 0)
-    {
-      y_segment_time[0] += segment_time;
-    }
-    else
-    {
-      y_segment_time[2] = y_segment_time[1];
-      y_segment_time[1] = y_segment_time[0];
-      y_segment_time[0] = segment_time;
-    }
-    long max_x_segment_time = max(x_segment_time[0], max(x_segment_time[1], x_segment_time[2]));
-    long max_y_segment_time = max(y_segment_time[0], max(y_segment_time[1], y_segment_time[2]));
-    long min_xy_segment_time =min(max_x_segment_time, max_y_segment_time);
-    if(min_xy_segment_time < MAX_FREQ_TIME)
-      speed_factor = min(speed_factor, speed_factor * (float)min_xy_segment_time / (float)MAX_FREQ_TIME);
-#endif
-
   // Correct the speed
   if( speed_factor < 1.0)
   {
@@ -847,46 +799,6 @@ block->steps_y = labs(steps_y_signed);
   block->acceleration = block->acceleration_st / steps_per_mm;
   block->acceleration_rate = (long)((float)block->acceleration_st * (16777216.0 / (F_CPU / 8.0)));
 
-#if 0  // Use old jerk for now
-  // Compute path unit vector
-  double unit_vec[3];
-
-  unit_vec[X_AXIS] = delta_mm[X_AXIS]*inverse_millimeters;
-  unit_vec[Y_AXIS] = delta_mm[Y_AXIS]*inverse_millimeters;
-  unit_vec[Z_AXIS] = delta_mm[Z_AXIS]*inverse_millimeters;
-
-  // Compute maximum allowable entry speed at junction by centripetal acceleration approximation.
-  // Let a circle be tangent to both previous and current path line segments, where the junction
-  // deviation is defined as the distance from the junction to the closest edge of the circle,
-  // colinear with the circle center. The circular segment joining the two paths represents the
-  // path of centripetal acceleration. Solve for max velocity based on max acceleration about the
-  // radius of the circle, defined indirectly by junction deviation. This may be also viewed as
-  // path width or max_jerk in the previous grbl version. This approach does not actually deviate
-  // from path, but used as a robust way to compute cornering speeds, as it takes into account the
-  // nonlinearities of both the junction angle and junction velocity.
-  double vmax_junction = MINIMUM_PLANNER_SPEED; // Set default max junction speed
-
-  // Skip first block or when previous_nominal_speed is used as a flag for homing and offset cycles.
-  if ((block_buffer_head != block_buffer_tail) && (previous_nominal_speed > 0.0)) {
-    // Compute cosine of angle between previous and current path. (prev_unit_vec is negative)
-    // NOTE: Max junction velocity is computed without sin() or acos() by trig half angle identity.
-    double cos_theta = - previous_unit_vec[X_AXIS] * unit_vec[X_AXIS]
-      - previous_unit_vec[Y_AXIS] * unit_vec[Y_AXIS]
-      - previous_unit_vec[Z_AXIS] * unit_vec[Z_AXIS] ;
-
-    // Skip and use default max junction speed for 0 degree acute junction.
-    if (cos_theta < 0.95) {
-      vmax_junction = min(previous_nominal_speed,block->nominal_speed);
-      // Skip and avoid divide by zero for straight junctions at 180 degrees. Limit to min() of nominal speeds.
-      if (cos_theta > -0.95) {
-        // Compute maximum junction velocity based on maximum acceleration and junction deviation
-        double sin_theta_d2 = sqrt(0.5*(1.0-cos_theta)); // Trig half angle identity. Always positive.
-        vmax_junction = min(vmax_junction,
-        sqrt(block->acceleration * junction_deviation * sin_theta_d2/(1.0-sin_theta_d2)) );
-      }
-    }
-  }
-#endif
   // Start with a safe speed
   float vmax_junction = max_xy_jerk/2;
   float vmax_junction_factor = 1.0;
@@ -957,33 +869,6 @@ block->steps_y = labs(steps_y_signed);
   previous_nominal_speed = block->nominal_speed;
 
 
-#ifdef ADVANCE
-  // Calculate advance rate
-  if((block->steps_e == 0) || (block->steps_x == 0 && block->steps_y == 0 && block->steps_z == 0)) {
-    block->advance_rate = 0;
-    block->advance = 0;
-  }
-  else {
-    long acc_dist = estimate_acceleration_distance(0, block->nominal_rate, block->acceleration_st);
-    float advance = (STEPS_PER_CUBIC_MM_E * EXTRUDER_ADVANCE_K) *
-      (current_speed[E_AXIS] * current_speed[E_AXIS] * EXTRUTION_AREA * EXTRUTION_AREA)*256;
-    block->advance = advance;
-    if(acc_dist == 0) {
-      block->advance_rate = 0;
-    }
-    else {
-      block->advance_rate = advance / (float)acc_dist;
-    }
-  }
-  /*
-    SERIAL_ECHO_START;
-   SERIAL_ECHOPGM("advance :");
-   SERIAL_ECHO(block->advance/256.0);
-   SERIAL_ECHOPGM("advance rate :");
-   SERIAL_ECHOLN(block->advance_rate/256.0);
-   */
-#endif // ADVANCE
-
   calculate_trapezoid_for_block(block, block->entry_speed/block->nominal_speed,
   safe_speed/block->nominal_speed);
 
@@ -994,74 +879,6 @@ block->steps_y = labs(steps_y_signed);
   memcpy(position, target, sizeof(target)); // position[] = target[]
 
   planner_recalculate();
-/*
-  int8_t block_index = block_buffer_tail;
-  block_t *current;
-  block_t *next = NULL;
-
-  while(block_index != block_buffer_head) {
-    current = next;
-    next = &block_buffer[block_index];
-    if (current) {
-      // Recalculate if current block entry or exit junction speed has changed.
-            SERIAL_PROTOCOLPGM("current->millimeters");
-      SERIAL_PROTOCOL(current->millimeters);
-      SERIAL_PROTOCOLLN("");
-            SERIAL_PROTOCOLPGM("current->accelerate_until ");
-      SERIAL_PROTOCOL(current->accelerate_until);
-      SERIAL_PROTOCOLLN("");
-
-      SERIAL_PROTOCOLPGM("current->decelerate_after ");
-      SERIAL_PROTOCOL(current->decelerate_after);
-      SERIAL_PROTOCOLLN("");
-
-      SERIAL_PROTOCOLPGM("current->initial_rate ");
-      SERIAL_PROTOCOL(current->initial_rate);
-      SERIAL_PROTOCOLLN("");
-
-            SERIAL_PROTOCOLPGM("current->nominal_rate ");
-      SERIAL_PROTOCOL(current->nominal_rate);
-      SERIAL_PROTOCOLLN("");
-
-      SERIAL_PROTOCOLPGM("current->final_rate ");
-      SERIAL_PROTOCOL(current->final_rate);
-      SERIAL_PROTOCOLLN("");
-
-      SERIAL_PROTOCOLPGM("current->steps_x ");
-      SERIAL_PROTOCOL(current->steps_x);
-      SERIAL_PROTOCOLLN("");
-
-      SERIAL_PROTOCOLPGM("current->steps_y ");
-      SERIAL_PROTOCOL(current->steps_y);
-      SERIAL_PROTOCOLLN("");
-
-      SERIAL_PROTOCOLPGM("current->steps_z ");
-      SERIAL_PROTOCOL(current->steps_z);
-      SERIAL_PROTOCOLLN("");
-
-      SERIAL_PROTOCOLPGM("current->steps_e ");
-      SERIAL_PROTOCOL(current->steps_e);
-      SERIAL_PROTOCOLLN("");
-
-      SERIAL_PROTOCOLPGM("current->step_event_count ");
-      SERIAL_PROTOCOL(current->step_event_count);
-      SERIAL_PROTOCOLLN("");
-
-
-      SERIAL_PROTOCOLPGM("---------------");
-      SERIAL_PROTOCOLLN("");
-
-
-
-    }
-    block_index = next_block_index( block_index );
-  }
-
-    SERIAL_PROTOCOLPGM("----------------------------");
-  SERIAL_PROTOCOLLN("");
-
-
-*/
 
   st_wake_up();
 
@@ -1091,10 +908,22 @@ void plan_set_position(const float &x, const float &y, const float &z, const flo
 {
 #endif // ENABLE_AUTO_BED_LEVELING
 
-  position[X_AXIS] = lround(x*axis_steps_per_unit[X_AXIS]);
-  position[Y_AXIS] = lround(y*axis_steps_per_unit[Y_AXIS]);
+
+// Because the AXIS are skewed. Homing becomes tricky because when you are homing one axis, both axis are actually moving
+// This produces unexpected results. i.e - Y axis triggers when you are homing X axis.
+// This is undesirable behaviour. If we are homing the axis, disable the skew check by overwriting our theta values.
+float cos_theta = calib_cos_theta;
+float tan_theta = calib_tan_theta;
+if(homing_axis){
+  cos_theta = 1;
+  tan_theta = 0;
+}
+
+  position[X_AXIS] = lround(x*axis_steps_per_unit[X_AXIS]/(calib_x_scale*cos_theta));
+  position[Y_AXIS] = lround((y-x*tan_theta)*axis_steps_per_unit[Y_AXIS]/calib_y_scale);
   position[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);
   position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]);
+
   st_set_position(position[X_AXIS], position[Y_AXIS], position[Z_AXIS], position[E_AXIS]);
   previous_nominal_speed = 0.0; // Resets planner junction speeds. Assumes start from rest.
   previous_speed[0] = 0.0;
