@@ -42,7 +42,7 @@
 #include <SPI.h>
 #endif
 
-#define VERSION_STRING  "1.0.0"
+#define VERSION_STRING  "1.0.1"
 
 // look here for descriptions of G-codes: http://linuxcnc.org/handbook/gcode/g-code.html
 // http://objects.reprap.org/wiki/Mendel_User_Manual:_RepRapGCodes
@@ -344,7 +344,7 @@ void setup()
   if(mcu & 32) SERIAL_ECHOLNPGM(MSG_SOFTWARE_RESET);
   MCUSR=0;
 
-  /*SERIAL_ECHOPGM(MSG_MARLIN);
+  /*
   SERIAL_ECHOLNPGM(VERSION_STRING);
   #ifdef STRING_VERSION_CONFIG_H
     #ifdef STRING_CONFIG_H_AUTHOR
@@ -1722,28 +1722,12 @@ void process_commands()
     {
       if(code_seen('S')) memcpy(product_serial_number, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], sizeof(product_serial_number));
 
-      //Terminate the string.
-      product_serial_number[10] = '\0';
+      product_serial_number[10] = '\0'; //Terminate the string.
       Config_StoreCalibration();
     }
     break;
 
-    case 505:
-    {
-           SERIAL_ECHO_START;
-          SERIAL_ECHOLNPGM("Calibration Offsets:");
-           SERIAL_ECHO_START;
-          SERIAL_ECHOPAIR("X:", min_z_x_pos);
-           SERIAL_ECHOPAIR(" Y:", min_z_y_pos);
-           SERIAL_ECHOPAIR(" I:", xypos_x_pos);
-           SERIAL_ECHOPAIR(" J:", xypos_y_pos);
-           SERIAL_ECHOPAIR(" P:", z_probe_offset);
-           SERIAL_ECHOLN("");
-
-
-    }
-    break;
-    case 508: // M505 Store No. Min X, Min Y, XY Positioner locations.
+    case 505: // M505 Store No. Min X, Min Y, XY Positioner locations.
     {
       if(code_seen('X')) min_z_x_pos = code_value();
       if(code_seen('Y')) min_z_y_pos = code_value();
@@ -1753,7 +1737,7 @@ void process_commands()
     }
     break;
 
-    case 506: // Store the axis scaling and axis skew.
+    case 506: // M506 Store the axis scaling and axis skew.
     {
       if(code_seen('X')) calib_x_scale = code_value();
       if(code_seen('Y')) calib_y_scale = code_value();
@@ -1784,7 +1768,7 @@ void process_commands()
 
         #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
           SERIAL_PROTOCOLLN("Stepper Driver Currents (Max: 255)");
-          SERIAL_PROTOCOLPGM("X:");
+          SERIAL_PROTOCOLPGM("M907 X:");
           SERIAL_PROTOCOL((int)digiPotGetCurrent(X_AXIS));
           SERIAL_PROTOCOLPGM("  Y:");
           SERIAL_PROTOCOL((int)digiPotGetCurrent(Y_AXIS));
@@ -1801,16 +1785,6 @@ void process_commands()
 
       #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
         for(int i=0;i<NUM_AXIS;i++) if(code_seen(axis_codes[i])) digiPotSetCurrent(i,code_value());
-      #endif
-    }
-    break;
-    case 908: // M908 Control digital trimpot directly.
-    {
-      #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
-        uint8_t channel,current;
-        if(code_seen('P')) channel=code_value();
-        if(code_seen('S')) current=code_value();
-        digiPotWrite(channel, current);
       #endif
     }
     break;
