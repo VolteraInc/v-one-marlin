@@ -42,7 +42,15 @@
 #include <SPI.h>
 #endif
 
-#define VERSION_STRING  "1.0.1"
+/*
+Update these versions whenever firmware is shipped to a customer.
+These version numbers should reflect the branch they are in.
+v0.0.0 <- Internal use.
+v1.0.0 <- What batch 1 shipped with.
+v1.0.1 <- TBD
+*/
+
+#define VERSION_STRING  "v0.0.0"
 
 // look here for descriptions of G-codes: http://linuxcnc.org/handbook/gcode/g-code.html
 // http://objects.reprap.org/wiki/Mendel_User_Manual:_RepRapGCodes
