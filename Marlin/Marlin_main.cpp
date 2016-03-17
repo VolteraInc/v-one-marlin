@@ -84,6 +84,10 @@ v1.0.1 <- TBD
 // G90 - Use Absolute Coordinates
 // G91 - Use Relative Coordinates
 // G92 - Set current position to coordinates given
+//
+// G1001 - Raise until endstop hit
+// G1002 - Move to XY-Positioner
+// G1003 - Move to Z-Switch
 
 // M Codes
 // M0   - Unconditional stop - Wait for user to press a button on the LCD (Only if ULTRA_LCD is enabled)
@@ -215,6 +219,7 @@ float min_z_x_pos;
 float min_z_y_pos;
 float xypos_x_pos;
 float xypos_y_pos;
+float xypos_z_pos = XYPOS_Z_POS;
 char product_serial_number[11] = PRODUCT_SERIAL;
 
 //===========================================================================
@@ -723,6 +728,54 @@ bool ensure_requested_homing(void) {
   return true;
 }
 
+void moveXY(const String& description, float x, float y, float f) {
+  if (description) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHO(description);
+    SERIAL_ECHO(" (X:"); SERIAL_ECHO(x);
+    SERIAL_ECHO(" Y:"); SERIAL_ECHO(y);
+    SERIAL_ECHO(" Z:"); SERIAL_ECHO(current_position[Z_AXIS]);
+    SERIAL_ECHO(" F:"); SERIAL_ECHO(f);
+    SERIAL_ECHO(")\n");
+  }
+
+  memcpy(destination, current_position, sizeof(destination));
+  destination[X_AXIS] = x;
+  destination[Y_AXIS] = y;
+  feedrate = f;
+  prepare_move();
+}
+
+void moveZ(const String& description, float z, float f) {
+  if (description) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHO(description);
+    SERIAL_ECHO(" (Z:"); SERIAL_ECHO(z);
+    SERIAL_ECHO(" F:"); SERIAL_ECHO(f);
+    SERIAL_ECHO(")\n");
+  }
+
+  memcpy(destination, current_position, sizeof(destination));
+  destination[Z_AXIS] = z;
+  feedrate = f;
+  prepare_move();
+}
+
+void raise() {
+  bool enabled = endstops_enabled();
+  enable_endstops(true);
+
+  moveZ("Rise to max Z", Z_MAX_POS, homing_feedrate[Z_AXIS]);
+  st_synchronize();
+  endstops_hit_on_purpose();
+
+  // Tell the planner where we are, it thinks we are at Z_MAX_POS
+  current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
+  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+
+  enable_endstops(enabled);
+}
+
 void process_commands()
 {
   unsigned long codenum; //throw away variable
@@ -1114,6 +1167,23 @@ void process_commands()
            }
         }
       }
+      break;
+
+    case 1001: // Raise until endstop hit
+      raise();
+      break;
+
+    case 1002: // Move to xy-positioner
+      raise();
+      moveXY("move to xy-positioner", xypos_x_pos, xypos_y_pos, homing_feedrate[X_AXIS]);
+      st_synchronize();
+      moveZ("lower to xy-positioner", xypos_z_pos, homing_feedrate[Z_AXIS]);
+      st_synchronize();
+      break;
+
+    case 1003: // Move to z-switch
+      raise();
+      moveXY("move to z-switch", min_z_x_pos, min_z_y_pos, homing_feedrate[X_AXIS]);
       break;
     }
     previous_millis_active_cmd = millis();
@@ -1933,7 +2003,7 @@ void prepare_move()
 
   // Do not use feedmultiply for E or Z only moves
   if( (current_position[X_AXIS] == destination [X_AXIS]) && (current_position[Y_AXIS] == destination [Y_AXIS])) {
-      plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
+    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
   }
   else {
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate*feedmultiply/60/100.0, active_extruder);
