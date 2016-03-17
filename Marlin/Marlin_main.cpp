@@ -851,6 +851,11 @@ int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
       return -1;
     }
     centerX = (measurement2 + measurement1) / 2;
+    SERIAL_PROTOCOL("xy-positioner-centerX");
+    SERIAL_PROTOCOL(" M1:"); SERIAL_PROTOCOL_F(measurement1, 3);
+    SERIAL_PROTOCOL(" M2:"); SERIAL_PROTOCOL_F(measurement2, 3);
+    SERIAL_PROTOCOL(" X:"); SERIAL_PROTOCOL_F(centerX, 3);
+    SERIAL_PROTOCOL("\n");
 
     // Compute center Y
     if ( moveXY("", centerX, centerY, feedrate, false) // applies new centerX
@@ -860,10 +865,15 @@ int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
       return -1;
     }
     centerY = (measurement2 + measurement1) / 2;
+    SERIAL_PROTOCOL("xy-positioner-centerY");
+    SERIAL_PROTOCOL(" M1:"); SERIAL_PROTOCOL_F(measurement1, 3);
+    SERIAL_PROTOCOL(" M2:"); SERIAL_PROTOCOL_F(measurement2, 3);
+    SERIAL_PROTOCOL(" Y:"); SERIAL_PROTOCOL_F(centerY, 3);
+    SERIAL_PROTOCOL("\n");
   }
 
   // Go to the computed position
-  if (moveXY("", centerX, centerY, feedrate, false)) {
+  if (moveXY("move to computed center", centerX, centerY, feedrate, false)) {
     return -1;
   }
 
