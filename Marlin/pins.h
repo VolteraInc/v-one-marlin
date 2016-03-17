@@ -1,9 +1,6 @@
 #ifndef PINS_H
 #define PINS_H
 
-#define DIGIPOTSS_PIN -1
-
-
 /****************************************************************************************
 * Arduino Mega pin assignment
 *
