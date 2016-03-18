@@ -206,8 +206,6 @@ float endstop_adj[3]={0,0,0};
 #endif
 float min_pos[3] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS };
 float max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
-#define HOMED_NONE 0
-signed char axis_homed_state[3] = {HOMED_NONE, HOMED_NONE, HOMED_NONE};
 float zprobe_zoffset;
 
 uint8_t active_extruder = 0;
@@ -226,6 +224,8 @@ char product_serial_number[11];
 //===========================================================================
 //=============================Private Variables=============================
 //===========================================================================
+#define HOMED_NONE 0
+signed char axis_homed_state[3] = {HOMED_NONE, HOMED_NONE, HOMED_NONE};
 const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
 static float destination[NUM_AXIS] = {  0.0, 0.0, 0.0, 0.0};
 static float offset[3] = {0.0, 0.0, 0.0};
@@ -280,6 +280,8 @@ boolean chdkActive = false;
 //===========================================================================
 //=============================Routines======================================
 //===========================================================================
+
+void sendHomedStatusUpdate();
 
 void checkBufferEmpty();
 
@@ -382,6 +384,8 @@ void setup()
   {
     fromsd[i] = false;
   }
+
+  sendHomedStatusUpdate();
 
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
@@ -622,14 +626,14 @@ static int homeaxis(int axis, bool flip) {
       axis_home_dir = axis_home_dir*-1 ;
     }
 
-    if (!axis_homed_state[axis]) current_position[axis] = 0;
+    if (!getHomedState(axis)) current_position[axis] = 0;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 
     // If we already know roughly where we are, don't go too far past the known extent
     // (e.g. if tool isn't mounted and we're trying to home z bottom after having homed z top)
     // Only do this in Z because no other axis has double endstops
     bool soft_limit_home = axis == Z_AXIS;
-    destination[axis] = soft_limit_home && axis_homed_state[axis] ? (axis_home_dir > 0 ? max_pos : min_pos)[axis] + axis_home_dir : 1.5 * max_length(axis) * axis_home_dir;
+    destination[axis] = soft_limit_home && getHomedState(axis) ? (axis_home_dir > 0 ? max_pos : min_pos)[axis] + axis_home_dir : 1.5 * max_length(axis) * axis_home_dir;
     feedrate = homing_feedrate[axis];
     endstops_hit_on_purpose(); // Clear endstop flags
 
@@ -661,11 +665,30 @@ static int homeaxis(int axis, bool flip) {
     destination[axis] = current_position[axis];
     feedrate = 0.0;
     endstops_hit_on_purpose();
-    axis_homed_state[axis] = axis_home_dir;
+    setHomedState(axis, axis_home_dir);
 
     homing_axis = false; //Lower flag to indicate homing was finished. It doesn't matter if it was not sucessful.
 
     return 0;
+}
+
+int getHomedState(int axis) {
+  return axis_homed_state[axis];
+}
+
+void setHomedState(int axis, int value) {
+  if (axis_homed_state[axis] != value) {
+    axis_homed_state[axis] = value;
+    sendHomedStatusUpdate();
+  }
+}
+
+void sendHomedStatusUpdate() {
+  SERIAL_PROTOCOL("homedStatusUpdate");
+  SERIAL_PROTOCOL(" x:"); SERIAL_PROTOCOL(getHomedState(X_AXIS));
+  SERIAL_PROTOCOL(" y:"); SERIAL_PROTOCOL(getHomedState(Y_AXIS));
+  SERIAL_PROTOCOL(" z:"); SERIAL_PROTOCOL(getHomedState(Z_AXIS));
+  SERIAL_PROTOCOL("\n");
 }
 
 void refresh_cmd_timeout(void)
@@ -681,9 +704,9 @@ void ensure_homed(bool need_x, bool need_y, bool need_z) {
     need_x = need_y = need_z = true;
   }
 
-  bool home_x = need_x && !axis_homed_state[X_AXIS];
-  bool home_y = need_y && !axis_homed_state[Y_AXIS];
-  bool home_z = need_z && !axis_homed_state[Z_AXIS];
+  bool home_x = need_x && !getHomedState(X_AXIS);
+  bool home_y = need_y && !getHomedState(Y_AXIS);
+  bool home_z = need_z && !getHomedState(Z_AXIS);
 
   if (!home_x && !home_y && !home_z) return;
 
@@ -727,7 +750,7 @@ bool ensure_requested_homing(void) {
     strchr_pointer += (home_y < 0 ? 2 : 1) + 1;
     signed char home_z = code_value_long();
 
-    if ((home_x && axis_homed_state[X_AXIS] != home_x) || (home_y && axis_homed_state[Y_AXIS] != home_y) || (home_z && axis_homed_state[Z_AXIS] != home_z)) {
+    if ((home_x && getHomedState(X_AXIS) != home_x) || (home_y && getHomedState(Y_AXIS) != home_y) || (home_z && getHomedState(Z_AXIS) != home_z)) {
       SERIAL_ERROR_START;
       SERIAL_ERRORLNPGM(" move failed - printer not homed as requested");
       return false;
@@ -859,7 +882,7 @@ int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
       return -1;
     }
     centerX = (measurement2 + measurement1) / 2;
-    SERIAL_PROTOCOL("xy-positioner-centerX");
+    SERIAL_PROTOCOL("xyPositionerCenterX");
     SERIAL_PROTOCOL(" M1:"); SERIAL_PROTOCOL_F(measurement1, 3);
     SERIAL_PROTOCOL(" M2:"); SERIAL_PROTOCOL_F(measurement2, 3);
     SERIAL_PROTOCOL(" X:"); SERIAL_PROTOCOL_F(centerX, 3);
@@ -873,7 +896,7 @@ int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
       return -1;
     }
     centerY = (measurement2 + measurement1) / 2;
-    SERIAL_PROTOCOL("xy-positioner-centerY");
+    SERIAL_PROTOCOL("xyPositionerCenterY");
     SERIAL_PROTOCOL(" M1:"); SERIAL_PROTOCOL_F(measurement1, 3);
     SERIAL_PROTOCOL(" M2:"); SERIAL_PROTOCOL_F(measurement2, 3);
     SERIAL_PROTOCOL(" Y:"); SERIAL_PROTOCOL_F(centerY, 3);
@@ -897,7 +920,7 @@ int homeZtoZswitch() {
   saved_feedrate = feedrate;
   enable_endstops(true);
 
-  if (moveXY("", min_z_x_pos, min_z_y_pos, max_feedrate[X_AXIS] * 60, false)) {
+  if (moveXY("ensure at z-switch", min_z_x_pos, min_z_y_pos, max_feedrate[X_AXIS] * 60, false)) {
     goto DONE;
   }
 
@@ -1035,7 +1058,7 @@ void process_commands()
         || moveXY("", xypos_x_pos, xypos_y_pos, homing_feedrate[Y_AXIS], false)) {
         break;
       }
-      SERIAL_PROTOCOL("xy-positioner-measurement +Y:");
+      SERIAL_PROTOCOL("xyPositionerMeasurement +Y:");
       SERIAL_PROTOCOL_F(measurement, 3);
       SERIAL_PROTOCOL("\n");
       break;
@@ -1048,7 +1071,7 @@ void process_commands()
         || moveXY("", xypos_x_pos, xypos_y_pos, homing_feedrate[Y_AXIS], false)) {
         break;
       }
-      SERIAL_PROTOCOL("xy-positioner-measurement -Y:");
+      SERIAL_PROTOCOL("xyPositionerMeasurement -Y:");
       SERIAL_PROTOCOL_F(measurement, 3);
       SERIAL_PROTOCOL("\n");
       break;
@@ -1061,7 +1084,7 @@ void process_commands()
         || moveXY("", xypos_x_pos, xypos_y_pos, homing_feedrate[X_AXIS], false)) {
         break;
       }
-      SERIAL_PROTOCOL("xy-positioner-measurement +X:");
+      SERIAL_PROTOCOL("xyPositionerMeasurement +X:");
       SERIAL_PROTOCOL_F(measurement, 3);
       SERIAL_PROTOCOL("\n");
       break;
@@ -1074,7 +1097,7 @@ void process_commands()
         || moveXY("", xypos_x_pos, xypos_y_pos, homing_feedrate[X_AXIS], false)) {
         break;
       }
-      SERIAL_PROTOCOL("xy-positioner-measurement -X:");
+      SERIAL_PROTOCOL("xyPositionerMeasurement -X:");
       SERIAL_PROTOCOL_F(measurement, 3);
       SERIAL_PROTOCOL("\n");
       break;
@@ -1264,7 +1287,7 @@ void process_commands()
       }
 
       // Output
-      SERIAL_PROTOCOL("xy-positioner-center-measurement");
+      SERIAL_PROTOCOL("xyPositionerCenterMeasurement");
       SERIAL_PROTOCOL(" X:"); SERIAL_PROTOCOL_F(centerX, 3);
       SERIAL_PROTOCOL(" Y:"); SERIAL_PROTOCOL_F(centerY, 3);
       SERIAL_PROTOCOL("\n");
@@ -1576,11 +1599,11 @@ void process_commands()
       // Homing state on each axis
       // 0 = not homed, -1 = homed to min extent, 1 = homed to max extent
       SERIAL_PROTOCOLPGM(" H:");
-      SERIAL_PROTOCOL(axis_homed_state[X_AXIS]);
+      SERIAL_PROTOCOL(getHomedState(X_AXIS));
       SERIAL_PROTOCOL(',');
-      SERIAL_PROTOCOL(axis_homed_state[Y_AXIS]);
+      SERIAL_PROTOCOL(getHomedState(Y_AXIS));
       SERIAL_PROTOCOL(',');
-      SERIAL_PROTOCOL(axis_homed_state[Z_AXIS]);
+      SERIAL_PROTOCOL(getHomedState(Z_AXIS));
 
       SERIAL_PROTOCOLLN("");
       break;
