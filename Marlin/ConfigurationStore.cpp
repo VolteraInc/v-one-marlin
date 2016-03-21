@@ -259,7 +259,6 @@ void Config_RetrieveCalibration()
         calib_y_scale = CALIB_Y_SCALE;
         calib_cos_theta = CALIB_COS_THETA;
         calib_tan_theta = CALIB_TAN_THETA;
-        strcpy(product_serial_number, PRODUCT_SERIAL);
     }
 }
 
