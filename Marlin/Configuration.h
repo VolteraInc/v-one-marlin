@@ -289,6 +289,7 @@ const bool XY_MIN_X_ENDSTOP_INVERTING = true;
 const bool XY_MAX_X_ENDSTOP_INVERTING = true;
 const bool XY_MIN_Y_ENDSTOP_INVERTING = true;
 const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
+#define READ_PIN(PIN) (READ(PIN ## _PIN) ^ (PIN ## _ENDSTOP_INVERTING))
 //#define DISABLE_MAX_ENDSTOPS
 //#define DISABLE_MIN_ENDSTOPS
 
