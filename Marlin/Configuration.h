@@ -273,17 +273,18 @@
 #if VOLTERA_PIN_VERSION == 1
 const bool X_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool P_BOT_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 #elif VOLTERA_PIN_VERSION == 2
 const bool X_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
+const bool P_TOP_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
+const bool P_BOT_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 #endif
+
 const bool Y_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool X_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Y_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-
-const bool P_TOP_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-const bool P_BOT_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 
 const bool XY_MIN_X_ENDSTOP_INVERTING = true;
 const bool XY_MAX_X_ENDSTOP_INVERTING = true;
