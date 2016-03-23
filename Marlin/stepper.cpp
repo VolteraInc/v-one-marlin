@@ -210,6 +210,11 @@
     endstop_z_hit=false;
   }
 
+  bool endstops_enabled()
+  {
+    return check_endstops;
+  }
+
   void enable_endstops(bool check)
   {
     check_endstops = check;

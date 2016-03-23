@@ -58,6 +58,7 @@ bool didHitEndstops();
 void checkHitEndstops(); //call from somewhere to create an serial error message with the locations the endstops where hit, in case they were triggered
 void endstops_hit_on_purpose(); //avoid creation of the message, i.e. after homing and before a routine call of checkHitEndstops();
 
+bool endstops_enabled(); // Returns true if endstop checking is enabled, otherwise false
 void enable_endstops(bool check); // Enable/disable endstop checking
 
 void checkStepperErrors(); //Print errors detected by the stepper

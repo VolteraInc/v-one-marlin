@@ -84,6 +84,10 @@ v1.0.1 <- TBD
 // G90 - Use Absolute Coordinates
 // G91 - Use Relative Coordinates
 // G92 - Set current position to coordinates given
+//
+// G1001 - Raise until endstop hit
+// G1002 - Move to XY-Positioner
+// G1003 - Move to Z-Switch
 
 // M Codes
 // M0   - Unconditional stop - Wait for user to press a button on the LCD (Only if ULTRA_LCD is enabled)
@@ -215,6 +219,7 @@ float min_z_x_pos;
 float min_z_y_pos;
 float xypos_x_pos;
 float xypos_y_pos;
+float xypos_z_pos = XYPOS_Z_POS;
 char product_serial_number[11] = PRODUCT_SERIAL;
 
 //===========================================================================
@@ -723,6 +728,148 @@ bool ensure_requested_homing(void) {
   return true;
 }
 
+void moveZ(const String& description, float z, float f) {
+  if (description.length()) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHO(description);
+    SERIAL_ECHO(" (Z:"); SERIAL_ECHO(z);
+    SERIAL_ECHO(" F:"); SERIAL_ECHO(f);
+    SERIAL_ECHO(")\n");
+  }
+
+  memcpy(destination, current_position, sizeof(destination));
+  destination[Z_AXIS] = z;
+  feedrate = f;
+  prepare_move();
+}
+
+void raise(const String& description = "Rise to max Z") {
+  bool enabled = endstops_enabled();
+  enable_endstops(true);
+
+  moveZ(description, Z_MAX_POS, homing_feedrate[Z_AXIS]);
+  st_synchronize();
+  endstops_hit_on_purpose();
+
+  // Tell the planner where we are, it thinks we are at Z_MAX_POS
+  current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
+  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+
+  enable_endstops(enabled);
+}
+
+int moveXY(const String& description, float x, float y, float f, bool autoRaise = true) {
+  if (description.length()) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHO(description);
+    SERIAL_ECHO(" (X:"); SERIAL_ECHO(x);
+    SERIAL_ECHO(" Y:"); SERIAL_ECHO(y);
+    SERIAL_ECHO(" F:"); SERIAL_ECHO(f);
+    SERIAL_ECHO(")\n");
+  }
+
+  // Rise to a safe height before moving
+  if (autoRaise && (current_position[X_AXIS] != x || current_position[Y_AXIS] != y)) {
+    raise();
+  }
+
+  memcpy(destination, current_position, sizeof(destination));
+  destination[X_AXIS] = x;
+  destination[Y_AXIS] = y;
+  feedrate = f;
+  prepare_move();
+  return 0;
+}
+
+// x and y are treated as relative to the current position (not f)
+void relativeMoveXY(const String& description, float x, float y, float f, bool autoRaise = true) {
+  moveXY(
+    description,
+    current_position[X_AXIS] + x,
+    current_position[Y_AXIS] + y,
+    f,
+    autoRaise
+  );
+}
+
+int xyPositionerTouch(int direction, AxisEnum axis, float& measurement) {
+  int returnValue = -1;
+  bool enabled = endstops_enabled();
+  enable_endstops(true);
+
+  // Move in the given axis and direction until a switch is triggered
+  float offset = (direction < 0 ? -5.0f : 5.0f);
+  relativeMoveXY(
+    "",
+    axis == X_AXIS ? offset : 0,
+    axis == Y_AXIS ? offset : 0,
+    homing_feedrate[axis] / 2,
+    false
+  );
+  st_synchronize();
+
+  // Tell the planner where we are, it is not aware of endstops
+  current_position[axis] = st_get_position_mm(axis);
+  plan_set_position(
+    current_position[X_AXIS],
+    current_position[Y_AXIS],
+    current_position[Z_AXIS],
+    current_position[E_AXIS]
+  );
+
+  if (!didHitEndstops()) {
+    SERIAL_ERROR_START;
+    SERIAL_ERROR("Unable to complete xy-positioning, ");
+    SERIAL_ERROR(direction < 0 ? '-' : '+');
+    SERIAL_ERROR(axis_codes[axis]);
+    SERIAL_ERROR(" limit not hit\n");
+    goto DONE;
+  }
+  endstops_hit_on_purpose();
+
+  // Success
+  measurement = current_position[axis];
+  returnValue = 0;
+
+DONE:
+  enable_endstops(enabled);
+  return returnValue;
+}
+
+int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
+  const float feedrate = homing_feedrate[X_AXIS];
+  float measurement1;
+  float measurement2;
+  centerX = xypos_x_pos;
+  centerY = xypos_y_pos;
+  for (int i=0; i<cycles; ++i) {
+    // Compute center X
+    if ( moveXY("", centerX, centerY, feedrate, false) // applies new centerY on 2nd iteration
+      || xyPositionerTouch(1, X_AXIS, measurement1) // measure +x
+      || moveXY("", centerX, centerY, feedrate, false) // recenter
+      || xyPositionerTouch(-1, X_AXIS, measurement2)) { // measure -x
+      return -1;
+    }
+    centerX = (measurement2 + measurement1) / 2;
+
+    // Compute center Y
+    if ( moveXY("", centerX, centerY, feedrate, false) // applies new centerX
+      || xyPositionerTouch(1, Y_AXIS, measurement1) // measure +y
+      || moveXY("", centerX, centerY, feedrate, false) // recenter
+      || xyPositionerTouch(-1, Y_AXIS, measurement2)) { // measure -y
+      return -1;
+    }
+    centerY = (measurement2 + measurement1) / 2;
+  }
+
+  // Go to the computed position
+  if (moveXY("", centerX, centerY, feedrate, false)) {
+    return -1;
+  }
+
+  return 0;
+}
+
 void process_commands()
 {
   unsigned long codenum; //throw away variable
@@ -855,116 +1002,57 @@ void process_commands()
       endstops_hit_on_purpose();
       break;
 
-    case 18: // G18:  XYPositioner Y1 - Move in +Y until a switch is triggered
-      {
-          enable_endstops(true);
-          // move in +Y until a switch is triggered
-          feedrate = homing_feedrate[X_AXIS]/(2);
-          float yPosition = current_position[Y_AXIS] + 10;
-          plan_buffer_line(current_position[X_AXIS], yPosition, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
-          st_synchronize();
-
-          // we have to let the planner know where we are right now as it is not where we said to go.
-          current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
-          SERIAL_PROTOCOLPGM("xypos Y: ");
-          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-
-          if (!didHitEndstops()) {
-            SERIAL_ERROR_START;
-            SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
-          }
-
-          // Output the trigger position in Y in microns.
-          SERIAL_PROTOCOLLN(float(current_position[Y_AXIS]*1000));
-          enable_endstops(false);
-          plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS]-2.0, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
-          st_synchronize();
-          enable_endstops(true);
+    // G18: XYPositioner Y1 - Move in +Y until a switch is triggered
+    case 18: {
+      float measurement;
+      if ( xyPositionerTouch(1, Y_AXIS, measurement)
+        || moveXY("", xypos_x_pos, xypos_y_pos, homing_feedrate[Y_AXIS], false)) {
+        break;
+      }
+      SERIAL_PROTOCOL("xy-positioner-measurement +Y:");
+      SERIAL_PROTOCOL_F(measurement, 3);
+      SERIAL_PROTOCOL("\n");
+      break;
     }
-      break;
 
-      case 19: // G19: XYPositioner Y2 - Move in -Y until a switch is triggered
-      {
-          enable_endstops(true);
-          // move in -Y until a switch is triggered
-          feedrate = homing_feedrate[Y_AXIS]/(2);
-          float yPosition = current_position[Y_AXIS] - 10;
-          plan_buffer_line(current_position[X_AXIS], yPosition, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
-          st_synchronize();
-
-          // we have to let the planner know where we are right now as it is not where we said to go.
-          current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
-          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-
-          if (!didHitEndstops()) {
-            SERIAL_ERROR_START;
-            SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
-          }
-
-          SERIAL_PROTOCOLPGM("xypos Y: ");
-          SERIAL_PROTOCOLLN(float(current_position[Y_AXIS]*1000));
-          enable_endstops(false);
-          plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS]+2.0, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
-          st_synchronize();
-          enable_endstops(true);
+    // G19: XYPositioner Y2 - Move in -Y until a switch is triggered
+    case 19: {
+      float measurement;
+      if ( xyPositionerTouch(-1, Y_AXIS, measurement)
+        || moveXY("", xypos_x_pos, xypos_y_pos, homing_feedrate[Y_AXIS], false)) {
+        break;
       }
+      SERIAL_PROTOCOL("xy-positioner-measurement -Y:");
+      SERIAL_PROTOCOL_F(measurement, 3);
+      SERIAL_PROTOCOL("\n");
       break;
+    }
 
-    case 20: // G20: XYPositioner X1 - Move in +X until a switch is triggered
-      {
-          enable_endstops(true);
-          // move in +X until a switch is triggered
-          feedrate = homing_feedrate[X_AXIS]/(2);
-          float xPosition = current_position[X_AXIS] + 10;
-          plan_buffer_line(xPosition, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
-          st_synchronize();
-
-          // we have to let the planner know where we are right now as it is not where we said to go.
-          current_position[X_AXIS] = st_get_position_mm(X_AXIS);
-          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-
-          if (!didHitEndstops()) {
-            SERIAL_ERROR_START;
-            SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
-          }
-
-          // Output the trigger position in X in microns.
-          SERIAL_PROTOCOLPGM("xypos X: ");
-          SERIAL_PROTOCOLLN(float(current_position[X_AXIS]*1000));
-          enable_endstops(false);
-          plan_buffer_line(current_position[X_AXIS]-2.0, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
-          st_synchronize();
-          enable_endstops(true);
+    // G20: XYPositioner X1 - Move in +X until a switch is triggered
+    case 20: {
+      float measurement;
+      if ( xyPositionerTouch(1, X_AXIS, measurement)
+        || moveXY("", xypos_x_pos, xypos_y_pos, homing_feedrate[X_AXIS], false)) {
+        break;
       }
+      SERIAL_PROTOCOL("xy-positioner-measurement +X:");
+      SERIAL_PROTOCOL_F(measurement, 3);
+      SERIAL_PROTOCOL("\n");
       break;
+    }
 
-    case 21: // G21: XYPositioner X2 - Move in -X until switch triggered
-      {
-          enable_endstops(true);
-          // move in -X until a switch is triggered
-          feedrate = homing_feedrate[X_AXIS]/(2);
-          float xPosition = current_position[X_AXIS] - 10;
-          plan_buffer_line(xPosition, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
-          st_synchronize();
-
-          // we have to let the planner know where we are right now as it is not where we said to go.
-          current_position[X_AXIS] = st_get_position_mm(X_AXIS);
-          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-
-          if (!didHitEndstops()) {
-            SERIAL_ERROR_START;
-            SERIAL_ERRORLNPGM(" xypos failed - no limit hit");
-          }
-
-          // Output the trigger position in X in microns.
-          SERIAL_PROTOCOLPGM("xypos X: ");
-          SERIAL_PROTOCOLLN(float(current_position[X_AXIS]*1000));
-          enable_endstops(false);
-          plan_buffer_line(current_position[X_AXIS]+2.0, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
-          st_synchronize();
-          enable_endstops(true);
+    // G21: XYPositioner X2 - Move in -X until switch triggered
+    case 21: {
+      float measurement;
+      if ( xyPositionerTouch(-1, X_AXIS, measurement)
+        || moveXY("", xypos_x_pos, xypos_y_pos, homing_feedrate[X_AXIS], false)) {
+        break;
       }
+      SERIAL_PROTOCOL("xy-positioner-measurement -X:");
+      SERIAL_PROTOCOL_F(measurement, 3);
+      SERIAL_PROTOCOL("\n");
       break;
+    }
 
     case 24: //Test the zAxis - move to impossible position, and report where limit switch triggered.
       {
@@ -1114,6 +1202,43 @@ void process_commands()
            }
         }
       }
+      break;
+
+    // G1001 Raise until endstop hit
+    case 1001:
+      raise();
+      break;
+
+    // G1002 Move to xy-positioner and find center
+    case 1002: {
+      // Move
+      moveXY("move to xy-positioner", xypos_x_pos, xypos_y_pos, homing_feedrate[X_AXIS]);
+      moveZ("lower to xy-positioner", xypos_z_pos, homing_feedrate[Z_AXIS]);
+
+      // Check for move-only flag
+      if (code_seen('M')) {
+        break;
+      }
+
+      // Find the center
+      float centerX;
+      float centerY;
+      long cycles = code_seen('C') ? code_value_long() : 2;
+      if (xyPositionerFindCenter(cycles, centerX, centerY)) {
+        break;
+      }
+
+      // Output
+      SERIAL_PROTOCOL("xy-positioner-center-measurement");
+      SERIAL_PROTOCOL(" X:"); SERIAL_PROTOCOL_F(centerX, 3);
+      SERIAL_PROTOCOL(" Y:"); SERIAL_PROTOCOL_F(centerY, 3);
+      SERIAL_PROTOCOL("\n");
+      break;
+    }
+
+    // G1003 Move to z-switch
+    case 1003:
+      moveXY("move to z-switch", min_z_x_pos, min_z_y_pos, homing_feedrate[X_AXIS]);
       break;
     }
     previous_millis_active_cmd = millis();
@@ -1933,7 +2058,7 @@ void prepare_move()
 
   // Do not use feedmultiply for E or Z only moves
   if( (current_position[X_AXIS] == destination [X_AXIS]) && (current_position[Y_AXIS] == destination [Y_AXIS])) {
-      plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
+    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
   }
   else {
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate*feedmultiply/60/100.0, active_extruder);
