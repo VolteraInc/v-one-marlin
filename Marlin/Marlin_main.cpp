@@ -88,6 +88,7 @@ v1.0.1 <- TBD
 // G1001 - Raise until endstop hit
 // G1002 - Move to XY-Positioner
 // G1003 - Move to Z-Switch
+// G1004 - Relative move (same as G91; G01 <args>; G90)
 
 // M Codes
 // M0   - Unconditional stop - Wait for user to press a button on the LCD (Only if ULTRA_LCD is enabled)
@@ -1188,6 +1189,15 @@ void process_commands()
     case 91: // G91
       relative_mode = true;
       break;
+
+    // G1004 Relative movement
+    case 1004:
+      relative_mode = true;
+      get_coordinates(); // For X Y Z E F
+      prepare_move();
+      relative_mode = false;
+      break;
+
     case 92: // G92
       st_synchronize();
       for(int8_t i=0; i < NUM_AXIS; i++) {
@@ -1241,9 +1251,10 @@ void process_commands()
       moveXY("move to z-switch", min_z_x_pos, min_z_y_pos, homing_feedrate[X_AXIS]);
       break;
     }
-    previous_millis_active_cmd = millis();
-  }
 
+    previous_millis_active_cmd = millis();
+
+  }
   else if(code_seen('M'))
   {
     switch( (int)code_value() )
