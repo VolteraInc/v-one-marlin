@@ -78,7 +78,7 @@
 // VOLTERA_pinVersion 1 -> What B1 Shipped with
 // VOLTERA_pinVersion 2 -> B2 Prototype
 #define VOLTERA  1
-#define VOLTERA_PIN_VERSION 2
+#define VOLTERA_PIN_VERSION 1
 
 //Default Calibration offsets for the Voltera -V-One
 #define MIN_Z_X_POS       (4.38)
