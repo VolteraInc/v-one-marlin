@@ -220,7 +220,7 @@ float min_z_y_pos;
 float xypos_x_pos;
 float xypos_y_pos;
 float xypos_z_pos = XYPOS_Z_POS;
-char product_serial_number[11] = PRODUCT_SERIAL;
+char product_serial_number[11];
 
 //===========================================================================
 //=============================Private Variables=============================
