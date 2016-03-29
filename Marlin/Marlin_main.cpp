@@ -789,9 +789,9 @@ int moveXY(const String& description, float x, float y, float f, bool autoRaise 
   if (description.length()) {
     SERIAL_ECHO_START;
     SERIAL_ECHO(description);
-    SERIAL_ECHO(" (X:"); SERIAL_ECHO(x);
-    SERIAL_ECHO(" Y:"); SERIAL_ECHO(y);
-    SERIAL_ECHO(" F:"); SERIAL_ECHO(f);
+    SERIAL_ECHO(" (x:"); SERIAL_ECHO(x);
+    SERIAL_ECHO(" y:"); SERIAL_ECHO(y);
+    SERIAL_ECHO(" f:"); SERIAL_ECHO(f);
     SERIAL_ECHO(")\n");
   }
 
@@ -879,9 +879,9 @@ int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
     }
     centerX = (measurement2 + measurement1) / 2;
     SERIAL_PROTOCOL("xyPositionerCenterX");
-    SERIAL_PROTOCOL(" M1:"); SERIAL_PROTOCOL_F(measurement1, 3);
-    SERIAL_PROTOCOL(" M2:"); SERIAL_PROTOCOL_F(measurement2, 3);
-    SERIAL_PROTOCOL(" X:"); SERIAL_PROTOCOL_F(centerX, 3);
+    SERIAL_PROTOCOL(" m1:"); SERIAL_PROTOCOL_F(measurement1, 3);
+    SERIAL_PROTOCOL(" m2:"); SERIAL_PROTOCOL_F(measurement2, 3);
+    SERIAL_PROTOCOL(" x:"); SERIAL_PROTOCOL_F(centerX, 3);
     SERIAL_PROTOCOL("\n");
 
     // Compute center Y
@@ -893,9 +893,9 @@ int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
     }
     centerY = (measurement2 + measurement1) / 2;
     SERIAL_PROTOCOL("xyPositionerCenterY");
-    SERIAL_PROTOCOL(" M1:"); SERIAL_PROTOCOL_F(measurement1, 3);
-    SERIAL_PROTOCOL(" M2:"); SERIAL_PROTOCOL_F(measurement2, 3);
-    SERIAL_PROTOCOL(" Y:"); SERIAL_PROTOCOL_F(centerY, 3);
+    SERIAL_PROTOCOL(" m1:"); SERIAL_PROTOCOL_F(measurement1, 3);
+    SERIAL_PROTOCOL(" m2:"); SERIAL_PROTOCOL_F(measurement2, 3);
+    SERIAL_PROTOCOL(" y:"); SERIAL_PROTOCOL_F(centerY, 3);
     SERIAL_PROTOCOL("\n");
   }
 
@@ -1272,8 +1272,8 @@ void process_commands()
 
       // Output
       SERIAL_PROTOCOL("xyPositionerCenterMeasurement");
-      SERIAL_PROTOCOL(" X:"); SERIAL_PROTOCOL_F(centerX, 3);
-      SERIAL_PROTOCOL(" Y:"); SERIAL_PROTOCOL_F(centerY, 3);
+      SERIAL_PROTOCOL(" x:"); SERIAL_PROTOCOL_F(centerX, 3);
+      SERIAL_PROTOCOL(" y:"); SERIAL_PROTOCOL_F(centerY, 3);
       SERIAL_PROTOCOL("\n");
       break;
     }
