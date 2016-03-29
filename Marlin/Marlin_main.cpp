@@ -608,7 +608,11 @@ static void clean_up_after_endstop_move() {
     previous_millis_active_cmd = millis();
 }
 
-static void homeaxis(int axis, bool flip) {
+static int homeaxis(int axis, bool flip) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHO("home axis:"); SERIAL_ECHO(axis_codes[axis]);
+    SERIAL_ECHO(" flip:"); SERIAL_ECHO(flip);
+    SERIAL_ECHO("\n");
 
     homing_axis = true; // Raise flag to let planner know we are homing and axis so it ignores skew adjustments.
     int axis_home_dir = home_dir(axis);
@@ -639,7 +643,7 @@ static void homeaxis(int axis, bool flip) {
       // We don't actually know if this is where we are (maybe it stalled)
       // ...so this error should probably be followed with another homing attempt
       current_position[axis] = destination[axis];
-      return;
+      return -1;
     }
 
     current_position[axis] = 0;
@@ -660,6 +664,7 @@ static void homeaxis(int axis, bool flip) {
 
     homing_axis = false; //Lower flag to indicate homing was finished. It doesn't matter if it was not sucessful.
 
+    return 0;
 }
 
 void refresh_cmd_timeout(void)
@@ -882,6 +887,33 @@ int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
   return 0;
 }
 
+int homeZtoZswitch() {
+  SERIAL_ECHO_START;
+  SERIAL_ECHOLN("home Z to z-switch");
+
+  int returnValue = -1;
+  bool enabled = endstops_enabled();
+  saved_feedrate = feedrate;
+  enable_endstops(true);
+
+  if (moveXY("", min_z_x_pos, min_z_y_pos, feedrate, false)) {
+    goto DONE;
+  }
+
+  memcpy(destination, current_position, sizeof(destination));
+  if (homeaxis(Z_AXIS, 1)) {
+    goto DONE;
+  }
+  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+
+  returnValue = 0;
+
+DONE:
+  feedrate = saved_feedrate;
+  enable_endstops(enabled);
+  return returnValue;
+}
+
 void process_commands()
 {
   unsigned long codenum; //throw away variable
@@ -926,26 +958,7 @@ void process_commands()
       break;
 
     case 33: // G33 Homes the Z axis to the other switch.
-
-      saved_feedrate = feedrate;
-      previous_millis_active_cmd = millis();
-      enable_endstops(true);
-
-      for(int8_t i=0; i < NUM_AXIS; i++) {
-        destination[i] = current_position[i];
-      }
-      feedrate = 0.0;
-
-      homeaxis(Z_AXIS,1);
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-
-      #ifdef ENDSTOPS_ONLY_FOR_HOMING
-        enable_endstops(false);
-      #endif
-
-      feedrate = saved_feedrate;
-      previous_millis_active_cmd = millis();
-      endstops_hit_on_purpose();
+      homeZtoZswitch();
       break;
 
 
@@ -1250,7 +1263,26 @@ void process_commands()
 
     // G1003 Move to z-switch
     case 1003:
-      moveXY("move to z-switch", min_z_x_pos, min_z_y_pos, homing_feedrate[X_AXIS]);
+      if (moveXY("move to z-switch", min_z_x_pos, min_z_y_pos, homing_feedrate[X_AXIS])) {
+        break;
+      }
+
+      // Check for move-only flag
+      if (code_seen('M')) {
+        break;
+      }
+
+      // Home z
+      if (homeZtoZswitch()) {
+        break;
+      }
+
+      // Set the max-z soft limit
+      raise();
+      max_pos[Z_AXIS] = current_position[Z_AXIS];
+      SERIAL_ECHO_START;
+      SERIAL_ECHO("setting soft limit max-z to ");
+      SERIAL_ECHOLN(max_pos[Z_AXIS]);
       break;
     }
     previous_millis_active_cmd = millis();
