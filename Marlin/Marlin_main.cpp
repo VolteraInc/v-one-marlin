@@ -973,9 +973,7 @@ void process_commands()
 
       enable_endstops(true);
 
-      for(int8_t i=0; i < NUM_AXIS; i++) {
-        destination[i] = current_position[i];
-      }
+      memcpy(destination, current_position, sizeof(destination));
       feedrate = 0.0;
 
 
