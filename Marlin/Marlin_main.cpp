@@ -1993,15 +1993,14 @@ void ClearToSend()
 
 void get_coordinates()
 {
-  bool seen[4]={false,false,false,false};
   for(int8_t i=0; i < NUM_AXIS; i++) {
-    if(code_seen(axis_codes[i]))
-    {
-      destination[i] = (float)code_value() + (axis_relative_modes[i] || relative_mode)*current_position[i];
-      seen[i]=true;
+    if(code_seen(axis_codes[i])) {
+      destination[i] = (float)code_value() + (axis_relative_modes[i] || relative_mode) * current_position[i];
+    } else {
+      destination[i] = current_position[i];
     }
-    else destination[i] = current_position[i]; //Are these else lines really needed?
   }
+
   if(code_seen('F')) {
     next_feedrate = code_value();
     if(next_feedrate > 0.0) feedrate = next_feedrate;
