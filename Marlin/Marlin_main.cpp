@@ -312,39 +312,6 @@ extern "C"{
   }
 }
 
-//adds an command to the main command buffer
-//thats really done in a non-safe way.
-//needs overworking someday
-void enquecommand(const char *cmd)
-{
-  if(buflen < BUFSIZE)
-  {
-    //this is dangerous if a mixing of serial and this happens
-    strcpy(&(cmdbuffer[bufindw][0]),cmd);
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("enqueing \"");
-    SERIAL_ECHO(cmdbuffer[bufindw]);
-    SERIAL_ECHOLNPGM("\"");
-    bufindw= (bufindw + 1)%BUFSIZE;
-    buflen += 1;
-  }
-}
-
-void enquecommand_P(const char *cmd)
-{
-  if(buflen < BUFSIZE)
-  {
-    //this is dangerous if a mixing of serial and this happens
-    strcpy_P(&(cmdbuffer[bufindw][0]),cmd);
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("enqueing \"");
-    SERIAL_ECHO(cmdbuffer[bufindw]);
-    SERIAL_ECHOLNPGM("\"");
-    bufindw= (bufindw + 1)%BUFSIZE;
-    buflen += 1;
-  }
-}
-
 void setup()
 {
   MYSERIAL.begin(BAUDRATE);
