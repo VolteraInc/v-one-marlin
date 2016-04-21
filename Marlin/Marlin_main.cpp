@@ -572,7 +572,22 @@ static void run_z_probe() {
     feedrate = homing_feedrate[Z_AXIS];
 
     // move down until you find the bed
-    const float zPosition = -10.0f;
+    float zPosition = -10.0f;
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
+    st_synchronize();
+
+    // we have to let the planner know where we are right now as it is not where we said to go.
+    zPosition = st_get_position_mm(Z_AXIS);
+    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS]);
+
+    // move up the retract distance
+    zPosition += home_retract_mm(Z_AXIS);
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
+    st_synchronize();
+
+    // move back down slowly to find bed
+    feedrate = homing_feedrate[Z_AXIS]/6.0; //VOLTERA (ORIGINALLY 2)
+    zPosition -= home_retract_mm(Z_AXIS) * 2;
     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
 
