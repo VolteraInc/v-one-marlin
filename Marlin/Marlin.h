@@ -106,7 +106,7 @@ void manage_inactivity();
 
 #if defined(X_ENABLE_PIN) && X_ENABLE_PIN > -1
   #define  enable_x() WRITE(X_ENABLE_PIN, X_ENABLE_ON)
-  #define disable_x() { WRITE(X_ENABLE_PIN,!X_ENABLE_ON); axis_homed_state[X_AXIS] = false; }
+  #define disable_x() { WRITE(X_ENABLE_PIN,!X_ENABLE_ON); setHomedState(X_AXIS, 0); }
 #else
   #define enable_x() ;
   #define disable_x() ;
@@ -115,10 +115,10 @@ void manage_inactivity();
 #if defined(Y_ENABLE_PIN) && Y_ENABLE_PIN > -1
   #ifdef Y_DUAL_STEPPER_DRIVERS
     #define  enable_y() { WRITE(Y_ENABLE_PIN, Y_ENABLE_ON); WRITE(Y2_ENABLE_PIN,  Y_ENABLE_ON); }
-    #define disable_y() { WRITE(Y_ENABLE_PIN,!Y_ENABLE_ON); WRITE(Y2_ENABLE_PIN, !Y_ENABLE_ON); axis_homed_state[Y_AXIS] = false; }
+    #define disable_y() { WRITE(Y_ENABLE_PIN,!Y_ENABLE_ON); WRITE(Y2_ENABLE_PIN, !Y_ENABLE_ON); setHomedState(Y_AXIS, 0); }
   #else
     #define  enable_y() WRITE(Y_ENABLE_PIN, Y_ENABLE_ON)
-    #define disable_y() { WRITE(Y_ENABLE_PIN,!Y_ENABLE_ON); axis_homed_state[Y_AXIS] = false; }
+    #define disable_y() { WRITE(Y_ENABLE_PIN,!Y_ENABLE_ON); setHomedState(Y_AXIS, 0); }
   #endif
 #else
   #define enable_y() ;
@@ -127,7 +127,7 @@ void manage_inactivity();
 
 #if defined(Z_ENABLE_PIN) && Z_ENABLE_PIN > -1
     #define enable_z() WRITE(Z_ENABLE_PIN, Z_ENABLE_ON)
-    #define disable_z() { WRITE(Z_ENABLE_PIN,!Z_ENABLE_ON); axis_homed_state[Z_AXIS] = false; }
+    #define disable_z() { WRITE(Z_ENABLE_PIN,!Z_ENABLE_ON); setHomedState(Z_AXIS, 0); }
 #else
   #define enable_z()
   #define disable_z()
@@ -190,7 +190,6 @@ extern float add_homeing[3];
 
 extern float min_pos[3];
 extern float max_pos[3];
-extern signed char axis_homed_state[3];
 extern float zprobe_zoffset;
 extern int fanSpeed;
 extern bool override_p_bot;
@@ -214,5 +213,8 @@ extern uint8_t active_extruder;
 extern void digipot_i2c_set_current( int channel, float current );
 extern void digipot_i2c_init();
 #endif
+
+extern int getHomedState(int axis);
+extern void setHomedState(int axis, int value);
 
 #endif
