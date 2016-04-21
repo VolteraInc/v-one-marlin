@@ -92,7 +92,7 @@
 #define XYPOS_Z_POS       (-6.0)
 
 //Default Serial number for the Voltera V-One
-#define PRODUCT_SERIAL    ("V0-00-0000")
+#define PRODUCT_SERIAL    ("V1-00-0000")
 
 
 // Define this to set a custom name for your generic Mendel,
