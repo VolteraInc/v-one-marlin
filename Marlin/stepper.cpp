@@ -387,8 +387,8 @@ ISR(TIMER1_COMPA_vect)
       {
 
   #if defined(X_MIN_PIN) && X_MIN_PIN > -1
-        bool x_min_endstop=(READ(X_MIN_PIN) != X_MIN_ENDSTOP_INVERTING || READ(XY_MIN_X_PIN)!=XY_MIN_X_ENDSTOP_INVERTING); // X- direction, also monitors XY_min_X
-        if(x_min_endstop && old_x_min_endstop && (current_block->steps_x > 0)) {
+        bool x_min_endstop = READ_PIN(X_MIN) || READ_PIN(XY_MIN_X); // X- direction, also monitors XY_min_X
+        if (x_min_endstop && old_x_min_endstop && (current_block->steps_x > 0)) {
           endstops_trigsteps[X_AXIS] = count_position[X_AXIS];
           endstop_x_hit=true;
           step_events_completed = current_block->step_event_count;
@@ -404,8 +404,8 @@ ISR(TIMER1_COMPA_vect)
       {
 
   // #if defined(X_MAX_PIN) && X_MAX_PIN > -1
-        bool x_max_endstop=(READ(XY_MAX_X_PIN)!=XY_MAX_X_ENDSTOP_INVERTING); // X+ direction, also monitors XY_max_X
-        if(x_max_endstop && old_x_max_endstop && (current_block->steps_x > 0)){
+        bool x_max_endstop = READ_PIN(XY_MAX_X); // X+ direction, also monitors XY_max_X
+        if (x_max_endstop && old_x_max_endstop && (current_block->steps_x > 0)){
           endstops_trigsteps[X_AXIS] = count_position[X_AXIS];
           endstop_x_hit=true;
           step_events_completed = current_block->step_event_count;
@@ -425,8 +425,8 @@ ISR(TIMER1_COMPA_vect)
     CHECK_ENDSTOPS
     {
   #if defined(Y_MIN_PIN) && Y_MIN_PIN > -1
-      bool y_min_endstop=(READ(Y_MIN_PIN) != Y_MIN_ENDSTOP_INVERTING || READ(XY_MIN_Y_PIN)!=XY_MIN_Y_ENDSTOP_INVERTING); // Y- direction, also monitors XY_min_Y
-      if(y_min_endstop && old_y_min_endstop && (current_block->steps_y > 0)) {
+      bool y_min_endstop = READ_PIN(Y_MIN) || READ_PIN(XY_MIN_Y); // Y- direction, also monitors XY_min_Y
+      if (y_min_endstop && old_y_min_endstop && (current_block->steps_y > 0)) {
         endstops_trigsteps[Y_AXIS] = count_position[Y_AXIS];
         endstop_y_hit=true;
         step_events_completed = current_block->step_event_count;
@@ -438,15 +438,13 @@ ISR(TIMER1_COMPA_vect)
   else { // +direction
     CHECK_ENDSTOPS
     {
-  // #if defined(Y_MAX_PIN) && Y_MAX_PIN > -1
-      bool y_max_endstop=(READ(XY_MAX_Y_PIN)!=XY_MAX_Y_ENDSTOP_INVERTING);
+      bool y_max_endstop = READ_PIN(XY_MAX_Y);
       if(y_max_endstop && old_y_max_endstop && (current_block->steps_y > 0)){
         endstops_trigsteps[Y_AXIS] = count_position[Y_AXIS];
         endstop_y_hit=true;
         step_events_completed = current_block->step_event_count;
       }
       old_y_max_endstop = y_max_endstop;
-  // #endif
     }
   }
 
@@ -456,20 +454,21 @@ ISR(TIMER1_COMPA_vect)
     count_direction[Z_AXIS]=-1;
     CHECK_ENDSTOPS
     {
-      bool z_min = 0;
-      bool p_top = 0;
-      bool p_bot = 0;
+      bool z_min = READ_PIN(Z_MIN);
+      bool p_bot = READ_PIN(P_BOT);
 
-      z_min = READ(Z_MIN_PIN);
-      p_top = READ(P_TOP_PIN);
-      p_bot = READ(P_BOT_PIN);
+#if defined(P_TOP_PIN) && P_TOP_PIN > -1
+      bool p_top = READ_PIN(P_TOP);
+#else
+      bool p_top = false;
+#endif
 
       // We bypass p_bot when calculating the probe_offset
       if (override_p_bot){
-        p_bot = P_BOT_ENDSTOP_INVERTING;
+        p_bot = true;
       }
 
-  bool z_min_endstop=(z_min!= Z_MIN_ENDSTOP_INVERTING) || (p_top!= P_TOP_ENDSTOP_INVERTING) || (p_bot!= P_BOT_ENDSTOP_INVERTING);
+  bool z_min_endstop = z_min || p_top || p_bot;
   if(z_min_endstop && old_z_min_endstop && (current_block->steps_z > 0)) {
     endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
     endstop_z_hit=true;
@@ -485,10 +484,7 @@ ISR(TIMER1_COMPA_vect)
     CHECK_ENDSTOPS
     {
       #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
-      bool z_max = 0;
-      z_max = READ(Z_MAX_PIN);
-
-      bool z_max_endstop=(z_max != Z_MAX_ENDSTOP_INVERTING);
+      bool z_max_endstop = READ_PIN(Z_MAX);
       if(z_max_endstop && old_z_max_endstop && (current_block->steps_z > 0)) {
         endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
         endstop_z_hit=true;
