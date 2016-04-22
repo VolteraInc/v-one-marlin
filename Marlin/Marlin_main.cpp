@@ -756,7 +756,7 @@ void raise(const String& description = "Rise to max Z") {
   bool enabled = endstops_enabled();
   enable_endstops(true);
 
-  moveZ(description, Z_MAX_POS, max_feedrate[Z_AXIS]);
+  moveZ(description, Z_MAX_POS, max_feedrate[Z_AXIS] * 60);
   st_synchronize();
   endstops_hit_on_purpose();
 
@@ -846,7 +846,7 @@ DONE:
 }
 
 int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
-  const float feedrate = max_feedrate[X_AXIS];
+  const float feedrate = max_feedrate[X_AXIS] * 60;
   float measurement1;
   float measurement2;
   centerX = xypos_x_pos;
@@ -898,7 +898,7 @@ int homeZtoZswitch() {
   saved_feedrate = feedrate;
   enable_endstops(true);
 
-  if (moveXY("ensure at z-switch", min_z_x_pos, min_z_y_pos, max_feedrate[X_AXIS], false)) {
+  if (moveXY("ensure at z-switch", min_z_x_pos, min_z_y_pos, max_feedrate[X_AXIS] * 60, false)) {
     goto DONE;
   }
 
@@ -1234,8 +1234,8 @@ void process_commands()
     // G1002 Move to xy-positioner and find center
     case 1002: {
       // Move
-      moveXY("move to xy-positioner", xypos_x_pos, xypos_y_pos, max_feedrate[X_AXIS]);
-      moveZ("lower to xy-positioner", xypos_z_pos, max_feedrate[Z_AXIS]);
+      moveXY("move to xy-positioner", xypos_x_pos, xypos_y_pos, max_feedrate[X_AXIS] * 60);
+      moveZ("lower to xy-positioner", xypos_z_pos, max_feedrate[Z_AXIS] * 60);
 
       // Check for move-only flag
       if (code_seen('M')) {
@@ -1260,7 +1260,7 @@ void process_commands()
 
     // G1003 Move to z-switch
     case 1003:
-      if (moveXY("move to z-switch", min_z_x_pos, min_z_y_pos, max_feedrate[X_AXIS])) {
+      if (moveXY("move to z-switch", min_z_x_pos, min_z_y_pos, max_feedrate[X_AXIS] * 60)) {
         break;
       }
 
