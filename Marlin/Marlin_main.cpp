@@ -366,6 +366,46 @@ void setup()
   glow_force_green = READ_PIN(Z_MIN);
 }
 
+void periodic_output()
+{
+  static struct {
+      float position[NUM_AXIS];
+      struct { float current; float target; } temperature;
+  } prev; // Previously reported values
+  static auto nextOutputAt = millis();
+
+  const auto now = millis();
+  if (now >= nextOutputAt) {
+
+    // Schedule next output
+    nextOutputAt += 1000;
+
+    // Output position on change
+    if (memcmp(prev.position, current_position, sizeof(prev.position)) != 0) {
+      memcpy(prev.position, current_position, sizeof(prev.position));
+      SERIAL_PROTOCOL("positionUpdate");
+      SERIAL_PROTOCOLPGM(" x:"); SERIAL_PROTOCOL_F(current_position[X_AXIS], 6);
+      SERIAL_PROTOCOLPGM(" y:"); SERIAL_PROTOCOL_F(current_position[Y_AXIS], 6);
+      SERIAL_PROTOCOLPGM(" z:"); SERIAL_PROTOCOL_F(current_position[Z_AXIS], 6);
+      SERIAL_PROTOCOLPGM(" e:"); SERIAL_PROTOCOL_F(current_position[E_AXIS], 6);
+      SERIAL_PROTOCOL("\n");
+    }
+
+    // Output temperature on change
+    {
+      const auto current = degBed();
+      const auto target = degTargetBed();
+      if ( prev.temperature.current != current || prev.temperature.target != target) {
+        prev.temperature.current = current;
+        prev.temperature.target = target;
+        SERIAL_PROTOCOL("bedTemperatureUpdate");
+        SERIAL_PROTOCOLPGM(" current:"); SERIAL_PROTOCOL_F(degBed(),1);
+        SERIAL_PROTOCOLPGM(" target:"); SERIAL_PROTOCOL_F(degTargetBed(),1);
+        SERIAL_PROTOCOL("\n");
+      }
+    }
+  }
+}
 
 void loop()
 {
@@ -383,6 +423,7 @@ void loop()
   manage_inactivity();
   checkHitEndstops();
   checkBufferEmpty();
+  periodic_output();
 }
 
 void get_command()
