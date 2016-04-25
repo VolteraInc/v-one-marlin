@@ -578,23 +578,6 @@ static void run_z_probe() {
   SERIAL_PROTOCOL("\n");
 }
 
-static void setup_for_endstop_move() {
-    saved_feedrate = feedrate;
-    saved_feedmultiply = feedmultiply;
-    feedmultiply = 100;
-    previous_millis_active_cmd = millis();
-    enable_endstops(true);
-}
-
-static void clean_up_after_endstop_move() {
-#ifdef ENDSTOPS_ONLY_FOR_HOMING
-    enable_endstops(false);
-#endif
-    feedrate = saved_feedrate;
-    feedmultiply = saved_feedmultiply;
-    previous_millis_active_cmd = millis();
-}
-
 static int homeaxis(int axis, bool flip) {
     SERIAL_ECHO_START;
     SERIAL_ECHO("home axis:"); SERIAL_ECHO(axis_codes[axis]);
@@ -924,7 +907,6 @@ DONE:
 void process_commands()
 {
   unsigned long codenum; //throw away variable
-  char *starpos = NULL;
   if (command_prefix_seen('V')) {
     process_vcode((int)code_value());
   } else if(command_prefix_seen('G')) {
@@ -2314,7 +2296,7 @@ void handle_glow_leds(){
     // Remap into a sine wave
     // "wow, this circuit printer's indicator LEDs follow a sine wave!" - nobody
     unsigned short glow_led_wrap = sin_lookup[glow_led_counter];
-    for (char i = 0; i < GLOW_LED_COUNT; ++i) {
+    for (unsigned char i = 0; i < GLOW_LED_COUNT; ++i) {
       analogWrite(glow_led_pins[i], (glow_led_wrap * glow_led_states_hold[i]) / 256);
     }
   }
