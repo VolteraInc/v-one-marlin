@@ -94,11 +94,12 @@ int relativeMove(float x, float y, float z, float e, float speed_in_mm_per_min) 
 }
 
 int moveToLimit(int axis, int direction, float speed_in_mm_per_min, float maxTravel) {
+  const auto travel = direction > 0 ? maxTravel : -maxTravel;
   relativeMove(
-    0,
-    0,
-    direction > 0 ? maxTravel : -maxTravel,
-    0,
+    axis == X_AXIS ? travel : 0.0f,
+    axis == Y_AXIS ? travel : 0.0f,
+    axis == Z_AXIS ? travel : 0.0f,
+    0.0f,
     speed_in_mm_per_min
   );
   st_synchronize();

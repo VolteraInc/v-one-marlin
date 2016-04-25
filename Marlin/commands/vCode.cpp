@@ -12,7 +12,7 @@ int process_vcode(int command_code) {
     //-------------------------------------------
     // Movement Status
     case 0:
-      outputMovementStatus();
+      return outputMovementStatus();
 
     // Move
     case 1:
@@ -45,11 +45,11 @@ int process_vcode(int command_code) {
       }
       if (code_seen('X')) {
         const auto direction = code_prefix() == '-' ? -1 : 1;
-        if (moveToLimit(Z_AXIS, direction, feedrate)) { return -1; }
+        if (moveToLimit(X_AXIS, direction, feedrate)) { return -1; }
       }
       if (code_seen('Y')) {
         const auto direction = code_prefix() == '-' ? -1 : 1;
-        if (moveToLimit(Z_AXIS, direction, feedrate)) { return -1; }
+        if (moveToLimit(Y_AXIS, direction, feedrate)) { return -1; }
       }
       if (code_seen('Z') && code_prefix() != '-') {
         if (moveToLimit(Z_AXIS, 1, feedrate)) { return -1; }
