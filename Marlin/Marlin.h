@@ -197,6 +197,10 @@ extern float min_z_y_pos;
 extern float xypos_x_pos;
 extern float xypos_y_pos;
 
+extern const char axis_codes[NUM_AXIS];
+
+extern bool logging_enabled;
+
 #ifdef FAN_SOFT_PWM
 extern unsigned char fanSpeedSoftPwm;
 #endif

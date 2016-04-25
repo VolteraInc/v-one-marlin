@@ -42,6 +42,9 @@
 #include <SPI.h>
 #endif
 
+#include "api/api.h"
+
+
 /*
 Update these versions whenever firmware is shipped to a customer.
 These version numbers should reflect the branch they are in.
@@ -220,13 +223,15 @@ float xypos_x_pos;
 float xypos_y_pos;
 float xypos_z_pos = XYPOS_Z_POS;
 char product_serial_number[11];
+const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
+
+bool logging_enabled = false;
 
 //===========================================================================
 //=============================Private Variables=============================
 //===========================================================================
 #define HOMED_NONE 0
 signed char axis_homed_state[3] = {HOMED_NONE, HOMED_NONE, HOMED_NONE};
-const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
 static float destination[NUM_AXIS] = {  0.0, 0.0, 0.0, 0.0};
 static float offset[3] = {0.0, 0.0, 0.0};
 static bool home_all_axis = true;
@@ -576,43 +581,19 @@ static void axis_is_at_home(int axis, int flip) {
 }
 
 static void run_z_probe() {
-
-    feedrate = homing_feedrate[Z_AXIS];
-
-    // move down until you find the bed
-    float zPosition = -10.0f;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
-    st_synchronize();
-
-    // we have to let the planner know where we are right now as it is not where we said to go.
-    zPosition = st_get_position_mm(Z_AXIS);
-    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS]);
-
-    // move up the retract distance
-    zPosition += home_retract_mm(Z_AXIS);
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
-    st_synchronize();
-
-    // move back down slowly to find bed
-    feedrate = homing_feedrate[Z_AXIS]/6.0; //VOLTERA (ORIGINALLY 2)
-    zPosition -= home_retract_mm(Z_AXIS) * 2;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
-    st_synchronize();
-
-    if (didHitEndstops()) { // TODO: weak test, should check the probe button specifically
-      SERIAL_PROTOCOL("probeMeasurement");
-      SERIAL_PROTOCOL(" x:"); SERIAL_PROTOCOL_F(current_position[X_AXIS],3);
-      SERIAL_PROTOCOL(" y:"); SERIAL_PROTOCOL_F(current_position[Y_AXIS],3);
-      SERIAL_PROTOCOL(" z:"); SERIAL_PROTOCOL_F(current_position[Z_AXIS],3);
-      SERIAL_PROTOCOL("\n");
-    } else {
+  float measurement;
+  if (probe(home_retract_mm(Z_AXIS), measurement) != 0) {
       SERIAL_ERROR_START;
       SERIAL_ERRORLN("Unable to collect probe measurement, probe switch did not trigger");
-    }
+      return;
+  }
 
-    // we have to let the planner know where we are right now as it is not where we said to go.
-    current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
-    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+  // Output position
+  SERIAL_PROTOCOL("probeMeasurement");
+  SERIAL_PROTOCOL(" x:"); SERIAL_PROTOCOL_F(current_position[X_AXIS], 3);
+  SERIAL_PROTOCOL(" y:"); SERIAL_PROTOCOL_F(current_position[Y_AXIS], 3);
+  SERIAL_PROTOCOL(" z:"); SERIAL_PROTOCOL_F(measurement, 3);
+  SERIAL_PROTOCOL("\n");
 }
 
 static void setup_for_endstop_move() {
@@ -642,7 +623,7 @@ static int homeaxis(int axis, bool flip) {
     int axis_home_dir = home_dir(axis);
 
     if (flip){
-      axis_home_dir = axis_home_dir*-1 ;
+      axis_home_dir = axis_home_dir * -1;
     }
 
     if (!getHomedState(axis)) current_position[axis] = 0;
@@ -676,10 +657,11 @@ static int homeaxis(int axis, bool flip) {
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
 
-    destination[axis] = 2*home_retract_mm(axis) * axis_home_dir;
-    feedrate = homing_feedrate[axis]/(6);
+    destination[axis] = 2 * home_retract_mm(axis) * axis_home_dir;
+    feedrate = homing_feedrate[axis] / 6;
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
+
     axis_is_at_home(axis, flip);
     destination[axis] = current_position[axis];
     feedrate = 0.0;
@@ -1191,10 +1173,7 @@ void process_commands()
 
     // G30 Single Z Probe
     case 30: {
-      st_synchronize();
-      setup_for_endstop_move(); // VOLTERA EDITED
       run_z_probe();
-      clean_up_after_endstop_move();
       break;
     }
 
@@ -1322,13 +1301,32 @@ void process_commands()
       SERIAL_ECHO("setting soft limit max-z to ");
       SERIAL_ECHOLN(max_pos[Z_AXIS]);
       break;
+
+    // Enable logging
+    case 1005:
+      // Turn on debug logging
+      if (code_seen('D')) {
+        logging_enabled = true;
+
+      // Return to default log level
+      } else {
+        SERIAL_ECHO_START;
+        SERIAL_ECHO("Restoring default log level\n");
+
+        logging_enabled = false;
+      }
+
+      // Output current log level
+      SERIAL_ECHO_START;
+      SERIAL_ECHO("LoggingLevel:");
+      SERIAL_ECHO(logging_enabled ? "Debug" : "Warning");
+      SERIAL_ECHO("\n");
+      break;
     }
 
     previous_millis_active_cmd = millis();
 
-  }
-  else if(code_seen('M'))
-  {
+  } else if(code_seen('M')) {
     switch( (int)code_value() )
     {
 
