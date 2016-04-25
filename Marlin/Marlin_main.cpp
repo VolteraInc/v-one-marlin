@@ -43,6 +43,7 @@
 #endif
 
 #include "api/api.h"
+#include "commands/processing.h"
 
 
 /*
@@ -240,16 +241,13 @@ static long gcode_N, gcode_LastN, Stopped_gcode_LastN = 0;
 
 static bool relative_mode = false;  //Determines Absolute or Relative Coordinates
 
-static char cmdbuffer[BUFSIZE][MAX_CMD_SIZE];
 static bool fromsd[BUFSIZE];
-static int bufindr = 0;
 static int bufindw = 0;
 static int buflen = 0;
 //static int i = 0;
 static char serial_char;
 static int serial_count = 0;
 static boolean comment_mode = false;
-static char *strchr_pointer; // just a pointer to find chars in the command string like X, Y, Z, E, etc
 
 //static float tt = 0;
 //static float bt = 0;
@@ -533,22 +531,6 @@ void get_command()
       if(!comment_mode) cmdbuffer[bufindw][serial_count++] = serial_char;
     }
   }
-}
-
-float code_value()
-{
-  return (strtod(&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], NULL));
-}
-
-long code_value_long()
-{
-  return (strtol(&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], NULL, 10));
-}
-
-bool code_seen(char code)
-{
-  strchr_pointer = strchr(cmdbuffer[bufindr], code);
-  return (strchr_pointer != NULL);  //Return True if a character was found
 }
 
 #define DEFINE_PGM_READ_ANY(type, reader)       \
@@ -943,8 +925,9 @@ void process_commands()
 {
   unsigned long codenum; //throw away variable
   char *starpos = NULL;
-  if(code_seen('G'))
-  {
+  if (command_prefix_seen('V')) {
+    process_vcode((int)code_value());
+  } else if(command_prefix_seen('G')) {
     switch((int)code_value())
     {
     case 0: // G0 -> G1
@@ -1326,7 +1309,7 @@ void process_commands()
 
     previous_millis_active_cmd = millis();
 
-  } else if(code_seen('M')) {
+  } else if(command_prefix_seen('M')) {
     switch( (int)code_value() )
     {
 

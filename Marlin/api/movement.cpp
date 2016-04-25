@@ -80,6 +80,7 @@ int move(float x, float y, float z, float e, float speed_in_mm_per_min) {
     speed_in_mm_per_min/60,
     active_extruder
   );
+  return 0;
 }
 
 int relativeMove(float x, float y, float z, float e, float speed_in_mm_per_min) {
@@ -92,7 +93,7 @@ int relativeMove(float x, float y, float z, float e, float speed_in_mm_per_min) 
   );
 }
 
-int moveToLimit(AxisEnum axis, int direction, float speed_in_mm_per_min, float maxTravel = 9999.9f) {
+int moveToLimit(int axis, int direction, float speed_in_mm_per_min, float maxTravel) {
   relativeMove(
     0,
     0,
