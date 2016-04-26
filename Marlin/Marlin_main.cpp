@@ -271,9 +271,6 @@ bool CooldownNoWait = true;
 bool pending_temp_change = false;
 bool target_direction;
 
-static bool ensure_homed_enable = false;
-static bool ensure_homed_preemptive_all_axis = false;
-
 //Insert variables if CHDK is defined
 #ifdef CHDK
 unsigned long chdkHigh = 0;
@@ -660,69 +657,6 @@ void sendHomedStatusUpdate() {
 void refresh_cmd_timeout(void)
 {
   previous_millis_active_cmd = millis();
-}
-
-
-void ensure_homed(bool need_x, bool need_y, bool need_z) {
-  static float saved_destination[NUM_AXIS];
-  // We don't want to preemptive home if it's just the e axis (i.e. not xyz) moving
-  if (ensure_homed_preemptive_all_axis && (need_x || need_y || need_z)) {
-    need_x = need_y = need_z = true;
-  }
-
-  bool home_x = need_x && !getHomedState(X_AXIS);
-  bool home_y = need_y && !getHomedState(Y_AXIS);
-  bool home_z = need_z && !getHomedState(Z_AXIS);
-
-  if (!home_x && !home_y && !home_z) return;
-
-  saved_feedrate = feedrate;
-  saved_feedmultiply = feedmultiply;
-  feedmultiply = 100;
-  enable_endstops(true);
-  memcpy(saved_destination, destination, sizeof(saved_destination));
-  memcpy(destination, current_position, sizeof(current_position));
-
-  feedrate = 0.0;
-
-  if (home_z) homeaxis(Z_AXIS, 0);
-  if (home_y) homeaxis(Y_AXIS, 0);
-  if (home_x) homeaxis(X_AXIS, 0);
-
-  #ifdef ENDSTOPS_ONLY_FOR_HOMING
-  enable_endstops(false);
-  #endif
-  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-  endstops_hit_on_purpose();
-
-  for (int i = 0; i < NUM_AXIS; ++i)
-  {
-    if (code_seen(axis_codes[i])) destination[i] = saved_destination[i];
-  }
-
-  feedrate = saved_feedrate;
-  feedmultiply = saved_feedmultiply;
-}
-
-bool ensure_requested_homing(void) {
-  // You can specify H#,#,# on a movement command to ensure that the printer is homed to a particular endstop before moving
-  // If it isn't, it'll bail (it *won't* implicitly home)
-  // Note that the parsing is super sketch, probably best not to pass malformed syntax
-  // This exists soley because the Z axis coordinate system shifts ~15mm depending on whether we're homed to bottom or top Z
-  if (code_seen('H')) {
-    signed char home_x = code_value_long();
-    strchr_pointer += (home_x < 0 ? 2 : 1) + 1;
-    signed char home_y = code_value_long();
-    strchr_pointer += (home_y < 0 ? 2 : 1) + 1;
-    signed char home_z = code_value_long();
-
-    if ((home_x && getHomedState(X_AXIS) != home_x) || (home_y && getHomedState(Y_AXIS) != home_y) || (home_z && getHomedState(Z_AXIS) != home_z)) {
-      SERIAL_ERROR_START;
-      SERIAL_ERRORLNPGM(" move failed - printer not homed as requested");
-      return false;
-    }
-  }
-  return true;
 }
 
 void moveZ(const String& description, float z, float f) {
@@ -1603,11 +1537,6 @@ void process_commands()
 
       break;
 
-    case 124: // M124 configure forced-homing behaviour. H0/1 to disable/enable, A0/1 to home all axis immediately, not just those required for the movement
-      if (code_seen('H')) ensure_homed_enable = code_value_long() != 0;
-      if (code_seen('A')) ensure_homed_preemptive_all_axis = code_value_long() != 0;
-      break;
-
     case 125:
     {
       // Reports the current state of the Probe
@@ -2094,12 +2023,6 @@ void prepare_move()
   clamp_to_software_endstops(destination);
 
   previous_millis_active_cmd = millis();
-
-  if (ensure_homed_enable) {
-    ensure_homed(current_position[X_AXIS] != destination[X_AXIS], current_position[Y_AXIS] != destination[Y_AXIS], current_position[Z_AXIS] != destination[Z_AXIS]);
-  }
-
-  if (!ensure_requested_homing()) return;
 
   // Do not use feedmultiply for E or Z only moves
   if( (current_position[X_AXIS] == destination [X_AXIS]) && (current_position[Y_AXIS] == destination [Y_AXIS])) {
