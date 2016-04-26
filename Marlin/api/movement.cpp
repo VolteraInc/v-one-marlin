@@ -69,6 +69,17 @@ int outputMovementStatus() {
   return 0;
 }
 
+float getDefaultFeedrate() {
+  // Returns the max feedrate across all axes
+  return max(
+    max(
+      max_feedrate[X_AXIS],
+      max_feedrate[Y_AXIS]
+    ),
+    max_feedrate[Z_AXIS]
+  );
+}
+
 int move(float x, float y, float z, float e, float speed_in_mm_per_min) {
   current_position[ X_AXIS ] = x;
   current_position[ Y_AXIS ] = y;
@@ -95,6 +106,11 @@ int move(float x, float y, float z, float e, float speed_in_mm_per_min) {
     active_extruder
   );
   return 0;
+}
+
+int moveXY(float x, float y, float f) {
+  const float feedrate = f < 0 ? getDefaultFeedrate() : f;
+  return move(x, y, current_position[Z_AXIS], current_position[E_AXIS], feedrate);
 }
 
 int relativeMove(float x, float y, float z, float e, float speed_in_mm_per_min) {
