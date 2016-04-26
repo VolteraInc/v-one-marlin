@@ -43,6 +43,7 @@
 #endif
 
 #include "api/api.h"
+#include "commands/processing.h"
 
 
 /*
@@ -240,16 +241,13 @@ static long gcode_N, gcode_LastN, Stopped_gcode_LastN = 0;
 
 static bool relative_mode = false;  //Determines Absolute or Relative Coordinates
 
-static char cmdbuffer[BUFSIZE][MAX_CMD_SIZE];
 static bool fromsd[BUFSIZE];
-static int bufindr = 0;
 static int bufindw = 0;
 static int buflen = 0;
 //static int i = 0;
 static char serial_char;
 static int serial_count = 0;
 static boolean comment_mode = false;
-static char *strchr_pointer; // just a pointer to find chars in the command string like X, Y, Z, E, etc
 
 //static float tt = 0;
 //static float bt = 0;
@@ -535,22 +533,6 @@ void get_command()
   }
 }
 
-float code_value()
-{
-  return (strtod(&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], NULL));
-}
-
-long code_value_long()
-{
-  return (strtol(&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], NULL, 10));
-}
-
-bool code_seen(char code)
-{
-  strchr_pointer = strchr(cmdbuffer[bufindr], code);
-  return (strchr_pointer != NULL);  //Return True if a character was found
-}
-
 #define DEFINE_PGM_READ_ANY(type, reader)       \
     static inline type pgm_read_any(const type *p)  \
     { return pgm_read_##reader##_near(p); }
@@ -594,23 +576,6 @@ static void run_z_probe() {
   SERIAL_PROTOCOL(" y:"); SERIAL_PROTOCOL_F(current_position[Y_AXIS], 3);
   SERIAL_PROTOCOL(" z:"); SERIAL_PROTOCOL_F(measurement, 3);
   SERIAL_PROTOCOL("\n");
-}
-
-static void setup_for_endstop_move() {
-    saved_feedrate = feedrate;
-    saved_feedmultiply = feedmultiply;
-    feedmultiply = 100;
-    previous_millis_active_cmd = millis();
-    enable_endstops(true);
-}
-
-static void clean_up_after_endstop_move() {
-#ifdef ENDSTOPS_ONLY_FOR_HOMING
-    enable_endstops(false);
-#endif
-    feedrate = saved_feedrate;
-    feedmultiply = saved_feedmultiply;
-    previous_millis_active_cmd = millis();
 }
 
 static int homeaxis(int axis, bool flip) {
@@ -942,9 +907,9 @@ DONE:
 void process_commands()
 {
   unsigned long codenum; //throw away variable
-  char *starpos = NULL;
-  if(code_seen('G'))
-  {
+  if (command_prefix_seen('V')) {
+    process_vcode((int)code_value());
+  } else if(command_prefix_seen('G')) {
     switch((int)code_value())
     {
     case 0: // G0 -> G1
@@ -1326,7 +1291,7 @@ void process_commands()
 
     previous_millis_active_cmd = millis();
 
-  } else if(code_seen('M')) {
+  } else if(command_prefix_seen('M')) {
     switch( (int)code_value() )
     {
 
@@ -2331,7 +2296,7 @@ void handle_glow_leds(){
     // Remap into a sine wave
     // "wow, this circuit printer's indicator LEDs follow a sine wave!" - nobody
     unsigned short glow_led_wrap = sin_lookup[glow_led_counter];
-    for (char i = 0; i < GLOW_LED_COUNT; ++i) {
+    for (unsigned char i = 0; i < GLOW_LED_COUNT; ++i) {
       analogWrite(glow_led_pins[i], (glow_led_wrap * glow_led_states_hold[i]) / 256);
     }
   }

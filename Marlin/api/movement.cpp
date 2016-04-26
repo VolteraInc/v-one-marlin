@@ -17,6 +17,20 @@ static void s_fixPosition(int axis) {
   );
 }
 
+static float s_maxTravelInAxis(int axis) {
+  switch(axis) {
+    case X_AXIS: return X_MAX_LENGTH;
+    case Y_AXIS: return Y_MAX_LENGTH;
+    case Z_AXIS: return Z_MAX_LENGTH;
+    default:
+      SERIAL_ERROR_START;
+      SERIAL_ERROR("Unable to determine max travel distance for axis, axis ");
+      SERIAL_ERROR(axis);
+      SERIAL_ERROR(" is not recognized - defaulting to a value of 0");
+      return 0; // Will likely result in an obvious error, which we can fix
+  }
+}
+
 int outputMovementStatus() {
   // Position
   SERIAL_PROTOCOL("Position");
@@ -80,6 +94,7 @@ int move(float x, float y, float z, float e, float speed_in_mm_per_min) {
     speed_in_mm_per_min/60,
     active_extruder
   );
+  return 0;
 }
 
 int relativeMove(float x, float y, float z, float e, float speed_in_mm_per_min) {
@@ -92,13 +107,16 @@ int relativeMove(float x, float y, float z, float e, float speed_in_mm_per_min) 
   );
 }
 
-int moveToLimit(AxisEnum axis, int direction, float speed_in_mm_per_min, float maxTravel = 9999.9f) {
+int moveToLimit(int axis, int direction, float speed_in_mm_per_min, float maxTravel) {
+  const auto clampedSpeed = min(speed_in_mm_per_min, homing_feedrate[axis]);
+  const auto clampedMaxTravel = min(maxTravel, s_maxTravelInAxis(axis));
+  const auto travel = direction > 0 ? clampedMaxTravel : -clampedMaxTravel;
   relativeMove(
-    0,
-    0,
-    direction > 0 ? maxTravel : -maxTravel,
-    0,
-    speed_in_mm_per_min
+    axis == X_AXIS ? travel : 0.0f,
+    axis == Y_AXIS ? travel : 0.0f,
+    axis == Z_AXIS ? travel : 0.0f,
+    0.0f,
+    clampedSpeed
   );
   st_synchronize();
 
