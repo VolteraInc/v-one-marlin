@@ -104,6 +104,7 @@ void process_commands();
 
 void manage_inactivity();
 
+void setHomedState(int axis, int value);
 #if defined(X_ENABLE_PIN) && X_ENABLE_PIN > -1
   #define  enable_x() WRITE(X_ENABLE_PIN, X_ENABLE_ON)
   #define disable_x() { WRITE(X_ENABLE_PIN,!X_ENABLE_ON); setHomedState(X_AXIS, 0); }
@@ -176,7 +177,6 @@ void setPwmFrequency(uint8_t pin, int val);
   #define CRITICAL_SECTION_END    SREG = _sreg;
 #endif //CRITICAL_SECTION_START
 
-extern bool homing_axis;
 extern float homing_feedrate[];
 extern bool axis_relative_modes[];
 extern int feedmultiply;
@@ -196,6 +196,7 @@ extern float min_z_x_pos;
 extern float min_z_y_pos;
 extern float xypos_x_pos;
 extern float xypos_y_pos;
+extern float xypos_z_pos;
 
 extern const char axis_codes[NUM_AXIS];
 
@@ -215,8 +216,5 @@ extern uint8_t active_extruder;
 extern void digipot_i2c_set_current( int channel, float current );
 extern void digipot_i2c_init();
 #endif
-
-extern int getHomedState(int axis);
-extern void setHomedState(int axis, int value);
 
 #endif
