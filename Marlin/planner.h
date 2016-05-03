@@ -80,6 +80,7 @@ void plan_set_position(const float &x, const float &y, const float &z, const flo
 
 void plan_set_e_position(const float &e);
 
+void plan_enable_skew_adjustment(bool enable);
 
 
 void check_axes_activity();

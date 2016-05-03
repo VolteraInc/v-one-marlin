@@ -134,6 +134,11 @@ static int8_t prev_block_index(int8_t block_index) {
   return(block_index);
 }
 
+bool skew_adjustments_enabled = true;
+void plan_enable_skew_adjustment(bool enabed) {
+  skew_adjustments_enabled = enabed;
+}
+
 //===========================================================================
 //=============================functions         ============================
 //===========================================================================
@@ -539,7 +544,7 @@ float tan_theta = calib_tan_theta;
 // Because the AXIS are skewed. Homing becomes tricky because when you are homing one axis, both axis are actually moving
 // This produces unexpected results. i.e - Y axis triggers when you are homing X axis.
 // This is undesirable behaviour. If we are homing the axis, disable the skew check by overwriting our theta values.
-if(homing_axis){
+if(skew_adjustments_enabled){
   cos_theta = 1;
   tan_theta = 0;
 }
@@ -871,7 +876,7 @@ void plan_set_position(const float &x, const float &y, const float &z, const flo
 // This is undesirable behaviour. If we are homing the axis, disable the skew check by overwriting our theta values.
 float cos_theta = calib_cos_theta;
 float tan_theta = calib_tan_theta;
-if(homing_axis){
+if(skew_adjustments_enabled){
   cos_theta = 1;
   tan_theta = 0;
 }
