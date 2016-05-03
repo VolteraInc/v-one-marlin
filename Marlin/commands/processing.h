@@ -13,6 +13,9 @@ float code_value(); // the float that follows the found code
 long code_value_long(); // the long that follows the found code
 char code_prefix(); // the character before the found code
 
+extern unsigned long previous_millis_active_cmd;
+void refresh_cmd_timeout();
+
 //int process_gcode();
 //int process_mcode();
 int process_vcode(int command_code);

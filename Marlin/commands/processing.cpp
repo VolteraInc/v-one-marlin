@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "Arduino.h" // millis()
+
 char cmdbuffer[BUFSIZE][MAX_CMD_SIZE];
 char *strchr_pointer = nullptr; // a pointer to find chars in the command string like X, Y, Z, E, etc
 int bufindr = 0;
@@ -36,4 +38,9 @@ char code_prefix() {
   }
 
   return cmdbuffer[bufindr][index];
+}
+
+unsigned long previous_millis_active_cmd = 0;
+void refresh_cmd_timeout() {
+  previous_millis_active_cmd = millis();
 }
