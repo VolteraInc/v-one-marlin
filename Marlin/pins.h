@@ -57,7 +57,7 @@
     #define XY_MAX_X_PIN      62
     #define XY_MIN_Y_PIN      60
     #define XY_MAX_Y_PIN      66
-    #define P_BOT_PIN          34
+    #define P_TOP_PIN          34
 
     #define LED_RED_PIN        5
     #define LED_GREEN_PIN      2

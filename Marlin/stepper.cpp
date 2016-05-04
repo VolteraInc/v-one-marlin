@@ -82,6 +82,7 @@
   static bool old_z_max_endstop=false;
 
   static bool check_endstops = true;
+  static bool calibration_plate_enabled = false;
 
   volatile long count_position[NUM_AXIS] = { 0, 0, 0, 0};
   volatile signed char count_direction[NUM_AXIS] = { 1, 1, 1, 1};
@@ -171,6 +172,16 @@
     return endstop_x_hit || endstop_y_hit || endstop_z_hit;
   }
 
+bool endstop_triggered(int axis) {
+  switch (axis) {
+    case X_AXIS: return endstop_x_hit;
+    case Y_AXIS: return endstop_y_hit;
+    case Z_AXIS: return endstop_z_hit;
+    default: return false;
+  }
+}
+
+
   void checkHitEndstops()
   {
     if( endstop_x_hit || endstop_y_hit || endstop_z_hit) {
@@ -203,11 +214,12 @@
     }
   }
 
-  void endstops_hit_on_purpose()
-  {
-    endstop_x_hit=false;
-    endstop_y_hit=false;
-    endstop_z_hit=false;
+  void clear_endstop(int axis) {
+    switch (axis) {
+      case X_AXIS: endstop_x_hit = false; return;
+      case Y_AXIS: endstop_y_hit = false; return;
+      case Z_AXIS: endstop_z_hit = false; return;
+    }
   }
 
   bool endstops_enabled()
@@ -218,6 +230,11 @@
   void enable_endstops(bool check)
   {
     check_endstops = check;
+  }
+
+  void enable_calibration_plate(bool enable) {
+    //TODO: ...should use a critical section???
+    calibration_plate_enabled = enable;
   }
 
   //         __________________________
@@ -455,18 +472,13 @@ ISR(TIMER1_COMPA_vect)
     CHECK_ENDSTOPS
     {
       bool z_min = READ_PIN(Z_MIN);
-      bool p_bot = READ_PIN(P_BOT);
-
-#if defined(P_TOP_PIN) && P_TOP_PIN > -1
       bool p_top = READ_PIN(P_TOP);
-#else
-      bool p_top = false;
-#endif
 
-      // We bypass p_bot when calculating the probe_offset
-      if (override_p_bot){
-        p_bot = true;
-      }
+#if defined(P_BOT_PIN) && P_BOT_PIN > -1
+      bool p_bot = calibration_plate_enabled ? READ_PIN(P_BOT) : false;
+#else
+      bool p_bot = false;
+#endif
 
   bool z_min_endstop = z_min || p_top || p_bot;
   if(z_min_endstop && old_z_min_endstop && (current_block->steps_z > 0)) {

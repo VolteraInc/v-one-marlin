@@ -21,8 +21,6 @@
 #ifndef stepper_h
 #define stepper_h
 
-#include "planner.h"
-
 // Mod by VOLTERA
 #define WRITE_Z_STEP(v) WRITE(Z_STEP_PIN, v)
 #define NORM_Z_DIR() WRITE(Z_DIR_PIN, !INVERT_Z_DIR)
@@ -55,17 +53,18 @@ void st_wake_up();
 
 
 bool didHitEndstops();
+bool endstop_triggered(int axis);
+
 void checkHitEndstops(); //call from somewhere to create an serial error message with the locations the endstops where hit, in case they were triggered
-void endstops_hit_on_purpose(); //avoid creation of the message, i.e. after homing and before a routine call of checkHitEndstops();
+void clear_endstop(int axis);
 
 bool endstops_enabled(); // Returns true if endstop checking is enabled, otherwise false
 void enable_endstops(bool check); // Enable/disable endstop checking
+void enable_calibration_plate(bool enable);
 
 void checkStepperErrors(); //Print errors detected by the stepper
 
 void finishAndDisableSteppers();
-
-extern block_t *current_block;  // A pointer to the block currently being traced
 
 void quickStop();
 

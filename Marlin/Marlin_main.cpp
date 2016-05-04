@@ -148,7 +148,6 @@ v1.0.1 <- TBD
 // M203 - Set maximum feedrate that your machine can sustain (M203 X200 Y200 Z300 E10000) in mm/sec
 // M204 - Set default acceleration: S normal moves T filament only moves (M204 S3000 T7000) in mm/sec^2  also sets minimum segment time in ms (B20000) to prevent buffer under-runs and M20 minimum feedrate
 // M205 -  advanced settings:  minimum travel speed S=while printing T=travel only,  B=minimum segment time X= maximum xy jerk, Z=maximum Z jerk, E=maximum E jerk
-// M206 - set additional homing offset
 // M207 - set retract length S[positive mm] F[feedrate mm/min] Z[additional zlift/hop], stays in mm regardless of M200 setting
 // M208 - set recover=unretract length S[positive mm surplus to the M207 S*] F[feedrate mm/sec]
 // M209 - S<1=true/0=false> enable automatic retract detect if the slicer did not support G10/11: every normal extrude-only move will be classified as retract depending on the direction.
@@ -195,8 +194,6 @@ v1.0.1 <- TBD
 //===========================================================================
 //=============================public variables=============================
 //===========================================================================
-bool homing_axis = false;
-float homing_feedrate[] = HOMING_FEEDRATE;
 bool axis_relative_modes[] = AXIS_RELATIVE_MODES;
 int feedmultiply=100; //100->1 200->2
 int saved_feedmultiply;
@@ -204,7 +201,6 @@ int extrudemultiply=100; //100->1 200->2
 int extruder_multiply[EXTRUDERS] = {100};
 float volumetric_multiplier[EXTRUDERS] = {1.0};
 float current_position[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
-float add_homeing[3]={0,0,0};
 #ifdef DELTA
 float endstop_adj[3]={0,0,0};
 #endif
@@ -231,12 +227,9 @@ bool logging_enabled = false;
 //===========================================================================
 //=============================Private Variables=============================
 //===========================================================================
-#define HOMED_NONE 0
-signed char axis_homed_state[3] = {HOMED_NONE, HOMED_NONE, HOMED_NONE};
 static float destination[NUM_AXIS] = {  0.0, 0.0, 0.0, 0.0};
 static float offset[3] = {0.0, 0.0, 0.0};
-static bool home_all_axis = true;
-static float feedrate = 1500.0, next_feedrate, saved_feedrate;
+static float feedrate = 1500.0;
 static long gcode_N, gcode_LastN, Stopped_gcode_LastN = 0;
 
 static bool relative_mode = false;  //Determines Absolute or Relative Coordinates
@@ -254,7 +247,7 @@ static boolean comment_mode = false;
 
 //Inactivity shutdown variables
 static unsigned long previous_millis_serial_rx = 0;
-static unsigned long previous_millis_active_cmd = 0;
+
 // After this long without serial traffic *and* no movement, everything shuts down
 static unsigned long max_no_serial_no_movement_time = 60000;
 static unsigned long stepper_inactive_time = DEFAULT_STEPPER_DEACTIVE_TIME*1000l;
@@ -271,9 +264,6 @@ bool CooldownNoWait = true;
 bool pending_temp_change = false;
 bool target_direction;
 
-static bool ensure_homed_enable = false;
-static bool ensure_homed_preemptive_all_axis = false;
-
 //Insert variables if CHDK is defined
 #ifdef CHDK
 unsigned long chdkHigh = 0;
@@ -283,8 +273,6 @@ boolean chdkActive = false;
 //===========================================================================
 //=============================Routines======================================
 //===========================================================================
-
-void sendHomedStatusUpdate();
 
 void checkBufferEmpty();
 
@@ -372,8 +360,8 @@ void setup()
 void periodic_output()
 {
   static struct {
-      float position[NUM_AXIS];
-      struct { float current; float target; } temperature;
+    float position[NUM_AXIS];
+    struct { float current; float target; } temperature;
   } prev; // Previously reported values
   static auto nextOutputAt = millis();
 
@@ -414,14 +402,17 @@ void loop()
 {
   if(buflen < (BUFSIZE-1))
     get_command();
-  if(buflen)
-  {
+
+  if(buflen) {
     previous_millis_serial_rx = millis();
+
     process_commands();
+    refresh_cmd_timeout();
+
     buflen = (buflen-1);
     bufindr = (bufindr + 1)%BUFSIZE;
   }
-  //check heater every n milliseconds
+
   manage_heater();
   manage_inactivity();
   checkHitEndstops();
@@ -533,377 +524,6 @@ void get_command()
   }
 }
 
-#define DEFINE_PGM_READ_ANY(type, reader)       \
-    static inline type pgm_read_any(const type *p)  \
-    { return pgm_read_##reader##_near(p); }
-
-DEFINE_PGM_READ_ANY(float,       float);
-DEFINE_PGM_READ_ANY(signed char, byte);
-
-#define XYZ_CONSTS_FROM_CONFIG(type, array, CONFIG) \
-static const PROGMEM type array##_P[3] =        \
-    { X_##CONFIG, Y_##CONFIG, Z_##CONFIG };     \
-static inline type array(int axis)          \
-    { return pgm_read_any(&array##_P[axis]); }
-
-XYZ_CONSTS_FROM_CONFIG(float, base_min_pos,    MIN_POS);
-XYZ_CONSTS_FROM_CONFIG(float, base_max_pos,    MAX_POS);
-XYZ_CONSTS_FROM_CONFIG(float, base_home_pos,   HOME_POS);
-XYZ_CONSTS_FROM_CONFIG(float, max_length,      MAX_LENGTH);
-XYZ_CONSTS_FROM_CONFIG(float, home_retract_mm, HOME_RETRACT_MM);
-XYZ_CONSTS_FROM_CONFIG(signed char, home_dir,  HOME_DIR);
-
-static void axis_is_at_home(int axis, int flip) {
-
-  current_position[axis] = base_home_pos(axis) + add_homeing[axis];
-  if (flip)
-  current_position[axis] = base_min_pos(axis) + add_homeing[axis];
-  min_pos[axis] =          base_min_pos(axis) + add_homeing[axis];
-  max_pos[axis] =          base_max_pos(axis) + add_homeing[axis];
-}
-
-static void run_z_probe() {
-  float measurement;
-  if (probe(home_retract_mm(Z_AXIS), measurement) != 0) {
-      SERIAL_ERROR_START;
-      SERIAL_ERRORLN("Unable to collect probe measurement, probe switch did not trigger");
-      return;
-  }
-
-  // Output position
-  SERIAL_PROTOCOL("probeMeasurement");
-  SERIAL_PROTOCOL(" x:"); SERIAL_PROTOCOL_F(current_position[X_AXIS], 3);
-  SERIAL_PROTOCOL(" y:"); SERIAL_PROTOCOL_F(current_position[Y_AXIS], 3);
-  SERIAL_PROTOCOL(" z:"); SERIAL_PROTOCOL_F(measurement, 3);
-  SERIAL_PROTOCOL("\n");
-}
-
-static int homeaxis(int axis, bool flip) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHO("home axis:"); SERIAL_ECHO(axis_codes[axis]);
-    SERIAL_ECHO(" flip:"); SERIAL_ECHO(flip);
-    SERIAL_ECHO("\n");
-
-    homing_axis = true; // Raise flag to let planner know we are homing and axis so it ignores skew adjustments.
-    int axis_home_dir = home_dir(axis);
-
-    if (flip){
-      axis_home_dir = axis_home_dir * -1;
-    }
-
-    if (!getHomedState(axis)) current_position[axis] = 0;
-    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-
-    // If we already know roughly where we are, don't go too far past the known extent
-    // (e.g. if tool isn't mounted and we're trying to home z bottom after having homed z top)
-    // Only do this in Z because no other axis has double endstops
-    bool soft_limit_home = axis == Z_AXIS;
-    destination[axis] = soft_limit_home && getHomedState(axis) ? (axis_home_dir > 0 ? max_pos : min_pos)[axis] + axis_home_dir : 1.5 * max_length(axis) * axis_home_dir;
-    feedrate = homing_feedrate[axis];
-    endstops_hit_on_purpose(); // Clear endstop flags
-
-    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
-    st_synchronize();
-
-    if (!didHitEndstops()) {
-      SERIAL_ERROR_START;
-      SERIAL_ERRORPGM(" home ");
-      SERIAL_ERROR(axis_codes[axis]);
-      SERIAL_ERRORLNPGM(" failed - no limit hit");
-      // We don't actually know if this is where we are (maybe it stalled)
-      // ...so this error should probably be followed with another homing attempt
-      current_position[axis] = destination[axis];
-      return -1;
-    }
-
-    current_position[axis] = 0;
-    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-    destination[axis] = -home_retract_mm(axis) * axis_home_dir;
-    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
-    st_synchronize();
-
-    destination[axis] = 2 * home_retract_mm(axis) * axis_home_dir;
-    feedrate = homing_feedrate[axis] / 6;
-    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
-    st_synchronize();
-
-    axis_is_at_home(axis, flip);
-    destination[axis] = current_position[axis];
-    feedrate = 0.0;
-    endstops_hit_on_purpose();
-    setHomedState(axis, axis_home_dir);
-
-    homing_axis = false; //Lower flag to indicate homing was finished. It doesn't matter if it was not sucessful.
-
-    return 0;
-}
-
-int getHomedState(int axis) {
-  return axis_homed_state[axis];
-}
-
-void setHomedState(int axis, int value) {
-  if (axis_homed_state[axis] != value) {
-    axis_homed_state[axis] = value;
-    sendHomedStatusUpdate();
-  }
-}
-
-void sendHomedStatusUpdate() {
-  SERIAL_PROTOCOL("homedStatusUpdate");
-  SERIAL_PROTOCOL(" x:"); SERIAL_PROTOCOL(getHomedState(X_AXIS));
-  SERIAL_PROTOCOL(" y:"); SERIAL_PROTOCOL(getHomedState(Y_AXIS));
-  SERIAL_PROTOCOL(" z:"); SERIAL_PROTOCOL(getHomedState(Z_AXIS));
-  SERIAL_PROTOCOL("\n");
-}
-
-void refresh_cmd_timeout(void)
-{
-  previous_millis_active_cmd = millis();
-}
-
-
-void ensure_homed(bool need_x, bool need_y, bool need_z) {
-  static float saved_destination[NUM_AXIS];
-  // We don't want to preemptive home if it's just the e axis (i.e. not xyz) moving
-  if (ensure_homed_preemptive_all_axis && (need_x || need_y || need_z)) {
-    need_x = need_y = need_z = true;
-  }
-
-  bool home_x = need_x && !getHomedState(X_AXIS);
-  bool home_y = need_y && !getHomedState(Y_AXIS);
-  bool home_z = need_z && !getHomedState(Z_AXIS);
-
-  if (!home_x && !home_y && !home_z) return;
-
-  saved_feedrate = feedrate;
-  saved_feedmultiply = feedmultiply;
-  feedmultiply = 100;
-  enable_endstops(true);
-  memcpy(saved_destination, destination, sizeof(saved_destination));
-  memcpy(destination, current_position, sizeof(current_position));
-
-  feedrate = 0.0;
-
-  if (home_z) homeaxis(Z_AXIS, 0);
-  if (home_y) homeaxis(Y_AXIS, 0);
-  if (home_x) homeaxis(X_AXIS, 0);
-
-  #ifdef ENDSTOPS_ONLY_FOR_HOMING
-  enable_endstops(false);
-  #endif
-  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-  endstops_hit_on_purpose();
-
-  for (int i = 0; i < NUM_AXIS; ++i)
-  {
-    if (code_seen(axis_codes[i])) destination[i] = saved_destination[i];
-  }
-
-  feedrate = saved_feedrate;
-  feedmultiply = saved_feedmultiply;
-}
-
-bool ensure_requested_homing(void) {
-  // You can specify H#,#,# on a movement command to ensure that the printer is homed to a particular endstop before moving
-  // If it isn't, it'll bail (it *won't* implicitly home)
-  // Note that the parsing is super sketch, probably best not to pass malformed syntax
-  // This exists soley because the Z axis coordinate system shifts ~15mm depending on whether we're homed to bottom or top Z
-  if (code_seen('H')) {
-    signed char home_x = code_value_long();
-    strchr_pointer += (home_x < 0 ? 2 : 1) + 1;
-    signed char home_y = code_value_long();
-    strchr_pointer += (home_y < 0 ? 2 : 1) + 1;
-    signed char home_z = code_value_long();
-
-    if ((home_x && getHomedState(X_AXIS) != home_x) || (home_y && getHomedState(Y_AXIS) != home_y) || (home_z && getHomedState(Z_AXIS) != home_z)) {
-      SERIAL_ERROR_START;
-      SERIAL_ERRORLNPGM(" move failed - printer not homed as requested");
-      return false;
-    }
-  }
-  return true;
-}
-
-void moveZ(const String& description, float z, float f) {
-  if (description.length()) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHO(description);
-    SERIAL_ECHO(" (Z:"); SERIAL_ECHO(z);
-    SERIAL_ECHO(" F:"); SERIAL_ECHO(f);
-    SERIAL_ECHO(")\n");
-  }
-
-  memcpy(destination, current_position, sizeof(destination));
-  destination[Z_AXIS] = z;
-  feedrate = f;
-  prepare_move();
-}
-
-void raise(const String& description = "Rise to max Z") {
-  bool enabled = endstops_enabled();
-  enable_endstops(true);
-
-  moveZ(description, Z_MAX_POS, max_feedrate[Z_AXIS] * 60);
-  st_synchronize();
-  endstops_hit_on_purpose();
-
-  // Tell the planner where we are, it thinks we are at Z_MAX_POS
-  current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
-  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-
-  enable_endstops(enabled);
-}
-
-int moveXY(const String& description, float x, float y, float f, bool autoRaise = true) {
-  if (description.length()) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHO(description);
-    SERIAL_ECHO(" (x:"); SERIAL_ECHO(x);
-    SERIAL_ECHO(" y:"); SERIAL_ECHO(y);
-    SERIAL_ECHO(" f:"); SERIAL_ECHO(f);
-    SERIAL_ECHO(")\n");
-  }
-
-  // Rise to a safe height before moving
-  if (autoRaise && (current_position[X_AXIS] != x || current_position[Y_AXIS] != y)) {
-    raise();
-  }
-
-  memcpy(destination, current_position, sizeof(destination));
-  destination[X_AXIS] = x;
-  destination[Y_AXIS] = y;
-  feedrate = f;
-  prepare_move();
-  return 0;
-}
-
-// x and y are treated as relative to the current position (not f)
-void relativeMoveXY(const String& description, float x, float y, float f, bool autoRaise = true) {
-  moveXY(
-    description,
-    current_position[X_AXIS] + x,
-    current_position[Y_AXIS] + y,
-    f,
-    autoRaise
-  );
-}
-
-int xyPositionerTouch(int direction, AxisEnum axis, float& measurement) {
-  int returnValue = -1;
-  bool enabled = endstops_enabled();
-  enable_endstops(true);
-
-  // Move in the given axis and direction until a switch is triggered
-  float offset = (direction < 0 ? -5.0f : 5.0f);
-  relativeMoveXY(
-    "",
-    axis == X_AXIS ? offset : 0,
-    axis == Y_AXIS ? offset : 0,
-    homing_feedrate[axis] / 2,
-    false
-  );
-  st_synchronize();
-
-  // Tell the planner where we are, it is not aware of endstops
-  current_position[axis] = st_get_position_mm(axis);
-  plan_set_position(
-    current_position[X_AXIS],
-    current_position[Y_AXIS],
-    current_position[Z_AXIS],
-    current_position[E_AXIS]
-  );
-
-  if (!didHitEndstops()) {
-    SERIAL_ERROR_START;
-    SERIAL_ERROR("Unable to complete xy-positioning, ");
-    SERIAL_ERROR(direction < 0 ? '-' : '+');
-    SERIAL_ERROR(axis_codes[axis]);
-    SERIAL_ERROR(" limit not hit\n");
-    goto DONE;
-  }
-  endstops_hit_on_purpose();
-
-  // Success
-  measurement = current_position[axis];
-  returnValue = 0;
-
-DONE:
-  enable_endstops(enabled);
-  return returnValue;
-}
-
-int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
-  const float feedrate = max_feedrate[X_AXIS] * 60;
-  float measurement1;
-  float measurement2;
-  centerX = xypos_x_pos;
-  centerY = xypos_y_pos;
-  for (int i=0; i<cycles; ++i) {
-    // Compute center X
-    if ( moveXY("", centerX, centerY, feedrate, false) // applies new centerY on 2nd iteration
-      || xyPositionerTouch(1, X_AXIS, measurement1) // measure +x
-      || moveXY("", centerX, centerY, feedrate, false) // recenter
-      || xyPositionerTouch(-1, X_AXIS, measurement2)) { // measure -x
-      return -1;
-    }
-    centerX = (measurement2 + measurement1) / 2;
-    SERIAL_PROTOCOL("xyPositionerCenterX");
-    SERIAL_PROTOCOL(" m1:"); SERIAL_PROTOCOL_F(measurement1, 3);
-    SERIAL_PROTOCOL(" m2:"); SERIAL_PROTOCOL_F(measurement2, 3);
-    SERIAL_PROTOCOL(" x:"); SERIAL_PROTOCOL_F(centerX, 3);
-    SERIAL_PROTOCOL("\n");
-
-    // Compute center Y
-    if ( moveXY("", centerX, centerY, feedrate, false) // applies new centerX
-      || xyPositionerTouch(1, Y_AXIS, measurement1) // measure +y
-      || moveXY("", centerX, centerY, feedrate, false) // recenter
-      || xyPositionerTouch(-1, Y_AXIS, measurement2)) { // measure -y
-      return -1;
-    }
-    centerY = (measurement2 + measurement1) / 2;
-    SERIAL_PROTOCOL("xyPositionerCenterY");
-    SERIAL_PROTOCOL(" m1:"); SERIAL_PROTOCOL_F(measurement1, 3);
-    SERIAL_PROTOCOL(" m2:"); SERIAL_PROTOCOL_F(measurement2, 3);
-    SERIAL_PROTOCOL(" y:"); SERIAL_PROTOCOL_F(centerY, 3);
-    SERIAL_PROTOCOL("\n");
-  }
-
-  // Go to the computed position
-  if (moveXY("move to computed center", centerX, centerY, feedrate, false)) {
-    return -1;
-  }
-
-  return 0;
-}
-
-int homeZtoZswitch() {
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLN("home Z to z-switch");
-
-  int returnValue = -1;
-  bool enabled = endstops_enabled();
-  saved_feedrate = feedrate;
-  enable_endstops(true);
-
-  if (moveXY("ensure at z-switch", min_z_x_pos, min_z_y_pos, max_feedrate[X_AXIS] * 60, false)) {
-    goto DONE;
-  }
-
-  memcpy(destination, current_position, sizeof(destination));
-  if (homeaxis(Z_AXIS, 1)) {
-    goto DONE;
-  }
-  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-
-  returnValue = 0;
-
-DONE:
-  feedrate = saved_feedrate;
-  enable_endstops(enabled);
-  return returnValue;
-}
-
 void process_commands()
 {
   unsigned long codenum; //throw away variable
@@ -940,86 +560,58 @@ void process_commands()
 
       st_synchronize();
       codenum += millis();  // keep track of when we started waiting
-      previous_millis_active_cmd = millis();
-      while(millis()  < codenum ){
+      refresh_cmd_timeout();
+      while(millis() < codenum ){ // TODO: dangerous! could skip work on loop
         manage_heater();
         manage_inactivity();
       }
       break;
 
-    case 33: // G33 Homes the Z axis to the other switch.
-      homeZtoZswitch();
+    // G33 Homes the Z axis to the z-switch.
+    case 33:
+      homeZ();
       break;
 
+    // G28 Home X and Y normally, home Z to the top (legacy code relies on this behavior)
+    case 28: {
+      bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
 
-    case 28: //G28 Home all Axis one at a time
+      if (home_all || code_seen('Z')) {
+        setHomedState(Z_AXIS, 0);
+        raise();
 
-      saved_feedrate = feedrate;
-      saved_feedmultiply = feedmultiply;
-      feedmultiply = 100;
-      previous_millis_active_cmd = millis();
-
-      enable_endstops(true);
-
-      memcpy(destination, current_position, sizeof(destination));
-      feedrate = 0.0;
-
-
-      home_all_axis = !((code_seen(axis_codes[X_AXIS])) || (code_seen(axis_codes[Y_AXIS])) || (code_seen(axis_codes[Z_AXIS])));
-
-      #if Z_HOME_DIR > 0                      // If homing away from BED do Z first
-      if((home_all_axis) || (code_seen(axis_codes[Z_AXIS]))) {
-        #ifdef VOLTERA
-        homeaxis(Z_AXIS,0);
-        #endif
-      }
-      #endif
-
-      if((home_all_axis) || (code_seen(axis_codes[Y_AXIS]))) {
-        homeaxis(Y_AXIS,0);
+        // Set the position so that we can process absolute movements (e.g. G1)
+        current_position[Z_AXIS] = Z_MAX_POS;
+        plan_set_position(
+          current_position[ X_AXIS ],
+          current_position[ Y_AXIS ],
+          current_position[ Z_AXIS ],
+          current_position[ E_AXIS ]
+        );
       }
 
-      if((home_all_axis) || (code_seen(axis_codes[X_AXIS])))
-      {
-        homeaxis(X_AXIS,0);
+      if (home_all || code_seen('X')) {
+        setHomedState(X_AXIS, 0);
       }
 
-      if(code_seen(axis_codes[X_AXIS]))
-      {
-        if(code_value_long() != 0) {
-          current_position[X_AXIS]=code_value()+add_homeing[0];
-        }
+      if (home_all || code_seen('Y')) {
+        setHomedState(Y_AXIS, 0);
       }
 
-      if(code_seen(axis_codes[Y_AXIS])) {
-        if(code_value_long() != 0) {
-          current_position[Y_AXIS]=code_value()+add_homeing[1];
-        }
-      }
+      home(
+        home_all || code_seen('X'),
+        home_all || code_seen('Y'),
+        false
+      );
 
-      if(code_seen(axis_codes[Z_AXIS])) {
-        if(code_value_long() != 0) {
-          current_position[Z_AXIS]=code_value()+add_homeing[2];
-        }
-      }
-
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-
-      #ifdef ENDSTOPS_ONLY_FOR_HOMING
-        enable_endstops(false);
-      #endif
-
-      feedrate = saved_feedrate;
-      feedmultiply = saved_feedmultiply;
-      previous_millis_active_cmd = millis();
-      endstops_hit_on_purpose();
       break;
+    }
 
     // G18: XYPositioner Y1 - Move in +Y until a switch is triggered
     case 18: {
       float measurement;
-      if ( xyPositionerTouch(1, Y_AXIS, measurement)
-        || moveXY("", xypos_x_pos, xypos_y_pos, homing_feedrate[Y_AXIS], false)) {
+      if ( xyPositionerTouch(Y_AXIS, 1, measurement)
+        || moveXY(xypos_x_pos, xypos_y_pos)) {
         break;
       }
       SERIAL_PROTOCOL("xyPositionerMeasurement +Y:");
@@ -1031,8 +623,8 @@ void process_commands()
     // G19: XYPositioner Y2 - Move in -Y until a switch is triggered
     case 19: {
       float measurement;
-      if ( xyPositionerTouch(-1, Y_AXIS, measurement)
-        || moveXY("", xypos_x_pos, xypos_y_pos, homing_feedrate[Y_AXIS], false)) {
+      if ( xyPositionerTouch(Y_AXIS, -1, measurement)
+        || moveXY(xypos_x_pos, xypos_y_pos)) {
         break;
       }
       SERIAL_PROTOCOL("xyPositionerMeasurement -Y:");
@@ -1044,8 +636,8 @@ void process_commands()
     // G20: XYPositioner X1 - Move in +X until a switch is triggered
     case 20: {
       float measurement;
-      if ( xyPositionerTouch(1, X_AXIS, measurement)
-        || moveXY("", xypos_x_pos, xypos_y_pos, homing_feedrate[X_AXIS], false)) {
+      if ( xyPositionerTouch(X_AXIS, 1, measurement)
+        || moveXY(xypos_x_pos, xypos_y_pos)) {
         break;
       }
       SERIAL_PROTOCOL("xyPositionerMeasurement +X:");
@@ -1057,8 +649,8 @@ void process_commands()
     // G21: XYPositioner X2 - Move in -X until switch triggered
     case 21: {
       float measurement;
-      if ( xyPositionerTouch(-1, X_AXIS, measurement)
-        || moveXY("", xypos_x_pos, xypos_y_pos, homing_feedrate[X_AXIS], false)) {
+      if ( xyPositionerTouch(X_AXIS, -1, measurement)
+        || moveXY(xypos_x_pos, xypos_y_pos)) {
         break;
       }
       SERIAL_PROTOCOL("xyPositionerMeasurement -X:");
@@ -1120,9 +712,8 @@ void process_commands()
 
     case 27: //Test the zAxis - move to impossible position, and report where limit switch triggered.
       {
-
-          feedrate = homing_feedrate[Z_AXIS]/(6);
           // move down until you find the bed
+          feedrate = homing_feedrate[Z_AXIS]/(6);
           float zPosition = 30;
           plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
           st_synchronize();
@@ -1138,61 +729,37 @@ void process_commands()
 
     // G30 Single Z Probe
     case 30: {
-      run_z_probe();
+      float measurement;
+      if (probe(measurement)) {
+        break;
+      }
+
+      // Output position
+      SERIAL_PROTOCOL("probeMeasurement");
+      SERIAL_PROTOCOL(" x:"); SERIAL_PROTOCOL_F(current_position[X_AXIS], 3);
+      SERIAL_PROTOCOL(" y:"); SERIAL_PROTOCOL_F(current_position[Y_AXIS], 3);
+      SERIAL_PROTOCOL(" z:"); SERIAL_PROTOCOL_F(measurement, 3);
+      SERIAL_PROTOCOL("\n");
       break;
     }
 
-      case 31: //G31 Reports the Probe Offset
-      {
-         feedrate = homing_feedrate[Z_AXIS];
-          // move down until you find the bed
-          float zPosition = -10;
-          plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
-          st_synchronize();
-
-          if (!didHitEndstops()) {
-              SERIAL_ERROR_START;
-              SERIAL_ERRORLNPGM(" probe bottom pad failed - no limit hit");
-          }
-
-          // We hit the bed, tell the planner know where we are right now as it is not where we said to go.
-          current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
-          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-
-          // Copy this value,  this is the height of our GOLD pad (p_bot)
-          float p_bot_height = current_position[Z_AXIS] * 1000;
-
-          // Override the p_bot, we will continue to go down until the probe triggers
-          override_p_bot = true;
-          plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
-          st_synchronize();
-
-          // Stop overriding it, we are moving up now. Tell the planner where we are right now.
-          override_p_bot = false;
-          current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
-          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-
-          float z_probe_offset = p_bot_height - current_position[Z_AXIS]*1000;
-
-          SERIAL_PROTOCOLPGM("Probe Offset: ");
-          SERIAL_PROTOCOL(z_probe_offset);
-          SERIAL_PROTOCOLPGM("\n");
+    // G31 Reports the Probe Offset
+    case 31: {
+      float z_probe_offset;
+      if (measureProbeDisplacement(z_probe_offset)) {
+        break;
       }
+      SERIAL_PROTOCOL("Probe Offset: ");
+      SERIAL_PROTOCOL(z_probe_offset * 1000); // TODO: should use SERIAL_PROTOCOL_F instead of *1000
+      SERIAL_PROTOCOL("\n");
       break;
+    }
 
     case 90: // G90
       relative_mode = false;
       break;
     case 91: // G91
       relative_mode = true;
-      break;
-
-    // G1004 Relative movement
-    case 1004:
-      relative_mode = true;
-      get_coordinates(); // For X Y Z E F
-      prepare_move();
-      relative_mode = false;
       break;
 
     case 92: // G92
@@ -1202,94 +769,15 @@ void process_commands()
            if(i == E_AXIS) {
              current_position[i] = code_value();
              plan_set_e_position(current_position[E_AXIS]);
-           }
-           else {
-             current_position[i] = code_value()+add_homeing[i];
+           } else {
+             current_position[i] = code_value();
              plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
            }
         }
       }
       break;
 
-    // G1001 Raise until endstop hit
-    case 1001:
-      raise();
-      break;
-
-    // G1002 Move to xy-positioner and find center
-    case 1002: {
-      // Move
-      moveXY("move to xy-positioner", xypos_x_pos, xypos_y_pos, max_feedrate[X_AXIS] * 60);
-      moveZ("lower to xy-positioner", xypos_z_pos, max_feedrate[Z_AXIS] * 60);
-
-      // Check for move-only flag
-      if (code_seen('M')) {
-        break;
-      }
-
-      // Find the center
-      float centerX;
-      float centerY;
-      long cycles = code_seen('C') ? code_value_long() : 2;
-      if (xyPositionerFindCenter(cycles, centerX, centerY)) {
-        break;
-      }
-
-      // Output
-      SERIAL_PROTOCOL("xyPositionerCenterMeasurement");
-      SERIAL_PROTOCOL(" x:"); SERIAL_PROTOCOL_F(centerX, 3);
-      SERIAL_PROTOCOL(" y:"); SERIAL_PROTOCOL_F(centerY, 3);
-      SERIAL_PROTOCOL("\n");
-      break;
-    }
-
-    // G1003 Move to z-switch
-    case 1003:
-      if (moveXY("move to z-switch", min_z_x_pos, min_z_y_pos, max_feedrate[X_AXIS] * 60)) {
-        break;
-      }
-
-      // Check for move-only flag
-      if (code_seen('M')) {
-        break;
-      }
-
-      // Home z
-      if (homeZtoZswitch()) {
-        break;
-      }
-
-      // Set the max-z soft limit
-      raise();
-      max_pos[Z_AXIS] = current_position[Z_AXIS];
-      SERIAL_ECHO_START;
-      SERIAL_ECHO("setting soft limit max-z to ");
-      SERIAL_ECHOLN(max_pos[Z_AXIS]);
-      break;
-
-    // Enable logging
-    case 1005:
-      // Turn on debug logging
-      if (code_seen('D')) {
-        logging_enabled = true;
-
-      // Return to default log level
-      } else {
-        SERIAL_ECHO_START;
-        SERIAL_ECHO("Restoring default log level\n");
-
-        logging_enabled = false;
-      }
-
-      // Output current log level
-      SERIAL_ECHO_START;
-      SERIAL_ECHO("LoggingLevel:");
-      SERIAL_ECHO(logging_enabled ? "Debug" : "Warning");
-      SERIAL_ECHO("\n");
-      break;
-    }
-
-    previous_millis_active_cmd = millis();
+    } // switch
 
   } else if(command_prefix_seen('M')) {
     switch( (int)code_value() )
@@ -1324,7 +812,7 @@ void process_commands()
       setWatch();
       break;
     case 140: // M140 set bed temp
-      previous_millis_active_cmd = millis();
+      refresh_cmd_timeout();
       if (code_seen('S')) setTargetBed(code_value());
       break;
     case 105 : // M105
@@ -1380,7 +868,6 @@ void process_commands()
         #endif
 
         SERIAL_PROTOCOLLN("");
-      return;
       break;
     case 190: // M190 - Wait for bed heater to reach target.
     #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
@@ -1414,7 +901,7 @@ void process_commands()
           manage_inactivity();
         }
         pending_temp_change = false;
-        previous_millis_active_cmd = millis();
+        refresh_cmd_timeout();
     #endif
         break;
 
@@ -1447,13 +934,13 @@ void process_commands()
         break;
     #endif //FAN_PIN
 
-      case 81: // M81 - Turn off Power Supply
-        disable_heater();
-        st_synchronize();
-        finishAndDisableSteppers();
-        fanSpeed = 0;
-        delay(1000); // Wait a little before to switch off
-	  break;
+    case 81: // M81 - Turn off Power Supply
+      disable_heater();
+      st_synchronize();
+      finishAndDisableSteppers();
+      fanSpeed = 0;
+      delay(1000); // Wait a little before to switch off
+      break;
 
     case 82:
       axis_relative_modes[3] = false;
@@ -1603,11 +1090,6 @@ void process_commands()
 
       break;
 
-    case 124: // M124 configure forced-homing behaviour. H0/1 to disable/enable, A0/1 to home all axis immediately, not just those required for the movement
-      if (code_seen('H')) ensure_homed_enable = code_value_long() != 0;
-      if (code_seen('A')) ensure_homed_preemptive_all_axis = code_value_long() != 0;
-      break;
-
     case 125:
     {
       // Reports the current state of the Probe
@@ -1745,26 +1227,20 @@ void process_commands()
       if(code_seen('E')) max_e_jerk = code_value() ;
     }
     break;
-    case 206: // M206 additional homeing offset
-      for(int8_t i=0; i < 3; i++)
-      {
-        if(code_seen(axis_codes[i])) add_homeing[i] = code_value();
-      }
-      break;
     #ifdef DELTA
-	case 665: // M665 set delta configurations L<diagonal_rod> R<delta_radius> S<segments_per_sec>
-		if(code_seen('L')) {
-			delta_diagonal_rod= code_value();
-		}
-		if(code_seen('R')) {
-			delta_radius= code_value();
-		}
-		if(code_seen('S')) {
-			delta_segments_per_second= code_value();
-		}
+  case 665: // M665 set delta configurations L<diagonal_rod> R<delta_radius> S<segments_per_sec>
+    if(code_seen('L')) {
+      delta_diagonal_rod= code_value();
+    }
+    if(code_seen('R')) {
+      delta_radius= code_value();
+    }
+    if(code_seen('S')) {
+      delta_segments_per_second= code_value();
+    }
 
-		recalc_delta_settings(delta_radius, delta_diagonal_rod);
-		break;
+    recalc_delta_settings(delta_radius, delta_diagonal_rod);
+    break;
     case 666: // M666 set delta endstop adjustemnt
       for(int8_t i=0; i < 3; i++)
       {
@@ -1852,12 +1328,12 @@ void process_commands()
     #ifdef PREVENT_DANGEROUS_EXTRUDE
     case 302: // allow cold extrudes, or set the minimum extrude temperature
     {
-	  float temp = .0;
-	  if (code_seen('S')) temp=code_value();
+      float temp = .0;
+      if (code_seen('S')) temp = code_value();
       set_extrude_min_temp(temp);
     }
     break;
-	#endif
+    #endif
     case 303: // M303 PID autotune
     {
       float temp = 150.0;
@@ -2006,8 +1482,8 @@ void get_coordinates()
   }
 
   if(code_seen('F')) {
-    next_feedrate = code_value();
-    if(next_feedrate > 0.0) feedrate = next_feedrate;
+    auto f = code_value();
+    if(f > 0.0) feedrate = f;
   }
 }
 
@@ -2054,13 +1530,13 @@ void clamp_to_software_endstops(float target[3])
 #ifdef DELTA
 void recalc_delta_settings(float radius, float diagonal_rod)
 {
-	 delta_tower1_x= -SIN_60*radius; // front left tower
-	 delta_tower1_y= -COS_60*radius;
-	 delta_tower2_x=  SIN_60*radius; // front right tower
-	 delta_tower2_y= -COS_60*radius;
-	 delta_tower3_x= 0.0;                  // back middle tower
-	 delta_tower3_y= radius;
-	 delta_diagonal_rod_2= sq(diagonal_rod);
+  delta_tower1_x= -SIN_60*radius; // front left tower
+  delta_tower1_y= -COS_60*radius;
+  delta_tower2_x=  SIN_60*radius; // front right tower
+  delta_tower2_y= -COS_60*radius;
+  delta_tower3_x= 0.0;            // back middle tower
+  delta_tower3_y= radius;
+  delta_diagonal_rod_2= sq(diagonal_rod);
 }
 
 void calculate_delta(float cartesian[3])
@@ -2089,17 +1565,19 @@ void calculate_delta(float cartesian[3])
 }
 #endif
 
-void prepare_move()
-{
+void prepare_move() {
   clamp_to_software_endstops(destination);
 
-  previous_millis_active_cmd = millis();
-
-  if (ensure_homed_enable) {
-    ensure_homed(current_position[X_AXIS] != destination[X_AXIS], current_position[Y_AXIS] != destination[Y_AXIS], current_position[Z_AXIS] != destination[Z_AXIS]);
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHO("prepare_move");
+    SERIAL_ECHO(" X:"); SERIAL_ECHO(destination[ X_AXIS ]);
+    SERIAL_ECHO(" Y:"); SERIAL_ECHO(destination[ Y_AXIS ]);
+    SERIAL_ECHO(" Z:"); SERIAL_ECHO(destination[ Z_AXIS ]);
+    SERIAL_ECHO(" E:"); SERIAL_ECHO(destination[ E_AXIS ]);
+    SERIAL_ECHO(" F:"); SERIAL_ECHO(feedrate);
+    SERIAL_ECHO("\n");
   }
-
-  if (!ensure_requested_homing()) return;
 
   // Do not use feedmultiply for E or Z only moves
   if( (current_position[X_AXIS] == destination [X_AXIS]) && (current_position[Y_AXIS] == destination [Y_AXIS])) {
@@ -2125,7 +1603,6 @@ void prepare_arc_move(char isclockwise) {
   for(int8_t i=0; i < NUM_AXIS; i++) {
     current_position[i] = destination[i];
   }
-  previous_millis_active_cmd = millis();
 }
 
 

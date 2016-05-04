@@ -104,6 +104,7 @@ void process_commands();
 
 void manage_inactivity();
 
+void setHomedState(int axis, int value);
 #if defined(X_ENABLE_PIN) && X_ENABLE_PIN > -1
   #define  enable_x() WRITE(X_ENABLE_PIN, X_ENABLE_ON)
   #define disable_x() { WRITE(X_ENABLE_PIN,!X_ENABLE_ON); setHomedState(X_AXIS, 0); }
@@ -176,7 +177,6 @@ void setPwmFrequency(uint8_t pin, int val);
   #define CRITICAL_SECTION_END    SREG = _sreg;
 #endif //CRITICAL_SECTION_START
 
-extern bool homing_axis;
 extern float homing_feedrate[];
 extern bool axis_relative_modes[];
 extern int feedmultiply;
@@ -184,7 +184,6 @@ extern int extrudemultiply; // Sets extrude multiply factor (in percent) for all
 extern int extruder_multiply[EXTRUDERS]; // sets extrude multiply factor (in percent) for each extruder individually
 extern float volumetric_multiplier[EXTRUDERS]; // reciprocal of cross-sectional area of filament (in square millimeters), stored this way to reduce computational burden in planner
 extern float current_position[NUM_AXIS] ;
-extern float add_homeing[3];
 
 extern float min_pos[3];
 extern float max_pos[3];
@@ -196,6 +195,7 @@ extern float min_z_x_pos;
 extern float min_z_y_pos;
 extern float xypos_x_pos;
 extern float xypos_y_pos;
+extern float xypos_z_pos;
 
 extern const char axis_codes[NUM_AXIS];
 
@@ -215,8 +215,5 @@ extern uint8_t active_extruder;
 extern void digipot_i2c_set_current( int channel, float current );
 extern void digipot_i2c_init();
 #endif
-
-extern int getHomedState(int axis);
-extern void setHomedState(int axis, int value);
 
 #endif
