@@ -66,10 +66,10 @@ void sendHomedStatusUpdate() {
 }
 
 static void axisIsAtHome(int axis) {
-  current_position[axis] = base_home_pos(axis) + add_homeing[axis];
+  current_position[axis] = base_home_pos(axis);
 
-  min_pos[axis] = base_min_pos(axis) + add_homeing[axis];
-  max_pos[axis] = base_max_pos(axis) + add_homeing[axis];
+  min_pos[axis] = base_min_pos(axis);
+  max_pos[axis] = base_max_pos(axis);
 
   plan_set_position(
     current_position[ X_AXIS ],
@@ -83,7 +83,6 @@ static void axisIsAtHome(int axis) {
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHO("Homed "); SERIAL_ECHO(axis_codes[axis]); SERIAL_ERROR("-axis");
-    SERIAL_ECHO(" add_homeing:"); SERIAL_ECHO(add_homeing[axis]);
     SERIAL_ECHO(" base_home_pos:"); SERIAL_ECHO(base_home_pos(axis));
     SERIAL_ECHO(" base_min_pos:"); SERIAL_ECHO(base_min_pos(axis));
     SERIAL_ECHO(" current_position:"); SERIAL_ECHO(current_position[axis]);
@@ -99,11 +98,11 @@ static int homeAxis(int axis) {
   SERIAL_ECHO("home axis:"); SERIAL_ECHO(axis_codes[axis]);
   SERIAL_ECHO("\n");
 
-  if (axis == Z_AXIS) {
-    // Finish any pending moves (prevents crashes)
-    st_synchronize();
-  } else {
-    // Raise print head (prevents crashes)
+  // Finish any pending moves (prevents crashes)
+  st_synchronize();
+
+  // To prevent crashes, raise Z
+  if (axis == X_AXIS || axis == Y_AXIS) {
     raise();
   }
 
@@ -134,12 +133,6 @@ DONE:
 }
 
 int home(bool homingX, bool homingY, bool homingZ) {
-  // Raise before moving in X or Y (prevents crashes)
-  if (homingX || homingY) {
-    if (raise()) {
-      return -1;
-    }
-  }
 
   // Homing Y first moves the print head out of the way, which
   // which allows the user to access the board/bed sooner

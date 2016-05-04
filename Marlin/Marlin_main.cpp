@@ -148,7 +148,6 @@ v1.0.1 <- TBD
 // M203 - Set maximum feedrate that your machine can sustain (M203 X200 Y200 Z300 E10000) in mm/sec
 // M204 - Set default acceleration: S normal moves T filament only moves (M204 S3000 T7000) in mm/sec^2  also sets minimum segment time in ms (B20000) to prevent buffer under-runs and M20 minimum feedrate
 // M205 -  advanced settings:  minimum travel speed S=while printing T=travel only,  B=minimum segment time X= maximum xy jerk, Z=maximum Z jerk, E=maximum E jerk
-// M206 - set additional homing offset
 // M207 - set retract length S[positive mm] F[feedrate mm/min] Z[additional zlift/hop], stays in mm regardless of M200 setting
 // M208 - set recover=unretract length S[positive mm surplus to the M207 S*] F[feedrate mm/sec]
 // M209 - S<1=true/0=false> enable automatic retract detect if the slicer did not support G10/11: every normal extrude-only move will be classified as retract depending on the direction.
@@ -202,7 +201,6 @@ int extrudemultiply=100; //100->1 200->2
 int extruder_multiply[EXTRUDERS] = {100};
 float volumetric_multiplier[EXTRUDERS] = {1.0};
 float current_position[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
-float add_homeing[3]={0,0,0};
 #ifdef DELTA
 float endstop_adj[3]={0,0,0};
 #endif
@@ -578,10 +576,6 @@ void process_commands()
     case 28: {
       bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
 
-      setHomedState(X_AXIS, 0);
-      setHomedState(Y_AXIS, 0);
-      setHomedState(Z_AXIS, 0);
-
       if (home_all || code_seen('Z')) {
         setHomedState(Z_AXIS, 0);
         raise();
@@ -609,18 +603,6 @@ void process_commands()
         home_all || code_seen('Y'),
         false
       );
-
-      // Apply the given offset
-      if(code_seen('X') && code_value_long() != 0) {
-        current_position[X_AXIS] = code_value() + add_homeing[0];
-      }
-      if(code_seen('Y') && code_value_long() != 0) {
-        current_position[Y_AXIS] = code_value() + add_homeing[1];
-      }
-      if(code_seen('Z') && code_value_long() != 0) {
-        current_position[Z_AXIS] = code_value() + add_homeing[2];
-      }
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 
       break;
     }
@@ -788,7 +770,7 @@ void process_commands()
              current_position[i] = code_value();
              plan_set_e_position(current_position[E_AXIS]);
            } else {
-             current_position[i] = code_value() + add_homeing[i];
+             current_position[i] = code_value();
              plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
            }
         }
@@ -1245,12 +1227,6 @@ void process_commands()
       if(code_seen('E')) max_e_jerk = code_value() ;
     }
     break;
-    case 206: // M206 additional homeing offset
-      for(int8_t i=0; i < 3; i++)
-      {
-        if(code_seen(axis_codes[i])) add_homeing[i] = code_value();
-      }
-      break;
     #ifdef DELTA
   case 665: // M665 set delta configurations L<diagonal_rod> R<delta_radius> S<segments_per_sec>
     if(code_seen('L')) {
