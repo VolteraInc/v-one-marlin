@@ -52,14 +52,11 @@ float st_get_position_mm(uint8_t axis);
 void st_wake_up();
 
 
-bool didHitEndstops();
 bool endstop_triggered(int axis);
 
 void checkHitEndstops(); //call from somewhere to create an serial error message with the locations the endstops where hit, in case they were triggered
 void clear_endstop(int axis);
 
-bool endstops_enabled(); // Returns true if endstop checking is enabled, otherwise false
-void enable_endstops(bool check); // Enable/disable endstop checking
 void enable_calibration_plate(bool enable);
 
 void checkStepperErrors(); //Print errors detected by the stepper

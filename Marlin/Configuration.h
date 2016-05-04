@@ -89,7 +89,7 @@
 #define CALIB_Y_SCALE     (1.0)
 #define CALIB_COS_THETA   (1.0)
 #define CALIB_TAN_THETA   (0.0)
-#define XYPOS_Z_POS       (-6.0)
+#define XYPOS_Z_POS       (-4.0)
 
 //Default Serial number for the Voltera V-One
 #define PRODUCT_SERIAL    ("V1-00-0000")
@@ -98,8 +98,7 @@
 // Define this to set a custom name for your generic Mendel,
 #define CUSTOM_MENDEL_NAME "V-ONE"
 
-// It's nice to have the ack specify the line it's acking
-#define ACK_CMD {SERIAL_PROTOCOLPGM(MSG_OK " "); SERIAL_PROTOCOLLN(gcode_N);}
+#define ACK_CMD SERIAL_PROTOCOLPGM(MSG_OK "\n");
 
 // Define this to set a unique identifier for this printer, (Used by some programs to differentiate between machines)
 // You can use an online service to generate a random UUID. (eg http://www.uuidgenerator.net/version4)
@@ -533,14 +532,6 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
     #define LCD_WIDTH 20
     #define LCD_HEIGHT 4
 #endif
-
-// Increase the FAN pwm frequency. Removes the PWM noise but increases heating in the FET/Arduino
-//#define FAST_PWM_FAN
-
-// Temperature status LEDs that display the hotend and bet temperature.
-// If all hotends and bed temperature and temperature setpoint are < 54C then the BLUE led is on.
-// Otherwise the RED led is on. There is 1C hysteresis.
-//#define TEMP_STAT_LEDS
 
 // Use software PWM to drive the fan, as for the heaters. This uses a very low frequency
 // which is not ass annoying as with the hardware PWM. On the other hand, if this frequency

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "./tools/tools.h"
+
 // Movement
 const int useDefaultFeedrate = -1;
 const float useDefaultMaxTravel = 9999.9f;
@@ -42,17 +44,3 @@ int moveToXyPositioner();
 
 // Calibration plate
 int measureProbeDisplacement(float& displacement);
-
-// Tools
-enum Tool {
-  TOOLS_NONE = 0,
-  TOOLS_PROBE = 1,
-  TOOLS_DISPENSER = 2,
-};
-
-const char* toolTypeAsString(Tool tool);
-int outputToolStatus();
-Tool getTool();
-void setTool(Tool tool);
-int prepareToolToMove();
-int resetToolPreparations();

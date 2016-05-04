@@ -81,7 +81,6 @@
   static bool old_z_min_endstop=false;
   static bool old_z_max_endstop=false;
 
-  static bool check_endstops = true;
   static bool calibration_plate_enabled = false;
 
   volatile long count_position[NUM_AXIS] = { 0, 0, 0, 0};
@@ -90,8 +89,6 @@
   //===========================================================================
   //=============================functions         ============================
   //===========================================================================
-
-  #define CHECK_ENDSTOPS  if(check_endstops)
 
   // intRes = intIn1 * intIn2 >> 16
   // uses:
@@ -163,79 +160,79 @@
     "r26" , "r27" \
     )
 
-  // Some useful constants
+// Some useful constants
 
-  #define ENABLE_STEPPER_DRIVER_INTERRUPT()  TIMSK1 |= (1<<OCIE1A)
-  #define DISABLE_STEPPER_DRIVER_INTERRUPT() TIMSK1 &= ~(1<<OCIE1A)
-
-  bool didHitEndstops() {
-    return endstop_x_hit || endstop_y_hit || endstop_z_hit;
-  }
+#define ENABLE_STEPPER_DRIVER_INTERRUPT()  TIMSK1 |= (1<<OCIE1A)
+#define DISABLE_STEPPER_DRIVER_INTERRUPT() TIMSK1 &= ~(1<<OCIE1A)
 
 bool endstop_triggered(int axis) {
+  bool triggered = false;
+  CRITICAL_SECTION_START;
   switch (axis) {
-    case X_AXIS: return endstop_x_hit;
-    case Y_AXIS: return endstop_y_hit;
-    case Z_AXIS: return endstop_z_hit;
-    default: return false;
+    case X_AXIS: triggered = endstop_x_hit; break;
+    case Y_AXIS: triggered = endstop_y_hit; break;
+    case Z_AXIS: triggered = endstop_z_hit; break;
+  }
+  CRITICAL_SECTION_END;
+  return triggered;
+}
+
+void checkHitEndstops()
+{
+  decltype(endstops_trigsteps) trigsteps;
+  CRITICAL_SECTION_START;
+    bool x_hit = endstop_x_hit;
+    bool y_hit = endstop_y_hit;
+    bool z_hit = endstop_z_hit;
+    trigsteps[ X_AXIS ] = endstops_trigsteps[ X_AXIS ];
+    trigsteps[ Y_AXIS ] = endstops_trigsteps[ Y_AXIS ];
+    trigsteps[ Z_AXIS ] = endstops_trigsteps[ Z_AXIS ];
+    endstop_x_hit = false;
+    endstop_y_hit = false;
+    endstop_z_hit = false;
+  CRITICAL_SECTION_END;
+
+  if (x_hit || y_hit || z_hit) {
+    SERIAL_ECHO_START;  //TODO-ERROR?
+    SERIAL_ECHOPGM(MSG_ENDSTOPS_HIT);
+    if (x_hit) {
+      SERIAL_ECHOPAIR(" X:", (float)trigsteps[X_AXIS]/axis_steps_per_unit[X_AXIS]);
+    }
+    if (y_hit) {
+      SERIAL_ECHOPAIR(" Y:", (float)trigsteps[Y_AXIS]/axis_steps_per_unit[Y_AXIS]);
+    }
+    if (z_hit) {
+      SERIAL_ECHOPAIR(" Z:", (float)trigsteps[Z_AXIS]/axis_steps_per_unit[Z_AXIS]);
+    }
+    SERIAL_ECHOLN("");
+#ifdef ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED //TODO-REMOVE?
+    if (abort_on_endstop_hit) {
+      card.sdprinting = false;
+      card.closefile();
+      quickStop();
+      setTargetHotend0(0);
+      setTargetHotend1(0);
+      setTargetHotend2(0);
+    }
+#endif
   }
 }
 
-
-  void checkHitEndstops()
-  {
-    if( endstop_x_hit || endstop_y_hit || endstop_z_hit) {
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM(MSG_ENDSTOPS_HIT);
-      if(endstop_x_hit) {
-        SERIAL_ECHOPAIR(" X:",(float)endstops_trigsteps[X_AXIS]/axis_steps_per_unit[X_AXIS]);
-      }
-      if(endstop_y_hit) {
-        SERIAL_ECHOPAIR(" Y:",(float)endstops_trigsteps[Y_AXIS]/axis_steps_per_unit[Y_AXIS]);
-      }
-      if(endstop_z_hit) {
-        SERIAL_ECHOPAIR(" Z:",(float)endstops_trigsteps[Z_AXIS]/axis_steps_per_unit[Z_AXIS]);
-      }
-      SERIAL_ECHOLN("");
-      endstop_x_hit=false;
-      endstop_y_hit=false;
-      endstop_z_hit=false;
-  #ifdef ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED
-      if (abort_on_endstop_hit)
-      {
-        card.sdprinting = false;
-        card.closefile();
-        quickStop();
-        setTargetHotend0(0);
-        setTargetHotend1(0);
-        setTargetHotend2(0);
-      }
-  #endif
-    }
-  }
-
-  void clear_endstop(int axis) {
+void clear_endstop(int axis) {
+  CRITICAL_SECTION_START;
     switch (axis) {
-      case X_AXIS: endstop_x_hit = false; return;
-      case Y_AXIS: endstop_y_hit = false; return;
-      case Z_AXIS: endstop_z_hit = false; return;
+      case X_AXIS: endstop_x_hit = false; break;
+      case Y_AXIS: endstop_y_hit = false; break;
+      case Z_AXIS: endstop_z_hit = false; break;
     }
-  }
+  CRITICAL_SECTION_END;
+}
 
-  bool endstops_enabled()
-  {
-    return check_endstops;
-  }
-
-  void enable_endstops(bool check)
-  {
-    check_endstops = check;
-  }
-
-  void enable_calibration_plate(bool enable) {
-    //TODO: ...should use a critical section???
+void enable_calibration_plate(bool enable) {
+  CRITICAL_SECTION_START;
     calibration_plate_enabled = enable;
-  }
+  CRITICAL_SECTION_END;
+}
 
   //         __________________________
   //        /|                        |\     _________________         ^
@@ -399,8 +396,6 @@ ISR(TIMER1_COMPA_vect)
   #else
   if ((((out_bits & (1<<X_AXIS)) != 0)&&(out_bits & (1<<Y_AXIS)) != 0)) {   //-X occurs for -A and -B
   #endif
-    CHECK_ENDSTOPS
-    {
       {
 
   #if defined(X_MIN_PIN) && X_MIN_PIN > -1
@@ -413,11 +408,9 @@ ISR(TIMER1_COMPA_vect)
         old_x_min_endstop = x_min_endstop;
   #endif
       }
-    }
+
   }
   else { // +direction
-    CHECK_ENDSTOPS
-    {
       {
 
   // #if defined(X_MAX_PIN) && X_MAX_PIN > -1
@@ -431,7 +424,6 @@ ISR(TIMER1_COMPA_vect)
   // #endif
 
       }
-    }
   }
 
   #ifndef COREXY
@@ -439,9 +431,6 @@ ISR(TIMER1_COMPA_vect)
   #else
   if ((((out_bits & (1<<X_AXIS)) != 0)&&(out_bits & (1<<Y_AXIS)) == 0)) {   // -Y occurs for -A and +B
   #endif
-    CHECK_ENDSTOPS
-    {
-  #if defined(Y_MIN_PIN) && Y_MIN_PIN > -1
       bool y_min_endstop = READ_PIN(Y_MIN) || READ_PIN(XY_MIN_Y); // Y- direction, also monitors XY_min_Y
       if (y_min_endstop && old_y_min_endstop && (current_block->steps_y > 0)) {
         endstops_trigsteps[Y_AXIS] = count_position[Y_AXIS];
@@ -449,12 +438,9 @@ ISR(TIMER1_COMPA_vect)
         step_events_completed = current_block->step_event_count;
       }
       old_y_min_endstop = y_min_endstop;
-  #endif
-    }
   }
   else { // +direction
-    CHECK_ENDSTOPS
-    {
+
       bool y_max_endstop = READ_PIN(XY_MAX_Y);
       if(y_max_endstop && old_y_max_endstop && (current_block->steps_y > 0)){
         endstops_trigsteps[Y_AXIS] = count_position[Y_AXIS];
@@ -462,15 +448,13 @@ ISR(TIMER1_COMPA_vect)
         step_events_completed = current_block->step_event_count;
       }
       old_y_max_endstop = y_max_endstop;
-    }
   }
 
   if ((out_bits & (1<<Z_AXIS)) != 0) {   // -direction
     REV_Z_DIR();
 
     count_direction[Z_AXIS]=-1;
-    CHECK_ENDSTOPS
-    {
+
       bool z_min = READ_PIN(Z_MIN);
       bool p_top = READ_PIN(P_TOP);
 
@@ -488,13 +472,12 @@ ISR(TIMER1_COMPA_vect)
   }
   old_z_min_endstop = z_min_endstop;
 
-}
+
 }
   else { // +direction
     NORM_Z_DIR();
     count_direction[Z_AXIS]=1;
-    CHECK_ENDSTOPS
-    {
+
       #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
       bool z_max_endstop = READ_PIN(Z_MAX);
       if(z_max_endstop && old_z_max_endstop && (current_block->steps_z > 0)) {
@@ -504,7 +487,7 @@ ISR(TIMER1_COMPA_vect)
       }
       old_z_max_endstop = z_max_endstop;
       #endif
-    }
+
   }
 
   #ifndef ADVANCE
@@ -825,7 +808,6 @@ void st_init()
   TIMSK0 |= (1<<OCIE0A);
   #endif //ADVANCE
 
-  enable_endstops(true); // Start with endstops active. After homing they can be disabled
   sei();
 }
 

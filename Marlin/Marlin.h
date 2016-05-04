@@ -157,9 +157,7 @@ void prepare_move();
 void kill();
 void Stop();
 
-#ifdef VOLTERA
 void handle_glow_leds();
-#endif
 
 bool IsStopped();
 
@@ -167,10 +165,6 @@ void prepare_arc_move(char isclockwise);
 void clamp_to_software_endstops(float target[3]);
 
 void refresh_cmd_timeout(void);
-
-#ifdef FAST_PWM_FAN
-void setPwmFrequency(uint8_t pin, int val);
-#endif
 
 #ifndef CRITICAL_SECTION_START
   #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli();
@@ -200,10 +194,6 @@ extern float xypos_z_pos;
 extern const char axis_codes[NUM_AXIS];
 
 extern bool logging_enabled;
-
-#ifdef FAN_SOFT_PWM
-extern unsigned char fanSpeedSoftPwm;
-#endif
 
 extern unsigned long starttime;
 extern unsigned long stoptime;

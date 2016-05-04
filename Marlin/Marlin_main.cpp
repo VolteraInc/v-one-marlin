@@ -576,6 +576,8 @@ void process_commands()
     case 28: {
       bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
 
+      resetToolPreparations();
+
       if (home_all || code_seen('Z')) {
         setHomedState(Z_AXIS, 0);
         raise();
@@ -934,14 +936,6 @@ void process_commands()
         break;
     #endif //FAN_PIN
 
-    case 81: // M81 - Turn off Power Supply
-      disable_heater();
-      st_synchronize();
-      finishAndDisableSteppers();
-      fanSpeed = 0;
-      delay(1000); // Wait a little before to switch off
-      break;
-
     case 82:
       axis_relative_modes[3] = false;
       break;
@@ -949,12 +943,12 @@ void process_commands()
       axis_relative_modes[3] = true;
       break;
     case 18: //compatibility
-    case 84: // M84
       if(code_seen('S')){
         stepper_inactive_time = code_value() * 1000;
       }
       else
       {
+        resetToolPreparations();
         bool all_axis = !((code_seen(axis_codes[X_AXIS])) || (code_seen(axis_codes[Y_AXIS])) || (code_seen(axis_codes[Z_AXIS]))|| (code_seen(axis_codes[E_AXIS])));
         if(all_axis)
         {
@@ -1061,14 +1055,6 @@ void process_commands()
       SERIAL_PROTOCOL(getHomedState(Z_AXIS));
 
       SERIAL_PROTOCOLLN("");
-      break;
-    case 120: // M120 - Added by VOLTERA
-      st_synchronize();
-      enable_endstops(false) ;
-      break;
-    case 121: // M121 -  Added by VOLTERA
-      st_synchronize();
-      enable_endstops(true) ;
       break;
     case 122: //M122 - We let the planner know where we are. -  Added by VOLTERA
         {
@@ -1606,39 +1592,6 @@ void prepare_arc_move(char isclockwise) {
 }
 
 
-#ifdef TEMP_STAT_LEDS
-static bool blue_led = false;
-static bool red_led = false;
-static uint32_t stat_update = 0;
-
-void handle_status_leds(void) {
-  float max_temp = 0.0;
-  if(millis() > stat_update) {
-    stat_update += 500; // Update every 0.5s
-    for (int8_t cur_extruder = 0; cur_extruder < EXTRUDERS; ++cur_extruder) {
-       max_temp = max(max_temp, degHotend(cur_extruder));
-       max_temp = max(max_temp, degTargetHotend(cur_extruder));
-    }
-    #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-      max_temp = max(max_temp, degTargetBed());
-      max_temp = max(max_temp, degBed());
-    #endif
-    if((max_temp > 55.0) && (red_led == false)) {
-      digitalWrite(STAT_LED_RED, 1);
-      digitalWrite(STAT_LED_BLUE, 0);
-      red_led = true;
-      blue_led = false;
-    }
-    if((max_temp < 54.0) && (blue_led == false)) {
-      digitalWrite(STAT_LED_RED, 0);
-      digitalWrite(STAT_LED_BLUE, 1);
-      red_led = false;
-      blue_led = true;
-    }
-  }
-}
-#endif
-
 void manage_inactivity()
 {
   if(stepper_inactive_time)  {
@@ -1648,6 +1601,7 @@ void manage_inactivity()
         disable_y();
         disable_z();
         disable_e0();
+        resetToolPreparations();
       }
     }
   }
@@ -1660,17 +1614,11 @@ void manage_inactivity()
       disable_z();
       disable_e0();
       disable_heater();
+      resetToolPreparations();
     }
   }
 
-
-  #ifdef VOLTERA
-    handle_glow_leds();
-  #endif
-
-  #ifdef TEMP_STAT_LEDS
-      handle_status_leds();
-  #endif
+  handle_glow_leds();
   check_axes_activity();
 }
 
@@ -1683,7 +1631,6 @@ void checkBufferEmpty() {
   buffer_fill = new_buffer_fill;
 }
 
-#ifdef VOLTERA
 void handle_glow_leds(){
   #define GLOW_LED_COUNT 3
   #define TEMP_PACE_CURVE max((-5 * bedTemp) / 42 + 36, 5)
@@ -1778,7 +1725,6 @@ void handle_glow_leds(){
     }
   }
 }
-#endif
 
 void kill()
 {
@@ -1807,76 +1753,6 @@ void Stop()
 }
 
 bool IsStopped() { return Stopped; };
-
-#ifdef FAST_PWM_FAN
-void setPwmFrequency(uint8_t pin, int val)
-{
-  val &= 0x07;
-  switch(digitalPinToTimer(pin))
-  {
-
-    #if defined(TCCR0A)
-    case TIMER0A:
-    case TIMER0B:
-//         TCCR0B &= ~(_BV(CS00) | _BV(CS01) | _BV(CS02));
-//         TCCR0B |= val;
-         break;
-    #endif
-
-    #if defined(TCCR1A)
-    case TIMER1A:
-    case TIMER1B:
-//         TCCR1B &= ~(_BV(CS10) | _BV(CS11) | _BV(CS12));
-//         TCCR1B |= val;
-         break;
-    #endif
-
-    #if defined(TCCR2)
-    case TIMER2:
-    case TIMER2:
-         TCCR2 &= ~(_BV(CS10) | _BV(CS11) | _BV(CS12));
-         TCCR2 |= val;
-         break;
-    #endif
-
-    #if defined(TCCR2A)
-    case TIMER2A:
-    case TIMER2B:
-         TCCR2B &= ~(_BV(CS20) | _BV(CS21) | _BV(CS22));
-         TCCR2B |= val;
-         break;
-    #endif
-
-    #if defined(TCCR3A)
-    case TIMER3A:
-    case TIMER3B:
-    case TIMER3C:
-         TCCR3B &= ~(_BV(CS30) | _BV(CS31) | _BV(CS32));
-         TCCR3B |= val;
-         break;
-    #endif
-
-    #if defined(TCCR4A)
-    case TIMER4A:
-    case TIMER4B:
-    case TIMER4C:
-         TCCR4B &= ~(_BV(CS40) | _BV(CS41) | _BV(CS42));
-         TCCR4B |= val;
-         break;
-   #endif
-
-    #if defined(TCCR5A)
-    case TIMER5A:
-    case TIMER5B:
-    case TIMER5C:
-         TCCR5B &= ~(_BV(CS50) | _BV(CS51) | _BV(CS52));
-         TCCR5B |= val;
-         break;
-   #endif
-
-  }
-}
-#endif //FAST_PWM_FAN
 
 bool setTargetedHotend(int code){
   tmp_extruder = active_extruder;

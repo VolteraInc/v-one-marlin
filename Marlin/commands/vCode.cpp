@@ -61,10 +61,6 @@ int process_vcode(int command_code) {
 
     // Probe at current x,y position
     case 4: {
-      if (getTool() != TOOLS_PROBE) {
-        SERIAL_ERROR_START;
-        SERIAL_ERROR("Unable to probe, probe not mounted");
-      }
 
       float measurement;
       if (
@@ -208,18 +204,18 @@ int process_vcode(int command_code) {
     // List Commands
     default:
       SERIAL_ECHO_START;
-      SERIAL_ECHO("Movement Commands\n");
-      SERIAL_ECHO("  V0 - Movement status\n");
-      SERIAL_ECHO("  V1 - Move/Dispense -- V1 X100 Y100 Z10 E30 F6000\n");
-      SERIAL_ECHO("  V2 - Relative Move/Dispense -- V2 X5 Y3 Z-1 E2 F6000\n");
-      SERIAL_ECHO("  V3 - Move until limit switch triggers -- V3 -X -Y -Z F6000\n");
-      SERIAL_ECHO("  V4 - Probe at current position -- V4\n");
-      SERIAL_ECHO("  V5 - raise, home XY, and reset tool preparations -- V5\n");
-      SERIAL_ECHO("\n");
-      SERIAL_ECHO("Tool Commands");
-      SERIAL_ECHO("  V100 - Tool status");
-      SERIAL_ECHO("  V101 - attach/detach tool -- V101 or V101 P or V101 D");
-      SERIAL_ECHO("\n");
+      SERIAL_ECHOLN("Movement Commands");
+      SERIAL_ECHOLN("  V0 - Movement status");
+      SERIAL_ECHOLN("  V1 - Move/Dispense -- V1 X100 Y100 Z10 E30 F6000");
+      SERIAL_ECHOLN("  V2 - Relative Move/Dispense -- V2 X5 Y3 Z-1 E2 F6000");
+      SERIAL_ECHOLN("  V3 - Move until limit switch triggers -- V3 -X -Y -Z F6000");
+      SERIAL_ECHOLN("  V4 - Probe at current position -- V4");
+      SERIAL_ECHOLN("  V5 - raise, home XY, and reset tool preparations -- V5");
+      SERIAL_ECHOLN("");
+      SERIAL_ECHOLN("Tool Commands");
+      SERIAL_ECHOLN("  V100 - Tool status");
+      SERIAL_ECHOLN("  V101 - attach/detach tool -- V101 or V101 P or V101 D");
+      SERIAL_ECHOLN("");
       return 0;
   }
 }

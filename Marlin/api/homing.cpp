@@ -48,12 +48,6 @@ void setHomedState(int axis, int value) {
     if (axis == Z_AXIS && value == 0) {
       max_pos[Z_AXIS] = Z_MAX_POS;
     }
-
-    // Clear tool preparations too
-    // HACK: homing functions should not call tool functions
-    if (value == 0) {
-      resetToolPreparations();
-    }
   }
 }
 
@@ -181,8 +175,11 @@ int homeZ() {
     return -1;
   }
   max_pos[Z_AXIS] = current_position[Z_AXIS];
-  SERIAL_ECHO_START;
-  SERIAL_ECHO("setting soft limit max-z to "); SERIAL_ECHOLN(max_pos[Z_AXIS]);
+
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHO("setting soft limit max-z to "); SERIAL_ECHOLN(max_pos[Z_AXIS]);
+  }
 
   return 0;
 }

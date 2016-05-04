@@ -42,11 +42,15 @@ int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
       return -1;
     }
     centerX = (measurement2 + measurement1) / 2;
-    SERIAL_PROTOCOL("xyPositionerCenterX");
-    SERIAL_PROTOCOL(" m1:"); SERIAL_PROTOCOL_F(measurement1, 3);
-    SERIAL_PROTOCOL(" m2:"); SERIAL_PROTOCOL_F(measurement2, 3);
-    SERIAL_PROTOCOL(" x:"); SERIAL_PROTOCOL_F(centerX, 3);
-    SERIAL_PROTOCOL("\n");
+
+    if (logging_enabled){
+      SERIAL_ECHO_START;
+      SERIAL_ECHO("xyPositionerCenterX");
+      SERIAL_ECHO(" m1:"); SERIAL_ECHO(measurement1);
+      SERIAL_ECHO(" m2:"); SERIAL_ECHO(measurement2);
+      SERIAL_ECHO(" x:"); SERIAL_ECHO(centerX);
+      SERIAL_ECHO("\n");
+    }
 
     // Compute center Y
     if ( moveXY(centerX, centerY) // applies new centerX
@@ -56,11 +60,15 @@ int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
       return -1;
     }
     centerY = (measurement2 + measurement1) / 2;
-    SERIAL_PROTOCOL("xyPositionerCenterY");
-    SERIAL_PROTOCOL(" m1:"); SERIAL_PROTOCOL_F(measurement1, 3);
-    SERIAL_PROTOCOL(" m2:"); SERIAL_PROTOCOL_F(measurement2, 3);
-    SERIAL_PROTOCOL(" y:"); SERIAL_PROTOCOL_F(centerY, 3);
-    SERIAL_PROTOCOL("\n");
+
+    if (logging_enabled){
+      SERIAL_ECHO_START;
+      SERIAL_ECHO("xyPositionerCenterY");
+      SERIAL_ECHO(" m1:"); SERIAL_ECHO(measurement1);
+      SERIAL_ECHO(" m2:"); SERIAL_ECHO(measurement2);
+      SERIAL_ECHO(" y:"); SERIAL_ECHO(centerY);
+      SERIAL_ECHO("\n");
+    }
 
     // Each cycle takes a non-trivial amount of time so reset the inactivity timer
     refresh_cmd_timeout();

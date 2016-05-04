@@ -450,20 +450,12 @@ void check_axes_activity()
   unsigned char z_active = 0;
   unsigned char e_active = 0;
   unsigned char tail_fan_speed = fanSpeed;
-  #ifdef BARICUDA
-  unsigned char tail_valve_pressure = ValvePressure;
-  unsigned char tail_e_to_p_pressure = EtoPPressure;
-  #endif
   block_t *block;
 
   if(block_buffer_tail != block_buffer_head)
   {
     uint8_t block_index = block_buffer_tail;
     tail_fan_speed = block_buffer[block_index].fan_speed;
-    #ifdef BARICUDA
-    tail_valve_pressure = block_buffer[block_index].valve_pressure;
-    tail_e_to_p_pressure = block_buffer[block_index].e_to_p_pressure;
-    #endif
     while(block_index != block_buffer_head)
     {
       block = &block_buffer[block_index];

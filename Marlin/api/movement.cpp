@@ -96,7 +96,7 @@ float getDefaultFeedrate() {
   );
 }
 
-int move(float x, float y, float z, float e, float f) {
+static int s_move(float x, float y, float z, float e, float f) {
   const float speed_in_mm_per_min = f < 0 ? getDefaultFeedrate() : f;
 
   current_position[ X_AXIS ] = x;
@@ -126,6 +126,22 @@ int move(float x, float y, float z, float e, float f) {
   return 0;
 }
 
+static void s_clamp(float& x, float& y, float& z)
+{
+  if (x < min_pos[X_AXIS]) x = min_pos[X_AXIS];
+  if (y < min_pos[Y_AXIS]) y = min_pos[Y_AXIS];
+  if (z < min_pos[Z_AXIS]) z = min_pos[Z_AXIS];
+
+  if (x > max_pos[X_AXIS]) x = max_pos[X_AXIS];
+  if (y > max_pos[Y_AXIS]) y = max_pos[Y_AXIS];
+  if (z > max_pos[Z_AXIS]) z = max_pos[Z_AXIS];
+}
+
+int move(float x, float y, float z , float e, float f){
+  s_clamp(x, y, z);
+  s_move(x, y, z, e, f);
+}
+
 int moveXY(float x, float y, float f) {
   return move(x, y, current_position[Z_AXIS], current_position[E_AXIS], f);
 }
@@ -153,10 +169,10 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
   const auto clampedMaxTravel = min(maxTravel, s_maxTravelInAxis(axis));
   const auto travel = direction < 0 ? -clampedMaxTravel : clampedMaxTravel;
   const float clampedSpeed = f < 0 ? homing_feedrate[axis] : min(f, homing_feedrate[axis]);
-  if (relativeMove(
-      axis == X_AXIS ? travel : 0.0f,
-      axis == Y_AXIS ? travel : 0.0f,
-      axis == Z_AXIS ? travel : 0.0f,
+  if (s_move(
+      current_position[ X_AXIS ] + (axis == X_AXIS ? travel : 0.0f),
+      current_position[ Y_AXIS ] + (axis == Y_AXIS ? travel : 0.0f),
+      current_position[ Z_AXIS ] + (axis == Z_AXIS ? travel : 0.0f),
       0.0f,
       clampedSpeed
     )) {
@@ -256,25 +272,4 @@ int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement
   }
   return 0;
 }
-
-int probe(float& measurement) {
-  // Finish any pending moves (prevents crashes)
-  st_synchronize();
-
-  // Move to limit
-  if (moveToLimit(Z_AXIS, -1) != 0) {
-    SERIAL_ERROR_START;
-    SERIAL_ERROR("Unable to probe, switch did not trigger\n");
-    return -1;
-  }
-
-  // Record the measurement
-  measurement = current_position[Z_AXIS];
-  if(logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHO("probe measurement: "); SERIAL_ECHOLN(measurement);
-  }
-  return 0;
-}
-
 
