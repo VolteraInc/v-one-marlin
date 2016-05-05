@@ -144,9 +144,9 @@ static void s_clamp(float& x, float& y, float& z)
   }
 }
 
-int move(float x, float y, float z , float e, float f){
+int move(float x, float y, float z , float e, float f) {
   s_clamp(x, y, z);
-  s_move(x, y, z, e, f);
+  return s_move(x, y, z, e, f);
 }
 
 int moveXY(float x, float y, float f) {
