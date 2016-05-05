@@ -383,10 +383,11 @@ void periodic_output()
     }
 
     // Output temperature on change
+    // NOTE: The temp sensor is noisy so filter small changes
     {
       const auto current = degBed();
       const auto target = degTargetBed();
-      if ( prev.temperature.current != current || prev.temperature.target != target) {
+      if ( abs(prev.temperature.current - current) >= .5 || prev.temperature.target != target) {
         prev.temperature.current = current;
         prev.temperature.target = target;
         SERIAL_PROTOCOL("bedTemperatureUpdate");
