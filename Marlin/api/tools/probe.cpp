@@ -6,8 +6,12 @@
 static float s_probeDisplacement = 0.0f;
 
 static bool s_probeMounted() {
-  float probeVoltage = analogRead(P_TOP_STATE_PIN)/1024.0*5.0;
+#if VOLTERA_PIN_VERSION == 1
+  return getTool() == TOOLS_PROBE;
+#else
+  float probeVoltage = analogRead(P_TOP_STATE_PIN) / 1024.0 * 5.0;
   return probeVoltage <= 4.0;
+#endif
 }
 
 int prepareProbe(Point2D& reference) {

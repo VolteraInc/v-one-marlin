@@ -55,6 +55,10 @@ void setTool(Tool tool) {
   resetToolPreparations();
 }
 
+Tool getTool() {
+  return s_tool;
+}
+
 int resetToolPreparations() {
   switch (s_tool) {
     case TOOLS_PROBE:

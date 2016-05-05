@@ -10,5 +10,6 @@ enum Tool {
 const char* toolTypeAsString(Tool tool);
 int outputToolStatus();
 void setTool(Tool tool);
+Tool getTool();
 int prepareToolToMove();
 int resetToolPreparations();
