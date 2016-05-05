@@ -36,6 +36,9 @@ int prepareToolToMove() {
         s_dispenserReady = true;
       }
       break;
+
+    case TOOLS_NONE:
+      break;
   }
   return 0;
 }
@@ -69,7 +72,9 @@ int resetToolPreparations() {
     case TOOLS_DISPENSER:
       s_dispenserReady = false;
       setHomedState(Z_AXIS, 0);
-     break;
+      break;
+    case TOOLS_NONE:
+      break;
   }
   return 0;
 }
