@@ -97,7 +97,9 @@ static int homeAxis(int axis) {
 
   // To prevent crashes, raise Z
   if (axis == X_AXIS || axis == Y_AXIS) {
-    raise();
+    if(raise()) {
+      goto DONE;
+    }
   }
 
   // Raise flag to let planner know we are homing an axis so it ignores skew adjustments.
