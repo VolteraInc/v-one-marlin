@@ -128,18 +128,25 @@ static int s_move(float x, float y, float z, float e, float f) {
 
 static void s_clamp(float& x, float& y, float& z)
 {
-  if (x < min_pos[X_AXIS]) x = min_pos[X_AXIS];
-  if (y < min_pos[Y_AXIS]) y = min_pos[Y_AXIS];
-  if (z < min_pos[Z_AXIS]) z = min_pos[Z_AXIS];
+  if (getHomedState(X_AXIS)) {
+    if (x < min_pos[X_AXIS]) x = min_pos[X_AXIS];
+    if (x > max_pos[X_AXIS]) x = max_pos[X_AXIS];
+  }
 
-  if (x > max_pos[X_AXIS]) x = max_pos[X_AXIS];
-  if (y > max_pos[Y_AXIS]) y = max_pos[Y_AXIS];
-  if (z > max_pos[Z_AXIS]) z = max_pos[Z_AXIS];
+  if (getHomedState(Y_AXIS)) {
+    if (y > max_pos[Y_AXIS]) y = max_pos[Y_AXIS];
+    if (y < min_pos[Y_AXIS]) y = min_pos[Y_AXIS];
+  }
+
+  if (getHomedState(Z_AXIS)) {
+    if (z < min_pos[Z_AXIS]) z = min_pos[Z_AXIS];
+    if (z > max_pos[Z_AXIS]) z = max_pos[Z_AXIS];
+  }
 }
 
-int move(float x, float y, float z , float e, float f){
+int move(float x, float y, float z , float e, float f) {
   s_clamp(x, y, z);
-  s_move(x, y, z, e, f);
+  return s_move(x, y, z, e, f);
 }
 
 int moveXY(float x, float y, float f) {
