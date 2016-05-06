@@ -62,9 +62,6 @@ void sendHomedStatusUpdate() {
 static void axisIsAtHome(int axis) {
   current_position[axis] = base_home_pos(axis);
 
-  min_pos[axis] = base_min_pos(axis);
-  max_pos[axis] = base_max_pos(axis);
-
   plan_set_position(
     current_position[ X_AXIS ],
     current_position[ Y_AXIS ],
