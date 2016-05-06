@@ -88,6 +88,13 @@ int outputMovementStatus() {
   SERIAL_ECHO(" z:"); SERIAL_ECHO(getHomedState(Z_AXIS));
   SERIAL_ECHO("\n");
 
+  SERIAL_ECHO_START;
+  SERIAL_ECHO("Axis ranges");
+  SERIAL_ECHO(" x:"); SERIAL_ECHO(min_pos[X_AXIS]); SERIAL_ECHO(" to "); SERIAL_ECHO(max_pos[X_AXIS]);
+  SERIAL_ECHO(" y:"); SERIAL_ECHO(min_pos[Y_AXIS]); SERIAL_ECHO(" to "); SERIAL_ECHO(max_pos[Y_AXIS]);
+  SERIAL_ECHO(" z:"); SERIAL_ECHO(min_pos[Z_AXIS]); SERIAL_ECHO(" to "); SERIAL_ECHO(max_pos[Z_AXIS]);
+  SERIAL_ECHO("\n");
+
   return 0;
 }
 
