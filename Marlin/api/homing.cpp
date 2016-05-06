@@ -152,6 +152,10 @@ int home(bool homingX, bool homingY, bool homingZ) {
 }
 
 int moveToZSwitch() {
+  if (!homedXY()) {
+    SERIAL_ERROR_START;
+    SERIAL_ERROR("Unable to move to Z-Switch, either the x-axis or the y-axis has not been homed");
+  }
   if (min_z_x_pos != current_position[X_AXIS] || min_z_y_pos != current_position[Y_AXIS]) {
     if (raise()) {
       return -1;
