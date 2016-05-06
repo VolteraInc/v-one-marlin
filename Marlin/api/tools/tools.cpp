@@ -88,9 +88,9 @@ int resetToolPreparations() {
 
 const char* toolTypeAsString(Tool tool) {
   switch(tool) {
-    case TOOLS_NONE: return "none";
-    case TOOLS_PROBE: return "probe";
-    case TOOLS_DISPENSER: return "dispenser";
+    case TOOLS_NONE: return "None";
+    case TOOLS_PROBE: return "Probe";
+    case TOOLS_DISPENSER: return "Dispenser";
     default: return "unknown";
   }
 }
