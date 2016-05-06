@@ -146,11 +146,11 @@ static int s_moveIsSafe(float x, float y, float z) {
     (getHomedState(Z_AXIS) && (z < min_pos[Z_AXIS] || z > max_pos[Z_AXIS]))
   ) {
       SERIAL_ERROR_START;
-      SERIAL_ERROR("Unable to move to ");
-      SERIAL_ERROR(x); SERIAL_ERROR(',');
-      SERIAL_ERROR(y); SERIAL_ERROR(',');
+      SERIAL_ERROR("Unable to move to (");
+      SERIAL_ERROR(x); SERIAL_ERROR(", ");
+      SERIAL_ERROR(y); SERIAL_ERROR(", ");
       SERIAL_ERROR(z);
-      SERIAL_ERROR(", position falls outside of safe bounds\n");
+      SERIAL_ERROR(") position falls outside of safe bounds\n");
       return -1;
   }
   return 0;
