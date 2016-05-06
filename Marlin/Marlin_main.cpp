@@ -344,6 +344,7 @@ void setup()
   }
 
   sendHomedStatusUpdate();
+  sendToolStatusUpdate();
 
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
@@ -387,7 +388,7 @@ void periodic_output()
     {
       const auto current = degBed();
       const auto target = degTargetBed();
-      if ( abs(prev.temperature.current - current) >= .5 || prev.temperature.target != target) {
+      if ( abs(prev.temperature.current - current) >= 0.9 || prev.temperature.target != target) {
         prev.temperature.current = current;
         prev.temperature.target = target;
         SERIAL_PROTOCOL("bedTemperatureUpdate");

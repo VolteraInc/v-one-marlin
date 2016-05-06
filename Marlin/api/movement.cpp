@@ -49,6 +49,7 @@ static float s_maxTravelInAxis(int axis) {
 
 int outputMovementStatus() {
   // Position
+  SERIAL_ECHO_START;
   SERIAL_ECHO("Position");
   SERIAL_ECHO(" X:"); SERIAL_ECHO(current_position[X_AXIS]);
   SERIAL_ECHO(" Y:"); SERIAL_ECHO(current_position[Y_AXIS]);
@@ -57,12 +58,14 @@ int outputMovementStatus() {
   SERIAL_ECHO("\n");
 
   // Stepper status
+  SERIAL_ECHO_START;
   SERIAL_ECHO("StepperPosition");
   SERIAL_ECHO(" x:"); SERIAL_ECHO(st_get_position_mm(X_AXIS));
   SERIAL_ECHO(" y:"); SERIAL_ECHO(st_get_position_mm(Y_AXIS));
   SERIAL_ECHO(" z:"); SERIAL_ECHO(st_get_position_mm(Z_AXIS));
   SERIAL_ECHO(" e:"); SERIAL_ECHO(st_get_position_mm(E_AXIS));
   SERIAL_ECHO("\n");
+  SERIAL_ECHO_START;
   SERIAL_ECHO("StepperCounts");
   SERIAL_ECHO(" x:"); SERIAL_ECHO(st_get_position(X_AXIS));
   SERIAL_ECHO(" y:"); SERIAL_ECHO(st_get_position(Y_AXIS));
@@ -71,17 +74,27 @@ int outputMovementStatus() {
   SERIAL_ECHO("\n");
 
   // Planner
+  SERIAL_ECHO_START;
   SERIAL_ECHO("Planner");
   SERIAL_ECHO(" movesPlanned:"); SERIAL_ECHO((int)movesplanned());
   SERIAL_ECHO("\n");
 
   // Homing state on each axis
   // 0 = not homed, -1 = homed to min extent, 1 = homed to max extent
+  SERIAL_ECHO_START;
   SERIAL_ECHO("Homing");
   SERIAL_ECHO(" x:"); SERIAL_ECHO(getHomedState(X_AXIS));
   SERIAL_ECHO(" y:"); SERIAL_ECHO(getHomedState(Y_AXIS));
   SERIAL_ECHO(" z:"); SERIAL_ECHO(getHomedState(Z_AXIS));
   SERIAL_ECHO("\n");
+
+  SERIAL_ECHO_START;
+  SERIAL_ECHO("Axis ranges");
+  SERIAL_ECHO(" x:"); SERIAL_ECHO(min_pos[X_AXIS]); SERIAL_ECHO(" to "); SERIAL_ECHO(max_pos[X_AXIS]);
+  SERIAL_ECHO(" y:"); SERIAL_ECHO(min_pos[Y_AXIS]); SERIAL_ECHO(" to "); SERIAL_ECHO(max_pos[Y_AXIS]);
+  SERIAL_ECHO(" z:"); SERIAL_ECHO(min_pos[Z_AXIS]); SERIAL_ECHO(" to "); SERIAL_ECHO(max_pos[Z_AXIS]);
+  SERIAL_ECHO("\n");
+
   return 0;
 }
 
@@ -126,27 +139,28 @@ static int s_move(float x, float y, float z, float e, float f) {
   return 0;
 }
 
-static void s_clamp(float& x, float& y, float& z)
-{
-  if (getHomedState(X_AXIS)) {
-    if (x < min_pos[X_AXIS]) x = min_pos[X_AXIS];
-    if (x > max_pos[X_AXIS]) x = max_pos[X_AXIS];
+static int s_moveIsSafe(float x, float y, float z) {
+  if (
+    (getHomedState(X_AXIS) && (x < min_pos[X_AXIS] || x > max_pos[X_AXIS])) ||
+    (getHomedState(Y_AXIS) && (y < min_pos[Y_AXIS] || y > max_pos[Y_AXIS])) ||
+    (getHomedState(Z_AXIS) && (z < min_pos[Z_AXIS] || z > max_pos[Z_AXIS]))
+  ) {
+      SERIAL_ERROR_START;
+      SERIAL_ERROR("Unable to move to (");
+      SERIAL_ERROR(x); SERIAL_ERROR(", ");
+      SERIAL_ERROR(y); SERIAL_ERROR(", ");
+      SERIAL_ERROR(z);
+      SERIAL_ERROR(") position falls outside of safe bounds\n");
+      return -1;
   }
-
-  if (getHomedState(Y_AXIS)) {
-    if (y > max_pos[Y_AXIS]) y = max_pos[Y_AXIS];
-    if (y < min_pos[Y_AXIS]) y = min_pos[Y_AXIS];
-  }
-
-  if (getHomedState(Z_AXIS)) {
-    if (z < min_pos[Z_AXIS]) z = min_pos[Z_AXIS];
-    if (z > max_pos[Z_AXIS]) z = max_pos[Z_AXIS];
-  }
+  return 0;
 }
 
 int move(float x, float y, float z , float e, float f) {
-  s_clamp(x, y, z);
-  return s_move(x, y, z, e, f);
+  return (
+    s_moveIsSafe(x, y, z) ||
+    s_move(x, y, z, e, f)
+  );
 }
 
 int moveXY(float x, float y, float f) {

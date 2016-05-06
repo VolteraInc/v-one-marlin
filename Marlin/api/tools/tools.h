@@ -13,3 +13,4 @@ void setTool(Tool tool);
 Tool getTool();
 int prepareToolToMove();
 int resetToolPreparations();
+void sendToolStatusUpdate();

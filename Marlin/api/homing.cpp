@@ -60,10 +60,7 @@ void sendHomedStatusUpdate() {
 }
 
 static void axisIsAtHome(int axis) {
-  current_position[axis] = base_home_pos(axis);
-
-  min_pos[axis] = base_min_pos(axis);
-  max_pos[axis] = base_max_pos(axis);
+  current_position[axis] = 0;
 
   plan_set_position(
     current_position[ X_AXIS ],
@@ -97,7 +94,9 @@ static int homeAxis(int axis) {
 
   // To prevent crashes, raise Z
   if (axis == X_AXIS || axis == Y_AXIS) {
-    raise();
+    if(raise()) {
+      goto DONE;
+    }
   }
 
   // Raise flag to let planner know we are homing an axis so it ignores skew adjustments.
@@ -153,6 +152,10 @@ int home(bool homingX, bool homingY, bool homingZ) {
 }
 
 int moveToZSwitch() {
+  if (!homedXY()) {
+    SERIAL_ERROR_START;
+    SERIAL_ERROR("Unable to move to Z-Switch, either the x-axis or the y-axis has not been homed");
+  }
   if (min_z_x_pos != current_position[X_AXIS] || min_z_y_pos != current_position[Y_AXIS]) {
     if (raise()) {
       return -1;
@@ -171,10 +174,12 @@ int homeZ() {
   }
 
   // Raise and set the max-z soft limit
+  // Note: the point of contact can vary slightly, so we add some fudge to make to max tolerant
+  const float fudge = 0.01;
   if(raise()) {
     return -1;
   }
-  max_pos[Z_AXIS] = current_position[Z_AXIS];
+  max_pos[Z_AXIS] = current_position[Z_AXIS] + fudge;
 
   if (logging_enabled) {
     SERIAL_ECHO_START;

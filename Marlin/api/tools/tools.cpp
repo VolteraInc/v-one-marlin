@@ -9,6 +9,12 @@ static Point2D s_reference;
 static bool s_probeReady = false;
 static bool s_dispenserReady = false;
 
+void sendToolStatusUpdate() {
+  SERIAL_PROTOCOL("toolUpdate");
+  SERIAL_PROTOCOL(" type:"); SERIAL_PROTOCOL(toolTypeAsString(s_tool));
+  SERIAL_PROTOCOL("\n");
+}
+
 int prepareToolToMove() {
   // Ensure homed in X, Y
   if (!homedXY()) {
@@ -56,6 +62,7 @@ void setTool(Tool tool) {
   }
   s_tool = tool;
   resetToolPreparations();
+  sendToolStatusUpdate();
 }
 
 Tool getTool() {

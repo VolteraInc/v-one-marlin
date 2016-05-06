@@ -341,7 +341,12 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 // It has no impact on actual printing, as in that case we zero to the bottom limit switch and never attempt to reach the maximum again
 // (if we did, we'd hit the bottom limit switch, since with the tool attached the axis length is reduced significantly)
 #define Z_MAX_POS 22
-#define Z_MIN_POS 0
+
+#if VOLTERA_PIN_VERSION == 1
+#define Z_MIN_POS -11
+#else
+#define Z_MIN_POS -6
+#endif
 
 #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
 #define Y_MAX_LENGTH (Y_MAX_POS - Y_MIN_POS)
