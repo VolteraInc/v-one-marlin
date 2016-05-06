@@ -49,6 +49,7 @@ static float s_maxTravelInAxis(int axis) {
 
 int outputMovementStatus() {
   // Position
+  SERIAL_ECHO_START;
   SERIAL_ECHO("Position");
   SERIAL_ECHO(" X:"); SERIAL_ECHO(current_position[X_AXIS]);
   SERIAL_ECHO(" Y:"); SERIAL_ECHO(current_position[Y_AXIS]);
@@ -57,12 +58,14 @@ int outputMovementStatus() {
   SERIAL_ECHO("\n");
 
   // Stepper status
+  SERIAL_ECHO_START;
   SERIAL_ECHO("StepperPosition");
   SERIAL_ECHO(" x:"); SERIAL_ECHO(st_get_position_mm(X_AXIS));
   SERIAL_ECHO(" y:"); SERIAL_ECHO(st_get_position_mm(Y_AXIS));
   SERIAL_ECHO(" z:"); SERIAL_ECHO(st_get_position_mm(Z_AXIS));
   SERIAL_ECHO(" e:"); SERIAL_ECHO(st_get_position_mm(E_AXIS));
   SERIAL_ECHO("\n");
+  SERIAL_ECHO_START;
   SERIAL_ECHO("StepperCounts");
   SERIAL_ECHO(" x:"); SERIAL_ECHO(st_get_position(X_AXIS));
   SERIAL_ECHO(" y:"); SERIAL_ECHO(st_get_position(Y_AXIS));
@@ -71,17 +74,20 @@ int outputMovementStatus() {
   SERIAL_ECHO("\n");
 
   // Planner
+  SERIAL_ECHO_START;
   SERIAL_ECHO("Planner");
   SERIAL_ECHO(" movesPlanned:"); SERIAL_ECHO((int)movesplanned());
   SERIAL_ECHO("\n");
 
   // Homing state on each axis
   // 0 = not homed, -1 = homed to min extent, 1 = homed to max extent
+  SERIAL_ECHO_START;
   SERIAL_ECHO("Homing");
   SERIAL_ECHO(" x:"); SERIAL_ECHO(getHomedState(X_AXIS));
   SERIAL_ECHO(" y:"); SERIAL_ECHO(getHomedState(Y_AXIS));
   SERIAL_ECHO(" z:"); SERIAL_ECHO(getHomedState(Z_AXIS));
   SERIAL_ECHO("\n");
+
   return 0;
 }
 
