@@ -60,7 +60,7 @@ void sendHomedStatusUpdate() {
 }
 
 static void axisIsAtHome(int axis) {
-  current_position[axis] = base_home_pos(axis);
+  current_position[axis] = 0;
 
   plan_set_position(
     current_position[ X_AXIS ],
