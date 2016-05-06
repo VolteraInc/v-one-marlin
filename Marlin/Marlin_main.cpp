@@ -388,7 +388,7 @@ void periodic_output()
     {
       const auto current = degBed();
       const auto target = degTargetBed();
-      if ( abs(prev.temperature.current - current) >= .5 || prev.temperature.target != target) {
+      if ( abs(prev.temperature.current - current) >= 0.9 || prev.temperature.target != target) {
         prev.temperature.current = current;
         prev.temperature.target = target;
         SERIAL_PROTOCOL("bedTemperatureUpdate");
