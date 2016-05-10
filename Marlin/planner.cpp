@@ -531,15 +531,15 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
   //Given the coordinates we want to go to. Target will indicate the number of steps we need to get there.
 
 
-float cos_theta = calib_cos_theta;
-float tan_theta = calib_tan_theta;
-// Because the AXIS are skewed. Homing becomes tricky because when you are homing one axis, both axis are actually moving
-// This produces unexpected results. i.e - Y axis triggers when you are homing X axis.
-// This is undesirable behaviour. If we are homing the axis, disable the skew check by overwriting our theta values.
-if(skew_adjustments_enabled){
-  cos_theta = 1;
-  tan_theta = 0;
-}
+  float cos_theta = calib_cos_theta;
+  float tan_theta = calib_tan_theta;
+  // Because the AXIS are skewed. Homing becomes tricky because when you are homing one axis, both axis are actually moving
+  // This produces unexpected results. i.e - Y axis triggers when you are homing X axis.
+  // This is undesirable behaviour. If we are homing the axis, disable the skew check by overwriting our theta values.
+  if(!skew_adjustments_enabled){
+    cos_theta = 1;
+    tan_theta = 0;
+  }
 
   //Target tells us the desired local x and y coordinates to meet the global X and Y. We take into account skew and scaling.
   long target[4];
