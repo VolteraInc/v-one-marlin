@@ -391,7 +391,7 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 #elif VOLTERA_PIN_VERSION == 2
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,1600,1714.2857142857144}
 #endif
-#define DEFAULT_MAX_FEEDRATE          {500, (7501.0/60.0), (251.0/60.0),(141.0/60.0)}    // (mm/sec)
+#define DEFAULT_MAX_FEEDRATE          {18000/60.0, 7500.0/60.0, 250.0/60.0, 140.0/60.0}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {1500,700,100,50}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
 
 #define DEFAULT_ACCELERATION          1000    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
