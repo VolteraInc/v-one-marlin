@@ -406,9 +406,17 @@ void loop()
     get_command();
 
   if(buflen) {
+    // Refresh the timeouts before processing so that that we have
+    // the entire timeout duration to process the command
+    // (ie. manage_inactivity is called while processing the command)
     previous_millis_serial_rx = millis();
+    refresh_cmd_timeout();
 
     process_commands();
+
+    // Refresh the timeouts after processing so that the user/sw
+    // has then entire timeout duration to issue another command
+    previous_millis_serial_rx = millis();
     refresh_cmd_timeout();
 
     buflen = (buflen-1);
@@ -562,7 +570,6 @@ void process_commands()
 
       st_synchronize();
       codenum += millis();  // keep track of when we started waiting
-      refresh_cmd_timeout();
       while(millis() < codenum ){ // TODO: dangerous! could skip work on loop
         manage_heater();
         manage_inactivity();
@@ -816,7 +823,6 @@ void process_commands()
       setWatch();
       break;
     case 140: // M140 set bed temp
-      refresh_cmd_timeout();
       if (code_seen('S')) setTargetBed(code_value());
       break;
     case 105 : // M105
@@ -1596,27 +1602,55 @@ void prepare_arc_move(char isclockwise) {
 
 void manage_inactivity()
 {
-  if(stepper_inactive_time)  {
-    if( (millis() - previous_millis_active_cmd) >  stepper_inactive_time ){
-      if(blocks_queued() == false){
+  static auto nextCheckAt = millis();
+
+  const auto now = millis();
+  if (now >= nextCheckAt) {
+
+    // Schedule next check
+    nextCheckAt += 1000;
+
+    if (logging_enabled) {
+      SERIAL_ECHO_START;
+      SERIAL_ECHO("Checking for inactivity ");
+      SERIAL_ECHO("now: "); SERIAL_ECHO(now);
+      SERIAL_ECHO("prevSerial: "); SERIAL_ECHO(previous_millis_serial_rx);
+      SERIAL_ECHO("prevCommand: "); SERIAL_ECHO(previous_millis_active_cmd);
+      SERIAL_ECHO("\n");
+    }
+
+    if(stepper_inactive_time)  {
+      if( (now - previous_millis_active_cmd) >  stepper_inactive_time ){
+        if(blocks_queued() == false){
+          refresh_cmd_timeout();
+          SERIAL_ECHO_START;
+          SERIAL_ECHO("The stepper has been inactive for more than ");
+          SERIAL_ECHO(stepper_inactive_time);
+          SERIAL_ECHO("ms, deactivating motors\n");
+          disable_x();
+          disable_y();
+          disable_z();
+          disable_e0();
+          resetToolPreparations();
+        }
+      }
+    }
+
+    // Power down everything if serial traffic has stopped in addition to a lack of movement
+    if (!stepper_inactive_time || !previous_millis_active_cmd || (now - previous_millis_active_cmd) >  stepper_inactive_time) {
+      if (now - previous_millis_serial_rx > max_no_serial_no_movement_time && previous_millis_serial_rx && max_no_serial_no_movement_time) {
+        previous_millis_serial_rx = now;
+        SERIAL_ECHO_START;
+        SERIAL_ECHO("No communication for more than ");
+        SERIAL_ECHO(max_no_serial_no_movement_time);
+        SERIAL_ECHO("ms, deactivating motors and heater\n");
         disable_x();
         disable_y();
         disable_z();
         disable_e0();
+        disable_heater();
         resetToolPreparations();
       }
-    }
-  }
-
-  // Power down everything if serial traffic has stopped in addition to a lack of movement
-  if (!stepper_inactive_time || !previous_millis_active_cmd || (millis() - previous_millis_active_cmd) >  stepper_inactive_time) {
-    if (millis() - previous_millis_serial_rx > max_no_serial_no_movement_time && previous_millis_serial_rx && max_no_serial_no_movement_time) {
-      disable_x();
-      disable_y();
-      disable_z();
-      disable_e0();
-      disable_heater();
-      resetToolPreparations();
     }
   }
 
