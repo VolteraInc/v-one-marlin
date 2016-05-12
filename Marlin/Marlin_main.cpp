@@ -570,7 +570,6 @@ void process_commands()
 
       st_synchronize();
       codenum += millis();  // keep track of when we started waiting
-      refresh_cmd_timeout();
       while(millis() < codenum ){ // TODO: dangerous! could skip work on loop
         manage_heater();
         manage_inactivity();
@@ -824,7 +823,6 @@ void process_commands()
       setWatch();
       break;
     case 140: // M140 set bed temp
-      refresh_cmd_timeout();
       if (code_seen('S')) setTargetBed(code_value());
       break;
     case 105 : // M105
@@ -1645,7 +1643,7 @@ void manage_inactivity()
         SERIAL_ECHO_START;
         SERIAL_ECHO("No communication for more than ");
         SERIAL_ECHO(max_no_serial_no_movement_time);
-        SERIAL_ECHO("ms, deactivating motors\n");
+        SERIAL_ECHO("ms, deactivating motors and heater\n");
         disable_x();
         disable_y();
         disable_z();
