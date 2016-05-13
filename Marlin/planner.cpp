@@ -868,7 +868,7 @@ void plan_set_position(const float &x, const float &y, const float &z, const flo
 // This is undesirable behaviour. If we are homing the axis, disable the skew check by overwriting our theta values.
 float cos_theta = calib_cos_theta;
 float tan_theta = calib_tan_theta;
-if(skew_adjustments_enabled){
+if(!skew_adjustments_enabled){
   cos_theta = 1;
   tan_theta = 0;
 }
