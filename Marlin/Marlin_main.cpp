@@ -257,7 +257,6 @@ unsigned long stoptime=0;
 
 static uint8_t tmp_extruder;
 
-
 bool Stopped=false;
 
 bool CooldownNoWait = true;
@@ -423,6 +422,7 @@ void loop()
     bufindr = (bufindr + 1)%BUFSIZE;
   }
 
+  manage_heating_profile();
   manage_heater();
   manage_inactivity();
   checkHitEndstops();
@@ -824,6 +824,27 @@ void process_commands()
       break;
     case 140: // M140 set bed temp
       if (code_seen('S')) setTargetBed(code_value());
+      break;
+
+    //M142 T240 D3600  => Heat to 240C and hold for 3600 seconds
+    case 141: // Append to profile.
+      {
+        int temperature = 0;
+        int duration = 0;
+        if (code_seen('T'))
+          temperature = code_value();
+        if (code_seen('D'))
+          duration = code_value();
+
+        // Confirm sensible values were received.
+        if (profile_validate_input(temperature, duration)){
+          break;
+        }
+
+        // Add the temperature
+        profile_add(temperature, duration);
+      }
+
       break;
     case 105 : // M105
       if(setTargetedHotend(105)){
@@ -1609,15 +1630,6 @@ void manage_inactivity()
 
     // Schedule next check
     nextCheckAt += 1000;
-
-    if (logging_enabled) {
-      SERIAL_ECHO_START;
-      SERIAL_ECHO("Checking for inactivity ");
-      SERIAL_ECHO("now: "); SERIAL_ECHO(now);
-      SERIAL_ECHO("prevSerial: "); SERIAL_ECHO(previous_millis_serial_rx);
-      SERIAL_ECHO("prevCommand: "); SERIAL_ECHO(previous_millis_active_cmd);
-      SERIAL_ECHO("\n");
-    }
 
     if(stepper_inactive_time)  {
       if( (now - previous_millis_active_cmd) >  stepper_inactive_time ){

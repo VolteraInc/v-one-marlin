@@ -150,6 +150,19 @@ unsigned long watchmillis[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0,0,0);
 #define SOFT_PWM_SCALE 0
 #endif
 
+
+static struct {
+    unsigned long holdUntil = 0;
+    unsigned long safetyTimeout = 0;
+    bool ramping = false;
+    int head = 0; // Indicates start of queue.
+    int tail = 0; // Indicates end of queue
+    int temperature[10]; // Temperature in degrees C
+    unsigned long duration[10]; // Duration in seconds
+} profile; // Previously reported values
+
+
+
 //===========================================================================
 //=============================   functions      ============================
 //===========================================================================
@@ -394,6 +407,130 @@ void checkExtruderAutoFans()
 
 #endif // any extruder auto fan pins set
 
+int profile_validate_input(const int temperature, const int duration){
+
+  // Ensure both parameters were received.
+  if (temperature == 0 || duration == 0){
+        SERIAL_ERROR_START;
+        SERIAL_ERROR("Cannot interpret heating profile. Temperature: ");
+        SERIAL_ERROR(temperature);
+        SERIAL_ERROR(" Duration: ");
+        SERIAL_ERROR(duration);
+        SERIAL_ERROR("\n");
+        return -1;
+  }
+
+  if (temperature < 0 || temperature > 240){
+      SERIAL_ERROR_START;
+      SERIAL_ERROR("Invalid temperature target received: ");
+      SERIAL_ERROR(temperature);
+      SERIAL_ERROR("\n");
+      return -1;
+  }
+
+  if (duration < 0 || duration > 60 * 60){ //Max 1 hour.
+      SERIAL_ERROR_START;
+      SERIAL_ERROR("Invalid duration time received: ");
+      SERIAL_ERROR(duration);
+      SERIAL_ERROR("\n");
+      return -1;
+  }
+
+  // Check if we still have space.
+  if (profile.tail >= sizeof(profile.temperature)){
+        SERIAL_ERROR_START;
+        SERIAL_ERROR("Cannot append to heating profile. Queue full");
+        SERIAL_ERROR("\n");
+        return -1;
+  }
+
+  return 0;
+}
+
+void profile_reset() {
+  memset(profile.temperature, 0, sizeof(profile.temperature));
+  memset(profile.duration, 0, sizeof(profile.duration));
+  profile.tail = 0;
+  profile.head = 0;
+  profile.ramping = false;
+  profile.holdUntil = 0;
+  profile.safetyTimeout = 0;
+  setTargetBed(0);
+}
+
+void profile_add(const int temperature, const int duration) {
+  //Add to temperature and duration to buffer.
+  profile.temperature[profile.tail] = temperature;
+  profile.duration[profile.tail] = duration;
+  profile.tail ++;
+}
+
+void manage_heating_profile(){
+
+  // Early return if our buffer is empty
+  if (profile.tail == 0){
+    return;
+  }
+
+  const unsigned long now = millis();
+
+  // If we are ramping, check temperature and timeout
+  if (profile.ramping) {
+
+    // Check if our safety timeout has been exceeeded
+    if (now >= profile.safetyTimeout){
+      // Log the error.
+      SERIAL_ERROR_START;
+      SERIAL_ERROR("Failed to reach target temperature within timeout period");
+      SERIAL_ERROR("\n");
+      profile_reset();
+    }
+
+    // Check if we are within 2 degrees
+    if (abs(target_temperature_bed - current_temperature_bed) < 2){
+      if (logging_enabled){
+          SERIAL_ECHO_START;
+          SERIAL_ECHO("Reached target temperature. Holding for");
+          SERIAL_ECHO(profile.duration[profile.head]);
+          SERIAL_ECHO(" seconds");
+          SERIAL_ECHO("\n");
+      }
+      profile.holdUntil = now + profile.duration[profile.head] * 1000; // Hold this temp for X seconds
+      profile.head ++;
+      profile.ramping = false;
+    }
+    return;
+  }
+
+  // Have we held the temperature long enough?
+  if (now >= profile.holdUntil) {
+
+    //Exit if the profile is finished.
+    if(profile.head >= profile.tail){
+      if (logging_enabled){
+        SERIAL_ECHO_START;
+        SERIAL_ECHO("Heating profile complete.");
+        SERIAL_ECHO("\n");
+      }
+      profile_reset();
+      return;
+    }
+
+    // Set temperature and ramping timeout. Different timeout if we are heating or cooling
+    unsigned long timeout = profile.temperature[profile.head] > current_temperature_bed ? (unsigned long)5*60*1000 : (unsigned long)25*60*1000;
+    profile.safetyTimeout = now + timeout;
+    profile.ramping = true;
+    setTargetBed(profile.temperature[profile.head]);
+
+    if (logging_enabled){
+      SERIAL_ECHO_START;
+      SERIAL_ECHO("New target Temperature: ");
+      SERIAL_ECHO(profile.temperature[profile.head]);
+      SERIAL_ECHO("\n");
+    }
+  }
+
+}
 void manage_heater()
 {
   float pid_input;
