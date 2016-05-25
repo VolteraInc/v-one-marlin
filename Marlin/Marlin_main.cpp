@@ -382,19 +382,21 @@ void periodic_output()
       SERIAL_PROTOCOL("\n");
     }
 
-    // Output temperature on change
-    // NOTE: The temp sensor is noisy so filter small changes
-    {
-      const auto current = degBed();
-      const auto target = degTargetBed();
-      if ( abs(prev.temperature.current - current) >= 0.9 || prev.temperature.target != target) {
+
+    const auto current = degBed();
+    const auto target = degTargetBed();
+    const auto timeRemaining = profile_remaining_time();
+
+    // Output temperature if curing profile is active or on changes.
+    // NOTE: The temp sensor is noisy so filter small changes.
+    if ( !profile_empty() || abs(prev.temperature.current - current) >= 0.5 || prev.temperature.target != target) {
         prev.temperature.current = current;
         prev.temperature.target = target;
         SERIAL_PROTOCOL("bedTemperatureUpdate");
-        SERIAL_PROTOCOLPGM(" current:"); SERIAL_PROTOCOL_F(degBed(),1);
-        SERIAL_PROTOCOLPGM(" target:"); SERIAL_PROTOCOL_F(degTargetBed(),1);
+        SERIAL_PROTOCOLPGM(" current:"); SERIAL_PROTOCOL_F(current,1);
+        SERIAL_PROTOCOLPGM(" target:"); SERIAL_PROTOCOL_F(target,1);
+        SERIAL_PROTOCOLPGM(" timeRemaining:"); SERIAL_PROTOCOL_F(timeRemaining,1);
         SERIAL_PROTOCOL("\n");
-      }
     }
   }
 }
@@ -826,7 +828,7 @@ void process_commands()
       if (code_seen('S')) setTargetBed(code_value());
       break;
 
-    //M142 T240 D3600  => Heat to 240C and hold for 3600 seconds
+    //M141 T240 D3600  => Heat to 240C and hold for 3600 seconds
     case 141: // Append to profile.
       {
         int temperature = 0;
@@ -843,8 +845,10 @@ void process_commands()
 
         // Add the temperature
         profile_add(temperature, duration);
+        break;
       }
-
+    case 142: // Stop the profile.
+      profile_reset();
       break;
     case 105 : // M105
       if(setTargetedHotend(105)){

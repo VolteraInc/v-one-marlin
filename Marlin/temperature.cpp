@@ -155,6 +155,7 @@ static struct {
     unsigned long holdUntil = 0;
     unsigned long safetyTimeout = 0;
     bool ramping = false;
+    bool holding = false;
     int head = 0; // Indicates start of queue.
     int tail = 0; // Indicates end of queue
     int temperature[10]; // Temperature in degrees C
@@ -453,6 +454,7 @@ void profile_reset() {
   profile.tail = 0;
   profile.head = 0;
   profile.ramping = false;
+  profile.holding = false; //<-- not really required, but reads nicer.
   profile.holdUntil = 0;
   profile.safetyTimeout = 0;
   setTargetBed(0);
@@ -465,10 +467,66 @@ void profile_add(const int temperature, const int duration) {
   profile.tail ++;
 }
 
+bool profile_empty(){
+  return profile.tail == 0;
+}
+bool profile_complete() {
+  return profile.head >= profile.tail;
+}
+
+//Heating and cooling rates are not symmetrical (VERY ROUGH ESTIMATE).
+#define HEAT_RATE (0.5) // [seconds / degrees]
+#define COOL_RATE (10)  // [seconds / degrees]
+
+float profile_sum_durations(int index){
+  // Calculates duration given the current index.
+  // Starts with index duration and takes account transition ramp (if available)
+  float delta = 0;
+  float sum = 0;
+
+  while(index < profile.tail){
+    sum += profile.duration[index];
+
+    // Peek ahead and add ramp rate.
+    if (index + 1 < profile.tail){
+      delta = profile.temperature[index+1] - profile.temperature[index];
+      sum += delta > 0 ? delta * HEAT_RATE : -delta * COOL_RATE;
+    }
+    index ++;
+  }
+  return sum;
+}
+
+float profile_remaining_time(){
+  // Calulate how much time is remaining in seconds (very rough estimate of ramping and cooling rates)
+  float sum;
+  float delta;
+
+  if (profile_empty()){
+    return 0;
+  }
+
+  // Iterate through remaining profile and get durations and ramp rates.
+  sum = profile_sum_durations(profile.head);
+
+  if (profile.ramping){
+    // Add our current ramping time.
+    delta = target_temperature_bed - current_temperature_bed;
+    sum += delta > 0 ? delta * HEAT_RATE : -delta * COOL_RATE;
+  }
+
+  else {
+    // Substract our elapsed time. (duration - time remaining)
+    sum -= profile.duration[profile.head] - (profile.holdUntil - millis())/1000;
+  }
+
+  return sum;
+}
+
 void manage_heating_profile(){
 
-  // Early return if our buffer is empty
-  if (profile.tail == 0){
+  // Early return if our profile is empty
+  if (profile_empty()){
     return;
   }
 
@@ -478,8 +536,7 @@ void manage_heating_profile(){
   if (profile.ramping) {
 
     // Check if our safety timeout has been exceeeded
-    if (now >= profile.safetyTimeout){
-      // Log the error.
+    if (now >= profile.safetyTimeout) {
       SERIAL_ERROR_START;
       SERIAL_ERROR("Failed to reach target temperature within timeout period");
       SERIAL_ERROR("\n");
@@ -487,49 +544,49 @@ void manage_heating_profile(){
     }
 
     // Check if we are within 2 degrees
-    if (abs(target_temperature_bed - current_temperature_bed) < 2){
+    if (abs(target_temperature_bed - current_temperature_bed) < 2) {
       if (logging_enabled){
           SERIAL_ECHO_START;
-          SERIAL_ECHO("Reached target temperature. Holding for");
+          SERIAL_ECHO("Reached target temperature. Holding for ");
           SERIAL_ECHO(profile.duration[profile.head]);
           SERIAL_ECHO(" seconds");
           SERIAL_ECHO("\n");
       }
       profile.holdUntil = now + profile.duration[profile.head] * 1000; // Hold this temp for X seconds
-      profile.head ++;
       profile.ramping = false;
+      profile.holding = true;
     }
     return;
   }
 
-  // Have we held the temperature long enough?
-  if (now >= profile.holdUntil) {
+  // If we are holding, have we held on long enough?
+  if (profile.holding) {
 
-    //Exit if the profile is finished.
-    if(profile.head >= profile.tail){
-      if (logging_enabled){
-        SERIAL_ECHO_START;
-        SERIAL_ECHO("Heating profile complete.");
-        SERIAL_ECHO("\n");
+    if (now >= profile.holdUntil) {
+      profile.holding = false;
+      profile.head ++;
+
+      if(profile_complete()){
+        SERIAL_PROTOCOL("profileComplete");
+        SERIAL_PROTOCOL("\n");
+        profile_reset();
       }
-      profile_reset();
-      return;
     }
-
-    // Set temperature and ramping timeout. Different timeout if we are heating or cooling
-    unsigned long timeout = profile.temperature[profile.head] > current_temperature_bed ? (unsigned long)5*60*1000 : (unsigned long)25*60*1000;
-    profile.safetyTimeout = now + timeout;
-    profile.ramping = true;
-    setTargetBed(profile.temperature[profile.head]);
-
-    if (logging_enabled){
-      SERIAL_ECHO_START;
-      SERIAL_ECHO("New target Temperature: ");
-      SERIAL_ECHO(profile.temperature[profile.head]);
-      SERIAL_ECHO("\n");
-    }
+    return;
   }
 
+  // If not ramping or holding, set temperature and ramping timeout. Different timeout if we are heating or cooling
+  unsigned long timeout = profile.temperature[profile.head] > current_temperature_bed ? (unsigned long)5*60*1000 : (unsigned long)25*60*1000;
+  profile.safetyTimeout = now + timeout;
+  profile.ramping = true;
+  setTargetBed(profile.temperature[profile.head]);
+
+  if (logging_enabled){
+    SERIAL_ECHO_START;
+    SERIAL_ECHO("New target Temperature: ");
+    SERIAL_ECHO(profile.temperature[profile.head]);
+    SERIAL_ECHO("\n");
+  }
 }
 void manage_heater()
 {
