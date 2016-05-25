@@ -832,6 +832,15 @@ block->steps_y = labs(steps_y_signed);
 
 void plan_set_position(float x, float y, float z, float e)
 {
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHO("Resetting planner position to");
+    SERIAL_ECHO(" X:"); SERIAL_ECHO(x);
+    SERIAL_ECHO(" Y:"); SERIAL_ECHO(y);
+    SERIAL_ECHO(" Z:"); SERIAL_ECHO(z);
+    SERIAL_ECHO(" E:"); SERIAL_ECHO(e);
+    SERIAL_ECHO("\n");
+  }
 
 
 // Because the AXIS are skewed. Homing becomes tricky because when you are homing one axis, both axis are actually moving
@@ -859,6 +868,13 @@ if(!skew_adjustments_enabled){
 
 void plan_set_e_position(float e)
 {
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHO("Resetting planner's E position to");
+    SERIAL_ECHO(" E:"); SERIAL_ECHO(e);
+    SERIAL_ECHO("\n");
+  }
+
   position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]);
   st_set_e_position(position[E_AXIS]);
 }
