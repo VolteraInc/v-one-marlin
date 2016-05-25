@@ -482,9 +482,8 @@ float junction_deviation = 0.1;
 // mm. Microseconds specify how many microseconds the move should take to perform. To aid acceleration
 // calculation the caller must also provide the physical length of the line in millimeters.
 
-void plan_buffer_line(const float &x, const float &y, const float &z, const float &e, float feed_rate, const uint8_t &extruder)
+void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8_t extruder)
 {
-
   // Calculate the buffer head after we push this byte
   int next_buffer_head = next_block_index(block_buffer_head);
 
@@ -831,7 +830,7 @@ block->steps_y = labs(steps_y_signed);
 
 }
 
-void plan_set_position(const float &x, const float &y, const float &z, const float &e)
+void plan_set_position(float x, float y, float z, float e)
 {
 
 
@@ -858,7 +857,7 @@ if(!skew_adjustments_enabled){
   previous_speed[3] = 0.0;
 }
 
-void plan_set_e_position(const float &e)
+void plan_set_e_position(float e)
 {
   position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]);
   st_set_e_position(position[E_AXIS]);
