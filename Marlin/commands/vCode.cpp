@@ -1,5 +1,6 @@
 #include "../api/api.h"
 #include "../Marlin.h"
+#include "../Stepper.h"
 
 #include "processing.h"
 
@@ -95,6 +96,19 @@ int process_vcode(int command_code) {
         homeXY()
       );
 
+    // Set current position
+    case 6:
+      if (code_seen('X') || code_seen('Y') || code_seen('Z')) {
+        return setPosition(
+          code_seen('X') ? code_value() : current_position[ X_AXIS ],
+          code_seen('Y') ? code_value() : current_position[ Y_AXIS ],
+          code_seen('Z') ? code_value() : current_position[ Z_AXIS ],
+          code_seen('E') ? code_value() : current_position[ E_AXIS ]
+        );
+      } else if (code_seen('E')) {
+        return setPositionEOnly(code_value());
+      }
+      return 0;
 
     //-------------------------------------------
     // Tool status
@@ -128,6 +142,7 @@ int process_vcode(int command_code) {
       SERIAL_ECHOLN("  V3 - Move until limit switch triggers -- V3 -X -Y -Z F6000");
       SERIAL_ECHOLN("  V4 - Probe at current position -- V4");
       SERIAL_ECHOLN("  V5 - raise, home XY, and reset tool preparations -- V5");
+      SERIAL_ECHOLN("  V6 - override planner's current position -- V6 E0");
       SERIAL_ECHOLN("");
       SERIAL_ECHOLN("Tool Commands");
       SERIAL_ECHOLN("  V100 - Tool status");
