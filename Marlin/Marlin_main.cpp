@@ -257,7 +257,6 @@ unsigned long stoptime=0;
 
 static uint8_t tmp_extruder;
 
-
 bool Stopped=false;
 
 bool CooldownNoWait = true;
@@ -383,19 +382,21 @@ void periodic_output()
       SERIAL_PROTOCOL("\n");
     }
 
-    // Output temperature on change
-    // NOTE: The temp sensor is noisy so filter small changes
-    {
-      const auto current = degBed();
-      const auto target = degTargetBed();
-      if ( abs(prev.temperature.current - current) >= 0.9 || prev.temperature.target != target) {
+
+    const auto current = degBed();
+    const auto target = degTargetBed();
+    const auto timeRemaining = profile_remaining_time();
+
+    // Output temperature if curing profile is active or on changes.
+    // NOTE: The temp sensor is noisy so filter small changes.
+    if ( !profile_empty() || abs(prev.temperature.current - current) >= 0.5 || prev.temperature.target != target) {
         prev.temperature.current = current;
         prev.temperature.target = target;
         SERIAL_PROTOCOL("bedTemperatureUpdate");
-        SERIAL_PROTOCOLPGM(" current:"); SERIAL_PROTOCOL_F(degBed(),1);
-        SERIAL_PROTOCOLPGM(" target:"); SERIAL_PROTOCOL_F(degTargetBed(),1);
+        SERIAL_PROTOCOLPGM(" current:"); SERIAL_PROTOCOL_F(current,1);
+        SERIAL_PROTOCOLPGM(" target:"); SERIAL_PROTOCOL_F(target,1);
+        SERIAL_PROTOCOLPGM(" timeRemaining:"); SERIAL_PROTOCOL_F(timeRemaining,1);
         SERIAL_PROTOCOL("\n");
-      }
     }
   }
 }
@@ -423,6 +424,7 @@ void loop()
     bufindr = (bufindr + 1)%BUFSIZE;
   }
 
+  manage_heating_profile();
   manage_heater();
   manage_inactivity();
   checkHitEndstops();
@@ -824,6 +826,29 @@ void process_commands()
       break;
     case 140: // M140 set bed temp
       if (code_seen('S')) setTargetBed(code_value());
+      break;
+
+    //M141 T240 D3600  => Heat to 240C and hold for 3600 seconds
+    case 141: // Append to profile.
+      {
+        int temperature = 0;
+        int duration = 0;
+        if (code_seen('T'))
+          temperature = code_value();
+        if (code_seen('D'))
+          duration = code_value();
+
+        // Confirm sensible values were received.
+        if (profile_validate_input(temperature, duration)){
+          break;
+        }
+
+        // Add the temperature
+        profile_add(temperature, duration);
+        break;
+      }
+    case 142: // Stop the profile.
+      profile_reset();
       break;
     case 105 : // M105
       if(setTargetedHotend(105)){
@@ -1609,15 +1634,6 @@ void manage_inactivity()
 
     // Schedule next check
     nextCheckAt += 1000;
-
-    if (logging_enabled) {
-      SERIAL_ECHO_START;
-      SERIAL_ECHO("Checking for inactivity ");
-      SERIAL_ECHO("now: "); SERIAL_ECHO(now);
-      SERIAL_ECHO("prevSerial: "); SERIAL_ECHO(previous_millis_serial_rx);
-      SERIAL_ECHO("prevCommand: "); SERIAL_ECHO(previous_millis_active_cmd);
-      SERIAL_ECHO("\n");
-    }
 
     if(stepper_inactive_time)  {
       if( (now - previous_millis_active_cmd) >  stepper_inactive_time ){
