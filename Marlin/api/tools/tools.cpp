@@ -111,7 +111,7 @@ int outputToolStatus() {
   SERIAL_ECHO(" Dispenser Ready:"); SERIAL_ECHO(s_dispenserReady);
   SERIAL_ECHO(" reference.x:"); SERIAL_ECHO(s_reference.x);
   SERIAL_ECHO(" reference.y:"); SERIAL_ECHO(s_reference.y);
-  SERIAL_PROTOCOL("\n");
+  SERIAL_ECHO("\n");
 
   return 0;
 }
