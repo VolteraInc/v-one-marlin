@@ -38,7 +38,7 @@ int measureProbeDisplacement(float& displacement) {
   SERIAL_ECHO("\n");
 #endif
 
-  if (displacement < 0.050f || displacement > 0.550f) {
+  if (displacement < 0.015f || displacement > 0.500f) {
     SERIAL_ERROR_START;
     SERIAL_ERROR("Unable to measure probe displacement, measured value ");
     SERIAL_ERROR(displacement);
