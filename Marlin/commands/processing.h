@@ -19,3 +19,4 @@ void refresh_cmd_timeout();
 //int process_gcode();
 //int process_mcode();
 int process_vcode(int command_code);
+int process_dcode(int command_code);
