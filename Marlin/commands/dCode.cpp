@@ -13,7 +13,7 @@ int process_dcode(int command_code) {
       // Toggle logging
       logging_enabled = !logging_enabled;
       SERIAL_ECHO_START;
-      SERIAL_ECHO(logging_enabled ? "Logging ON\n" : "Logging OFF\n");
+      SERIAL_ECHO(logging_enabled ? F("Logging ON\n") : F("Logging OFF\n"));
       return 0;
 
     // Algorithms - prepare to move
@@ -49,12 +49,12 @@ int process_dcode(int command_code) {
 
         // Output
         SERIAL_ECHO_START;
-        SERIAL_ECHO("xyPositionerFindCenter");
-        SERIAL_ECHO(" returnValue:"); SERIAL_ECHO(returnValue);
-        SERIAL_ECHO(" cycles:"); SERIAL_ECHO(cycles);
-        SERIAL_ECHO(" x:"); SERIAL_ECHO(centerX);
-        SERIAL_ECHO(" y:"); SERIAL_ECHO(centerY);
-        SERIAL_ECHO("\n");
+        SERIAL_ECHOPGM("xyPositionerFindCenter");
+        SERIAL_ECHOPGM(" returnValue:"); SERIAL_ECHO(returnValue);
+        SERIAL_ECHOPGM(" cycles:"); SERIAL_ECHO(cycles);
+        SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(centerX);
+        SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(centerY);
+        SERIAL_ECHOPGM("\n");
         return 0;
       }
 
@@ -70,10 +70,10 @@ int process_dcode(int command_code) {
 
       // Output
       SERIAL_ECHO_START;
-      SERIAL_ECHO("measureProbeDisplacement");
-      SERIAL_ECHO(" returnValue:"); SERIAL_ECHO(returnValue);
-      SERIAL_ECHO(" displacement:"); SERIAL_ECHO(displacement);
-      SERIAL_ECHO("\n");
+      SERIAL_ECHOPGM("measureProbeDisplacement");
+      SERIAL_ECHOPGM(" returnValue:"); SERIAL_ECHO(returnValue);
+      SERIAL_ECHOPGM(" displacement:"); SERIAL_ECHO(displacement);
+      SERIAL_ECHOPGM("\n");
       return 0;
     }
 
@@ -92,12 +92,15 @@ int process_dcode(int command_code) {
 
       // Output
       SERIAL_ECHO_START;
-      SERIAL_ECHO("measureAtSwitch");
-      SERIAL_ECHO(" returnValue:"); SERIAL_ECHO(returnValue);
-      SERIAL_ECHO(" axis:"); SERIAL_ECHO(axis_codes[axis]);
-      SERIAL_ECHO(" direction:"); SERIAL_ECHO(direction);
-      SERIAL_ECHO(" measurement:"); SERIAL_ECHO(measurement);
-      SERIAL_ECHO("\n");
+      SERIAL_ECHOPGM("measureAtSwitch");
+      SERIAL_ECHOPGM(" returnValue:"); SERIAL_ECHO(returnValue);
+      SERIAL_ECHOPGM(" axis:"); SERIAL_ECHO(axis_codes[axis]);
+      SERIAL_ECHOPGM(" direction:"); SERIAL_ECHO(direction);
+      SERIAL_ECHOPGM(" measurement:"); SERIAL_ECHO(measurement);
+      SERIAL_ECHOPGM("\n");
+      return 0;
+    }
+
     // Algorithms - Read probe pin voltage
     case 106: {
       const int maxCycles = 50;
@@ -133,16 +136,17 @@ int process_dcode(int command_code) {
     // List Commands
     default:
       SERIAL_ECHO_START;
-      SERIAL_ECHOLN("Movement Commands");
-      SERIAL_ECHOLN("  D1 - Toggle logging ON/OFF (default: OFF)");
-      SERIAL_ECHOLN("");
-      SERIAL_ECHOLN("Algorithms");
-      SERIAL_ECHOLN("  D101 - prepare tool to move");
-      SERIAL_ECHOLN("  D102 - Home -- D102 or D102 XY");
-      SERIAL_ECHOLN("  D103 - xy positioner -- D103 or D103 M (move-only)");
-      SERIAL_ECHOLN("  D104 - probe displacement");
-      SERIAL_ECHOLN("  D105 - measure at switch -- D105 -X");
-      SERIAL_ECHOLN("");
+      SERIAL_ECHOLNPGM("Movement Commands");
+      SERIAL_ECHOLNPGM("  D1 - Toggle logging ON/OFF (default: OFF)");
+      SERIAL_ECHOLNPGM("");
+      SERIAL_ECHOLNPGM("Algorithms");
+      SERIAL_ECHOLNPGM("  D101 - prepare tool to move");
+      SERIAL_ECHOLNPGM("  D102 - Home -- D102 or D102 XY");
+      SERIAL_ECHOLNPGM("  D103 - xy positioner -- D103 or D103 M (move-only)");
+      SERIAL_ECHOLNPGM("  D104 - probe displacement");
+      SERIAL_ECHOLNPGM("  D105 - measure at switch -- D105 -X");
+      SERIAL_ECHOLNPGM("  D106 - read probe pin's voltage (C=cycles M=milliseconds between readings) -- D106 C10 M5 ");
+      SERIAL_ECHOLNPGM("");
       return 0;
   }
 }
