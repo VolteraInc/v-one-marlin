@@ -100,6 +100,10 @@ int outputToolStatus() {
   SERIAL_ECHO(" type:"); SERIAL_ECHO(toolTypeAsString(s_tool));
   SERIAL_ECHO("\n");
 
+  SERIAL_ECHO("Probe ");
+  SERIAL_ECHO(" trigger status: "); SERIAL_ECHO(probeTriggerStateAsString(readProbeTriggerState()));
+  SERIAL_ECHO("\n");
+
   SERIAL_ECHO("Homing");
   SERIAL_ECHO(" x:"); SERIAL_ECHO(getHomedState(X_AXIS));
   SERIAL_ECHO(" y:"); SERIAL_ECHO(getHomedState(Y_AXIS));
