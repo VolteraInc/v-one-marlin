@@ -541,6 +541,10 @@ void process_commands()
   unsigned long codenum; //throw away variable
   if (command_prefix_seen('V')) {
     process_vcode((int)code_value());
+
+  } else if (command_prefix_seen('D')) {
+    process_dcode((int)code_value());
+
   } else if(command_prefix_seen('G')) {
     switch((int)code_value())
     {

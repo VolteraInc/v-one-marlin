@@ -108,103 +108,14 @@ int process_vcode(int command_code) {
       else setTool(TOOLS_NONE);
       return 0;
 
-    //-------------------------------------------
-    // Utils/Debugging
-
-    // Enable/disable logging
-    case 1001:
-      if (code_seen('D')) {
-        // Turn on debug logging
-        logging_enabled = true;
-      } else {
-        // Return to default log level
-        SERIAL_ECHO_START;
-        SERIAL_ECHO("Restoring default log level\n");
-        logging_enabled = false;
-      }
-
-      // Output current log level
-      SERIAL_ECHO_START;
-      SERIAL_ECHO("LoggingLevel:");
-      SERIAL_ECHO(logging_enabled ? "Debug" : "Warning");
-      SERIAL_ECHO("\n");
-      return 0;
-
-    // Algorithms - prepare to move
+    // For compatibility - these V-Commands are now D-Commands but production tests use V110# cmds.
     case 1101:
-      return prepareToolToMove();
+      process_dcode(101);
+      break;
 
-    // Algorithms - Homing
-    case 1102: {
-      bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
-      return home(
-        home_all || code_seen('X'),
-        home_all || code_seen('Y'),
-        home_all || code_seen('Z')
-      );
-    }
-
-    // Algorithms - XY Positioner
     case 1103:
-      // Check for move-only flag
-      if (code_seen('M')) {
-        return moveToXyPositioner();
-
-      } else {
-        // Find the center
-        float centerX;
-        float centerY;
-        const long cycles = code_seen('C') ? code_value_long() : defaultXyPositionerCycles;
-        const int returnValue = xyPositionerFindCenter(cycles, centerX, centerY);
-
-        // Output
-        SERIAL_ECHO_START;
-        SERIAL_ECHO("xyPositionerFindCenter");
-        SERIAL_ECHO(" returnValue:"); SERIAL_ECHO(returnValue);
-        SERIAL_ECHO(" cycles:"); SERIAL_ECHO(cycles);
-        SERIAL_ECHO(" x:"); SERIAL_ECHO(centerX);
-        SERIAL_ECHO(" y:"); SERIAL_ECHO(centerY);
-        SERIAL_ECHO("\n");
-        return 0;
-      }
-
-    // Algorithms - Probe calibration plate
-    case 1104: {
-      float displacement = 0.0f;
-      const int returnValue = measureProbeDisplacement(displacement);
-
-      // Output
-      SERIAL_ECHO_START;
-      SERIAL_ECHO("measureProbeDisplacement");
-      SERIAL_ECHO(" returnValue:"); SERIAL_ECHO(returnValue);
-      SERIAL_ECHO(" displacement:"); SERIAL_ECHO(displacement);
-      SERIAL_ECHO("\n");
-      return 0;
-    }
-
-    // Algorithms - Measure at switch
-    case 1105: {
-      float measurement;
-      const int axis = (
-        code_seen('X') ? X_AXIS : (
-          code_seen('Y') ? Y_AXIS : (
-            code_seen('Z') ? Z_AXIS : Z_AXIS
-          )
-        )
-      );
-      const int direction = code_prefix() == '-' ? -1 : 1;
-      const int returnValue = measureAtSwitch(axis, direction, useDefaultMaxTravel, measurement);
-
-      // Output
-      SERIAL_ECHO_START;
-      SERIAL_ECHO("measureAtSwitch");
-      SERIAL_ECHO(" returnValue:"); SERIAL_ECHO(returnValue);
-      SERIAL_ECHO(" axis:"); SERIAL_ECHO(axis_codes[axis]);
-      SERIAL_ECHO(" direction:"); SERIAL_ECHO(direction);
-      SERIAL_ECHO(" measurement:"); SERIAL_ECHO(measurement);
-      SERIAL_ECHO("\n");
-      return 0;
-    }
+      process_dcode(103);
+      break;
 
     //-------------------------------------------
     // List Commands
