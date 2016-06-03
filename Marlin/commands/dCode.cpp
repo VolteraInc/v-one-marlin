@@ -105,7 +105,7 @@ int process_dcode(int command_code) {
     case 106: {
       const int maxCycles = 50;
       float voltages[maxCycles];
-      const int cycles = min(50, code_seen('C') ? code_value() : maxCycles);
+      const int cycles = code_seen('C') ? code_value() : maxCycles;
       const int ms = code_seen('M') ? code_value() : 1;
 
       if (cycles > maxCycles) {
