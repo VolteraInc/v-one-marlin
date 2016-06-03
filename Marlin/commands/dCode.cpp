@@ -102,7 +102,7 @@ int process_dcode(int command_code) {
     case 106: {
       const int maxCycles = 50;
       float voltages[maxCycles];
-      const int cycles = min(50, code_seen('C') ? code_value() : maxCycles);
+      const int cycles = code_seen('C') ? code_value() : maxCycles;
       const int ms = code_seen('M') ? code_value() : 1;
 
       if (cycles > maxCycles) {
@@ -142,6 +142,7 @@ int process_dcode(int command_code) {
       SERIAL_ECHOLN("  D103 - xy positioner -- D103 or D103 M (move-only)");
       SERIAL_ECHOLN("  D104 - probe displacement");
       SERIAL_ECHOLN("  D105 - measure at switch -- D105 -X");
+      SERIAL_ECHOLN("  D106 - Read probe voltage -- D106 C50 M1")
       SERIAL_ECHOLN("");
       return 0;
   }
