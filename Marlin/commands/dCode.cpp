@@ -98,6 +98,34 @@ int process_dcode(int command_code) {
       SERIAL_ECHO(" direction:"); SERIAL_ECHO(direction);
       SERIAL_ECHO(" measurement:"); SERIAL_ECHO(measurement);
       SERIAL_ECHO("\n");
+    // Algorithms - Read probe pin voltage
+    case 106: {
+      const int maxCycles = 50;
+      float voltages[maxCycles];
+      const int cycles = code_seen('C') ? code_value() : maxCycles;
+      const int ms = code_seen('M') ? code_value() : 1;
+
+      if (cycles > maxCycles) {
+        SERIAL_ECHO_START;
+        SERIAL_ECHOPGM("Warning: The requested number of cycles ("); SERIAL_ECHO(cycles);
+        SERIAL_ECHOPGM(") exceeds the maximum ("); SERIAL_ECHO(maxCycles);
+        SERIAL_ECHOPGM(")");
+        return 0;
+      }
+
+      // Collect the voltage readings
+      for (int i = 0; i < cycles; ++i) {
+        voltages[i] = readProbePinVoltage();
+        delay(ms);
+      }
+
+      // Output the voltage readings
+      SERIAL_ECHO_START;
+      SERIAL_ECHOLNPGM("Voltages");
+      for (int i = 0; i < cycles; ++i) {
+        SERIAL_ECHOLN(voltages[i]);
+      }
+
       return 0;
     }
 
@@ -114,6 +142,7 @@ int process_dcode(int command_code) {
       SERIAL_ECHOLN("  D103 - xy positioner -- D103 or D103 M (move-only)");
       SERIAL_ECHOLN("  D104 - probe displacement");
       SERIAL_ECHOLN("  D105 - measure at switch -- D105 -X");
+      SERIAL_ECHOLN("  D106 - Read probe voltage -- D106 C50 M1")
       SERIAL_ECHOLN("");
       return 0;
   }
