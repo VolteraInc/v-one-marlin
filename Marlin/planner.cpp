@@ -242,7 +242,7 @@ FORCE_INLINE float max_allowable_speed(float acceleration, float target_velocity
 
 
 // The kernel called by planner_recalculate() when scanning the plan from last to first entry.
-void planner_reverse_pass_kernel(block_t *previous, block_t *current, block_t *next) {
+static void planner_reverse_pass_kernel(block_t *current, block_t *next) {
   if(!current) {
     return;
   }
@@ -287,13 +287,13 @@ void planner_reverse_pass() {
       block[2]= block[1];
       block[1]= block[0];
       block[0] = &block_buffer[block_index];
-      planner_reverse_pass_kernel(block[0], block[1], block[2]);
+      planner_reverse_pass_kernel(block[1], block[2]);
     }
   }
 }
 
 // The kernel called by planner_recalculate() when scanning the plan from first to last entry.
-void planner_forward_pass_kernel(block_t *previous, block_t *current, block_t *next) {
+static void planner_forward_pass_kernel(block_t *previous, block_t *current) {
   if(!previous) {
     return;
   }
@@ -327,10 +327,10 @@ void planner_forward_pass() {
     block[0] = block[1];
     block[1] = block[2];
     block[2] = &block_buffer[block_index];
-    planner_forward_pass_kernel(block[0],block[1],block[2]);
+    planner_forward_pass_kernel(block[0],block[1]);
     block_index = next_block_index(block_index);
   }
-  planner_forward_pass_kernel(block[1], block[2], NULL);
+  planner_forward_pass_kernel(block[1], block[2]);
 }
 
 // Recalculates the trapezoid speed profiles for all blocks in the plan according to the
@@ -449,13 +449,11 @@ void check_axes_activity()
   unsigned char y_active = 0;
   unsigned char z_active = 0;
   unsigned char e_active = 0;
-  unsigned char tail_fan_speed = fanSpeed;
   block_t *block;
 
   if(block_buffer_tail != block_buffer_head)
   {
     uint8_t block_index = block_buffer_tail;
-    tail_fan_speed = block_buffer[block_index].fan_speed;
     while(block_index != block_buffer_head)
     {
       block = &block_buffer[block_index];
@@ -476,32 +474,6 @@ void check_axes_activity()
   {
     disable_e0();
   }
-#if defined(FAN_PIN) && FAN_PIN > -1
-  #ifdef FAN_KICKSTART_TIME
-    static unsigned long fan_kick_end;
-    if (tail_fan_speed) {
-      if (fan_kick_end == 0) {
-        // Just starting up fan - run at full power.
-        fan_kick_end = millis() + FAN_KICKSTART_TIME;
-        tail_fan_speed = 255;
-      } else if (fan_kick_end > millis())
-        // Fan still spinning up.
-        tail_fan_speed = 255;
-    } else {
-      fan_kick_end = 0;
-    }
-  #endif//FAN_KICKSTART_TIME
-  #ifdef FAN_SOFT_PWM
-  fanSpeedSoftPwm = tail_fan_speed;
-  #else
-  //WRITE(FAN_PIN,tail_fan_speed);      //VOLTERA - TODO - temporary fix because fan is not pwm.
-  analogWrite(FAN_PIN,tail_fan_speed);
-  #endif//!FAN_SOFT_PWM
-#endif//FAN_PIN > -1
-#ifdef AUTOTEMP
-  getHighESpeed();
-#endif
-
 }
 
 
@@ -510,9 +482,8 @@ float junction_deviation = 0.1;
 // mm. Microseconds specify how many microseconds the move should take to perform. To aid acceleration
 // calculation the caller must also provide the physical length of the line in millimeters.
 
-void plan_buffer_line(const float &x, const float &y, const float &z, const float &e, float feed_rate, const uint8_t &extruder)
+void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8_t extruder)
 {
-
   // Calculate the buffer head after we push this byte
   int next_buffer_head = next_block_index(block_buffer_head);
 
@@ -859,8 +830,17 @@ block->steps_y = labs(steps_y_signed);
 
 }
 
-void plan_set_position(const float &x, const float &y, const float &z, const float &e)
+void plan_set_position(float x, float y, float z, float e)
 {
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHO("Resetting planner position to");
+    SERIAL_ECHO(" X:"); SERIAL_ECHO(x);
+    SERIAL_ECHO(" Y:"); SERIAL_ECHO(y);
+    SERIAL_ECHO(" Z:"); SERIAL_ECHO(z);
+    SERIAL_ECHO(" E:"); SERIAL_ECHO(e);
+    SERIAL_ECHO("\n");
+  }
 
 
 // Because the AXIS are skewed. Homing becomes tricky because when you are homing one axis, both axis are actually moving
@@ -886,8 +866,15 @@ if(!skew_adjustments_enabled){
   previous_speed[3] = 0.0;
 }
 
-void plan_set_e_position(const float &e)
+void plan_set_e_position(float e)
 {
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHO("Resetting planner's E position to");
+    SERIAL_ECHO(" E:"); SERIAL_ECHO(e);
+    SERIAL_ECHO("\n");
+  }
+
   position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]);
   st_set_e_position(position[E_AXIS]);
 }

@@ -22,15 +22,6 @@ static void s_fixPosition(int axis) {
     current_position[E_AXIS]
   );
   clear_endstop(axis);
-  if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHO("Corrected position to");
-    SERIAL_ECHO(" X:"); SERIAL_ECHO(current_position[ X_AXIS ]);
-    SERIAL_ECHO(" Y:"); SERIAL_ECHO(current_position[ Y_AXIS ]);
-    SERIAL_ECHO(" Z:"); SERIAL_ECHO(current_position[ Z_AXIS ]);
-    SERIAL_ECHO(" E:"); SERIAL_ECHO(current_position[ E_AXIS ]);
-    SERIAL_ECHO("\n");
-  }
 }
 
 static float s_maxTravelInAxis(int axis) {
