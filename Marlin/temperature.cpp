@@ -151,6 +151,7 @@ unsigned long watchmillis[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0,0,0);
 #endif
 
 
+#define PROFILE_SIZE (10)
 static struct {
     unsigned long holdUntil = 0;
     unsigned long safetyTimeout = 0;
@@ -158,8 +159,8 @@ static struct {
     bool holding = false;
     int head = 0; // Indicates start of queue.
     int tail = 0; // Indicates end of queue
-    int temperature[10]; // Temperature in degrees C
-    unsigned long duration[10]; // Duration in seconds
+    int temperature[PROFILE_SIZE]; // Temperature in degrees C
+    unsigned long duration[PROFILE_SIZE]; // Duration in seconds
 } profile; // Previously reported values
 
 
@@ -438,7 +439,7 @@ int profile_validate_input(const int temperature, const int duration){
   }
 
   // Check if we still have space.
-  if (profile.tail >= sizeof(profile.temperature)){
+  if (profile.tail >= PROFILE_SIZE){
         SERIAL_ERROR_START;
         SERIAL_ERROR("Cannot append to heating profile. Queue full");
         SERIAL_ERROR("\n");
@@ -538,8 +539,11 @@ void manage_heating_profile(){
     // Check if our safety timeout has been exceeeded
     if (now >= profile.safetyTimeout) {
       SERIAL_ERROR_START;
-      SERIAL_ERROR("Failed to reach target temperature within timeout period");
-      SERIAL_ERROR("\n");
+      SERIAL_ERROR("Failed to reach target temperature within timeout period. Current: ");
+      SERIAL_ERROR(current_temperature_bed);
+      SERIAL_ERROR("C Target: ")
+      SERIAL_ERROR(target_temperature_bed);
+      SERIAL_ERROR("C\n");
       profile_reset();
     }
 
