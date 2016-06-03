@@ -541,7 +541,7 @@ void manage_heating_profile(){
       SERIAL_ERROR_START;
       SERIAL_ERROR("Failed to reach target temperature within timeout period. Current: ");
       SERIAL_ERROR(current_temperature_bed);
-      SERIAL_ERROR("C Target: ")
+      SERIAL_ERROR("C Target: ");
       SERIAL_ERROR(target_temperature_bed);
       SERIAL_ERROR("C\n");
       profile_reset();
