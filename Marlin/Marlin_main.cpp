@@ -1113,20 +1113,10 @@ void process_commands()
 
       break;
 
-    case 125:
-    {
-      // Reports the current state of the Probe
-      #if defined(P_TOP_STATE_PIN) && P_TOP_STATE_PIN > -1
-      float probeVoltage = analogRead(P_TOP_STATE_PIN)/1024.0*5.0;
-      SERIAL_PROTOCOLPGM("Probe: ");
-
-      if (probeVoltage < 1.0)
-          SERIAL_PROTOCOLLNPGM("TRIGGERED");
-      else if(probeVoltage >= 1.0 && probeVoltage <= 4.0)
-          SERIAL_PROTOCOLLNPGM("ON");
-      else
-          SERIAL_PROTOCOLLNPGM("OFF");
-      #endif
+    // Reports the current state of the Probe
+    case 125: {
+      SERIAL_PROTOCOL("Probe: ");
+      SERIAL_PROTOCOLLN(probeTriggerStateAsString(readProbeTriggerState()));
       break;
     }
 
