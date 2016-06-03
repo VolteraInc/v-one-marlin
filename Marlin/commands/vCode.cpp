@@ -61,6 +61,12 @@ int process_vcode(int command_code) {
 
     // Probe at current x,y position
     case 4: {
+      if (getTool() != TOOLS_PROBE) {
+        SERIAL_ERROR_START;
+        SERIAL_ERROR("Unable to probe, current tool is ");
+        SERIAL_ERRORLN(toolTypeAsString(getTool()));
+        return -1;
+      }
 
       float measurement;
       if (
