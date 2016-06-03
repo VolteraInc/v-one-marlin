@@ -54,13 +54,13 @@ enum ProbeTriggerStates readProbeTriggerState() {
         SERIAL_ECHO_START;
         SERIAL_ECHO("Warning: determine probe trigger state took "); SERIAL_ECHO(i+1);
         SERIAL_ECHO(" of "); SERIAL_ECHO(maxIterations);
-        SERIAL_ECHO(" iterations to resolve.");
+        SERIAL_ECHOLN(" iterations to resolve.");
       }
       if (logging_enabled) {
         SERIAL_ECHO_START;
         SERIAL_ECHO("Determined probe trigger state "); SERIAL_ECHO(probeTriggerStateAsString(state));
         SERIAL_ECHO(" after "); SERIAL_ECHO(i+1);
-        SERIAL_ECHO(" iterations");
+        SERIAL_ECHOLN(" iterations");
       }
       return state;
     }
@@ -138,7 +138,7 @@ int probe(float& measurement) {
   // Move to limit
   if (moveToLimit(Z_AXIS, -1) != 0) {
     SERIAL_ERROR_START;
-    SERIAL_ERROR("Unable to probe, switch did not trigger\n");
+    SERIAL_ERRORLN("Unable to probe, switch did not trigger");
     return -1;
   }
 
