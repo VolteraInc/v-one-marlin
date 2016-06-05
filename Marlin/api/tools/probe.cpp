@@ -5,15 +5,23 @@
 
 static float s_probeDisplacement = 0.0f;
 
+#if VOLTERA_PIN_VERSION == 1
+
 float readProbePinVoltage() {
-#if defined(P_TOP_STATE_PIN) && P_TOP_STATE_PIN > -1
-  return analogRead(P_TOP_STATE_PIN) / 1024.0 * 5.0;
-#else
   return 5.0;
-#endif
 }
 
-static enum ProbeTriggerStates classifyVoltage(float voltage) {
+enum ProbeTriggerStates readProbeTriggerState() {
+  return getTool() == TOOLS_PROBE ? PROBE_ON : PROBE_OFF;
+}
+
+#else
+
+float readProbePinVoltage() {
+  return analogRead(P_TOP_STATE_PIN) / 1024.0 * 5.0;
+}
+
+static enum ProbeTriggerStates s_classifyVoltage(float voltage) {
   // Determine state
   if (voltage < 1.0) {
     return PROBE_TRIGGERED;
@@ -25,9 +33,6 @@ static enum ProbeTriggerStates classifyVoltage(float voltage) {
 }
 
 enum ProbeTriggerStates readProbeTriggerState() {
-#if VOLTERA_PIN_VERSION == 1
-  return getTool() == TOOLS_PROBE ? PROBE_ON : PROBE_OFF;
-#else
   // Stabilize the reading
   // Note: We've seen an occasional reading of 5.0 in otherwise stable readings,
   // if the readings are ~1.0 than a simple average could take too many iterations to
@@ -36,10 +41,10 @@ enum ProbeTriggerStates readProbeTriggerState() {
   int reportThreshold = 8;
   int count = 0;
   enum ProbeTriggerStates state = PROBE_OFF;
-  enum ProbeTriggerStates previousState = classifyVoltage(readProbePinVoltage());
+  enum ProbeTriggerStates previousState = s_classifyVoltage(readProbePinVoltage());
   for (int i = 0; i < maxIterations; ++i) {
     delay(1);
-    state = classifyVoltage(readProbePinVoltage());
+    state = s_classifyVoltage(readProbePinVoltage());
 
     // Reset counter if state differs from previous reading
     if (previousState != state) {
@@ -69,8 +74,10 @@ enum ProbeTriggerStates readProbeTriggerState() {
   SERIAL_ECHO_START;
   SERIAL_ECHO("Warning: Unable to determine probe trigger state, too much variation in readings.");
   return PROBE_UNKNOWN;
-#endif
 }
+
+#endif
+
 
 const char* probeTriggerStateAsString(enum ProbeTriggerStates state) {
   switch(state) {
