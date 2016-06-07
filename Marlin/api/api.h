@@ -25,6 +25,10 @@ int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement
 int retractFromSwitch(int axis, int direction);
 int probe(float& measurement);
 
+// Set planner position
+int setPositionEOnly(float e);
+int setPosition(float x, float y, float z, float e);
+
 // Homing
 int home(bool homeX = true, bool homeY = true, bool homeZ = true);
 bool homedXY();

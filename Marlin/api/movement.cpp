@@ -10,6 +10,33 @@ static const float s_defaultRetractDistance[3] = {
   Z_HOME_RETRACT_MM
 };
 
+
+int setPositionEOnly(float e) {
+  // Wait for moves to finish before altering the axis
+  st_synchronize();
+
+  current_position[E_AXIS] = e;
+  plan_set_e_position(e);
+  return 0;
+}
+
+int setPosition(float x, float y, float z, float e) {
+  // Wait for moves to finish before altering the axis
+  st_synchronize();
+
+  current_position[X_AXIS] = x;
+  current_position[Y_AXIS] = y;
+  current_position[Z_AXIS] = z;
+  current_position[E_AXIS] = e;
+  plan_set_position(
+    current_position[X_AXIS],
+    current_position[Y_AXIS],
+    current_position[Z_AXIS],
+    current_position[E_AXIS]
+  );
+  return 0;
+}
+
 // Set the planner position based on the stepper's position.
 // Note: Certain movements, like attempting to move past an end-stop, will leave the
 // planner out of sync with the stepper. This function corrects the planner's position.
