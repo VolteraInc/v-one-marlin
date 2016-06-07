@@ -122,14 +122,11 @@ int process_vcode(int command_code) {
       else setTool(TOOLS_NONE);
       return 0;
 
+    //-------------------------------------------
+    // Deprecated
     // For compatibility - these V-Commands are now D-Commands but production tests use V110# cmds.
-    case 1101:
-      process_dcode(101);
-      break;
-
-    case 1103:
-      process_dcode(103);
-      break;
+    case 1101: return process_dcode(101);
+    case 1103: return process_dcode(103);
 
     //-------------------------------------------
     // List Commands
