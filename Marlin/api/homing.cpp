@@ -4,17 +4,6 @@
 #include "../planner.h"
 #include "../stepper.h"
 
-// Full extent of each axis
-static const float s_maxTravelWhenHoming[] = {
-  131,
-  180,
-#if VOLTERA_PIN_VERSION == 1
-  33
-#else
-  28
-#endif
-};
-
 signed char axis_homed_state[3] = {0, 0, 0};
 float homing_feedrate[] = HOMING_FEEDRATE;
 
@@ -123,7 +112,7 @@ static int homeAxis(int axis) {
   // Move to the switch
   // Note: we use measureAtSwitch so that we contact the switch accurately
   float measurement;
-  if (measureAtSwitch(axis, home_dir(axis), s_maxTravelWhenHoming[axis], measurement)) {
+  if (measureAtSwitch(axis, home_dir(axis), useDefaultMaxTravel, measurement)) {
     goto DONE;
   }
 

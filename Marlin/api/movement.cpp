@@ -53,9 +53,9 @@ static void s_fixPosition(int axis) {
 
 static float s_maxTravelInAxis(int axis) {
   switch(axis) {
-    case X_AXIS: return X_MAX_LENGTH;
-    case Y_AXIS: return Y_MAX_LENGTH;
-    case Z_AXIS: return Z_MAX_LENGTH;
+    case X_AXIS: return getHomedState(X_AXIS) ? X_MAX_LENGTH : X_MAX_LENGTH_BEFORE_HOMING;
+    case Y_AXIS: return getHomedState(Y_AXIS) ? Y_MAX_LENGTH : Y_MAX_LENGTH_BEFORE_HOMING;
+    case Z_AXIS: return getHomedState(Z_AXIS) ? Z_MAX_LENGTH : Z_MAX_LENGTH_BEFORE_HOMING;
     default:
       SERIAL_ERROR_START;
       SERIAL_ERROR("Unable to determine max travel distance for axis, axis ");

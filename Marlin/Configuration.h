@@ -331,11 +331,26 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #define min_software_endstops false // If true, axis won't move to coordinates less than HOME_POS.
 #define max_software_endstops true  // If true, axis won't move to coordinates greater than the defined lengths below.
 
+// Travel limits before homing (Full extent of each axis)
+// Note: to measure this value move the head head to the max forward-left corner (with the motors off)
+// enable logging, then home the printer. The distance traveled should be logged when the planner's
+// position is re-synchronized with the stepper after hitting the limit switch.
+#if VOLTERA_PIN_VERSION == 1
+  #define X_MAX_LENGTH_BEFORE_HOMING 131
+  #define Y_MAX_LENGTH_BEFORE_HOMING 180
+  #define Z_MAX_LENGTH_BEFORE_HOMING 33
+#else
+  #define X_MAX_LENGTH_BEFORE_HOMING 134
+  #define Y_MAX_LENGTH_BEFORE_HOMING 160
+  #define Z_MAX_LENGTH_BEFORE_HOMING 28
+#endif
+
 // Travel limits after homing
 #define X_MAX_POS 129
 #define X_MIN_POS 0
 #define Y_MAX_POS 165
 #define Y_MIN_POS 0
+
 // This is intentionally 1mm less than the actual axis length (~23mm)
 // Otherwise it's possible to drive the z carriage into the bottom of the printhead assembly before we hit the soft endstop
 // It has no impact on actual printing, as in that case we zero to the bottom limit switch and never attempt to reach the maximum again
