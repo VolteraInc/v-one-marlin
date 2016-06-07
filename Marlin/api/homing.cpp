@@ -186,7 +186,7 @@ int homeZ() {
 
   // Raise and set the max-z soft limit
   // Note: the point of contact can vary slightly, so we add some fudge to make to max tolerant
-  const float fudge = 0.01;
+  const float fudge = 0.5; // mm
   if(raise()) {
     return -1;
   }
