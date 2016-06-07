@@ -157,21 +157,37 @@ static int s_move(float x, float y, float z, float e, float f) {
   return 0;
 }
 
-static int s_moveIsSafe(float x, float y, float z) {
-  if (
-    (getHomedState(X_AXIS) && (x < min_pos[X_AXIS] || x > max_pos[X_AXIS])) ||
-    (getHomedState(Y_AXIS) && (y < min_pos[Y_AXIS] || y > max_pos[Y_AXIS])) ||
-    (getHomedState(Z_AXIS) && (z < min_pos[Z_AXIS] || z > max_pos[Z_AXIS]))
-  ) {
-      SERIAL_ERROR_START;
-      SERIAL_ERROR("Unable to move to (");
-      SERIAL_ERROR(x); SERIAL_ERROR(", ");
-      SERIAL_ERROR(y); SERIAL_ERROR(", ");
-      SERIAL_ERROR(z);
-      SERIAL_ERROR(") position falls outside of safe bounds\n");
-      return -1;
+static bool s_moveIsUnsafeInAxis(int axis, float value) {
+  // Treat moves prior to homing as safe.
+  // Note: We could perform some checks, but there's little value to the user
+  if (!getHomedState(axis)) {
+    return false;
   }
-  return 0;
+
+  // Treat no movement as safe
+  // Note: This can also trip if the fudge factor on the z-max is too small
+  if (current_position[axis] == value) {
+    return false;
+  }
+
+  // Out-of-bounds movements are unsafe
+  if (value < min_pos[axis] || value > max_pos[axis]) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORPGM("Unable to move to "); SERIAL_ERROR(value);
+    SERIAL_ERRORPGM(" in "); SERIAL_ERROR(axis_codes[axis]);
+    SERIAL_ERRORPGM("-axis, position falls outside of safe bounds\n");
+    return true;
+  }
+
+  // Movement is safe
+  return false;
+}
+
+static int s_moveIsSafe(float x, float y, float z) {
+  bool unsafeInX = s_moveIsUnsafeInAxis( X_AXIS, x );
+  bool unsafeInY = s_moveIsUnsafeInAxis( Y_AXIS, y );
+  bool unsafeInZ = s_moveIsUnsafeInAxis( Z_AXIS, z );
+  return unsafeInX || unsafeInY || unsafeInZ ? -1 : 0;
 }
 
 int move(float x, float y, float z , float e, float f) {
