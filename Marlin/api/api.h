@@ -46,7 +46,9 @@ int moveToZSwitch(Tool tool);
 const float defaultXyPositionerCycles = 2;
 int xyPositionerTouch(Tool tool, int axis, int direction, float& measurement);
 int xyPositionerFindCenter(Tool tool, long cycles, float& centerX, float& centerY);
-int moveToXyPositioner(Tool tool);
+const bool skipMoveInZ = true;
+int moveToXyPositioner(Tool tool, bool skipMoveInZ = false);
+int calibrateKeyPositions(Tool tool, long cycles = defaultXyPositionerCycles);
 
 // Calibration plate
 int measureProbeDisplacement(Tool tool, float& displacement);

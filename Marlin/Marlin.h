@@ -189,7 +189,6 @@ extern float min_z_x_pos;
 extern float min_z_y_pos;
 extern float xypos_x_pos;
 extern float xypos_y_pos;
-extern float xypos_z_pos;
 
 extern const char axis_codes[NUM_AXIS];
 
