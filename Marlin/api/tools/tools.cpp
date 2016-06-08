@@ -10,9 +10,9 @@ static bool s_probeReady = false;
 static bool s_dispenserReady = false;
 
 void sendToolStatusUpdate() {
-  SERIAL_PROTOCOL("toolUpdate");
-  SERIAL_PROTOCOL(" type:"); SERIAL_PROTOCOL(toolTypeAsString(s_tool));
-  SERIAL_PROTOCOL("\n");
+  SERIAL_PROTOCOLPGM("toolUpdate");
+  SERIAL_PROTOCOLPGM(" type:"); SERIAL_PROTOCOL(toolTypeAsString(s_tool));
+  SERIAL_PROTOCOLPGM("\n");
 }
 
 int prepareToolToMove() {
@@ -51,11 +51,9 @@ int prepareToolToMove() {
 
 void setTool(Tool tool) {
   if (logging_enabled) {
-    SERIAL_ECHO("Swapping ");
-    SERIAL_ECHO(toolTypeAsString(s_tool));
-    SERIAL_ECHO(" for ");
-    SERIAL_ECHO(toolTypeAsString(tool));
-    SERIAL_ECHO("\n");
+    SERIAL_ECHOPGM("Swapping "); SERIAL_ECHO(toolTypeAsString(s_tool));
+    SERIAL_ECHOPGM(" for "); SERIAL_ECHO(toolTypeAsString(tool));
+    SERIAL_ECHOPGM("\n");
   }
   if (s_tool == tool) {
     return;
@@ -96,26 +94,26 @@ const char* toolTypeAsString(Tool tool) {
 }
 
 int outputToolStatus() {
-  SERIAL_ECHO("Tool");
-  SERIAL_ECHO(" type:"); SERIAL_ECHO(toolTypeAsString(s_tool));
-  SERIAL_ECHO("\n");
+  SERIAL_ECHOPGM("Tool");
+  SERIAL_ECHOPGM(" type:"); SERIAL_ECHO(toolTypeAsString(s_tool));
+  SERIAL_ECHOPGM("\n");
 
-  SERIAL_ECHO("Probe ");
-  SERIAL_ECHO(" trigger status: "); SERIAL_ECHO(probeTriggerStateAsString(readProbeTriggerState()));
-  SERIAL_ECHO("\n");
+  SERIAL_ECHOPGM("Probe ");
+  SERIAL_ECHOPGM(" trigger status: "); SERIAL_ECHO(probeTriggerStateAsString(readProbeTriggerState()));
+  SERIAL_ECHOPGM("\n");
 
-  SERIAL_ECHO("Homing");
-  SERIAL_ECHO(" x:"); SERIAL_ECHO(getHomedState(X_AXIS));
-  SERIAL_ECHO(" y:"); SERIAL_ECHO(getHomedState(Y_AXIS));
-  SERIAL_ECHO(" z:"); SERIAL_ECHO(getHomedState(Z_AXIS));
-  SERIAL_ECHO("\n");
+  SERIAL_ECHOPGM("Homing");
+  SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(getHomedState(X_AXIS));
+  SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(getHomedState(Y_AXIS));
+  SERIAL_ECHOPGM(" z:"); SERIAL_ECHO(getHomedState(Z_AXIS));
+  SERIAL_ECHOPGM("\n");
 
-  SERIAL_ECHO("Reference ");
-  SERIAL_ECHO(" Probe Ready:"); SERIAL_ECHO(s_probeReady);
-  SERIAL_ECHO(" Dispenser Ready:"); SERIAL_ECHO(s_dispenserReady);
-  SERIAL_ECHO(" reference.x:"); SERIAL_ECHO(s_reference.x);
-  SERIAL_ECHO(" reference.y:"); SERIAL_ECHO(s_reference.y);
-  SERIAL_ECHO("\n");
+  SERIAL_ECHOPGM("Reference ");
+  SERIAL_ECHOPGM(" Probe Ready:"); SERIAL_ECHO(s_probeReady);
+  SERIAL_ECHOPGM(" Dispenser Ready:"); SERIAL_ECHO(s_dispenserReady);
+  SERIAL_ECHOPGM(" reference.x:"); SERIAL_ECHO(s_reference.x);
+  SERIAL_ECHOPGM(" reference.y:"); SERIAL_ECHO(s_reference.y);
+  SERIAL_ECHOPGM("\n");
 
   return 0;
 }

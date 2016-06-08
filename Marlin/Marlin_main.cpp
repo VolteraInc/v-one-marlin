@@ -378,12 +378,12 @@ void periodic_output()
     // Output position on change
     if (memcmp(prev.position, current_position, sizeof(prev.position)) != 0) {
       memcpy(prev.position, current_position, sizeof(prev.position));
-      SERIAL_PROTOCOL("positionUpdate");
+      SERIAL_PROTOCOLPGM("positionUpdate");
       SERIAL_PROTOCOLPGM(" x:"); SERIAL_PROTOCOL_F(current_position[X_AXIS], 6);
       SERIAL_PROTOCOLPGM(" y:"); SERIAL_PROTOCOL_F(current_position[Y_AXIS], 6);
       SERIAL_PROTOCOLPGM(" z:"); SERIAL_PROTOCOL_F(current_position[Z_AXIS], 6);
       SERIAL_PROTOCOLPGM(" e:"); SERIAL_PROTOCOL_F(current_position[E_AXIS], 6);
-      SERIAL_PROTOCOL("\n");
+      SERIAL_PROTOCOLPGM("\n");
     }
 
 
@@ -396,11 +396,11 @@ void periodic_output()
     if ( !profile_empty() || abs(prev.temperature.current - current) >= 0.5 || prev.temperature.target != target) {
         prev.temperature.current = current;
         prev.temperature.target = target;
-        SERIAL_PROTOCOL("bedTemperatureUpdate");
+        SERIAL_PROTOCOLPGM("bedTemperatureUpdate");
         SERIAL_PROTOCOLPGM(" current:"); SERIAL_PROTOCOL_F(current,1);
         SERIAL_PROTOCOLPGM(" target:"); SERIAL_PROTOCOL_F(target,1);
         SERIAL_PROTOCOLPGM(" timeRemaining:"); SERIAL_PROTOCOL_F(timeRemaining,1);
-        SERIAL_PROTOCOL("\n");
+        SERIAL_PROTOCOLPGM("\n");
     }
   }
 }
@@ -635,9 +635,8 @@ void process_commands()
         || moveXY(xypos_x_pos, xypos_y_pos)) {
         break;
       }
-      SERIAL_PROTOCOL("xyPositionerMeasurement +Y:");
-      SERIAL_PROTOCOL_F(measurement, 3);
-      SERIAL_PROTOCOL("\n");
+      SERIAL_PROTOCOLPGM("xyPositionerMeasurement +Y:"); SERIAL_PROTOCOL_F(measurement, 3);
+      SERIAL_PROTOCOLPGM("\n");
       break;
     }
 
@@ -648,9 +647,8 @@ void process_commands()
         || moveXY(xypos_x_pos, xypos_y_pos)) {
         break;
       }
-      SERIAL_PROTOCOL("xyPositionerMeasurement -Y:");
-      SERIAL_PROTOCOL_F(measurement, 3);
-      SERIAL_PROTOCOL("\n");
+      SERIAL_PROTOCOLPGM("xyPositionerMeasurement -Y:"); SERIAL_PROTOCOL_F(measurement, 3);
+      SERIAL_PROTOCOLPGM("\n");
       break;
     }
 
@@ -661,9 +659,8 @@ void process_commands()
         || moveXY(xypos_x_pos, xypos_y_pos)) {
         break;
       }
-      SERIAL_PROTOCOL("xyPositionerMeasurement +X:");
-      SERIAL_PROTOCOL_F(measurement, 3);
-      SERIAL_PROTOCOL("\n");
+      SERIAL_PROTOCOLPGM("xyPositionerMeasurement +X:"); SERIAL_PROTOCOL_F(measurement, 3);
+      SERIAL_PROTOCOLPGM("\n");
       break;
     }
 
@@ -674,9 +671,8 @@ void process_commands()
         || moveXY(xypos_x_pos, xypos_y_pos)) {
         break;
       }
-      SERIAL_PROTOCOL("xyPositionerMeasurement -X:");
-      SERIAL_PROTOCOL_F(measurement, 3);
-      SERIAL_PROTOCOL("\n");
+      SERIAL_PROTOCOLPGM("xyPositionerMeasurement -X:"); SERIAL_PROTOCOL_F(measurement, 3);
+      SERIAL_PROTOCOLPGM("\n");
       break;
     }
 
@@ -756,11 +752,11 @@ void process_commands()
       }
 
       // Output position
-      SERIAL_PROTOCOL("probeMeasurement");
-      SERIAL_PROTOCOL(" x:"); SERIAL_PROTOCOL_F(current_position[X_AXIS], 3);
-      SERIAL_PROTOCOL(" y:"); SERIAL_PROTOCOL_F(current_position[Y_AXIS], 3);
-      SERIAL_PROTOCOL(" z:"); SERIAL_PROTOCOL_F(measurement, 3);
-      SERIAL_PROTOCOL("\n");
+      SERIAL_PROTOCOLPGM("probeMeasurement");
+      SERIAL_PROTOCOLPGM(" x:"); SERIAL_PROTOCOL_F(current_position[X_AXIS], 3);
+      SERIAL_PROTOCOLPGM(" y:"); SERIAL_PROTOCOL_F(current_position[Y_AXIS], 3);
+      SERIAL_PROTOCOLPGM(" z:"); SERIAL_PROTOCOL_F(measurement, 3);
+      SERIAL_PROTOCOLPGM("\n");
       break;
     }
 
@@ -770,9 +766,8 @@ void process_commands()
       if (measureProbeDisplacement(z_probe_offset)) {
         break;
       }
-      SERIAL_PROTOCOL("Probe Offset: ");
-      SERIAL_PROTOCOL(z_probe_offset * 1000); // TODO: should use SERIAL_PROTOCOL_F instead of *1000
-      SERIAL_PROTOCOL("\n");
+      SERIAL_PROTOCOLPGM("Probe Offset: "); SERIAL_PROTOCOL(z_probe_offset * 1000); // TODO: should use SERIAL_PROTOCOL_F instead of *1000
+      SERIAL_PROTOCOLPGM("\n");
       break;
     }
 
@@ -1119,8 +1114,7 @@ void process_commands()
 
     // Reports the current state of the Probe
     case 125: {
-      SERIAL_PROTOCOL("Probe: ");
-      SERIAL_PROTOCOLLN(probeTriggerStateAsString(readProbeTriggerState()));
+      SERIAL_PROTOCOLPGM("Probe: "); SERIAL_PROTOCOLLN(probeTriggerStateAsString(readProbeTriggerState()));
       break;
     }
 
@@ -1307,16 +1301,12 @@ void process_commands()
 
         updatePID();
         ACK_CMD
-        SERIAL_PROTOCOL(" p:");
-        SERIAL_PROTOCOL(Kp);
-        SERIAL_PROTOCOL(" i:");
-        SERIAL_PROTOCOL(unscalePID_i(Ki));
-        SERIAL_PROTOCOL(" d:");
-        SERIAL_PROTOCOL(unscalePID_d(Kd));
+        SERIAL_PROTOCOLPGM(" p:"); SERIAL_PROTOCOL(Kp);
+        SERIAL_PROTOCOLPGM(" i:"); SERIAL_PROTOCOL(unscalePID_i(Ki));
+        SERIAL_PROTOCOLPGM(" d:"); SERIAL_PROTOCOL(unscalePID_d(Kd));
         #ifdef PID_ADD_EXTRUSION_RATE
-        SERIAL_PROTOCOL(" c:");
         //Kc does not have scaling applied above, or in resetting defaults
-        SERIAL_PROTOCOL(Kc);
+        SERIAL_PROTOCOLPGM(" c:"); SERIAL_PROTOCOL(Kc);
         #endif
         SERIAL_PROTOCOLLN("");
       }
@@ -1331,12 +1321,9 @@ void process_commands()
 
         updatePID();
         ACK_CMD
-        SERIAL_PROTOCOL(" p:");
-        SERIAL_PROTOCOL(bedKp);
-        SERIAL_PROTOCOL(" i:");
-        SERIAL_PROTOCOL(unscalePID_i(bedKi));
-        SERIAL_PROTOCOL(" d:");
-        SERIAL_PROTOCOL(unscalePID_d(bedKd));
+        SERIAL_PROTOCOLPGM(" p:"); SERIAL_PROTOCOL(bedKp);
+        SERIAL_PROTOCOLPGM(" i:"); SERIAL_PROTOCOL(unscalePID_i(bedKi));
+        SERIAL_PROTOCOLPGM(" d:"); SERIAL_PROTOCOL(unscalePID_d(bedKd));
         SERIAL_PROTOCOLLN("");
       }
       break;
@@ -1439,15 +1426,11 @@ void process_commands()
       {
 
         #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
-          SERIAL_PROTOCOLLN("Stepper Driver Currents (Max: 255)");
-          SERIAL_PROTOCOLPGM("M907 X:");
-          SERIAL_PROTOCOL((int)digiPotGetCurrent(X_AXIS));
-          SERIAL_PROTOCOLPGM("  Y:");
-          SERIAL_PROTOCOL((int)digiPotGetCurrent(Y_AXIS));
-          SERIAL_PROTOCOLPGM("  Z:");
-          SERIAL_PROTOCOL((int)digiPotGetCurrent(Z_AXIS));
-          SERIAL_PROTOCOLPGM("  E:");
-          SERIAL_PROTOCOLLN((int)digiPotGetCurrent(E_AXIS));
+          SERIAL_PROTOCOLLNPGM("Stepper Driver Currents (Max: 255)");
+          SERIAL_PROTOCOLPGM("M907 X:"); SERIAL_PROTOCOL((int)digiPotGetCurrent(X_AXIS));
+          SERIAL_PROTOCOLPGM("  Y:"); SERIAL_PROTOCOL((int)digiPotGetCurrent(Y_AXIS));
+          SERIAL_PROTOCOLPGM("  Z:"); SERIAL_PROTOCOL((int)digiPotGetCurrent(Z_AXIS));
+          SERIAL_PROTOCOLPGM("  E:"); SERIAL_PROTOCOLLN((int)digiPotGetCurrent(E_AXIS));
         #endif
       }
       break;
@@ -1587,13 +1570,13 @@ void prepare_move() {
 
   if (logging_enabled) {
     SERIAL_ECHO_START;
-    SERIAL_ECHO("prepare_move");
-    SERIAL_ECHO(" X:"); SERIAL_ECHO(destination[ X_AXIS ]);
-    SERIAL_ECHO(" Y:"); SERIAL_ECHO(destination[ Y_AXIS ]);
-    SERIAL_ECHO(" Z:"); SERIAL_ECHO(destination[ Z_AXIS ]);
-    SERIAL_ECHO(" E:"); SERIAL_ECHO(destination[ E_AXIS ]);
-    SERIAL_ECHO(" F:"); SERIAL_ECHO(feedrate);
-    SERIAL_ECHO("\n");
+    SERIAL_ECHOPGM("prepare_move");
+    SERIAL_ECHOPGM(" X:"); SERIAL_ECHO(destination[ X_AXIS ]);
+    SERIAL_ECHOPGM(" Y:"); SERIAL_ECHO(destination[ Y_AXIS ]);
+    SERIAL_ECHOPGM(" Z:"); SERIAL_ECHO(destination[ Z_AXIS ]);
+    SERIAL_ECHOPGM(" E:"); SERIAL_ECHO(destination[ E_AXIS ]);
+    SERIAL_ECHOPGM(" F:"); SERIAL_ECHO(feedrate);
+    SERIAL_ECHOPGM("\n");
   }
 
   // Do not use feedmultiply for E or Z only moves
@@ -1638,9 +1621,8 @@ void manage_inactivity()
         if(blocks_queued() == false){
           refresh_cmd_timeout();
           SERIAL_ECHO_START;
-          SERIAL_ECHO("The stepper has been inactive for more than ");
-          SERIAL_ECHO(stepper_inactive_time);
-          SERIAL_ECHO("ms, deactivating motors\n");
+          SERIAL_ECHOPGM("The stepper has been inactive for more than "); SERIAL_ECHO(stepper_inactive_time);
+          SERIAL_ECHOPGM("ms, deactivating motors\n");
           disable_x();
           disable_y();
           disable_z();
@@ -1655,9 +1637,8 @@ void manage_inactivity()
       if (now - previous_millis_serial_rx > max_no_serial_no_movement_time && previous_millis_serial_rx && max_no_serial_no_movement_time) {
         previous_millis_serial_rx = now;
         SERIAL_ECHO_START;
-        SERIAL_ECHO("No communication for more than ");
-        SERIAL_ECHO(max_no_serial_no_movement_time);
-        SERIAL_ECHO("ms, deactivating motors and heater\n");
+        SERIAL_ECHOPGM("No communication for more than "); SERIAL_ECHO(max_no_serial_no_movement_time);
+        SERIAL_ECHOPGM("ms, deactivating motors and heater\n");
         disable_x();
         disable_y();
         disable_z();

@@ -58,9 +58,8 @@ static float s_maxTravelInAxis(int axis) {
     case Z_AXIS: return getHomedState(Z_AXIS) ? Z_MAX_LENGTH : Z_MAX_LENGTH_BEFORE_HOMING;
     default:
       SERIAL_ERROR_START;
-      SERIAL_ERROR("Unable to determine max travel distance for axis, axis ");
-      SERIAL_ERROR(axis);
-      SERIAL_ERROR(" is not recognized - defaulting to a value of 0");
+      SERIAL_ERRORPGM("Unable to determine max travel distance for axis, axis "); SERIAL_ERROR(axis);
+      SERIAL_ERRORPGM(" is not recognized - defaulting to a value of 0");
       return 0; // Will likely result in an obvious error, which we can fix
   }
 }
@@ -68,50 +67,50 @@ static float s_maxTravelInAxis(int axis) {
 int outputMovementStatus() {
   // Position
   SERIAL_ECHO_START;
-  SERIAL_ECHO("Position");
-  SERIAL_ECHO(" X:"); SERIAL_ECHO(current_position[X_AXIS]);
-  SERIAL_ECHO(" Y:"); SERIAL_ECHO(current_position[Y_AXIS]);
-  SERIAL_ECHO(" Z:"); SERIAL_ECHO(current_position[Z_AXIS]);
-  SERIAL_ECHO(" E:"); SERIAL_ECHO(current_position[E_AXIS]);
-  SERIAL_ECHO("\n");
+  SERIAL_ECHOPGM("Position");
+  SERIAL_ECHOPGM(" X:"); SERIAL_ECHO(current_position[X_AXIS]);
+  SERIAL_ECHOPGM(" Y:"); SERIAL_ECHO(current_position[Y_AXIS]);
+  SERIAL_ECHOPGM(" Z:"); SERIAL_ECHO(current_position[Z_AXIS]);
+  SERIAL_ECHOPGM(" E:"); SERIAL_ECHO(current_position[E_AXIS]);
+  SERIAL_ECHOPGM("\n");
 
   // Stepper status
   SERIAL_ECHO_START;
-  SERIAL_ECHO("StepperPosition");
-  SERIAL_ECHO(" x:"); SERIAL_ECHO(st_get_position_mm(X_AXIS));
-  SERIAL_ECHO(" y:"); SERIAL_ECHO(st_get_position_mm(Y_AXIS));
-  SERIAL_ECHO(" z:"); SERIAL_ECHO(st_get_position_mm(Z_AXIS));
-  SERIAL_ECHO(" e:"); SERIAL_ECHO(st_get_position_mm(E_AXIS));
-  SERIAL_ECHO("\n");
+  SERIAL_ECHOPGM("StepperPosition");
+  SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(st_get_position_mm(X_AXIS));
+  SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(st_get_position_mm(Y_AXIS));
+  SERIAL_ECHOPGM(" z:"); SERIAL_ECHO(st_get_position_mm(Z_AXIS));
+  SERIAL_ECHOPGM(" e:"); SERIAL_ECHO(st_get_position_mm(E_AXIS));
+  SERIAL_ECHOPGM("\n");
   SERIAL_ECHO_START;
-  SERIAL_ECHO("StepperCounts");
-  SERIAL_ECHO(" x:"); SERIAL_ECHO(st_get_position(X_AXIS));
-  SERIAL_ECHO(" y:"); SERIAL_ECHO(st_get_position(Y_AXIS));
-  SERIAL_ECHO(" z:"); SERIAL_ECHO(st_get_position(Z_AXIS));
-  SERIAL_ECHO(" e:"); SERIAL_ECHO(st_get_position(E_AXIS));
-  SERIAL_ECHO("\n");
+  SERIAL_ECHOPGM("StepperCounts");
+  SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(st_get_position(X_AXIS));
+  SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(st_get_position(Y_AXIS));
+  SERIAL_ECHOPGM(" z:"); SERIAL_ECHO(st_get_position(Z_AXIS));
+  SERIAL_ECHOPGM(" e:"); SERIAL_ECHO(st_get_position(E_AXIS));
+  SERIAL_ECHOPGM("\n");
 
   // Planner
   SERIAL_ECHO_START;
-  SERIAL_ECHO("Planner");
-  SERIAL_ECHO(" movesPlanned:"); SERIAL_ECHO((int)movesplanned());
-  SERIAL_ECHO("\n");
+  SERIAL_ECHOPGM("Planner");
+  SERIAL_ECHOPGM(" movesPlanned:"); SERIAL_ECHO((int)movesplanned());
+  SERIAL_ECHOPGM("\n");
 
   // Homing state on each axis
   // 0 = not homed, -1 = homed to min extent, 1 = homed to max extent
   SERIAL_ECHO_START;
-  SERIAL_ECHO("Homing");
-  SERIAL_ECHO(" x:"); SERIAL_ECHO(getHomedState(X_AXIS));
-  SERIAL_ECHO(" y:"); SERIAL_ECHO(getHomedState(Y_AXIS));
-  SERIAL_ECHO(" z:"); SERIAL_ECHO(getHomedState(Z_AXIS));
-  SERIAL_ECHO("\n");
+  SERIAL_ECHOPGM("Homing");
+  SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(getHomedState(X_AXIS));
+  SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(getHomedState(Y_AXIS));
+  SERIAL_ECHOPGM(" z:"); SERIAL_ECHO(getHomedState(Z_AXIS));
+  SERIAL_ECHOPGM("\n");
 
   SERIAL_ECHO_START;
-  SERIAL_ECHO("Axis ranges");
-  SERIAL_ECHO(" x:"); SERIAL_ECHO(min_pos[X_AXIS]); SERIAL_ECHO(" to "); SERIAL_ECHO(max_pos[X_AXIS]);
-  SERIAL_ECHO(" y:"); SERIAL_ECHO(min_pos[Y_AXIS]); SERIAL_ECHO(" to "); SERIAL_ECHO(max_pos[Y_AXIS]);
-  SERIAL_ECHO(" z:"); SERIAL_ECHO(min_pos[Z_AXIS]); SERIAL_ECHO(" to "); SERIAL_ECHO(max_pos[Z_AXIS]);
-  SERIAL_ECHO("\n");
+  SERIAL_ECHOPGM("Axis ranges");
+  SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(min_pos[X_AXIS]); SERIAL_ECHOPGM(" to "); SERIAL_ECHO(max_pos[X_AXIS]);
+  SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(min_pos[Y_AXIS]); SERIAL_ECHOPGM(" to "); SERIAL_ECHO(max_pos[Y_AXIS]);
+  SERIAL_ECHOPGM(" z:"); SERIAL_ECHO(min_pos[Z_AXIS]); SERIAL_ECHOPGM(" to "); SERIAL_ECHO(max_pos[Z_AXIS]);
+  SERIAL_ECHOPGM("\n");
 
   return 0;
 }
@@ -137,13 +136,13 @@ static int s_move(float x, float y, float z, float e, float f) {
 
   if (logging_enabled) {
     SERIAL_ECHO_START;
-    SERIAL_ECHO("Move");
-    SERIAL_ECHO(" X:"); SERIAL_ECHO(current_position[ X_AXIS ]);
-    SERIAL_ECHO(" Y:"); SERIAL_ECHO(current_position[ Y_AXIS ]);
-    SERIAL_ECHO(" Z:"); SERIAL_ECHO(current_position[ Z_AXIS ]);
-    SERIAL_ECHO(" E:"); SERIAL_ECHO(current_position[ E_AXIS ]);
-    SERIAL_ECHO(" F:"); SERIAL_ECHO(speed_in_mm_per_min);
-    SERIAL_ECHO("\n");
+    SERIAL_ECHOPGM("Move");
+    SERIAL_ECHOPGM(" X:"); SERIAL_ECHO(current_position[ X_AXIS ]);
+    SERIAL_ECHOPGM(" Y:"); SERIAL_ECHO(current_position[ Y_AXIS ]);
+    SERIAL_ECHOPGM(" Z:"); SERIAL_ECHO(current_position[ Z_AXIS ]);
+    SERIAL_ECHOPGM(" E:"); SERIAL_ECHO(current_position[ E_AXIS ]);
+    SERIAL_ECHOPGM(" F:"); SERIAL_ECHO(speed_in_mm_per_min);
+    SERIAL_ECHOPGM("\n");
   }
 
   plan_buffer_line(
@@ -238,10 +237,8 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
   // Confirm we triggered
   if (!endstop_triggered(axis)) { // TODO: weak test, should check specific switches
     SERIAL_ERROR_START;
-    SERIAL_ERROR("Unable to move to ");
-    SERIAL_ERROR(direction < 0 ? '-' : '+');
-    SERIAL_ERROR(axis_codes[axis]);
-    SERIAL_ERROR(" limit, limit switch did not trigger\n");
+    SERIAL_ERRORPGM("Unable to move to "); SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
+    SERIAL_ERRORPGM(" limit, limit switch did not trigger\n");
     return -1;
   }
 
@@ -263,9 +260,7 @@ int retractFromSwitch(int axis, int direction) {
   const float retractDistance = s_defaultRetractDistance[axis];
   if(logging_enabled) {
     SERIAL_ECHO_START;
-    SERIAL_ECHO("Retract by: ");
-    SERIAL_ECHO(retractDistance);
-    SERIAL_ECHO("\n");
+    SERIAL_ECHOPGM("Retract by: "); SERIAL_ECHOLN(retractDistance);
   }
   if (relativeMove(
       axis == X_AXIS ? retractDistance * -direction : 0,
@@ -280,9 +275,8 @@ int retractFromSwitch(int axis, int direction) {
   // Confirm that the switch was released
   if (endstop_triggered(axis)) {
     SERIAL_ERROR_START;
-    SERIAL_ERROR("Unable to retract from ");
-    SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
-    SERIAL_ERROR(" switch, switch did not release during retract movement\n");
+    SERIAL_ERRORPGM("Unable to retract from "); SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
+    SERIAL_ERRORPGM(" switch, switch did not release during retract movement\n");
     return -1;
   }
 
@@ -296,9 +290,8 @@ int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement
   // Move to limit
   if (moveToLimit(axis, direction, useDefaultFeedrate, maxTravel) != 0) {
     SERIAL_ERROR_START;
-    SERIAL_ERROR("Unable to measure at ");
-    SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
-    SERIAL_ERROR(" switch, switch did not trigger during initial approach\n");
+    SERIAL_ERRORPGM("Unable to measure at "); SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
+    SERIAL_ERRORPGM(" switch, switch did not trigger during initial approach\n");
     return -1;
   }
 
@@ -313,9 +306,8 @@ int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement
   const float retractDistance = s_defaultRetractDistance[axis];
   if (moveToLimit(axis, direction, slow, 2 * retractDistance)) {
     SERIAL_ERROR_START;
-    SERIAL_ERROR("Unable to measure at ");
-    SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
-    SERIAL_ERROR(" switch, switch did not trigger during second approach\n");
+    SERIAL_ERRORPGM("Unable to measure at "); SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
+    SERIAL_ERRORPGM(" switch, switch did not trigger during second approach\n");
     return -1;
   }
 
@@ -323,7 +315,7 @@ int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement
   measurement = current_position[axis];
   if(logging_enabled) {
     SERIAL_ECHO_START;
-    SERIAL_ECHO("Measurement: "); SERIAL_ECHOLN(measurement);
+    SERIAL_ECHOPGM("Measurement: "); SERIAL_ECHOLN(measurement);
   }
   return 0;
 }

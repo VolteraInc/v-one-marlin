@@ -191,11 +191,11 @@ void PID_autotune(float temp, int extruder, int ncycles)
        ||(extruder < 0)
   #endif
        ){
-          SERIAL_ECHOLN("PID Autotune failed. Bad extruder number.");
+          SERIAL_ECHOLNPGM("PID Autotune failed. Bad extruder number.");
           return;
         }
 
-  SERIAL_ECHOLN("PID Autotune start");
+  SERIAL_ECHOLNPGM("PID Autotune start");
 
   disable_heater(); // switch off all heaters.
 
@@ -413,37 +413,33 @@ int profile_validate_input(const int temperature, const int duration){
 
   // Ensure both parameters were received.
   if (temperature == 0 || duration == 0){
-        SERIAL_ERROR_START;
-        SERIAL_ERROR("Cannot interpret heating profile. Temperature: ");
-        SERIAL_ERROR(temperature);
-        SERIAL_ERROR(" Duration: ");
-        SERIAL_ERROR(duration);
-        SERIAL_ERROR("\n");
-        return -1;
+    SERIAL_ERROR_START;
+    SERIAL_ERRORPGM("Cannot interpret heating profile. Temperature: "); SERIAL_ERROR(temperature);
+    SERIAL_ERRORPGM(" Duration: "); SERIAL_ERROR(duration);
+    SERIAL_ERRORPGM("\n");
+    return -1;
   }
 
   if (temperature < 0 || temperature > 240){
-      SERIAL_ERROR_START;
-      SERIAL_ERROR("Invalid temperature target received: ");
-      SERIAL_ERROR(temperature);
-      SERIAL_ERROR("\n");
-      return -1;
+    SERIAL_ERROR_START;
+    SERIAL_ERRORPGM("Invalid temperature target received: "); SERIAL_ERROR(temperature);
+    SERIAL_ERRORPGM("\n");
+    return -1;
   }
 
   if (duration < 0 || duration > 60 * 60){ //Max 1 hour.
-      SERIAL_ERROR_START;
-      SERIAL_ERROR("Invalid duration time received: ");
-      SERIAL_ERROR(duration);
-      SERIAL_ERROR("\n");
-      return -1;
+    SERIAL_ERROR_START;
+    SERIAL_ERRORPGM("Invalid duration time received: "); SERIAL_ERROR(duration);
+    SERIAL_ERRORPGM("\n");
+    return -1;
   }
 
   // Check if we still have space.
   if (profile.tail >= PROFILE_SIZE){
-        SERIAL_ERROR_START;
-        SERIAL_ERROR("Cannot append to heating profile. Queue full");
-        SERIAL_ERROR("\n");
-        return -1;
+    SERIAL_ERROR_START;
+    SERIAL_ERRORPGM("Cannot append to heating profile. Queue full");
+    SERIAL_ERRORPGM("\n");
+    return -1;
   }
 
   return 0;
@@ -539,11 +535,9 @@ void manage_heating_profile(){
     // Check if our safety timeout has been exceeeded
     if (now >= profile.safetyTimeout) {
       SERIAL_ERROR_START;
-      SERIAL_ERROR("Failed to reach target temperature within timeout period. Current: ");
-      SERIAL_ERROR(current_temperature_bed);
-      SERIAL_ERROR("C Target: ");
-      SERIAL_ERROR(target_temperature_bed);
-      SERIAL_ERROR("C\n");
+      SERIAL_ERRORPGM("Failed to reach target temperature within timeout period. Current: "); SERIAL_ERROR(current_temperature_bed);
+      SERIAL_ERRORPGM("C Target: "); SERIAL_ERROR(target_temperature_bed);
+      SERIAL_ERRORPGM("C\n");
       profile_reset();
     }
 
@@ -551,10 +545,9 @@ void manage_heating_profile(){
     if (abs(target_temperature_bed - current_temperature_bed) < 2) {
       if (logging_enabled){
           SERIAL_ECHO_START;
-          SERIAL_ECHO("Reached target temperature. Holding for ");
-          SERIAL_ECHO(profile.duration[profile.head]);
-          SERIAL_ECHO(" seconds");
-          SERIAL_ECHO("\n");
+          SERIAL_ECHOPGM("Reached target temperature. Holding for "); SERIAL_ECHO(profile.duration[profile.head]);
+          SERIAL_ECHOPGM(" seconds");
+          SERIAL_ECHOPGM("\n");
       }
       profile.holdUntil = now + profile.duration[profile.head] * 1000; // Hold this temp for X seconds
       profile.ramping = false;
@@ -571,8 +564,7 @@ void manage_heating_profile(){
       profile.head ++;
 
       if(profile_complete()){
-        SERIAL_PROTOCOL("profileComplete");
-        SERIAL_PROTOCOL("\n");
+        SERIAL_PROTOCOLLNPGM("profileComplete");
         profile_reset();
       }
     }
@@ -587,9 +579,7 @@ void manage_heating_profile(){
 
   if (logging_enabled){
     SERIAL_ECHO_START;
-    SERIAL_ECHO("New target Temperature: ");
-    SERIAL_ECHO(profile.temperature[profile.head]);
-    SERIAL_ECHO("\n");
+    SERIAL_ECHOPGM("New target Temperature: "); SERIAL_ECHOLN(profile.temperature[profile.head]);
   }
 }
 void manage_heater()
@@ -639,18 +629,12 @@ void manage_heater()
     #endif //PID_OPENLOOP
     #ifdef PID_DEBUG
     SERIAL_ECHO_START;
-    SERIAL_ECHO(" PID_DEBUG ");
-    SERIAL_ECHO(e);
-    SERIAL_ECHO(": Input ");
-    SERIAL_ECHO(pid_input);
-    SERIAL_ECHO(" Output ");
-    SERIAL_ECHO(pid_output);
-    SERIAL_ECHO(" pTerm ");
-    SERIAL_ECHO(pTerm[e]);
-    SERIAL_ECHO(" iTerm ");
-    SERIAL_ECHO(iTerm[e]);
-    SERIAL_ECHO(" dTerm ");
-    SERIAL_ECHOLN(dTerm[e]);
+    SERIAL_ECHOPGM(" PID_DEBUG "); SERIAL_ECHO(e);
+    SERIAL_ECHOPGM(": Input "); SERIAL_ECHO(pid_input);
+    SERIAL_ECHOPGM(" Output "); SERIAL_ECHO(pid_output);
+    SERIAL_ECHOPGM(" pTerm "); SERIAL_ECHO(pTerm[e]);
+    SERIAL_ECHOPGM(" iTerm "); SERIAL_ECHO(iTerm[e]);
+    SERIAL_ECHOPGM(" dTerm "); SERIAL_ECHOLN(dTerm[e]);
     #endif //PID_DEBUG
   #else /* PID off */
     pid_output = 0;
@@ -675,7 +659,7 @@ void manage_heater()
         {
             setTargetHotend(0, e);
             SERIAL_ECHO_START;
-            SERIAL_ECHOLN("Heating failed");
+            SERIAL_ECHOPGMLN("Heating failed");
         }else{
             watchmillis[e] = 0;
         }

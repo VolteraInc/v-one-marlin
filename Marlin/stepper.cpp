@@ -194,17 +194,17 @@ void checkHitEndstops()
 
   if (x_hit || y_hit || z_hit) {
     SERIAL_ERROR_START;
-    SERIAL_ERROR("Unable to complete movement, limit switch triggered. Motion stopped at");
+    SERIAL_ERRORPGM("Unable to complete movement, limit switch triggered. Motion stopped at");
     if (x_hit) {
-      SERIAL_ERROR(" x:"); SERIAL_ERROR((float)trigsteps[X_AXIS] / axis_steps_per_unit[X_AXIS]);
+      SERIAL_ERRORPGM(" x:"); SERIAL_ERROR((float)trigsteps[X_AXIS] / axis_steps_per_unit[X_AXIS]);
     }
     if (y_hit) {
-      SERIAL_ERROR(" y:"); SERIAL_ERROR((float)trigsteps[Y_AXIS] / axis_steps_per_unit[Y_AXIS]);
+      SERIAL_ERRORPGM(" y:"); SERIAL_ERROR((float)trigsteps[Y_AXIS] / axis_steps_per_unit[Y_AXIS]);
     }
     if (z_hit) {
-      SERIAL_ERROR(" z:"); SERIAL_ERROR((float)trigsteps[Z_AXIS] / axis_steps_per_unit[Z_AXIS]);
+      SERIAL_ERRORPGM(" z:"); SERIAL_ERROR((float)trigsteps[Z_AXIS] / axis_steps_per_unit[Z_AXIS]);
     }
-    SERIAL_ECHO("\n");
+    SERIAL_ECHOPGM("\n");
 #ifdef ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED //TODO-REMOVE?
     if (abort_on_endstop_hit) {
       card.sdprinting = false;
