@@ -4,7 +4,9 @@
 
 int moveToXyPositioner() {
   if (xypos_x_pos != current_position[X_AXIS] || xypos_y_pos != current_position[Y_AXIS]) {
-    raise();
+    if (raise()) {
+      return -1;
+    }
   }
   return (
     moveXY(xypos_x_pos, xypos_y_pos) ||

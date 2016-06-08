@@ -92,6 +92,11 @@ static int homeAxis(int axis) {
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
+  // Clear homed state
+  // Note: movement safety checks may fail while homing, clearing
+  // the homed state disables those safety checks.
+  setHomedState(axis, 0);
+
   // To prevent crashes, raise Z
   if (axis == X_AXIS || axis == Y_AXIS) {
     if(raise()) {

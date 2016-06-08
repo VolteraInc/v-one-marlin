@@ -136,7 +136,7 @@ int process_dcode(int command_code) {
     // List Commands
     default:
       SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM("Movement Commands");
+      SERIAL_ECHOLNPGM("General Commands");
       SERIAL_ECHOLNPGM("  D1 - Toggle logging ON/OFF (default: OFF)");
       SERIAL_ECHOLNPGM("");
       SERIAL_ECHOLNPGM("Algorithms");

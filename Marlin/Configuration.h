@@ -81,10 +81,10 @@
 #define VOLTERA_PIN_VERSION 2
 
 //Default Calibration offsets for the Voltera -V-One
-#define MIN_Z_X_POS       (4.8)
-#define MIN_Z_Y_POS       (6.6)
-#define XYPOS_X_POS       (34.00)
-#define XYPOS_Y_POS       (3.0)
+#define MIN_Z_X_POS       (4.93)
+#define MIN_Z_Y_POS       (8.08)
+#define XYPOS_X_POS       (34.53)
+#define XYPOS_Y_POS       (5.08)
 #define CALIB_X_SCALE     (1.0)
 #define CALIB_Y_SCALE     (1.0)
 #define CALIB_COS_THETA   (1.0)
