@@ -4,7 +4,7 @@
 #include "../planner.h"
 #include "../stepper.h"
 
-static const float s_defaultRetractDistance[3] = {
+static const float s_defaultRetractDistance[] = {
   X_HOME_RETRACT_MM,
   Y_HOME_RETRACT_MM,
   Z_HOME_RETRACT_MM
@@ -189,7 +189,7 @@ static int s_moveIsSafe(float x, float y, float z) {
   return unsafeInX || unsafeInY || unsafeInZ ? -1 : 0;
 }
 
-int move(float x, float y, float z , float e, float f) {
+int move(float x, float y, float z, float e, float f) {
   return (
     s_moveIsSafe(x, y, z) ||
     s_move(x, y, z, e, f)
