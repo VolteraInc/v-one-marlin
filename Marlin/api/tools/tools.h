@@ -26,3 +26,7 @@ enum ProbeTriggerStates {
 enum ProbeTriggerStates readProbeTriggerState();
 const char* probeTriggerStateAsString(enum ProbeTriggerStates state);
 float readProbePinVoltage();
+
+// Dispenser
+const float defaultDispenseHeight = 2.0f;
+void setDispenseHeight(float height);

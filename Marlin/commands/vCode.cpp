@@ -135,6 +135,13 @@ int process_vcode(int command_code) {
       else setTool(TOOLS_NONE);
       return 0;
 
+    // Set dispense height
+    case 102:
+      return setDispenseHeight(
+        getTool(),
+        code_seen('Z') ? code_value() : defaultDispenseHeight
+      );
+
     //-------------------------------------------
     // Deprecated
     // For compatibility - these V-Commands are now D-Commands but production tests use V110# cmds.
@@ -158,6 +165,7 @@ int process_vcode(int command_code) {
       SERIAL_ECHOLNPGM("Tool Commands");
       SERIAL_ECHOLNPGM("  V100 - Tool status");
       SERIAL_ECHOLNPGM("  V101 - attach/detach tool -- V101 or V101 P or V101 D");
+      SERIAL_ECHOLNPGM("  V102 - set dispense height (must have dispenser attached) -- V102 Z0.140");
       return 0;
   }
 }

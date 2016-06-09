@@ -134,6 +134,11 @@ static int s_move(float x, float y, float z, float e, float f) {
   current_position[ Z_AXIS ] = z;
   current_position[ E_AXIS ] = e;
 
+  auto tool = getTool();
+  if (tool == TOOLS_DISPENSER && current_position[ E_AXIS ] >= 0) {
+    current_position[ Z_AXIS ] += getDispenseHeight(tool);
+  }
+
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Move");
