@@ -194,23 +194,24 @@ static int s_moveIsSafe(float x, float y, float z) {
   return unsafeInX || unsafeInY || unsafeInZ ? -1 : 0;
 }
 
-int move(float x, float y, float z, float e, float f) {
+int move(Tool tool, float x, float y, float z, float e, float f) {
   return (
     s_moveIsSafe(x, y, z) ||
     s_move(x, y, z, e, f)
   );
 }
 
-int moveXY(float x, float y, float f) {
-  return move(x, y, current_position[Z_AXIS], current_position[E_AXIS], f);
+int moveXY(Tool tool, float x, float y, float f) {
+  return move(tool, x, y, current_position[Z_AXIS], current_position[E_AXIS], f);
 }
 
-int moveZ(float z, float f) {
-  return move(current_position[X_AXIS], current_position[Y_AXIS], z, current_position[E_AXIS], f);
+int moveZ(Tool tool, float z, float f) {
+  return move(tool, current_position[X_AXIS], current_position[Y_AXIS], z, current_position[E_AXIS], f);
 }
 
-int relativeMove(float x, float y, float z, float e, float speed_in_mm_per_min) {
+int relativeMove(Tool tool, float x, float y, float z, float e, float speed_in_mm_per_min) {
   return move(
+    tool,
     current_position[ X_AXIS ] + x,
     current_position[ Y_AXIS ] + y,
     current_position[ Z_AXIS ] + z,

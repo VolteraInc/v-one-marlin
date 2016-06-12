@@ -100,27 +100,27 @@ static bool s_probeMounted() {
   return false;
 }
 
-int prepareProbe(Point2D& reference) {
+int prepareProbe(Tool tool, Point2D& reference) {
   if(!s_probeMounted()) {
     SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to probe, probe not mounted");
+    SERIAL_ERRORLNPGM("Unable to prepare probe, probe not mounted");
     return -1;
   }
 
   // Ensure homed in Z
   if (!homedZ()) {
-    if (homeZ()) {
+    if (homeZ(tool)) {
      return -1;
     }
   }
 
   // Record the center of the xy-positioner for use as a references
-  if (xyPositionerFindCenter(defaultXyPositionerCycles, reference.x, reference.y)) {
+  if (xyPositionerFindCenter(tool, defaultXyPositionerCycles, reference.x, reference.y)) {
     return -1;
   }
 
   // Record the probe's displacement
-  if (measureProbeDisplacement(s_probeDisplacement)) {
+  if (measureProbeDisplacement(tool, s_probeDisplacement)) {
     return -1;
   }
 
@@ -131,7 +131,13 @@ int prepareProbe(Point2D& reference) {
   return 0;
 }
 
-int probe(float& measurement) {
+int probe(Tool tool, float& measurement) {
+  if(tool != TOOLS_PROBE) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORLNPGM("Unable to probe, probe not attached");
+    return -1;
+  }
+
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 

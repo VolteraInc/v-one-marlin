@@ -6,6 +6,7 @@
 //-------------------------------------------
 // Utils/Debugging
 int process_dcode(int command_code) {
+  const auto tool = getTool();
   switch(command_code) {
 
     // Enable/disable logging
@@ -18,12 +19,13 @@ int process_dcode(int command_code) {
 
     // Algorithms - prepare to move
     case 101:
-      return prepareToolToMove();
+      return prepareToolToMove(tool);
 
     // Algorithms - Homing
     case 102: {
       bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
       return home(
+        tool,
         home_all || code_seen('X'),
         home_all || code_seen('Y'),
         home_all || code_seen('Z')
@@ -32,20 +34,20 @@ int process_dcode(int command_code) {
 
     // Algorithms - XY Positioner
     case 103:
-      if (prepareToolToMove()) {
+      if (prepareToolToMove(tool)) {
         return -1;
       }
 
       // Check for move-only flag
       if (code_seen('M')) {
-        return moveToXyPositioner();
+        return moveToXyPositioner(tool);
 
       } else {
         // Find the center
         float centerX;
         float centerY;
         const long cycles = code_seen('C') ? code_value_long() : defaultXyPositionerCycles;
-        const int returnValue = xyPositionerFindCenter(cycles, centerX, centerY);
+        const int returnValue = xyPositionerFindCenter(tool, cycles, centerX, centerY);
 
         // Output
         SERIAL_ECHO_START;
@@ -60,13 +62,13 @@ int process_dcode(int command_code) {
 
     // Algorithms - Probe calibration plate
     case 104: {
-      if ( prepareToolToMove()
-        || moveToXyPositioner()) {
+      if ( prepareToolToMove(tool)
+        || moveToXyPositioner(tool)) {
         return -1;
       }
 
       float displacement = 0.0f;
-      const int returnValue = measureProbeDisplacement(displacement);
+      const int returnValue = measureProbeDisplacement(tool, displacement);
 
       // Output
       SERIAL_ECHO_START;

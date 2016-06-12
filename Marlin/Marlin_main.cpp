@@ -588,7 +588,8 @@ void process_commands()
 
     // G33 Homes the Z axis to the z-switch.
     case 33:
-      homeZ();
+      // Note: it is safer to assume a dispenser is attached than it is to assume a probe is.
+      homeZ(TOOLS_DISPENSER);
       break;
 
     // G28 Home X and Y normally, home Z to the top (legacy code relies on this behavior)
@@ -620,6 +621,7 @@ void process_commands()
       }
 
       home(
+        TOOLS_NONE,
         home_all || code_seen('X'),
         home_all || code_seen('Y'),
         false
@@ -631,8 +633,8 @@ void process_commands()
     // G18: XYPositioner Y1 - Move in +Y until a switch is triggered
     case 18: {
       float measurement;
-      if ( xyPositionerTouch(Y_AXIS, 1, measurement)
-        || moveXY(xypos_x_pos, xypos_y_pos)) {
+      if ( xyPositionerTouch(TOOLS_PROBE, Y_AXIS, 1, measurement)
+        || moveXY(TOOLS_PROBE, xypos_x_pos, xypos_y_pos)) {
         break;
       }
       SERIAL_PROTOCOLPGM("xyPositionerMeasurement +Y:"); SERIAL_PROTOCOL_F(measurement, 3);
@@ -643,8 +645,8 @@ void process_commands()
     // G19: XYPositioner Y2 - Move in -Y until a switch is triggered
     case 19: {
       float measurement;
-      if ( xyPositionerTouch(Y_AXIS, -1, measurement)
-        || moveXY(xypos_x_pos, xypos_y_pos)) {
+      if ( xyPositionerTouch(TOOLS_PROBE, Y_AXIS, -1, measurement)
+        || moveXY(TOOLS_PROBE, xypos_x_pos, xypos_y_pos)) {
         break;
       }
       SERIAL_PROTOCOLPGM("xyPositionerMeasurement -Y:"); SERIAL_PROTOCOL_F(measurement, 3);
@@ -655,8 +657,8 @@ void process_commands()
     // G20: XYPositioner X1 - Move in +X until a switch is triggered
     case 20: {
       float measurement;
-      if ( xyPositionerTouch(X_AXIS, 1, measurement)
-        || moveXY(xypos_x_pos, xypos_y_pos)) {
+      if ( xyPositionerTouch(TOOLS_PROBE, X_AXIS, 1, measurement)
+        || moveXY(TOOLS_PROBE, xypos_x_pos, xypos_y_pos)) {
         break;
       }
       SERIAL_PROTOCOLPGM("xyPositionerMeasurement +X:"); SERIAL_PROTOCOL_F(measurement, 3);
@@ -667,8 +669,8 @@ void process_commands()
     // G21: XYPositioner X2 - Move in -X until switch triggered
     case 21: {
       float measurement;
-      if ( xyPositionerTouch(X_AXIS, -1, measurement)
-        || moveXY(xypos_x_pos, xypos_y_pos)) {
+      if ( xyPositionerTouch(TOOLS_PROBE, X_AXIS, -1, measurement)
+        || moveXY(TOOLS_PROBE, xypos_x_pos, xypos_y_pos)) {
         break;
       }
       SERIAL_PROTOCOLPGM("xyPositionerMeasurement -X:"); SERIAL_PROTOCOL_F(measurement, 3);
@@ -747,7 +749,7 @@ void process_commands()
     // G30 Single Z Probe
     case 30: {
       float measurement;
-      if (probe(measurement)) {
+      if (probe(TOOLS_PROBE, measurement)) {
         break;
       }
 
@@ -763,7 +765,7 @@ void process_commands()
     // G31 Reports the Probe Offset
     case 31: {
       float z_probe_offset;
-      if (measureProbeDisplacement(z_probe_offset)) {
+      if (measureProbeDisplacement(TOOLS_PROBE, z_probe_offset)) {
         break;
       }
       SERIAL_PROTOCOLPGM("Probe Offset: "); SERIAL_PROTOCOL(z_probe_offset * 1000); // TODO: should use SERIAL_PROTOCOL_F instead of *1000

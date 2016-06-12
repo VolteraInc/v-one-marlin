@@ -2,19 +2,29 @@
 
 #include "../Marlin.h"
 
-int moveToXyPositioner() {
+int moveToXyPositioner(Tool tool) {
   if (xypos_x_pos != current_position[X_AXIS] || xypos_y_pos != current_position[Y_AXIS]) {
     if (raise()) {
       return -1;
     }
   }
   return (
-    moveXY(xypos_x_pos, xypos_y_pos) ||
-    moveZ(xypos_z_pos)
+    moveXY(tool, xypos_x_pos, xypos_y_pos) ||
+    moveZ(tool, XYPOS_Z_POS)
   );
 }
 
-int xyPositionerTouch(int axis, int direction, float& measurement) {
+int xyPositionerTouch(Tool tool, int axis, int direction, float& measurement) {
+  switch(tool) {
+    case TOOLS_DISPENSER:
+    case TOOLS_PROBE:
+      break;
+    default:
+      SERIAL_ERROR_START;
+      SERIAL_ERRORLNPGM("Unable to touch xy-positioner switches, no tool attached");
+      return -1;
+  }
+
   // Move according to the given axis and direction until a switch is triggered
   const auto slow = homing_feedrate[axis] / 6;
   if (moveToLimit(axis, direction, slow, 5.0f)) {
@@ -26,7 +36,7 @@ int xyPositionerTouch(int axis, int direction, float& measurement) {
 
 int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
   // Goto the xy positioner
-  if (moveToXyPositioner()) {
+  if (moveToXyPositioner(tool)) {
     return -1;
   }
 
@@ -37,10 +47,10 @@ int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
   centerY = xypos_y_pos;
   for (int i=0; i<cycles; ++i) {
     // Compute center X
-    if ( moveXY(centerX, centerY) // applies new centerY on 2nd iteration
-      || xyPositionerTouch(X_AXIS, 1, measurement1) // measure +x
-      || moveXY(centerX, centerY) // recenter
-      || xyPositionerTouch(X_AXIS, -1, measurement2)) { // measure -x
+    if ( moveXY(tool, centerX, centerY) // applies new centerY on 2nd iteration
+      || xyPositionerTouch(tool, X_AXIS, 1, measurement1) // measure +x
+      || moveXY(tool, centerX, centerY) // recenter
+      || xyPositionerTouch(tool, X_AXIS, -1, measurement2)) { // measure -x
       return -1;
     }
     centerX = (measurement2 + measurement1) / 2;
@@ -55,10 +65,10 @@ int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
     }
 
     // Compute center Y
-    if ( moveXY(centerX, centerY) // applies new centerX
-      || xyPositionerTouch(Y_AXIS, 1, measurement1) // measure +y
-      || moveXY(centerX, centerY) // recenter
-      || xyPositionerTouch(Y_AXIS, -1, measurement2)) { // measure -y
+    if ( moveXY(tool, centerX, centerY) // applies new centerX
+      || xyPositionerTouch(tool, Y_AXIS, 1, measurement1) // measure +y
+      || moveXY(tool, centerX, centerY) // recenter
+      || xyPositionerTouch(tool, Y_AXIS, -1, measurement2)) { // measure -y
       return -1;
     }
     centerY = (measurement2 + measurement1) / 2;
@@ -77,7 +87,7 @@ int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
   }
 
   // Go to the computed position
-  if (moveXY(centerX, centerY)) {
+  if (moveXY(tool, centerX, centerY)) {
     return -1;
   }
 

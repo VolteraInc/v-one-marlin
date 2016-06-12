@@ -3,17 +3,23 @@
 #include "../Marlin.h"
 #include "../stepper.h"
 
-int measureCalibrationPlateZ(float& plateZ) {
+static int measureCalibrationPlateZ(Tool tool, float& plateZ) {
+  if(tool != TOOLS_PROBE) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORLNPGM("Unable to measure calibration plate, probe not mounted");
+    return -1;
+  }
+
   enable_calibration_plate(true);
   int returnValue = measureAtSwitch(Z_AXIS, -1, useDefaultMaxTravel, plateZ);
   enable_calibration_plate(false);
   return returnValue;
 }
 
-int measureProbeDisplacement(float& o_displacement) {
+int measureProbeDisplacement(Tool tool, float& o_displacement) {
   // Measure the calibration plate
   float plateZ;
-  if (measureCalibrationPlateZ(plateZ)) {
+  if (measureCalibrationPlateZ(tool, plateZ)) {
     return -1;
   }
 

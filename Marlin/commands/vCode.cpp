@@ -5,6 +5,7 @@
 #include "processing.h"
 
 int process_vcode(int command_code) {
+  const auto tool = getTool();
   switch(command_code) {
 
     //-------------------------------------------
@@ -14,8 +15,9 @@ int process_vcode(int command_code) {
 
     // Move
     case 1:
-      return prepareToolToMove() ||
+      return prepareToolToMove(tool) ||
         move(
+          tool,
           code_seen('X') ? code_value() : current_position[ X_AXIS ],
           code_seen('Y') ? code_value() : current_position[ Y_AXIS ],
           code_seen('Z') ? code_value() : current_position[ Z_AXIS ],
@@ -25,8 +27,9 @@ int process_vcode(int command_code) {
 
     // Relative move
     case 2:
-      return prepareToolToMove() ||
+      return prepareToolToMove(tool) ||
         relativeMove(
+          tool,
           code_seen('X') ? code_value() : 0,
           code_seen('Y') ? code_value() : 0,
           code_seen('Z') ? code_value() : 0,
@@ -39,7 +42,7 @@ int process_vcode(int command_code) {
     //    - movement is performed one axis at a time.
     //    - to avoid crashes we always raise first (if needed) and lower last (if needed).
     case 3: {
-      if (prepareToolToMove()) {
+      if (prepareToolToMove(tool)) {
         return -1;
       }
       const float feedrate = code_seen('F') ? code_value() : getDefaultFeedrate();
@@ -62,16 +65,16 @@ int process_vcode(int command_code) {
 
     // Probe at current x,y position
     case 4: {
-      if (getTool() != TOOLS_PROBE) {
+      if (tool != TOOLS_PROBE) {
         SERIAL_ERROR_START;
-        SERIAL_ERRORPGM("Unable to probe, current tool is "); SERIAL_ERRORLN(toolTypeAsString(getTool()));
+        SERIAL_ERRORPGM("Unable to probe, current tool is "); SERIAL_ERRORLN(toolTypeAsString(tool));
         return -1;
       }
 
       float measurement;
       if (
-        prepareToolToMove() ||
-        probe(measurement)
+        prepareToolToMove(tool) ||
+        probe(tool, measurement)
       ) {
         return -1;
       }
@@ -138,7 +141,7 @@ int process_vcode(int command_code) {
     // Set dispense height
     case 102:
       return setDispenseHeight(
-        getTool(),
+        tool,
         code_seen('Z') ? code_value() : defaultDispenseHeight
       );
 

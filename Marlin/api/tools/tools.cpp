@@ -15,7 +15,7 @@ void sendToolStatusUpdate() {
   SERIAL_PROTOCOLPGM("\n");
 }
 
-int prepareToolToMove() {
+int prepareToolToMove(Tool tool) {
   // Ensure homed in X, Y
   if (!homedXY()) {
     if (homeXY()) {
@@ -24,10 +24,10 @@ int prepareToolToMove() {
   }
 
   // Perform tool-specific preparations
-  switch (s_tool) {
+  switch (tool) {
     case TOOLS_PROBE:
       if (!s_probeReady) {
-        if (prepareProbe(s_reference)) {
+        if (prepareProbe(tool, s_reference)) {
           return -1;
         }
         s_probeReady = true;
@@ -41,7 +41,7 @@ int prepareToolToMove() {
           SERIAL_ERRORLNPGM("Unable to prepare dispenser, probe must be prepared first to establish a reference position");
           return -1;
         }
-        if (prepareDispenser(s_reference)) {
+        if (prepareDispenser(tool, s_reference)) {
           return -1;
         }
         s_dispenserReady = true;

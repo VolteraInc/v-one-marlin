@@ -11,7 +11,7 @@ const char* toolTypeAsString(Tool tool);
 int outputToolStatus();
 void setTool(Tool tool);
 Tool getTool();
-int prepareToolToMove();
+int prepareToolToMove(Tool tool);
 int resetToolPreparations();
 void sendToolStatusUpdate();
 
@@ -23,10 +23,12 @@ enum ProbeTriggerStates {
   PROBE_TRIGGERED = 3,
 };
 
+int probe(Tool tool, float& measurement);
 enum ProbeTriggerStates readProbeTriggerState();
 const char* probeTriggerStateAsString(enum ProbeTriggerStates state);
 float readProbePinVoltage();
 
 // Dispenser
 const float defaultDispenseHeight = 2.0f;
-void setDispenseHeight(float height);
+int setDispenseHeight(Tool tool, float height);
+float getDispenseHeight(Tool tool);

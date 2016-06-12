@@ -5,11 +5,11 @@
 
 static float s_dispenseHeight = defaultDispenseHeight;
 
-static int s_alignToReference(const Point2D& reference) {
+static int s_alignToReference(Tool tool, const Point2D& reference) {
   // Move the current tool to the reference position
   // i.e. the center of the xy-positioner.
   Point2D toolPosition;
-  if (xyPositionerFindCenter(defaultXyPositionerCycles, toolPosition.x, toolPosition.y)) {
+  if (xyPositionerFindCenter(tool, defaultXyPositionerCycles, toolPosition.x, toolPosition.y)) {
     return -1;
   }
 
@@ -22,17 +22,17 @@ static int s_alignToReference(const Point2D& reference) {
   return 0;
 }
 
-int prepareDispenser(const Point2D& reference) {
+int prepareDispenser(Tool tool, const Point2D& reference) {
 
   // Ensure homed in Z
   if (!homedZ()) {
-    if (homeZ()) {
+    if (homeZ(tool)) {
       return -1;
     }
   }
 
   // Measure the center of the xy-positioner to compensate for the dispenser's offset
-  if (s_alignToReference(reference)) {
+  if (s_alignToReference(tool, reference)) {
     return -1;
   }
 

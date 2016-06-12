@@ -131,7 +131,7 @@ DONE:
   return returnValue;
 }
 
-int home(bool homingX, bool homingY, bool homingZ) {
+int home(Tool tool, bool homingX, bool homingY, bool homingZ) {
 
   // Homing Y first moves the print head out of the way, which
   // which allows the user to access the board/bed sooner
@@ -148,7 +148,7 @@ int home(bool homingX, bool homingY, bool homingZ) {
   }
 
   if (homingZ) {
-    if (homeZ()) {
+    if (homeZ(tool)) {
       return -1;
     }
   }
@@ -157,7 +157,7 @@ int home(bool homingX, bool homingY, bool homingZ) {
   return 0;
 }
 
-int moveToZSwitch() {
+int moveToZSwitch(Tool tool) {
   if (!homedXY()) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM("Unable to move to Z-Switch, either the x-axis or the y-axis has not been homed");
@@ -172,13 +172,24 @@ int moveToZSwitch() {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Move to z-switch");
   }
-  return moveXY(min_z_x_pos, min_z_y_pos);
+  return moveXY(tool, min_z_x_pos, min_z_y_pos);
 }
 
-int homeZ() {
+int homeZ(Tool tool) {
+
+  switch(tool) {
+    case TOOLS_DISPENSER:
+    case TOOLS_PROBE:
+      break;
+    default:
+      SERIAL_ERROR_START;
+      SERIAL_ERRORLNPGM("Unable to home Z-axis, no tool attached");
+      return -1;
+  }
+
   // Home Z to the z-switch
   if (
-    moveToZSwitch() ||
+    moveToZSwitch(tool) ||
     homeAxis(Z_AXIS)
   ) {
     return -1;
@@ -201,5 +212,5 @@ int homeZ() {
 }
 
 int homeXY() {
-  return home(true, true, false);
+  return home(TOOLS_NONE, true, true, false);
 }
