@@ -5,7 +5,7 @@
 #include "../stepper.h"
 
 static signed char axis_homed_state[3] = {0, 0, 0};
-static const float homing_feedrate[] = HOMING_FEEDRATE;
+const float homing_feedrate[] = HOMING_FEEDRATE;
 
 
 #define DEFINE_PGM_READ_ANY(type, reader)       \
