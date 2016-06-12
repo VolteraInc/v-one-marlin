@@ -268,11 +268,12 @@ int retractFromSwitch(int axis, int direction) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Retract by: "); SERIAL_ECHOLN(retractDistance);
   }
-  if (relativeMove(
-      axis == X_AXIS ? retractDistance * -direction : 0,
-      axis == Y_AXIS ? retractDistance * -direction : 0,
-      axis == Z_AXIS ? retractDistance * -direction : 0,
-      0
+  if (s_move(
+      current_position[ X_AXIS ] + (axis == X_AXIS ? retractDistance * -direction : 0),
+      current_position[ Y_AXIS ] + (axis == Y_AXIS ? retractDistance * -direction : 0),
+      current_position[ Z_AXIS ] + (axis == Z_AXIS ? retractDistance * -direction : 0),
+      current_position[ E_AXIS ],
+      useDefaultFeedrate
     )) {
     return -1;
   }
