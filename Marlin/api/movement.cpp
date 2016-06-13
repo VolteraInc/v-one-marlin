@@ -244,21 +244,21 @@ int raise() {
   return moveToLimit(Z_AXIS, 1);
 }
 
-int retractFromSwitch(int axis, int direction) {
+int retractFromSwitch(int axis, int direction, float retractDistance) {
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
 
   // Retract slightly
-  const float retractDistance = s_defaultRetractDistance[axis];
+  const float distance = retractDistance < 0 ? s_defaultRetractDistance[axis] : retractDistance;
   if(logging_enabled) {
     SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Retract by: "); SERIAL_ECHOLN(retractDistance);
+    SERIAL_ECHOPGM("Retract by: "); SERIAL_ECHOLN(distance);
   }
   if (s_relativeRawMoveXYZ(
-      axis == X_AXIS ? retractDistance * -direction : 0,
-      axis == Y_AXIS ? retractDistance * -direction : 0,
-      axis == Z_AXIS ? retractDistance * -direction : 0
+      axis == X_AXIS ? distance * -direction : 0,
+      axis == Y_AXIS ? distance * -direction : 0,
+      axis == Z_AXIS ? distance * -direction : 0
     )) {
     return -1;
   }

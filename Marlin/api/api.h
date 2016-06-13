@@ -6,6 +6,7 @@
 const int useDefaultFeedrate = -1;
 const float useDefaultMaxTravel = 9999.9f;
 const bool ignoreDispenseHeight = false;
+const float useDefaultRetractDistance = -1.0f;
 float getDefaultFeedrate();
 
 int outputMovementStatus();
@@ -24,7 +25,7 @@ int raise();
 
 // Measurement
 int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement);
-int retractFromSwitch(int axis, int direction);
+int retractFromSwitch(int axis, int direction, float retractDistance = useDefaultRetractDistance);
 
 // Set planner position
 int setPositionEOnly(float e);
