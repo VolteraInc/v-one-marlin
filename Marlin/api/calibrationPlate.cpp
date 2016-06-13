@@ -48,7 +48,7 @@ int measureProbeDisplacement(float& displacement) {
   SERIAL_ECHOPGM("\n");
 #endif
 
-  if (displacement < 0.015f || displacement > 0.500f) {
+  if (displacement < 0.050f || displacement > 0.500f) {
     SERIAL_ERROR_START;
     SERIAL_ERRORPGM("Unable to measure probe displacement, measured value "); SERIAL_ERROR(displacement);
     SERIAL_ERRORPGM(" is outside of the expected range");
