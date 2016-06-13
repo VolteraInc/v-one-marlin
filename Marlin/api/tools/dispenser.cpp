@@ -3,7 +3,7 @@
 #include "../api.h"
 #include "internal.h"
 
-static float s_dispenseHeight = defaultDispenseHeight;
+static float s_dispenseHeight = dispenseHeightUpperBound;
 
 static int s_alignToReference(Tool tool, const Point2D& reference) {
   // Move the current tool to the reference position
@@ -23,7 +23,6 @@ static int s_alignToReference(Tool tool, const Point2D& reference) {
 }
 
 int prepareDispenser(Tool tool, const Point2D& reference) {
-
   // Ensure homed in Z
   if (!homedZ()) {
     if (homeZ(tool)) {
@@ -53,6 +52,11 @@ float getDispenseHeight(Tool tool) {
 }
 
 int setDispenseHeight(Tool tool, float height) {
+  if (logging_enabled) {
+    SERIAL_ECHOPGM("Dispense height set to "); SERIAL_ECHO(height);
+    SERIAL_ECHOPGM("mm\n");
+  }
+
   // Confirm we have a dispenser
   if (tool != TOOLS_DISPENSER) {
     SERIAL_ERROR_START;
@@ -60,7 +64,15 @@ int setDispenseHeight(Tool tool, float height) {
     return -1;
   }
 
+  if (height < 0.0f || height > dispenseHeightUpperBound ) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORPGM("Unable to set dispensing height to "); SERIAL_ERROR(height);
+    SERIAL_ERRORPGM("mm, value is outside expected range\n");
+    return -1;
+  }
+
   // Set the height
   s_dispenseHeight = height;
+
   return 0;
 }

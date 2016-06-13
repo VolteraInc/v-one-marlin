@@ -139,11 +139,15 @@ int process_vcode(int command_code) {
       return 0;
 
     // Set dispense height
+    // Note: Change will be applied to next movement
     case 102:
-      return setDispenseHeight(
-        tool,
-        code_seen('Z') ? code_value() : defaultDispenseHeight
-      );
+      if (code_seen('Z')) {
+        return setDispenseHeight(tool, code_value());
+      } else {
+        SERIAL_ERROR_START;
+        SERIAL_ERRORPGM("Unable to set dispense height, no value given");
+        return -1;
+      }
 
     //-------------------------------------------
     // Deprecated

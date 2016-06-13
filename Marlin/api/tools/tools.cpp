@@ -109,6 +109,10 @@ int outputToolStatus() {
   SERIAL_ECHOPGM(" trigger status: "); SERIAL_ECHO(probeTriggerStateAsString(readProbeTriggerState()));
   SERIAL_ECHOPGM("\n");
 
+  SERIAL_ECHOPGM("Dispenser ");
+  SERIAL_ECHOPGM(" dispense height: "); SERIAL_ECHO(getDispenseHeight(TOOLS_DISPENSER));
+  SERIAL_ECHOPGM("\n");
+
   SERIAL_ECHOPGM("Homing");
   SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(getHomedState(X_AXIS));
   SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(getHomedState(Y_AXIS));
