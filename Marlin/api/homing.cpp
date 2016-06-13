@@ -122,6 +122,16 @@ static int homeAxis(int axis) {
     goto DONE;
   }
 
+  if (axis == X_AXIS || axis == Y_AXIS) {
+    // Move slightly away from switch
+    // Note: Otherwise we will not be able to go to 0,0 without
+    // hitting a limit switch (and messing up our position)
+    if (retractFromSwitch(axis, home_dir(axis), HOMING_XY_OFFSET)) {
+      goto DONE;
+    }
+  }
+
+  // Set current position as home
   axisIsAtHome(axis);
 
   returnValue = 0;

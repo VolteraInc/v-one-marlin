@@ -81,10 +81,10 @@
 #define VOLTERA_PIN_VERSION 2
 
 //Default Calibration offsets for the Voltera -V-One
-#define MIN_Z_X_POS       (4.93)
-#define MIN_Z_Y_POS       (8.08)
-#define XYPOS_X_POS       (34.53)
-#define XYPOS_Y_POS       (5.08)
+#define MIN_Z_X_POS       (3.84)
+#define MIN_Z_Y_POS       (7.27)
+#define XYPOS_X_POS       (33.45)
+#define XYPOS_Y_POS       (4.29)
 #define CALIB_X_SCALE     (1.0)
 #define CALIB_Y_SCALE     (1.0)
 #define CALIB_COS_THETA   (1.0)
@@ -345,10 +345,13 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
   #define Z_MAX_LENGTH_BEFORE_HOMING 28
 #endif
 
+// Distance to retract from X,Y switches when homing
+#define HOMING_XY_OFFSET 1
+
 // Travel limits after homing
 #define X_MAX_POS 129
 #define X_MIN_POS 0
-#define Y_MAX_POS 165
+#define Y_MAX_POS 157
 #define Y_MIN_POS 0
 
 // This is intentionally 1mm less than the actual axis length (~23mm)
