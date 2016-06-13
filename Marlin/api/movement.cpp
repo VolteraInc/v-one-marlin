@@ -134,11 +134,6 @@ static int s_move(float x, float y, float z, float e, float f) {
   current_position[ Z_AXIS ] = z;
   current_position[ E_AXIS ] = e;
 
-  auto tool = getTool();
-  if (tool == TOOLS_DISPENSER && current_position[ E_AXIS ] >= 0) {
-    current_position[ Z_AXIS ] += getDispenseHeight(tool);
-  }
-
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Move");
@@ -194,7 +189,11 @@ static int s_moveIsSafe(float x, float y, float z) {
   return unsafeInX || unsafeInY || unsafeInZ ? -1 : 0;
 }
 
-int move(Tool tool, float x, float y, float z, float e, float f) {
+int move(Tool tool, float x, float y, float z, float e, float f, bool applyDispenseHeight) {
+  if (applyDispenseHeight && tool == TOOLS_DISPENSER) {
+    z += getDispenseHeight(tool);
+  }
+
   return (
     s_moveIsSafe(x, y, z) ||
     s_move(x, y, z, e, f)
@@ -205,8 +204,8 @@ int moveXY(Tool tool, float x, float y, float f) {
   return move(tool, x, y, current_position[Z_AXIS], current_position[E_AXIS], f);
 }
 
-int moveZ(Tool tool, float z, float f) {
-  return move(tool, current_position[X_AXIS], current_position[Y_AXIS], z, current_position[E_AXIS], f);
+int moveZ(Tool tool, float z, float f, bool applyDispenseHeight) {
+  return move(tool, current_position[X_AXIS], current_position[Y_AXIS], z, current_position[E_AXIS], f, applyDispenseHeight);
 }
 
 int relativeMove(Tool tool, float x, float y, float z, float e, float speed_in_mm_per_min) {

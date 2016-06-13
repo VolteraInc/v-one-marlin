@@ -5,13 +5,14 @@
 // Movement
 const int useDefaultFeedrate = -1;
 const float useDefaultMaxTravel = 9999.9f;
+const bool ignoreDispenseHeight = false;
 int outputMovementStatus();
 float getDefaultFeedrate();
 
 // Absolute movement
-int move(Tool tool, float x, float y, float z, float e, float f);
+int move(Tool tool, float x, float y, float z, float e, float f, bool applyDispenseHeight = true);
 int moveXY(Tool tool, float x, float y, float f = useDefaultFeedrate);
-int moveZ(Tool tool, float z, float f = useDefaultFeedrate);
+int moveZ(Tool tool, float z, float f = useDefaultFeedrate, bool applyDispenseHeight = true);
 
 // Relative movement
 int relativeMove(Tool tool, float x, float y, float z, float e, float f = useDefaultFeedrate);

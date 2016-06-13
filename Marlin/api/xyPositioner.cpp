@@ -10,7 +10,7 @@ int moveToXyPositioner(Tool tool) {
   }
   return (
     moveXY(tool, xypos_x_pos, xypos_y_pos) ||
-    moveZ(tool, XYPOS_Z_POS)
+    moveZ(tool, XYPOS_Z_POS, useDefaultFeedrate, ignoreDispenseHeight)
   );
 }
 
