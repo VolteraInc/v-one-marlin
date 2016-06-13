@@ -23,8 +23,10 @@ int measureProbeDisplacement(float& displacement) {
   }
 
   // Probe the calibration plate
+  // Note: we do not use the standard probe function here because
+  // it would subtract the previously measured displacement (if one exists)
   float probeContactZ;
-  if(probe(probeContactZ)) {
+  if(measureAtSwitch(Z_AXIS, -1, useDefaultMaxTravel, probeContactZ)) {
     return -1;
   }
 
