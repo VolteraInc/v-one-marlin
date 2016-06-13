@@ -78,10 +78,12 @@ int resetToolPreparations() {
   switch (s_tool) {
     case TOOLS_PROBE:
       s_probeReady = false;
+      setDispenseHeight(TOOLS_DISPENSER, 0.0f);
       s_dispenserReady = false;
       setHomedState(Z_AXIS, 0);
       break;
     case TOOLS_DISPENSER:
+      setDispenseHeight(TOOLS_DISPENSER, 0.0f);
       s_dispenserReady = false;
       setHomedState(Z_AXIS, 0);
       break;
