@@ -36,6 +36,11 @@ int prepareToolToMove() {
 
     case TOOLS_DISPENSER:
       if (!s_dispenserReady) {
+        if(!s_probeReady) {
+          SERIAL_ERROR_START;
+          SERIAL_ERRORLNPGM("Unable to prepare dispenser, probe must be prepared first to establish a reference position");
+          return -1;
+        }
         if (prepareDispenser(s_reference)) {
           return -1;
         }
