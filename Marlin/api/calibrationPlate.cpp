@@ -30,13 +30,21 @@ int measureProbeDisplacement(float& displacement) {
     return -1;
   }
 
-  displacement = abs(plateZ - probeContactZ);
+  displacement = plateZ - probeContactZ;
+
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPGM("Measure probe displacement of "); SERIAL_ECHO(displacement);
+    SERIAL_ECHOPGM(" (plateZ="); SERIAL_ECHO(plateZ);
+    SERIAL_ECHOPGM(" probeContactZ="); SERIAL_ECHO(probeContactZ);
+    SERIAL_ECHOPGM(")\n");
+  }
+
 
 #if VOLTERA_PIN_VERSION == 1
-  displacement = 0.05f;
-  SERIAL_ECHOPGM_START;
-  SERIAL_ECHOPGM("This printer does not have a calibration plate, reverting to constant probe displacement of: ");
-  SERIAL_ECHOPGM(displacement);
+  displacement = 0.050f;
+  SERIAL_ECHO_START;
+  SERIAL_ECHOPGM("This printer does not have a calibration plate, reverting to constant probe displacement of: "); SERIAL_ECHO(displacement);
   SERIAL_ECHOPGM("\n");
 #endif
 
