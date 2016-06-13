@@ -3,6 +3,17 @@
 #include "../Marlin.h"
 
 int moveToXyPositioner(Tool tool) {
+  // Make sure we have a probe
+  switch(tool) {
+    case TOOLS_DISPENSER:
+    case TOOLS_PROBE:
+      break;
+    default:
+      SERIAL_ERROR_START;
+      SERIAL_ERRORLNPGM("Unable to move to xy-positioner, no tool attached");
+      return -1;
+  }
+
   // Raise, unless we are really close to the target x,y position
   auto const dx = abs(xypos_x_pos - current_position[X_AXIS]);
   auto const dy = abs(xypos_y_pos - current_position[Y_AXIS]);
