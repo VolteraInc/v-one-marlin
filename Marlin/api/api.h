@@ -6,8 +6,9 @@
 const int useDefaultFeedrate = -1;
 const float useDefaultMaxTravel = 9999.9f;
 const bool ignoreDispenseHeight = false;
-int outputMovementStatus();
 float getDefaultFeedrate();
+
+int outputMovementStatus();
 
 // Absolute movement
 int move(Tool tool, float x, float y, float z, float e, float f, bool applyDispenseHeight = true);
