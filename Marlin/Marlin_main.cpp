@@ -342,6 +342,10 @@ void setup()
     fromsd[i] = false;
   }
 
+  SERIAL_PROTOCOLPGM("firmwareVersionReport: ");
+  SERIAL_PROTOCOLPGM(VERSION_STRING);
+  SERIAL_PROTOCOLPGM("\n");
+
   sendHomedStatusUpdate();
   sendToolStatusUpdate();
 
