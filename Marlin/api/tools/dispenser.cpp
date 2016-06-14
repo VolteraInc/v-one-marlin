@@ -3,7 +3,7 @@
 #include "../api.h"
 #include "internal.h"
 
-static float s_dispenseHeight = dispenseHeightUpperBound;
+static float s_dispenseHeight = 0.0f;
 
 static int s_alignToReference(Tool tool, const Point2D& reference) {
   // Move the current tool to the reference position
@@ -64,7 +64,7 @@ int setDispenseHeight(Tool tool, float height) {
     return -1;
   }
 
-  if (height < 0.0f || height > dispenseHeightUpperBound ) {
+  if (height < 0.0f || height > 2.0f ) {
     SERIAL_ERROR_START;
     SERIAL_ERRORPGM("Unable to set dispensing height to "); SERIAL_ERROR(height);
     SERIAL_ERRORPGM("mm, value is outside expected range\n");

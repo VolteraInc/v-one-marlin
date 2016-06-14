@@ -29,6 +29,5 @@ const char* probeTriggerStateAsString(enum ProbeTriggerStates state);
 float readProbePinVoltage();
 
 // Dispenser
-const float dispenseHeightUpperBound = 2.0f;
 int setDispenseHeight(Tool tool, float height);
 float getDispenseHeight(Tool tool);

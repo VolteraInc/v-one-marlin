@@ -141,7 +141,7 @@ int process_vcode(int command_code) {
     // Set dispense height
     // Note: Change will be applied to next movement
     case 102:
-      return setDispenseHeight(tool, code_seen('Z') ? code_value() : dispenseHeightUpperBound);
+      return setDispenseHeight(tool, code_seen('Z') ? code_value() : 0.0f);
 
     //-------------------------------------------
     // Deprecated
