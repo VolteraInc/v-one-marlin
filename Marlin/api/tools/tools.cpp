@@ -154,6 +154,7 @@ int relativeMove(Tool tool, float x, float y, float z, float e, float speed_in_m
     current_position[ Y_AXIS ] + y,
     current_position[ Z_AXIS ] + z,
     current_position[ E_AXIS ] + e,
-    speed_in_mm_per_min
+    speed_in_mm_per_min,
+    ignoreDispenseHeight
   );
 }
