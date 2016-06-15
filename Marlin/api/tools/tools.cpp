@@ -132,7 +132,7 @@ int outputToolStatus() {
 }
 
 int move(Tool tool, float x, float y, float z, float e, float f, bool applyDispenseHeight) {
-  if (applyDispenseHeight && tool == TOOLS_DISPENSER) {
+  if (applyDispenseHeight) {
     z += getDispenseHeight(tool);
   }
 

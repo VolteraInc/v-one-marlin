@@ -44,9 +44,9 @@ int prepareDispenser(Tool tool, const Point2D& reference) {
 float getDispenseHeight(Tool tool) {
   // Confirm we have a dispenser
   if (tool != TOOLS_DISPENSER) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to get dispensing height, current tool is "); SERIAL_ERRORLN(toolTypeAsString(getTool()));
-    return 5;
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPGM("Warning: dispense height requested for "); SERIAL_ERROR(toolTypeAsString(getTool()));
+    SERIAL_ECHOPGM(" returning "); SERIAL_ECHOLN(s_dispenseHeight);
   }
   return s_dispenseHeight;
 }
