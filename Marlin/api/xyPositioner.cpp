@@ -2,7 +2,7 @@
 
 #include "../Marlin.h"
 
-int moveToXyPositioner(Tool tool) {
+int moveToXyPositioner(Tool tool, bool skipMoveInZ) {
   // Make sure we have a probe
   switch(tool) {
     case TOOLS_DISPENSER:
@@ -23,11 +23,16 @@ int moveToXyPositioner(Tool tool) {
     }
   }
 
-  // Move to xy-positioner
-  return (
-    moveXY(tool, xypos_x_pos, xypos_y_pos) ||
-    moveZ(tool, XYPOS_Z_POS, useDefaultFeedrate, ignoreDispenseHeight)
-  );
+  // Move to xy-positioner's x,y
+  if (moveXY(tool, xypos_x_pos, xypos_y_pos)) {
+    return -1;
+  }
+
+  if (skipMoveInZ) {
+    return 0;
+  }
+
+  return moveZ(tool, XYPOS_Z_POS);
 }
 
 int xyPositionerTouch(Tool tool, int axis, int direction, float& measurement) {
@@ -50,17 +55,12 @@ int xyPositionerTouch(Tool tool, int axis, int direction, float& measurement) {
   return 0;
 }
 
-int xyPositionerFindCenter(Tool tool, long cycles, float& centerX, float& centerY) {
-  // Goto the xy positioner
-  if (moveToXyPositioner(tool)) {
-    return -1;
-  }
-
+static int s_findCenter(Tool tool, long cycles, float& o_centerX, float& o_centerY) {
   // Compute the center
   float measurement1;
   float measurement2;
-  centerX = xypos_x_pos;
-  centerY = xypos_y_pos;
+  auto centerX = xypos_x_pos;
+  auto centerY = xypos_y_pos;
   for (int i=0; i<cycles; ++i) {
     // Compute center X
     if ( moveXY(tool, centerX, centerY) // applies new centerY on 2nd iteration
@@ -107,5 +107,81 @@ int xyPositionerFindCenter(Tool tool, long cycles, float& centerX, float& center
     return -1;
   }
 
+  // Success
+  o_centerX = centerX;
+  o_centerY = centerY;
+  return 0;
+}
+
+int xyPositionerFindCenter(Tool tool, long cycles, float& centerX, float& centerY) {
+  return (
+    moveToXyPositioner(tool) ||
+    s_findCenter(tool, cycles, centerX, centerY)
+  );
+}
+
+int calibrateKeyPositions(Tool tool, long cycles) {
+  // Make sure we have a probe
+  if (tool != TOOLS_PROBE) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORLN("Unable to calibrate positions, probe not attached");
+    return -1;
+  }
+
+  // Home in X and Y
+  // Ensure homed in X, Y
+  if (!homedXY()) {
+    if (homeXY()) {
+      return -1;
+    }
+  }
+
+  // Move to the x,y location of the xy-positioner's
+  // Notes:
+  //   - We use the hardcoded default position, not the stored values, which could be wrong.
+  //   - We skip the Z movement because we have not homed Z. We don't home Z because
+  //     we'd need a reliable hardcoded x,y position for the z-switch, which has proven difficult.
+  //     Meanwhile, the xy-position is more tolerant of inaccuracies in the hardcoded values.
+  if (moveToXyPositioner(tool, skipMoveInZ)) {
+    return -1;
+  }
+
+  // Lower in Z (probe switch should trigger)
+  if (moveToLimit(Z_AXIS, -1)) {
+    return -1;
+  }
+
+  // Retract slightly
+  if (relativeMove(tool, 0, 0, 2, 0)) {
+    return -1;
+  }
+
+  // Find the center
+  float centerX;
+  float centerY;
+  if (s_findCenter(tool, cycles, centerX, centerY)) {
+    return -1;
+  }
+
+  // Set the x,y position of the z-switch
+  min_z_x_pos = centerX + (min_z_x_pos - xypos_x_pos);
+  min_z_y_pos = centerY + (min_z_y_pos - xypos_y_pos);
+
+  // Home Z (uses the new z-switch location)
+  if (homeZ(tool)) {
+    return -1;
+  }
+
+  // Find the center, using the standard algorithm
+  // Note: This will use a hardcoded Z position (unlike the previous call)
+  if (xyPositionerFindCenter(tool, cycles, centerX, centerY)) {
+    return -1;
+  }
+
+  // Set the x,y position of the xy-positioner
+  xypos_x_pos = centerX;
+  xypos_y_pos = centerY;
+
+  // Success
   return 0;
 }

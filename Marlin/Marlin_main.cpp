@@ -218,7 +218,6 @@ float min_z_x_pos;
 float min_z_y_pos;
 float xypos_x_pos;
 float xypos_y_pos;
-float xypos_z_pos = XYPOS_Z_POS;
 char product_serial_number[11];
 const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
 
@@ -548,6 +547,9 @@ void process_commands()
 
   } else if (command_prefix_seen('D')) {
     process_dcode((int)code_value());
+
+  } else if (command_prefix_seen('I')) {
+    process_icode((int)code_value());
 
   } else if(command_prefix_seen('G')) {
     switch((int)code_value())
