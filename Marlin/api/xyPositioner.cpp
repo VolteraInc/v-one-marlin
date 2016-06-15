@@ -50,7 +50,7 @@ int xyPositionerTouch(Tool tool, int axis, int direction, float& measurement) {
   return 0;
 }
 
-int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
+int xyPositionerFindCenter(Tool tool, long cycles, float& centerX, float& centerY) {
   // Goto the xy positioner
   if (moveToXyPositioner(tool)) {
     return -1;
