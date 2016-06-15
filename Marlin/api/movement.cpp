@@ -59,7 +59,7 @@ static float s_maxTravelInAxis(int axis) {
     default:
       SERIAL_ERROR_START;
       SERIAL_ERRORPGM("Unable to determine max travel distance for axis, axis "); SERIAL_ERROR(axis);
-      SERIAL_ERRORPGM(" is not recognized - defaulting to a value of 0");
+      SERIAL_ERRORLNPGM(" is not recognized - defaulting to a value of 0");
       return 0; // Will likely result in an obvious error, which we can fix
   }
 }

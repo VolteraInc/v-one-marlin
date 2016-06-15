@@ -72,7 +72,7 @@ enum ProbeTriggerStates readProbeTriggerState() {
   }
 
   SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Warning: Unable to determine probe trigger state, too much variation in readings.");
+  SERIAL_ECHOLNPGM("Warning: Unable to determine probe trigger state, too much variation in readings.");
   return PROBE_UNKNOWN;
 }
 
