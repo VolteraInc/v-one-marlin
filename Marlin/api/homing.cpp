@@ -4,8 +4,8 @@
 #include "../planner.h"
 #include "../stepper.h"
 
-signed char axis_homed_state[3] = {0, 0, 0};
-float homing_feedrate[] = HOMING_FEEDRATE;
+static signed char axis_homed_state[3] = {0, 0, 0};
+const float homing_feedrate[] = HOMING_FEEDRATE;
 
 
 #define DEFINE_PGM_READ_ANY(type, reader)       \
@@ -85,8 +85,10 @@ static void axisIsAtHome(int axis) {
 
 static int homeAxis(int axis) {
   int returnValue = -1;
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("home axis:"); SERIAL_ECHOLN(axis_codes[axis]);
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPGM("home axis:"); SERIAL_ECHOLN(axis_codes[axis]);
+  }
 
   // Finish any pending moves (prevents crashes)
   st_synchronize();
@@ -159,11 +161,16 @@ int moveToZSwitch() {
   if (!homedXY()) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM("Unable to move to Z-Switch, either the x-axis or the y-axis has not been homed");
+    return -1;
   }
   if (min_z_x_pos != current_position[X_AXIS] || min_z_y_pos != current_position[Y_AXIS]) {
     if (raise()) {
       return -1;
     }
+  }
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPGM("Move to z-switch");
   }
   return moveXY(min_z_x_pos, min_z_y_pos);
 }
