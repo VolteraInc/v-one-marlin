@@ -22,7 +22,8 @@ int process_vcode(int command_code) {
           code_seen('Y') ? code_value() : current_position[ Y_AXIS ],
           code_seen('Z') ? code_value() : current_position[ Z_AXIS ],
           code_seen('E') ? code_value() : current_position[ E_AXIS ],
-          code_seen('F') ? code_value() : getDefaultFeedrate()
+          code_seen('F') ? code_value() : getDefaultFeedrate(),
+          code_seen('D') // apply/ignore dispense height
         );
 
     // Relative move
