@@ -11,9 +11,9 @@ float getDefaultFeedrate();
 int outputMovementStatus();
 
 // Absolute movement
-int move(Tool tool, float x, float y, float z, float e, float f, bool applyDispenseHeight = true);
+int move(Tool tool, float x, float y, float z, float e, float f, bool applyDispenseHeight = ignoreDispenseHeight);
 int moveXY(Tool tool, float x, float y, float f = useDefaultFeedrate);
-int moveZ(Tool tool, float z, float f = useDefaultFeedrate, bool applyDispenseHeight = true);
+int moveZ(Tool tool, float z, float f = useDefaultFeedrate, bool applyDispenseHeight = ignoreDispenseHeight);
 
 // Relative movement
 int relativeMove(Tool tool, float x, float y, float z, float e, float f = useDefaultFeedrate);
