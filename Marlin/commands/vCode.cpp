@@ -110,6 +110,20 @@ int process_vcode(int command_code) {
       }
       return 0;
 
+    // Set current position, relatively
+    case 7:
+      if (code_seen('X') || code_seen('Y') || code_seen('Z')) {
+        return setPosition(
+          code_seen('X') ? current_position[ X_AXIS ] + code_value() : 0,
+          code_seen('Y') ? current_position[ Y_AXIS ] + code_value() : 0,
+          code_seen('Z') ? current_position[ Z_AXIS ] + code_value() : 0,
+          code_seen('E') ? current_position[ E_AXIS ] + code_value() : 0
+        );
+      } else if (code_seen('E')) {
+        return setPositionEOnly(current_position[ E_AXIS ] + code_value());
+      }
+      return 0;
+
     //-------------------------------------------
     // Tool status
     case 100:
@@ -140,6 +154,7 @@ int process_vcode(int command_code) {
       SERIAL_ECHOLN("  V4 - Probe at current position -- V4");
       SERIAL_ECHOLN("  V5 - raise, home XY, and reset tool preparations -- V5");
       SERIAL_ECHOLN("  V6 - override planner's current position -- V6 E0");
+      SERIAL_ECHOLN("  V7 - override planner's current position, relatively -- V7 E-1");
       SERIAL_ECHOLN("");
       SERIAL_ECHOLN("Tool Commands");
       SERIAL_ECHOLN("  V100 - Tool status");
