@@ -193,8 +193,7 @@ void Config_PrintCalibration(){
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Serial No:");
     SERIAL_ECHO_START;
-    SERIAL_ECHO(" M504 S:");
-    SERIAL_ECHOLN(product_serial_number);
+    SERIAL_ECHOPGM(" M504 S:"); SERIAL_ECHOLN(product_serial_number);
 
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Offsets:");
@@ -208,12 +207,9 @@ void Config_PrintCalibration(){
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Scaling and Skew (A in radians):");
     SERIAL_ECHO_START;
-    SERIAL_ECHO("  M506 X");
-    SERIAL_PROTOCOL_F(calib_x_scale, 6);
-    SERIAL_ECHO(" Y");
-    SERIAL_PROTOCOL_F(calib_y_scale, 6);
-    SERIAL_ECHO(" A");
-    SERIAL_PROTOCOL_F(atan(calib_tan_theta),6); //We use atan because it preserves the sign.
+    SERIAL_ECHOPGM("  M506 X"); SERIAL_PROTOCOL_F(calib_x_scale, 6);
+    SERIAL_ECHOPGM(" Y"); SERIAL_PROTOCOL_F(calib_y_scale, 6);
+    SERIAL_ECHOPGM(" A"); SERIAL_PROTOCOL_F(atan(calib_tan_theta),6); //We use atan because it preserves the sign.
     SERIAL_ECHOLN("");
 
 }

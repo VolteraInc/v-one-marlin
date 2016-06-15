@@ -47,11 +47,11 @@ int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
 
     if (logging_enabled){
       SERIAL_ECHO_START;
-      SERIAL_ECHO("xyPositionerCenterX");
-      SERIAL_ECHO(" m1:"); SERIAL_ECHO(measurement1);
-      SERIAL_ECHO(" m2:"); SERIAL_ECHO(measurement2);
-      SERIAL_ECHO(" x:"); SERIAL_ECHO(centerX);
-      SERIAL_ECHO("\n");
+      SERIAL_ECHOPGM("xyPositionerCenterX");
+      SERIAL_ECHOPGM(" m1:"); SERIAL_ECHO(measurement1);
+      SERIAL_ECHOPGM(" m2:"); SERIAL_ECHO(measurement2);
+      SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(centerX);
+      SERIAL_ECHOPGM("\n");
     }
 
     // Compute center Y
@@ -65,11 +65,11 @@ int xyPositionerFindCenter(long cycles, float& centerX, float& centerY) {
 
     if (logging_enabled){
       SERIAL_ECHO_START;
-      SERIAL_ECHO("xyPositionerCenterY");
-      SERIAL_ECHO(" m1:"); SERIAL_ECHO(measurement1);
-      SERIAL_ECHO(" m2:"); SERIAL_ECHO(measurement2);
-      SERIAL_ECHO(" y:"); SERIAL_ECHO(centerY);
-      SERIAL_ECHO("\n");
+      SERIAL_ECHOPGM("xyPositionerCenterY");
+      SERIAL_ECHOPGM(" m1:"); SERIAL_ECHO(measurement1);
+      SERIAL_ECHOPGM(" m2:"); SERIAL_ECHO(measurement2);
+      SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(centerY);
+      SERIAL_ECHOPGM("\n");
     }
 
     // Each cycle takes a non-trivial amount of time so reset the inactivity timer

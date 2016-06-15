@@ -32,18 +32,17 @@ int measureProbeDisplacement(float& displacement) {
 
 #if VOLTERA_PIN_VERSION == 1
   displacement = 0.05f;
-  SERIAL_ECHO_START;
-  SERIAL_ECHO("This printer does not have a calibration plate, reverting to constant probe displacement of: ");
-  SERIAL_ECHO(displacement);
-  SERIAL_ECHO("\n");
+  SERIAL_ECHOPGM_START;
+  SERIAL_ECHOPGM("This printer does not have a calibration plate, reverting to constant probe displacement of: ");
+  SERIAL_ECHOPGM(displacement);
+  SERIAL_ECHOPGM("\n");
 #endif
 
   if (displacement < 0.015f || displacement > 0.500f) {
     SERIAL_ERROR_START;
-    SERIAL_ERROR("Unable to measure probe displacement, measured value ");
-    SERIAL_ERROR(displacement);
-    SERIAL_ERROR(" is outside of the expected range");
-    SERIAL_ERROR("\n");
+    SERIAL_ERRORPGM("Unable to measure probe displacement, measured value "); SERIAL_ERROR(displacement);
+    SERIAL_ERRORPGM(" is outside of the expected range");
+    SERIAL_ERRORPGM("\n");
     return -1;
   }
 

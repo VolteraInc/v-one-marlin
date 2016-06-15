@@ -57,22 +57,22 @@ enum ProbeTriggerStates readProbeTriggerState() {
     if (++count >= 4) {
       if (i + 1 >= reportThreshold) {
         SERIAL_ECHO_START;
-        SERIAL_ECHO("Warning: determine probe trigger state took "); SERIAL_ECHO(i+1);
-        SERIAL_ECHO(" of "); SERIAL_ECHO(maxIterations);
-        SERIAL_ECHOLN(" iterations to resolve.");
+        SERIAL_ECHOPGM("Warning: determine probe trigger state took "); SERIAL_ECHO(i+1);
+        SERIAL_ECHOPGM(" of "); SERIAL_ECHO(maxIterations);
+        SERIAL_ECHOLNPGM(" iterations to resolve.");
       }
       if (logging_enabled) {
         SERIAL_ECHO_START;
-        SERIAL_ECHO("Determined probe trigger state "); SERIAL_ECHO(probeTriggerStateAsString(state));
-        SERIAL_ECHO(" after "); SERIAL_ECHO(i+1);
-        SERIAL_ECHOLN(" iterations");
+        SERIAL_ECHOPGM("Determined probe trigger state "); SERIAL_ECHO(probeTriggerStateAsString(state));
+        SERIAL_ECHOPGM(" after "); SERIAL_ECHO(i+1);
+        SERIAL_ECHOLNPGM(" iterations");
       }
       return state;
     }
   }
 
   SERIAL_ECHO_START;
-  SERIAL_ECHO("Warning: Unable to determine probe trigger state, too much variation in readings.");
+  SERIAL_ECHOLNPGM("Warning: Unable to determine probe trigger state, too much variation in readings.");
   return PROBE_UNKNOWN;
 }
 
@@ -103,7 +103,7 @@ static bool s_probeMounted() {
 int prepareProbe(Point2D& reference) {
   if(!s_probeMounted()) {
     SERIAL_ERROR_START;
-    SERIAL_ERRORLN("Unable to probe, probe not mounted");
+    SERIAL_ERRORLNPGM("Unable to probe, probe not mounted");
     return -1;
   }
 
@@ -137,7 +137,7 @@ int probe(float& measurement) {
 
   if(!s_probeMounted()) {
     SERIAL_ERROR_START;
-    SERIAL_ERRORLN("Unable to probe, probe not mounted");
+    SERIAL_ERRORLNPGM("Unable to probe, probe not mounted");
     return -1;
   }
 
@@ -145,7 +145,7 @@ int probe(float& measurement) {
   // Move to limit
   if (moveToLimit(Z_AXIS, -1) != 0) {
     SERIAL_ERROR_START;
-    SERIAL_ERRORLN("Unable to probe, switch did not trigger");
+    SERIAL_ERRORLNPGM("Unable to probe, switch did not trigger");
     return -1;
   }
 
@@ -153,9 +153,9 @@ int probe(float& measurement) {
   measurement = current_position[Z_AXIS] + s_probeDisplacement;
   if (logging_enabled) {
     SERIAL_ECHO_START;
-    SERIAL_ECHO("probe height: "); SERIAL_ECHOLN(current_position[Z_AXIS]);
-    SERIAL_ECHO("probe displacement: "); SERIAL_ECHOLN(s_probeDisplacement);
-    SERIAL_ECHO("probe measurement: "); SERIAL_ECHOLN(measurement);
+    SERIAL_ECHOPGM("probe height: "); SERIAL_ECHOLN(current_position[Z_AXIS]);
+    SERIAL_ECHOPGM("probe displacement: "); SERIAL_ECHOLN(s_probeDisplacement);
+    SERIAL_ECHOPGM("probe measurement: "); SERIAL_ECHOLN(measurement);
   }
   return 0;
 }

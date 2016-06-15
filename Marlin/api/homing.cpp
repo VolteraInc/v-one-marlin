@@ -52,11 +52,11 @@ void setHomedState(int axis, int value) {
 }
 
 void sendHomedStatusUpdate() {
-  SERIAL_PROTOCOL("homedStatusUpdate");
-  SERIAL_PROTOCOL(" x:"); SERIAL_PROTOCOL(getHomedState(X_AXIS));
-  SERIAL_PROTOCOL(" y:"); SERIAL_PROTOCOL(getHomedState(Y_AXIS));
-  SERIAL_PROTOCOL(" z:"); SERIAL_PROTOCOL(getHomedState(Z_AXIS));
-  SERIAL_PROTOCOL("\n");
+  SERIAL_PROTOCOLPGM("homedStatusUpdate");
+  SERIAL_PROTOCOLPGM(" x:"); SERIAL_PROTOCOL(getHomedState(X_AXIS));
+  SERIAL_PROTOCOLPGM(" y:"); SERIAL_PROTOCOL(getHomedState(Y_AXIS));
+  SERIAL_PROTOCOLPGM(" z:"); SERIAL_PROTOCOL(getHomedState(Z_AXIS));
+  SERIAL_PROTOCOLPGM("\n");
 }
 
 static void axisIsAtHome(int axis) {
@@ -73,21 +73,20 @@ static void axisIsAtHome(int axis) {
 
   if (logging_enabled) {
     SERIAL_ECHO_START;
-    SERIAL_ECHO("Homed "); SERIAL_ECHO(axis_codes[axis]); SERIAL_ERROR("-axis");
-    SERIAL_ECHO(" base_home_pos:"); SERIAL_ECHO(base_home_pos(axis));
-    SERIAL_ECHO(" base_min_pos:"); SERIAL_ECHO(base_min_pos(axis));
-    SERIAL_ECHO(" current_position:"); SERIAL_ECHO(current_position[axis]);
-    SERIAL_ECHO(" base_min_pos:"); SERIAL_ECHO(base_min_pos(axis));
-    SERIAL_ECHO(" base_max_pos:"); SERIAL_ECHO(base_max_pos(axis));
-    SERIAL_ECHO("\n");
+    SERIAL_ECHOPGM("Homed "); SERIAL_ECHO(axis_codes[axis]); SERIAL_ERRORPGM("-axis");
+    SERIAL_ECHOPGM(" base_home_pos:"); SERIAL_ECHO(base_home_pos(axis));
+    SERIAL_ECHOPGM(" base_min_pos:"); SERIAL_ECHO(base_min_pos(axis));
+    SERIAL_ECHOPGM(" current_position:"); SERIAL_ECHO(current_position[axis]);
+    SERIAL_ECHOPGM(" base_min_pos:"); SERIAL_ECHO(base_min_pos(axis));
+    SERIAL_ECHOPGM(" base_max_pos:"); SERIAL_ECHO(base_max_pos(axis));
+    SERIAL_ECHOPGM("\n");
   }
 }
 
 static int homeAxis(int axis) {
   int returnValue = -1;
   SERIAL_ECHO_START;
-  SERIAL_ECHO("home axis:"); SERIAL_ECHO(axis_codes[axis]);
-  SERIAL_ECHO("\n");
+  SERIAL_ECHOPGM("home axis:"); SERIAL_ECHOLN(axis_codes[axis]);
 
   // Finish any pending moves (prevents crashes)
   st_synchronize();
@@ -159,7 +158,7 @@ int home(bool homingX, bool homingY, bool homingZ) {
 int moveToZSwitch() {
   if (!homedXY()) {
     SERIAL_ERROR_START;
-    SERIAL_ERROR("Unable to move to Z-Switch, either the x-axis or the y-axis has not been homed");
+    SERIAL_ERRORLNPGM("Unable to move to Z-Switch, either the x-axis or the y-axis has not been homed");
   }
   if (min_z_x_pos != current_position[X_AXIS] || min_z_y_pos != current_position[Y_AXIS]) {
     if (raise()) {
@@ -188,7 +187,7 @@ int homeZ() {
 
   if (logging_enabled) {
     SERIAL_ECHO_START;
-    SERIAL_ECHO("setting soft limit max-z to "); SERIAL_ECHOLN(max_pos[Z_AXIS]);
+    SERIAL_ECHOPGM("setting soft limit max-z to "); SERIAL_ECHOLN(max_pos[Z_AXIS]);
   }
 
   return 0;
