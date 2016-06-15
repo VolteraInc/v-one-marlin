@@ -4,6 +4,8 @@
 #include "../planner.h"
 #include "../stepper.h"
 
+#include "internal.h"
+
 static const float s_defaultRetractDistance[] = {
   X_HOME_RETRACT_MM,
   Y_HOME_RETRACT_MM,
@@ -126,7 +128,45 @@ float getDefaultFeedrate() {
   );
 }
 
-static int s_move(float x, float y, float z, float e, float f) {
+static bool s_moveIsUnsafeInAxis(int axis, float value) {
+  // Treat moves prior to homing as safe.
+  // Note: We could perform some checks, but there's little value to the user
+  if (!getHomedState(axis)) {
+    return false;
+  }
+
+  // Treat no movement as safe
+  // Note: This can also trip if the fudge factor on the z-max is too small
+  if (current_position[axis] == value) {
+    return false;
+  }
+
+  // Out-of-bounds movements are unsafe
+  if (value < min_pos[axis] || value > max_pos[axis]) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORPGM("Unable to move to "); SERIAL_ERROR(value);
+    SERIAL_ERRORPGM(" in "); SERIAL_ERROR(axis_codes[axis]);
+    SERIAL_ERRORPGM("-axis, position falls outside of safe bounds\n");
+    return true;
+  }
+
+  // Movement is safe
+  return false;
+}
+
+static bool s_moveIsUnsafe(float x, float y, float z) {
+  return (
+    s_moveIsUnsafeInAxis( X_AXIS, x ) ||
+    s_moveIsUnsafeInAxis( Y_AXIS, y ) ||
+    s_moveIsUnsafeInAxis( Z_AXIS, z )
+  );
+}
+
+int rawMove(float x, float y, float z, float e, float f, bool confirmMoveIsSafe) {
+  if (confirmMoveIsSafe && s_moveIsUnsafe(x, y, z)) {
+    return -1;
+  }
+
   const float speed_in_mm_per_min = f < 0 ? getDefaultFeedrate() : f;
 
   current_position[ X_AXIS ] = x;
@@ -156,61 +196,14 @@ static int s_move(float x, float y, float z, float e, float f) {
   return 0;
 }
 
-static bool s_moveIsUnsafeInAxis(int axis, float value) {
-  // Treat moves prior to homing as safe.
-  // Note: We could perform some checks, but there's little value to the user
-  if (!getHomedState(axis)) {
-    return false;
-  }
-
-  // Treat no movement as safe
-  // Note: This can also trip if the fudge factor on the z-max is too small
-  if (current_position[axis] == value) {
-    return false;
-  }
-
-  // Out-of-bounds movements are unsafe
-  if (value < min_pos[axis] || value > max_pos[axis]) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to move to "); SERIAL_ERROR(value);
-    SERIAL_ERRORPGM(" in "); SERIAL_ERROR(axis_codes[axis]);
-    SERIAL_ERRORPGM("-axis, position falls outside of safe bounds\n");
-    return true;
-  }
-
-  // Movement is safe
-  return false;
-}
-
-static int s_moveIsSafe(float x, float y, float z) {
-  bool unsafeInX = s_moveIsUnsafeInAxis( X_AXIS, x );
-  bool unsafeInY = s_moveIsUnsafeInAxis( Y_AXIS, y );
-  bool unsafeInZ = s_moveIsUnsafeInAxis( Z_AXIS, z );
-  return unsafeInX || unsafeInY || unsafeInZ ? -1 : 0;
-}
-
-int move(float x, float y, float z, float e, float f) {
-  return (
-    s_moveIsSafe(x, y, z) ||
-    s_move(x, y, z, e, f)
-  );
-}
-
-int moveXY(float x, float y, float f) {
-  return move(x, y, current_position[Z_AXIS], current_position[E_AXIS], f);
-}
-
-int moveZ(float z, float f) {
-  return move(current_position[X_AXIS], current_position[Y_AXIS], z, current_position[E_AXIS], f);
-}
-
-int relativeMove(float x, float y, float z, float e, float speed_in_mm_per_min) {
-  return move(
+static int s_relativeRawMoveXYZ(float x, float y, float z, float speed_in_mm_per_min = useDefaultFeedrate, bool confirmMoveIsSafe = true) {
+  return rawMove(
     current_position[ X_AXIS ] + x,
     current_position[ Y_AXIS ] + y,
     current_position[ Z_AXIS ] + z,
-    current_position[ E_AXIS ] + e,
-    speed_in_mm_per_min
+    current_position[ E_AXIS ],
+    speed_in_mm_per_min,
+    confirmMoveIsSafe
   );
 }
 
@@ -223,12 +216,12 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
   const auto clampedMaxTravel = min(maxTravel, s_maxTravelInAxis(axis));
   const auto travel = direction < 0 ? -clampedMaxTravel : clampedMaxTravel;
   const float clampedSpeed = f < 0 ? homing_feedrate[axis] : min(f, homing_feedrate[axis]);
-  if (s_move(
-      current_position[ X_AXIS ] + (axis == X_AXIS ? travel : 0.0f),
-      current_position[ Y_AXIS ] + (axis == Y_AXIS ? travel : 0.0f),
-      current_position[ Z_AXIS ] + (axis == Z_AXIS ? travel : 0.0f),
-      0.0f,
-      clampedSpeed
+  if (s_relativeRawMoveXYZ(
+      axis == X_AXIS ? travel : 0.0f,
+      axis == Y_AXIS ? travel : 0.0f,
+      axis == Z_AXIS ? travel : 0.0f,
+      clampedSpeed,
+      skipMovementSafetyCheck
     )) {
     return -1;
   }
@@ -262,11 +255,10 @@ int retractFromSwitch(int axis, int direction) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Retract by: "); SERIAL_ECHOLN(retractDistance);
   }
-  if (relativeMove(
+  if (s_relativeRawMoveXYZ(
       axis == X_AXIS ? retractDistance * -direction : 0,
       axis == Y_AXIS ? retractDistance * -direction : 0,
-      axis == Z_AXIS ? retractDistance * -direction : 0,
-      0
+      axis == Z_AXIS ? retractDistance * -direction : 0
     )) {
     return -1;
   }

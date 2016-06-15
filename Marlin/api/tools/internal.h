@@ -5,5 +5,5 @@ struct Point2D {
   float y = 0.0f;
 };
 
-int prepareProbe(Point2D& reference);
-int prepareDispenser(const Point2D& reference);
+int prepareProbe(Tool tool, Point2D& reference);
+int prepareDispenser(Tool tool, const Point2D& reference);
