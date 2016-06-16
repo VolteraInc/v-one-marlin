@@ -239,7 +239,6 @@ static int buflen = 0;
 //static int i = 0;
 static char serial_char;
 static int serial_count = 0;
-static boolean comment_mode = false;
 
 //static float tt = 0;
 //static float bt = 0;
@@ -441,16 +440,12 @@ void get_command()
     serial_char = MYSERIAL.read();
     if(serial_char == '\n' ||
        serial_char == '\r' ||
-       (serial_char == ':' && comment_mode == false) ||
        serial_count >= (MAX_CMD_SIZE - 1) )
     {
       if(!serial_count) { //if empty line
-        comment_mode = false; //for new command
         return;
       }
       cmdbuffer[bufindw][serial_count] = 0; //terminate string
-      if(!comment_mode){
-        comment_mode = false; //for new command
         fromsd[bufindw] = false;
         if(strchr(cmdbuffer[bufindw], 'N') != NULL)
         {
@@ -528,13 +523,12 @@ void get_command()
         }
         bufindw = (bufindw + 1)%BUFSIZE;
         buflen += 1;
-      }
+
       serial_count = 0; //clear buffer
     }
     else
     {
-      if(serial_char == ';') comment_mode = true;
-      if(!comment_mode) cmdbuffer[bufindw][serial_count++] = serial_char;
+      cmdbuffer[bufindw][serial_count++] = serial_char;
     }
   }
 }
