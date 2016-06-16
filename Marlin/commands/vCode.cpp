@@ -117,10 +117,10 @@ int process_vcode(int command_code) {
     case 7:
       if (code_seen('X') || code_seen('Y') || code_seen('Z')) {
         return setPosition(
-          code_seen('X') ? current_position[ X_AXIS ] + code_value() : 0,
-          code_seen('Y') ? current_position[ Y_AXIS ] + code_value() : 0,
-          code_seen('Z') ? current_position[ Z_AXIS ] + code_value() : 0,
-          code_seen('E') ? current_position[ E_AXIS ] + code_value() : 0
+          current_position[ X_AXIS ] + code_seen('X') ? code_value() : 0,
+          current_position[ Y_AXIS ] + code_seen('Y') ? code_value() : 0,
+          current_position[ Z_AXIS ] + code_seen('Z') ? code_value() : 0,
+          current_position[ E_AXIS ] + code_seen('E') ? code_value() : 0
         );
       } else if (code_seen('E')) {
         return setPositionEOnly(current_position[ E_AXIS ] + code_value());
