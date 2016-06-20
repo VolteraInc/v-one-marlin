@@ -6,7 +6,6 @@
 #include "internal.h"
 
 static Tool s_tool = TOOLS_NONE;
-static Point2D s_reference;
 
 static bool s_probeReady = false;
 static bool s_dispenserReady = false;
@@ -29,7 +28,7 @@ int prepareToolToMove(Tool tool) {
   switch (tool) {
     case TOOLS_PROBE:
       if (!s_probeReady) {
-        if (prepareProbe(tool, s_reference)) {
+        if (prepareProbe(tool)) {
           return -1;
         }
         s_probeReady = true;
@@ -38,12 +37,7 @@ int prepareToolToMove(Tool tool) {
 
     case TOOLS_DISPENSER:
       if (!s_dispenserReady) {
-        if(!s_probeReady) {
-          SERIAL_ERROR_START;
-          SERIAL_ERRORLNPGM("Unable to prepare dispenser, probe must be prepared first to establish a reference position");
-          return -1;
-        }
-        if (prepareDispenser(tool, s_reference)) {
+        if (prepareDispenser(tool)) {
           return -1;
         }
         s_dispenserReady = true;
@@ -121,11 +115,9 @@ int outputToolStatus() {
   SERIAL_ECHOPGM(" z:"); SERIAL_ECHO(getHomedState(Z_AXIS));
   SERIAL_ECHOPGM("\n");
 
-  SERIAL_ECHOPGM("Reference ");
+  SERIAL_ECHOPGM("Status");
   SERIAL_ECHOPGM(" Probe Ready:"); SERIAL_ECHO(s_probeReady);
   SERIAL_ECHOPGM(" Dispenser Ready:"); SERIAL_ECHO(s_dispenserReady);
-  SERIAL_ECHOPGM(" reference.x:"); SERIAL_ECHO(s_reference.x);
-  SERIAL_ECHOPGM(" reference.y:"); SERIAL_ECHO(s_reference.y);
   SERIAL_ECHOPGM("\n");
 
   return 0;
