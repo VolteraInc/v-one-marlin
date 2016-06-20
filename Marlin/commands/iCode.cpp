@@ -42,11 +42,9 @@ int process_icode(int command_code) {
       SERIAL_PROTOCOLPGM(" zSwitch_y:"); SERIAL_PROTOCOL(min_z_y_pos);
       SERIAL_PROTOCOLPGM("\n");
 
-      if (code_seen('S')) {
-        SERIAL_PROTOCOLLNPGM("Storing settings...");
-        Config_StoreCalibration();
-        Config_RetrieveCalibration();
-      }
+      SERIAL_PROTOCOLLNPGM("Storing settings...");
+      Config_StoreCalibration();
+      Config_RetrieveCalibration();
 
       Config_PrintCalibration();
 
