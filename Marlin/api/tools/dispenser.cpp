@@ -5,24 +5,13 @@
 
 static float s_dispenseHeight = 0.0f;
 
-static int s_alignToReference(Tool tool, const Point2D& reference) {
-  // Move the current tool to the reference position
-  // i.e. the center of the xy-positioner.
-  Point2D toolPosition;
-  if (xyPositionerFindCenter(tool, defaultXyPositionerCycles, toolPosition.x, toolPosition.y)) {
+int prepareDispenser(Tool tool) {
+  if(probeMounted()) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORLNPGM("Unable to prepare dispenser, the probe is mounted");
     return -1;
   }
 
-  // The tip of the tool is currently at the center of the xy-positioner
-  // Override the current position
-  current_position[X_AXIS] = reference.x;
-  current_position[Y_AXIS] = reference.y;
-  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-
-  return 0;
-}
-
-int prepareDispenser(Tool tool, const Point2D& reference) {
   // Ensure homed in Z
   if (!homedZ()) {
     if (homeZ(tool)) {
@@ -30,10 +19,26 @@ int prepareDispenser(Tool tool, const Point2D& reference) {
     }
   }
 
-  // Measure the center of the xy-positioner to compensate for the dispenser's offset
-  if (s_alignToReference(tool, reference)) {
+  Point2D toolPosition;
+  if (xyPositionerFindCenter(tool, defaultXyPositionerCycles, toolPosition.x, toolPosition.y)) {
     return -1;
   }
+
+  auto const dx = abs(xypos_x_pos - toolPosition.x);
+  auto const dy = abs(xypos_y_pos - toolPosition.y);
+
+  if(dx > 1 || dy > 1){
+    SERIAL_ERROR_START;
+    SERIAL_ERRORPGM("Calculated XY center is very different than calibrated. ");
+    SERIAL_ERRORPGM("Calibrated X: "); SERIAL_ERROR(xypos_x_pos);
+    SERIAL_ERRORPGM(" Y: "); SERIAL_ERROR(xypos_y_pos);
+    SERIAL_ERRORPGM(" Measured X: "); SERIAL_ERROR(toolPosition.x);
+    SERIAL_ERRORPGM(" Y: "); SERIAL_ERRORLN(toolPosition.y);
+    return -1;
+  }
+
+  // Overwrite the current position with constant position.
+  setPosition(xypos_x_pos, xypos_y_pos, current_position[Z_AXIS], current_position[E_AXIS]);
 
   if (raise()) {
     return -1;

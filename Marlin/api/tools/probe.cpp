@@ -89,7 +89,7 @@ const char* probeTriggerStateAsString(enum ProbeTriggerStates state) {
   return "UNKNOWN";
 }
 
-static bool s_probeMounted() {
+bool probeMounted() {
   switch (readProbeTriggerState()) {
     case PROBE_TRIGGERED:
     case PROBE_ON: return true;
@@ -100,8 +100,8 @@ static bool s_probeMounted() {
   return false;
 }
 
-int prepareProbe(Tool tool, Point2D& reference) {
-  if(!s_probeMounted()) {
+int prepareProbe(Tool tool) {
+  if(!probeMounted()) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM("Unable to prepare probe, probe not mounted");
     return -1;
@@ -114,10 +114,26 @@ int prepareProbe(Tool tool, Point2D& reference) {
     }
   }
 
-  // Record the center of the xy-positioner for use as a references
-  if (xyPositionerFindCenter(tool, defaultXyPositionerCycles, reference.x, reference.y)) {
+  Point2D toolPosition;
+  if (xyPositionerFindCenter(tool, defaultXyPositionerCycles, toolPosition.x, toolPosition.y)) {
     return -1;
   }
+
+  auto const dx = abs(xypos_x_pos - toolPosition.x);
+  auto const dy = abs(xypos_y_pos - toolPosition.y);
+
+  if(dx > 1 || dy > 1){
+    SERIAL_ERROR_START;
+    SERIAL_ERRORPGM("Calculated XY center is very different than calibrated. ");
+    SERIAL_ERRORPGM("Calibrated X: "); SERIAL_ERROR(xypos_x_pos);
+    SERIAL_ERRORPGM(" Y: "); SERIAL_ERROR(xypos_y_pos);
+    SERIAL_ERRORPGM(" Measured X: "); SERIAL_ERROR(toolPosition.x);
+    SERIAL_ERRORPGM(" Y: "); SERIAL_ERRORLN(toolPosition.y);
+    return -1;
+  }
+
+  // Overwrite the current position with constant position.
+  setPosition(xypos_x_pos, xypos_y_pos, current_position[Z_AXIS], current_position[E_AXIS]);
 
   // Record the probe's displacement
   if (measureProbeDisplacement(tool, s_probeDisplacement)) {
@@ -141,7 +157,7 @@ int probe(Tool tool, float& measurement) {
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
-  if(!s_probeMounted()) {
+  if(!probeMounted()) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM("Unable to probe, probe not mounted");
     return -1;
