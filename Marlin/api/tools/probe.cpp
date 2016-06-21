@@ -114,7 +114,6 @@ int prepareProbe(Tool tool) {
     }
   }
 
-  // Record the center of the xy-positioner for use as a references
   Point2D toolPosition;
   if (xyPositionerFindCenter(tool, defaultXyPositionerCycles, toolPosition.x, toolPosition.y)) {
     return -1;
@@ -133,6 +132,8 @@ int prepareProbe(Tool tool) {
     return -1;
   }
 
+  // Overwrite the current position with constant position.
+  setPosition(xypos_x_pos, xypos_y_pos, current_position[Z_AXIS], current_position[E_AXIS]);
 
   // Record the probe's displacement
   if (measureProbeDisplacement(tool, s_probeDisplacement)) {

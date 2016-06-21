@@ -38,9 +38,7 @@ int prepareDispenser(Tool tool) {
   }
 
   // Overwrite the current position with constant position.
-  current_position[X_AXIS] = xypos_x_pos;
-  current_position[Y_AXIS] = xypos_y_pos;
-  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+  setPosition(xypos_x_pos, xypos_y_pos, current_position[Z_AXIS], current_position[E_AXIS]);
 
   if (raise()) {
     return -1;
