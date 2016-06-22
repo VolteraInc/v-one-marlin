@@ -98,26 +98,26 @@ const char* toolTypeAsString(Tool tool) {
 
 int outputToolStatus() {
   SERIAL_ECHOPGM("Tool");
-  SERIAL_ECHOPGM(" type:"); SERIAL_ECHO(toolTypeAsString(s_tool));
+  SERIAL_ECHOPGM(" type:"); SERIAL_ECHOLN(toolTypeAsString(s_tool));
   SERIAL_ECHOPGM("\n");
 
   SERIAL_ECHOPGM("Probe ");
-  SERIAL_ECHOPGM(" trigger status: "); SERIAL_ECHO(probeTriggerStateAsString(readProbeTriggerState()));
+  SERIAL_ECHOPGM(" trigger status: "); SERIAL_ECHOLN(probeTriggerStateAsString(readProbeTriggerState()));
   SERIAL_ECHOPGM("\n");
 
   SERIAL_ECHOPGM("Dispenser ");
-  SERIAL_ECHOPGM(" dispense height: "); SERIAL_ECHO(getDispenseHeight(TOOLS_DISPENSER));
+  SERIAL_ECHOPGM(" dispense height: "); SERIAL_ECHOLN(getDispenseHeight(TOOLS_DISPENSER));
   SERIAL_ECHOPGM("\n");
 
   SERIAL_ECHOPGM("Homing");
-  SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(getHomedState(X_AXIS));
-  SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(getHomedState(Y_AXIS));
-  SERIAL_ECHOPGM(" z:"); SERIAL_ECHO(getHomedState(Z_AXIS));
+  SERIAL_ECHOPGM(" x:"); SERIAL_ECHOLN(getHomedState(X_AXIS));
+  SERIAL_ECHOPGM(" y:"); SERIAL_ECHOLN(getHomedState(Y_AXIS));
+  SERIAL_ECHOPGM(" z:"); SERIAL_ECHOLN(getHomedState(Z_AXIS));
   SERIAL_ECHOPGM("\n");
 
   SERIAL_ECHOPGM("Status");
-  SERIAL_ECHOPGM(" Probe Ready:"); SERIAL_ECHO(s_probeReady);
-  SERIAL_ECHOPGM(" Dispenser Ready:"); SERIAL_ECHO(s_dispenserReady);
+  SERIAL_ECHOPGM(" Probe Ready:"); SERIAL_ECHOLN(s_probeReady);
+  SERIAL_ECHOPGM(" Dispenser Ready:"); SERIAL_ECHOLN(s_dispenserReady);
   SERIAL_ECHOPGM("\n");
 
   return 0;
