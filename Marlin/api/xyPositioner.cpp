@@ -163,9 +163,9 @@ int calibrateKeyPositions(Tool tool, long cycles) {
     return -1;
   }
 
-  // Set the x,y position of the z-switch
-  min_z_x_pos = centerX + (min_z_x_pos - xypos_x_pos);
-  min_z_y_pos = centerY + (min_z_y_pos - xypos_y_pos);
+  // Set the x,y position of the z-switch using hardcoded offset values.
+  min_z_x_pos = centerX - POS_X_OFFSET;
+  min_z_y_pos = centerY + POS_Y_OFFSET;
 
   // Home Z (uses the new z-switch location)
   if (homeZ(tool)) {

@@ -74,17 +74,19 @@
 #define MOTHERBOARD 33
 #endif
 
-// VOLTERA_pinVersion 0 -> version 3 (the one we came back from HAX with)
-// VOLTERA_pinVersion 1 -> What B1 Shipped with
-// VOLTERA_pinVersion 2 -> B2 Prototype
+// VOLTERA_PIN_VERSION 0 -> version 3 (the one we came back from HAX with)
+// VOLTERA_PIN_VERSION 1 -> What B1 Shipped with
+// VOLTERA_PIN_VERSION 2 -> B2 and B3
 #define VOLTERA  1
 #define VOLTERA_PIN_VERSION 2
 
 //Default Calibration offsets for the Voltera -V-One
-#define MIN_Z_X_POS       (2.34)
-#define MIN_Z_Y_POS       (5.77)
+#define MIN_Z_X_POS       (3.84)
+#define MIN_Z_Y_POS       (7.27)
 #define XYPOS_X_POS       (33.45)
 #define XYPOS_Y_POS       (4.29)
+#define POS_X_OFFSET      (29.60) // Distance between center of Min Z and XY Positioner - Taken from PCB and Solidworks CAD files
+#define POS_Y_OFFSET      (2.5)  // Distance between center of Min Z and XY Positioner - Taken from PCB and Solidworks CAD files
 #define CALIB_X_SCALE     (1.0)
 #define CALIB_Y_SCALE     (1.0)
 #define CALIB_COS_THETA   (1.0)
