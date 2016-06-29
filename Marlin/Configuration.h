@@ -81,12 +81,12 @@
 #define VOLTERA_PIN_VERSION 2
 
 //Default Calibration offsets for the Voltera -V-One
-#define MIN_Z_X_POS       (3.84)
-#define MIN_Z_Y_POS       (7.27)
 #define XYPOS_X_POS       (33.45)
 #define XYPOS_Y_POS       (4.29)
-#define POS_X_OFFSET      (29.60) // Distance between center of Min Z and XY Positioner - Taken from PCB and Solidworks CAD files
-#define POS_Y_OFFSET      (2.5)  // Distance between center of Min Z and XY Positioner - Taken from PCB and Solidworks CAD files
+#define OFFSET_FROM_XYPOS_TO_MINZ_X      (-29.60) // Distance between center of Min Z and XY Positioner - Taken from PCB and Solidworks CAD files
+#define OFFSET_FROM_XYPOS_TO_MINZ_Y      (2.5)  // Distance between center of Min Z and XY Positioner - Taken from PCB and Solidworks CAD files
+#define MIN_Z_X_POS       (XYPOS_X_POS + OFFSET_FROM_XYPOS_TO_MINZ_X)
+#define MIN_Z_Y_POS       (XYPOS_Y_POS + OFFSET_FROM_XYPOS_TO_MINZ_Y)
 #define CALIB_X_SCALE     (1.0)
 #define CALIB_Y_SCALE     (1.0)
 #define CALIB_COS_THETA   (1.0)
