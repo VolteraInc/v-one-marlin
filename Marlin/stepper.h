@@ -54,7 +54,7 @@ void st_wake_up();
 
 bool endstop_triggered(int axis);
 
-void checkHitEndstops(); //call from somewhere to create an serial error message with the locations the endstops where hit, in case they were triggered
+bool readAndResetEndstops(bool triggered[3], long stepsWhenTriggered[3]);
 void clear_endstop(int axis);
 
 void enable_calibration_plate(bool enable);
