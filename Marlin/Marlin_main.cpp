@@ -98,7 +98,8 @@ v1.0.1 <- TBD
 // M0   - Unconditional stop - Wait for user to press a button on the LCD (Only if ULTRA_LCD is enabled)
 // M1   - Same as M0
 // M17  - Enable/Power all stepper motors
-// M18  - Disable all stepper motors; same as M84
+// M18  - Disable steppers until next move,
+//        or use S<seconds> to specify an inactivity timeout, after which the steppers will be disabled.  S0 to disable the timeout.
 // M20  - List SD card
 // M21  - Init SD card
 // M22  - Release SD card
@@ -120,8 +121,6 @@ v1.0.1 <- TBD
 // M81  - Turn off Power Supply
 // M82  - Set E codes absolute (default)
 // M83  - Set E codes relative while in Absolute Coordinates (G90) mode
-// M84  - Disable steppers until next move,
-//        or use S<seconds> to specify an inactivity timeout, after which the steppers will be disabled.  S0 to disable the timeout.
 // M85  - Set inactivity shutdown timer with parameter S<seconds>. To disable set zero (default)
 // M92  - Set axis_steps_per_unit - same syntax as G92
 // M93  - Set the RGB LEDs using R[1-255] V[1-255] B[1-255] (uses V instead of G for green)
@@ -1002,31 +1001,19 @@ void process_commands()
     case 83:
       axis_relative_modes[3] = true;
       break;
-    case 18: //compatibility
-      if(code_seen('S')){
+
+    // M18 - Release motors, or set inactivity timeout
+    case 18:
+      if (code_seen('S')) {
         stepper_inactive_time = code_value() * 1000;
-      }
-      else
-      {
+      } else {
+        st_synchronize();
         resetToolPreparations();
-        bool all_axis = !((code_seen(axis_codes[X_AXIS])) || (code_seen(axis_codes[Y_AXIS])) || (code_seen(axis_codes[Z_AXIS]))|| (code_seen(axis_codes[E_AXIS])));
-        if(all_axis)
-        {
-          st_synchronize();
-          finishAndDisableSteppers();
-        }
-        else
-        {
-          st_synchronize();
-          if(code_seen('X')) disable_x();
-          if(code_seen('Y')) disable_y();
-          if(code_seen('Z')) {disable_z();}
-          #if ((E0_ENABLE_PIN != X_ENABLE_PIN) && (E1_ENABLE_PIN != Y_ENABLE_PIN)) // Only enable on boards that have seperate ENABLE_PINS
-            if(code_seen('E')) {
-              disable_e0();
-            }
-          #endif
-        }
+        bool disableAll = !(code_seen('X') || code_seen('Y') || code_seen('Z') || code_seen('E'));
+        if (disableAll || code_seen('X')) disable_x();
+        if (disableAll || code_seen('Y')) disable_y();
+        if (disableAll || code_seen('Z')) disable_z();
+        if (disableAll || code_seen('E')) disable_e0();
       }
       break;
     case 85: // M85

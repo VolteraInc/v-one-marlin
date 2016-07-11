@@ -61,8 +61,6 @@ void enable_calibration_plate(bool enable);
 
 void checkStepperErrors(); //Print errors detected by the stepper
 
-void finishAndDisableSteppers();
-
 void quickStop();
 
 void digiPotInit();
