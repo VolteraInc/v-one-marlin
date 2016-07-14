@@ -1116,6 +1116,15 @@ void process_commands()
       break;
     }
 
+    
+    // reports current voltage on p_top for FSR
+    case 126: {
+      float measurement = analogRead(P_TOP_STATE_PIN) / 1024.0 * 5.0;
+      SERIAL_PROTOCOLPGM("FSR reading: "); SERIAL_PROTOCOL_F(measurement, 2); SERIAL_PROTOCOLPGM("\n");
+      break;
+    }
+
+
     case 119: // M119
       SERIAL_PROTOCOLLN(MSG_M119_REPORT);
       #if defined(X_MIN_PIN) && X_MIN_PIN > -1
@@ -1168,6 +1177,8 @@ void process_commands()
       #endif
       break;
       //TODO: update for all axis, use for loop
+
+
 
     case 200: // M200 D<millimeters> set filament diameter and set E axis units to cubic millimeters (use S0 to set back to millimeters).
       {
