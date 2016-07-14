@@ -155,6 +155,8 @@ unsigned long watchmillis[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0,0,0);
 static struct {
     unsigned long holdUntil = 0;
     unsigned long safetyTimeout = 0;
+    unsigned long changeTimeout = 0;
+    float changeTemperature = 0;
     bool ramping = false;
     bool holding = false;
     int head = 0; // Indicates start of queue.
@@ -454,6 +456,8 @@ void profile_reset() {
   profile.holding = false; //<-- not really required, but reads nicer.
   profile.holdUntil = 0;
   profile.safetyTimeout = 0;
+  profile.changeTimeout = 0;
+  profile.changeTemperature = 0;
   setTargetBed(0);
 }
 
@@ -532,10 +536,19 @@ void manage_heating_profile(){
   // If we are ramping, check temperature and timeout
   if (profile.ramping) {
 
-    // Check if our safety timeout has been exceeeded
+    // Check if our safety timeout has been exceeeded. Looks only at time.
     if (now >= profile.safetyTimeout) {
       SERIAL_ERROR_START;
       SERIAL_ERRORPGM("Failed to reach target temperature within timeout period. Current: "); SERIAL_ERROR(current_temperature_bed);
+      SERIAL_ERRORPGM("C Target: "); SERIAL_ERROR(target_temperature_bed);
+      SERIAL_ERRORPGM("C\n");
+      profile_reset();
+    }
+
+    // Check if the temperature has moved at all during heating. Could indicate a loose/fallen thermistor
+    if (now >= profile.changeTimeout && (target_temperature_bed > current_temperature_bed) && abs(current_temperature_bed - profile.changeTemperature) < 2) {
+      SERIAL_ERROR_START;
+      SERIAL_ERRORPGM("Temperature change not detected. Current: "); SERIAL_ERROR(current_temperature_bed);
       SERIAL_ERRORPGM("C Target: "); SERIAL_ERROR(target_temperature_bed);
       SERIAL_ERRORPGM("C\n");
       profile_reset();
@@ -572,8 +585,10 @@ void manage_heating_profile(){
   }
 
   // If not ramping or holding, set temperature and ramping timeout. Different timeout if we are heating or cooling
-  unsigned long timeout = profile.temperature[profile.head] > current_temperature_bed ? (unsigned long)5*60*1000 : (unsigned long)25*60*1000;
+  unsigned long timeout = profile.temperature[profile.head] > current_temperature_bed ? (unsigned long)3*60*1000 : (unsigned long)25*60*1000;
   profile.safetyTimeout = now + timeout;
+  profile.changeTimeout = now + (unsigned long)10*1000; // 10 seconds to register a change in temperature.
+  profile.changeTemperature = current_temperature_bed; // Take snapshot of current temperature.
   profile.ramping = true;
   setTargetBed(profile.temperature[profile.head]);
 
