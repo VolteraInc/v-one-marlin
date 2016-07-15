@@ -53,11 +53,11 @@ static void s_fixPosition(int axis) {
   clear_endstop(axis);
 }
 
-static float s_maxTravelInAxis(int axis) {
+static float s_maxTravelInAxis(int axis, int direction) {
   switch(axis) {
     case X_AXIS: return getHomedState(X_AXIS) ? X_MAX_LENGTH : X_MAX_LENGTH_BEFORE_HOMING;
     case Y_AXIS: return getHomedState(Y_AXIS) ? Y_MAX_LENGTH : Y_MAX_LENGTH_BEFORE_HOMING;
-    case Z_AXIS: return getHomedState(Z_AXIS) ? Z_MAX_LENGTH : Z_MAX_LENGTH_BEFORE_HOMING;
+    case Z_AXIS: return getHomedState(Z_AXIS) ? Z_MAX_LENGTH : (direction < 0 ? Z_MAX_TRAVEL_DOWN_BEFORE_HOMING : Z_MAX_TRAVEL_UP_BEFORE_HOMING);
     default:
       SERIAL_ERROR_START;
       SERIAL_ERRORPGM("Unable to determine max travel distance for axis, axis "); SERIAL_ERROR(axis);
@@ -213,7 +213,7 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
   clear_endstop(axis);
 
   // Move
-  const auto clampedMaxTravel = min(maxTravel, s_maxTravelInAxis(axis));
+  const auto clampedMaxTravel = min(maxTravel, s_maxTravelInAxis(axis, direction));
   const auto travel = direction < 0 ? -clampedMaxTravel : clampedMaxTravel;
   const float clampedSpeed = f < 0 ? homing_feedrate[axis] : min(f, homing_feedrate[axis]);
   if (s_relativeRawMoveXYZ(
@@ -311,4 +311,3 @@ int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement
   }
   return 0;
 }
-

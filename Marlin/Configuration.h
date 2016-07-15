@@ -344,7 +344,8 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #else
   #define X_MAX_LENGTH_BEFORE_HOMING 134
   #define Y_MAX_LENGTH_BEFORE_HOMING 160
-  #define Z_MAX_LENGTH_BEFORE_HOMING 28
+  #define Z_MAX_TRAVEL_DOWN_BEFORE_HOMING 22 // so we don't hit the bottom of the carriage
+  #define Z_MAX_TRAVEL_UP_BEFORE_HOMING 28 // so we can climb out of the xy-positioner
 #endif
 
 // Distance to retract from X,Y switches when homing
