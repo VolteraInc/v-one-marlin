@@ -1679,7 +1679,7 @@ void handle_glow_leds(){
   (in order of precedence)
   White                     - No Connection or Not homed
   Ready                     - Green (Motors Engaged)
-  Receiving motion commands - Purple (30s since last command)
+  Receiving motion commands - Purple (45s since last command)
   Bed temp falling (M190)   - Blue
   Bed temp rising (M190)    - Orange
   Bed temp >= 50degC        - Red
@@ -1710,7 +1710,7 @@ void handle_glow_leds(){
       glow_led_states[2] = 0;
     }
     glow_led_pace = TEMP_PACE_CURVE;
-  } else if ((now - previous_millis_serial_rx) < (unsigned long)30*1000 && previous_millis_serial_rx) {
+  } else if ((now - previous_millis_serial_rx) < (unsigned long)45*1000 && previous_millis_serial_rx) {
     glow_led_states[0] = 255;
     glow_led_states[1] = 0;
     glow_led_states[2] = 255;
