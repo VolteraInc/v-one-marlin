@@ -121,7 +121,6 @@ v1.0.1 <- TBD
 // M81  - Turn off Power Supply
 // M82  - Set E codes absolute (default)
 // M83  - Set E codes relative while in Absolute Coordinates (G90) mode
-// M85  - Set inactivity shutdown timer with parameter S<seconds>. To disable set zero (default)
 // M92  - Set axis_steps_per_unit - same syntax as G92
 // M93  - Set the RGB LEDs using R[1-255] V[1-255] B[1-255] (uses V instead of G for green)
 // M104 - Set extruder target temp
@@ -246,7 +245,7 @@ static int serial_count = 0;
 static unsigned long previous_millis_serial_rx = 0;
 
 // After this long without serial traffic *and* no movement, everything shuts down
-static unsigned long max_no_serial_no_movement_time = 60000;
+static unsigned long heater_inactive_time = DEFAULT_HEATER_DEACTIVE_TIME*1000l;
 static unsigned long stepper_inactive_time = DEFAULT_STEPPER_DEACTIVE_TIME*1000l;
 
 unsigned long starttime=0;
@@ -1016,10 +1015,6 @@ void process_commands()
         if (disableAll || code_seen('E')) disable_e0();
       }
       break;
-    case 85: // M85
-      code_seen('S');
-      max_no_serial_no_movement_time = code_value() * 1000;
-      break;
     case 92: // M92
       for(int8_t i=0; i < NUM_AXIS; i++)
       {
@@ -1627,36 +1622,27 @@ void manage_inactivity()
     // Schedule next check
     nextCheckAt += 1000;
 
-    if(stepper_inactive_time)  {
-      if( (now - previous_millis_active_cmd) >  stepper_inactive_time ){
-        if(blocks_queued() == false){
-          refresh_cmd_timeout();
-          SERIAL_ECHO_START;
-          SERIAL_ECHOPGM("The stepper has been inactive for more than "); SERIAL_ECHO(stepper_inactive_time);
-          SERIAL_ECHOPGM("ms, deactivating motors\n");
-          disable_x();
-          disable_y();
-          disable_z();
-          disable_e0();
-          resetToolPreparations();
-        }
-      }
-    }
-
-    // Power down everything if serial traffic has stopped in addition to a lack of movement
-    if (!stepper_inactive_time || !previous_millis_active_cmd || (now - previous_millis_active_cmd) >  stepper_inactive_time) {
-      if (now - previous_millis_serial_rx > max_no_serial_no_movement_time && previous_millis_serial_rx && max_no_serial_no_movement_time) {
-        previous_millis_serial_rx = now;
+    if((now - previous_millis_active_cmd) >  stepper_inactive_time && stepper_inactive_time){
+      if(blocks_queued() == false){
+        refresh_cmd_timeout(); // Reseting timeout stops us from constantly checking.
         SERIAL_ECHO_START;
-        SERIAL_ECHOPGM("No communication for more than "); SERIAL_ECHO(max_no_serial_no_movement_time);
-        SERIAL_ECHOPGM("ms, deactivating motors and heater\n");
+        SERIAL_ECHOPGM("The stepper has been inactive for more than "); SERIAL_ECHO(stepper_inactive_time);
+        SERIAL_ECHOPGM("ms, deactivating motors\n");
         disable_x();
         disable_y();
         disable_z();
         disable_e0();
-        disable_heater();
         resetToolPreparations();
       }
+    }
+
+    // If we've been waiting for ~1 hour. Kill the heater.
+    if(now - previous_millis_serial_rx > heater_inactive_time && heater_inactive_time) {
+      previous_millis_serial_rx = now; //Resetting timeout stops us from constantly checking
+      SERIAL_ECHO_START;
+      SERIAL_ECHOPGM("No communication for more than "); SERIAL_ECHO(heater_inactive_time);
+      SERIAL_ECHOPGM("ms, deactivating heater\n");
+      disable_heater();
     }
   }
 
@@ -1691,9 +1677,9 @@ void handle_glow_leds(){
 
   /*
   (in order of precedence)
-  White                     - No Connection
-  Idle                      - Green
-  Receiving motion commands - Purple
+  White                     - No Connection or Not homed
+  Ready                     - Green (Motors Engaged)
+  Receiving motion commands - Purple (30s since last command)
   Bed temp falling (M190)   - Blue
   Bed temp rising (M190)    - Orange
   Bed temp >= 50degC        - Red
@@ -1703,6 +1689,8 @@ void handle_glow_leds(){
   */
   bool quick_change = false;
   bool ramp_down_now = false;
+
+  unsigned long now = millis();
 
   float bedTemp = degBed();
   float targetTemp = degTargetBed();
@@ -1722,13 +1710,13 @@ void handle_glow_leds(){
       glow_led_states[2] = 0;
     }
     glow_led_pace = TEMP_PACE_CURVE;
-  } else if (millis() - previous_millis_active_cmd < stepper_inactive_time && previous_millis_active_cmd !=0){
+  } else if ((now - previous_millis_serial_rx) < (unsigned long)30*1000 && previous_millis_serial_rx) {
     glow_led_states[0] = 255;
     glow_led_states[1] = 0;
     glow_led_states[2] = 255;
     glow_led_pace = 30;
     quick_change = true;
-  } else if (glow_force_green || (millis() - previous_millis_serial_rx < 1000 && previous_millis_serial_rx != 0)) {
+  } else if (glow_force_green || (now - previous_millis_serial_rx) < stepper_inactive_time && previous_millis_serial_rx) {
     glow_led_states[0] = 0;
     glow_led_states[1] = 255;
     glow_led_states[2] = 0;
@@ -1747,8 +1735,8 @@ void handle_glow_leds(){
     ramp_down_now = true;
   }
 
-  if ((millis() - glow_led_last_tick) > glow_led_pace) {
-    glow_led_last_tick = millis();
+  if ((now - glow_led_last_tick) > glow_led_pace) {
+    glow_led_last_tick = now;
     if (glow_led_counter == 0) {
       // To avoid abrupt changes, we wait for zero-crossing before updating the actual state (_hold) from the input
       memcpy(glow_led_states_hold, glow_led_states, sizeof(glow_led_states));

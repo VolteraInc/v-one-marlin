@@ -174,8 +174,9 @@
 #define INVERT_Z_STEP_PIN false
 #define INVERT_E_STEP_PIN false
 
-//default stepper release if idle
-#define DEFAULT_STEPPER_DEACTIVE_TIME (5*60)
+//default stepper release if idle, default heater timeout if idle
+#define DEFAULT_STEPPER_DEACTIVE_TIME (5*60) // 5 mins
+#define DEFAULT_HEATER_DEACTIVE_TIME (60*60) // 60 mins
 
 #define DEFAULT_MINIMUMFEEDRATE       0.0     // minimum feedrate
 #define DEFAULT_MINTRAVELFEEDRATE     0.0
