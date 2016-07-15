@@ -177,45 +177,33 @@ bool endstop_triggered(int axis) {
   return triggered;
 }
 
-void checkHitEndstops()
+/// Returns true if an endstop was hit
+bool readAndResetEndstops(bool triggered[3], long stepsWhenTriggered[3])
 {
-  decltype(endstops_trigsteps) trigsteps;
   CRITICAL_SECTION_START;
-    bool x_hit = endstop_x_hit;
-    bool y_hit = endstop_y_hit;
-    bool z_hit = endstop_z_hit;
-    trigsteps[ X_AXIS ] = endstops_trigsteps[ X_AXIS ];
-    trigsteps[ Y_AXIS ] = endstops_trigsteps[ Y_AXIS ];
-    trigsteps[ Z_AXIS ] = endstops_trigsteps[ Z_AXIS ];
+    // Read and reset hit flags
+    triggered[ X_AXIS ] = endstop_x_hit;
+    triggered[ Y_AXIS ] = endstop_y_hit;
+    triggered[ Z_AXIS ] = endstop_z_hit;
     endstop_x_hit = false;
     endstop_y_hit = false;
     endstop_z_hit = false;
+
+    // Read and reset stepper location when triggered
+    stepsWhenTriggered[ X_AXIS ] = endstops_trigsteps[ X_AXIS ];
+    stepsWhenTriggered[ Y_AXIS ] = endstops_trigsteps[ Y_AXIS ];
+    stepsWhenTriggered[ Z_AXIS ] = endstops_trigsteps[ Z_AXIS ];
+    endstops_trigsteps[ X_AXIS ] = 0;
+    endstops_trigsteps[ Y_AXIS ] = 0;
+    endstops_trigsteps[ Z_AXIS ] = 0;
+
   CRITICAL_SECTION_END;
 
-  if (x_hit || y_hit || z_hit) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to complete movement, limit switch triggered. Motion stopped at");
-    if (x_hit) {
-      SERIAL_ERRORPGM(" x:"); SERIAL_ERROR((float)trigsteps[X_AXIS] / axis_steps_per_unit[X_AXIS]);
-    }
-    if (y_hit) {
-      SERIAL_ERRORPGM(" y:"); SERIAL_ERROR((float)trigsteps[Y_AXIS] / axis_steps_per_unit[Y_AXIS]);
-    }
-    if (z_hit) {
-      SERIAL_ERRORPGM(" z:"); SERIAL_ERROR((float)trigsteps[Z_AXIS] / axis_steps_per_unit[Z_AXIS]);
-    }
-    SERIAL_ECHOPGM("\n");
-#ifdef ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED //TODO-REMOVE?
-    if (abort_on_endstop_hit) {
-      card.sdprinting = false;
-      card.closefile();
-      quickStop();
-      setTargetHotend0(0);
-      setTargetHotend1(0);
-      setTargetHotend2(0);
-    }
-#endif
-  }
+  return (
+    triggered[ X_AXIS ] ||
+    triggered[ Y_AXIS ] ||
+    triggered[ Z_AXIS ]
+  );
 }
 
 void clear_endstop(int axis) {
