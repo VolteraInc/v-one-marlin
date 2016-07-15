@@ -1716,7 +1716,7 @@ void handle_glow_leds(){
     glow_led_states[2] = 255;
     glow_led_pace = 30;
     quick_change = true;
-  } else if (glow_force_green || (now - previous_millis_serial_rx) < stepper_inactive_time && previous_millis_serial_rx) {
+  } else if (glow_force_green || ((now - previous_millis_serial_rx) < stepper_inactive_time && previous_millis_serial_rx)) {
     glow_led_states[0] = 0;
     glow_led_states[1] = 255;
     glow_led_states[2] = 0;
