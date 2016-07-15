@@ -6,6 +6,10 @@
 static float s_dispenseHeight = 0.0f;
 
 int prepareDispenser(Tool tool) {
+  if (raise()) {
+    return -1;
+  }
+
   if(probeMounted()) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM("Unable to prepare dispenser, the probe is mounted");
