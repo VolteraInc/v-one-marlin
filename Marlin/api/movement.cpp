@@ -196,6 +196,17 @@ int rawMove(float x, float y, float z, float e, float f, bool confirmMoveIsSafe)
   return 0;
 }
 
+static int s_relativeRawMoveE(float e, float speed_in_mm_per_min = useDefaultFeedrate) {
+  return rawMove(
+    current_position[ X_AXIS ],
+    current_position[ Y_AXIS ],
+    current_position[ Z_AXIS ],
+    e,
+    speed_in_mm_per_min,
+    skipMovementSafetyCheck
+  );
+}
+
 static int s_relativeRawMoveXYZ(float x, float y, float z, float speed_in_mm_per_min = useDefaultFeedrate, bool confirmMoveIsSafe = true) {
   return rawMove(
     current_position[ X_AXIS ] + x,
@@ -242,6 +253,18 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
 
 int raise() {
   return moveToLimit(Z_AXIS, 1);
+}
+
+int meshGears() {
+  // Move E backward, then move forward.
+  if (s_relativeRawMoveE(-0.02)) {
+    return -1;
+  }
+  st_synchronize();
+  if (s_relativeRawMoveE(0.02)) {
+    return -1;
+  }
+  return 0;
 }
 
 int retractFromSwitch(int axis, int direction, float retractDistance) {
