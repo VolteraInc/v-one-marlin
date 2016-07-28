@@ -208,6 +208,10 @@ static int s_relativeRawMoveXYZ(float x, float y, float z, float speed_in_mm_per
 }
 
 int moveToLimit(int axis, int direction, float f, float maxTravel) {
+  if(logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPGM("Move to limit: "); SERIAL_ECHO(direction < 0 ? '-' : '+'); SERIAL_ECHOLN(axis_codes[axis]);
+  }
 
   // Reset the endstop so that we know this movement triggered it (or didn't trigger it)
   clear_endstop(axis);
@@ -245,9 +249,13 @@ int raise() {
 }
 
 int retractFromSwitch(int axis, int direction, float retractDistance) {
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPGM("Retract from switch: "); SERIAL_ECHO(direction < 0 ? '-' : '+'); SERIAL_ECHOLN(axis_codes[axis]);
+  }
+
   // Finish any pending moves (prevents crashes)
   st_synchronize();
-
 
   // Retract slightly
   const float distance = retractDistance < 0 ? s_defaultRetractDistance[axis] : retractDistance;
@@ -276,6 +284,11 @@ int retractFromSwitch(int axis, int direction, float retractDistance) {
 }
 
 int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement) {
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPGM("Measure at switch: "); SERIAL_ECHO(direction < 0 ? '-' : '+'); SERIAL_ECHOLN(axis_codes[axis]);
+  }
+
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
@@ -309,5 +322,6 @@ int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Measurement: "); SERIAL_ECHOLN(measurement);
   }
+
   return 0;
 }

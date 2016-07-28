@@ -3,6 +3,11 @@
 #include "../Marlin.h"
 
 int moveToXyPositioner(Tool tool, bool skipMoveInZ) {
+  if(logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Move to xy positioner");
+  }
+
   // Make sure we have a probe
   switch(tool) {
     case TOOLS_DISPENSER:
@@ -28,11 +33,12 @@ int moveToXyPositioner(Tool tool, bool skipMoveInZ) {
     return -1;
   }
 
-  if (skipMoveInZ) {
-    return 0;
+  // move to xy-positioner's z, unless told to skip
+  if (!skipMoveInZ && moveZ(tool, XYPOS_Z_POS)) {
+    return -1;
   }
 
-  return moveZ(tool, XYPOS_Z_POS);
+  return 0;
 }
 
 int xyPositionerTouch(Tool tool, int axis, int direction, float& measurement) {
@@ -56,6 +62,11 @@ int xyPositionerTouch(Tool tool, int axis, int direction, float& measurement) {
 }
 
 static int s_findCenter(Tool tool, long cycles, float& o_centerX, float& o_centerY) {
+  if(logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Find center of xy positioner");
+  }
+
   // Compute the center
   float measurement1;
   float measurement2;

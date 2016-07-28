@@ -126,6 +126,10 @@ static int homeAxis(int axis) {
     // Move slightly away from switch
     // Note: Otherwise we will not be able to go to 0,0 without
     // hitting a limit switch (and messing up our position)
+    if (logging_enabled) {
+      SERIAL_ECHO_START;
+      SERIAL_ECHOLNPGM("Retracting from home switch");
+    }
     if (retractFromSwitch(axis, home_dir(axis), HOMING_XY_OFFSET)) {
       goto DONE;
     }
@@ -168,6 +172,10 @@ int home(Tool tool, bool homingX, bool homingY, bool homingZ) {
 }
 
 int moveToZSwitchXY(Tool tool) {
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Move to z-switch's x,y position");
+  }
   if (!homedXY()) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM("Unable to move to Z-Switch, either the x-axis or the y-axis has not been homed");
@@ -177,10 +185,6 @@ int moveToZSwitchXY(Tool tool) {
     if (raise()) {
       return -1;
     }
-  }
-  if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Move to z-switch");
   }
   return moveXY(tool, min_z_x_pos, min_z_y_pos);
 }

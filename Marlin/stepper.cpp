@@ -807,6 +807,10 @@ void st_synchronize()
     manage_heater();
     manage_inactivity();
   }
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("synchonized");
+  }
 }
 
 void st_set_position(const long &x, const long &y, const long &z, const long &e)
