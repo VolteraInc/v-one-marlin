@@ -1,4 +1,5 @@
 #include "../../Marlin.h"
+#include "../../stepper.h"
 
 #include "../api.h"
 #include "../internal.h"
@@ -123,24 +124,16 @@ int outputToolStatus() {
   return 0;
 }
 
-int move(Tool tool, float x, float y, float z, float e, float f, bool applyDispenseHeight) {
+int asyncMove(Tool tool, float x, float y, float z, float e, float f, bool applyDispenseHeight) {
   if (applyDispenseHeight) {
     z += getDispenseHeight(tool);
   }
 
-  return rawMove(x, y, z, e, f);
+  return asyncRawMove(x, y, z, e, f);
 }
 
-int moveXY(Tool tool, float x, float y, float f) {
-  return move(tool, x, y, current_position[Z_AXIS], current_position[E_AXIS], f);
-}
-
-int moveZ(Tool tool, float z, float f, bool applyDispenseHeight) {
-  return move(tool, current_position[X_AXIS], current_position[Y_AXIS], z, current_position[E_AXIS], f, applyDispenseHeight);
-}
-
-int relativeMove(Tool tool, float x, float y, float z, float e, float speed_in_mm_per_min) {
-  return move(
+int asyncRelativeMove(Tool tool, float x, float y, float z, float e, float speed_in_mm_per_min) {
+  return asyncMove(
     tool,
     current_position[ X_AXIS ] + x,
     current_position[ Y_AXIS ] + y,
@@ -148,4 +141,57 @@ int relativeMove(Tool tool, float x, float y, float z, float e, float speed_in_m
     current_position[ E_AXIS ] + e,
     speed_in_mm_per_min
   );
+}
+
+int relativeMove(Tool tool, float x, float y, float z, float e, float speed_in_mm_per_min) {
+  if (asyncRelativeMove(tool, x, y, z, e, speed_in_mm_per_min)) {
+    return -1;
+  }
+  st_synchronize();
+
+  // Check for endstop hits in each axis that we moved
+  if (
+    (x && endstop_triggered(X_AXIS)) ||
+    (y && endstop_triggered(Y_AXIS)) ||
+    (z && endstop_triggered(Z_AXIS))
+  ) {
+    // relying on endstop reporting and recovery at a higher-level
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Endstop hit during relative movement");
+    return -1;
+  }
+  return 0;
+}
+
+
+int moveXY(Tool tool, float x, float y, float f) {
+  if (asyncMove(tool, x, y, current_position[Z_AXIS], current_position[E_AXIS], f)) {
+    return -1;
+  }
+  st_synchronize();
+
+  // Check for endstop hits in X or Y-axis
+  if (endstop_triggered(X_AXIS) || endstop_triggered(Y_AXIS)) {
+    // relying on endstop reporting and recovery at a higher-level
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Endstop hit during x,y movement");
+    return -1;
+  }
+  return 0;
+}
+
+int moveZ(Tool tool, float z, float f, bool applyDispenseHeight) {
+  if (asyncMove(tool, current_position[X_AXIS], current_position[Y_AXIS], z, current_position[E_AXIS], f, applyDispenseHeight)) {
+    return -1;
+  }
+  st_synchronize();
+
+  // Check for an endstop hit in Z-axis
+  if (endstop_triggered(Z_AXIS)) {
+    // relying on endstop reporting and recovery at a higher-level
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Endstop hit during z movement");
+    return -1;
+  }
+  return 0;
 }
