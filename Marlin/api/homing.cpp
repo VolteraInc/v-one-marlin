@@ -167,7 +167,7 @@ int home(Tool tool, bool homingX, bool homingY, bool homingZ) {
   return 0;
 }
 
-int moveToZSwitch(Tool tool) {
+int moveToZSwitchXY(Tool tool) {
   if (!homedXY()) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM("Unable to move to Z-Switch, either the x-axis or the y-axis has not been homed");
@@ -199,7 +199,7 @@ int homeZ(Tool tool) {
 
   // Home Z to the z-switch
   if (
-    moveToZSwitch(tool) ||
+    moveToZSwitchXY(tool) ||
     homeAxis(Z_AXIS)
   ) {
     return -1;
