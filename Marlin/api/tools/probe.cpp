@@ -105,10 +105,21 @@ int prepareProbe(Tool tool) {
     return -1;
   }
 
-  if(!probeMounted()) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to prepare probe, probe not mounted");
-    return -1;
+  // Check for errors
+  switch (readProbeTriggerState()) {
+    case PROBE_ON:
+      break;
+
+    case PROBE_OFF:
+    case PROBE_UNKNOWN:
+      SERIAL_ERROR_START;
+      SERIAL_ERRORLNPGM("Unable to prepare probe, probe not mounted");
+      return -1;
+
+    case PROBE_TRIGGERED:
+      SERIAL_ERROR_START;
+      SERIAL_ERRORLNPGM("Unable to prepare probe, probe detected contact in raised position");
+      return -1;
   }
 
   // Ensure homed in Z
