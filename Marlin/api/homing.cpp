@@ -209,6 +209,12 @@ int homeZ(Tool tool) {
     return -1;
   }
 
+  if (tool == TOOLS_PROBE && readProbeTriggerState() == PROBE_TRIGGERED) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORLNPGM("Unable to home Z-axis, probe triggered before contacting z-switch");
+    return -1;
+  }
+
   // Raise and set the max-z soft limit
   // Note: the point of contact can vary slightly, so we add some fudge to make to max tolerant
   const float fudge = 0.5; // mm
