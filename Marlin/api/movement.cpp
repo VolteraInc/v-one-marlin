@@ -197,11 +197,13 @@ int rawMove(float x, float y, float z, float e, float f, bool confirmMoveIsSafe)
 }
 
 static int s_relativeRawMoveE(float e, float speed_in_mm_per_min = useDefaultFeedrate) {
+  st_synchronize();
+  
   return rawMove(
     current_position[ X_AXIS ],
     current_position[ Y_AXIS ],
     current_position[ Z_AXIS ],
-    e,
+    current_position[ E_AXIS ] + e,
     speed_in_mm_per_min,
     skipMovementSafetyCheck
   );
