@@ -11,12 +11,15 @@ float getDefaultFeedrate();
 
 int outputMovementStatus();
 
-// Absolute movement
-int move(Tool tool, float x, float y, float z, float e, float f, bool applyDispenseHeight = ignoreDispenseHeight);
+// Enqueue movements (do not wait for movement to finish)
+int asyncMove(Tool tool, float x, float y, float z, float e, float f, bool applyDispenseHeight = ignoreDispenseHeight);
+int asyncRelativeMove(Tool tool, float x, float y, float z, float e, float f = useDefaultFeedrate);
+
+// Absolute movement (synchronized)
 int moveXY(Tool tool, float x, float y, float f = useDefaultFeedrate);
 int moveZ(Tool tool, float z, float f = useDefaultFeedrate, bool applyDispenseHeight = ignoreDispenseHeight);
 
-// Relative movement
+// Relative movement (synchronized)
 int relativeMove(Tool tool, float x, float y, float z, float e, float f = useDefaultFeedrate);
 
 // Move until switch hit

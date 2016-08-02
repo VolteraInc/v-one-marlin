@@ -22,7 +22,7 @@ int process_vcode(int command_code) {
       }
 
       return prepareToolToMove(tool) ||
-        move(
+        asyncMove(
           tool,
           code_seen('X') ? code_value() : current_position[ X_AXIS ],
           code_seen('Y') ? code_value() : current_position[ Y_AXIS ],
@@ -35,7 +35,7 @@ int process_vcode(int command_code) {
     // Relative move
     case 2:
       return prepareToolToMove(tool) ||
-        relativeMove(
+        asyncRelativeMove(
           tool,
           code_seen('X') ? code_value() : 0,
           code_seen('Y') ? code_value() : 0,

@@ -162,7 +162,7 @@ static bool s_moveIsUnsafe(float x, float y, float z) {
   );
 }
 
-int rawMove(float x, float y, float z, float e, float f, bool confirmMoveIsSafe) {
+int asyncRawMove(float x, float y, float z, float e, float f, bool confirmMoveIsSafe) {
   if (confirmMoveIsSafe && s_moveIsUnsafe(x, y, z)) {
     return -1;
   }
@@ -210,14 +210,20 @@ static int s_relativeRawMoveE(float e, float speed_in_mm_per_min = useDefaultFee
 }
 
 static int s_relativeRawMoveXYZ(float x, float y, float z, float speed_in_mm_per_min = useDefaultFeedrate, bool confirmMoveIsSafe = true) {
-  return rawMove(
+  if (asyncRawMove(
     current_position[ X_AXIS ] + x,
     current_position[ Y_AXIS ] + y,
     current_position[ Z_AXIS ] + z,
     current_position[ E_AXIS ],
     speed_in_mm_per_min,
     confirmMoveIsSafe
-  );
+  )) {
+    return -1;
+  }
+
+  st_synchronize();
+
+  return 0;
 }
 
 int moveToLimit(int axis, int direction, float f, float maxTravel) {
@@ -242,7 +248,6 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
     )) {
     return -1;
   }
-  st_synchronize();
 
   // Confirm we triggered
   if (!endstop_triggered(axis)) { // TODO: weak test, should check specific switches
@@ -295,7 +300,6 @@ int retractFromSwitch(int axis, int direction, float retractDistance) {
     )) {
     return -1;
   }
-  st_synchronize();
 
   // Confirm that the switch was released
   if (endstop_triggered(axis)) {
