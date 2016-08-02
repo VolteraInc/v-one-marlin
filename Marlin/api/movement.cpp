@@ -197,16 +197,21 @@ int asyncRawMove(float x, float y, float z, float e, float f, bool confirmMoveIs
 }
 
 static int s_relativeRawMoveE(float e, float speed_in_mm_per_min = useDefaultFeedrate) {
-  st_synchronize();
-  
-  return rawMove(
+
+  if(asyncRawMove(
     current_position[ X_AXIS ],
     current_position[ Y_AXIS ],
     current_position[ Z_AXIS ],
     current_position[ E_AXIS ] + e,
     speed_in_mm_per_min,
     skipMovementSafetyCheck
-  );
+  )) {
+    return -1;
+  }
+
+  st_synchronize();
+
+  return 0;
 }
 
 static int s_relativeRawMoveXYZ(float x, float y, float z, float speed_in_mm_per_min = useDefaultFeedrate, bool confirmMoveIsSafe = true) {
