@@ -31,6 +31,9 @@ int retractFromSwitch(int axis, int direction, float retractDistance = useDefaul
 int setPositionEOnly(float e);
 int setPosition(float x, float y, float z, float e);
 
+// Move before homing
+int meshGears();
+
 // Homing
 int home(Tool tool, bool homeX = true, bool homeY = true, bool homeZ = true);
 bool homedXY();

@@ -16,6 +16,11 @@ int prepareDispenser(Tool tool) {
     return -1;
   }
 
+  // Wiggle E to mesh gears.
+  if (meshGears()) {
+    return -1;
+  }
+
   // Ensure homed in Z
   if (!homedZ()) {
     if (homeZ(tool)) {
