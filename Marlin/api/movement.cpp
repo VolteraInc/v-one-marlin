@@ -232,8 +232,8 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
     SERIAL_ECHOPGM("Move to limit: "); SERIAL_ECHO(direction < 0 ? '-' : '+'); SERIAL_ECHOLN(axis_codes[axis]);
   }
 
-  // Reset the endstop so that we know this movement triggered it (or didn't trigger it)
-  clear_endstop(axis);
+  // Finish any pending moves (prevents crashes)
+  st_synchronize();
 
   // Move
   const auto clampedMaxTravel = min(maxTravel, s_maxTravelInAxis(axis, direction));
