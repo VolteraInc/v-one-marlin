@@ -54,7 +54,7 @@ v1.0.0 <- What batch 1 shipped with.
 v1.0.1 <- TBD
 */
 
-#define VERSION_STRING  "v0.0.8"
+#define VERSION_STRING  "v0.0.9"
 
 // look here for descriptions of G-codes: http://linuxcnc.org/handbook/gcode/g-code.html
 // http://objects.reprap.org/wiki/Mendel_User_Manual:_RepRapGCodes
