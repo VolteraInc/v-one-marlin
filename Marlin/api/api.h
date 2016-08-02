@@ -43,7 +43,7 @@ bool homedZ();
 int getHomedState(int axis);
 void setHomedState(int axis, int value);
 void sendHomedStatusUpdate();
-int moveToZSwitch(Tool tool);
+int moveToZSwitchXY(Tool tool);
 
 // XY positioner
 const float defaultXyPositionerCycles = 2;
