@@ -105,10 +105,21 @@ int prepareProbe(Tool tool) {
     return -1;
   }
 
-  if(!probeMounted()) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to prepare probe, probe not mounted");
-    return -1;
+  // Check for errors
+  switch (readProbeTriggerState()) {
+    case PROBE_ON:
+      break;
+
+    case PROBE_OFF:
+    case PROBE_UNKNOWN:
+      SERIAL_ERROR_START;
+      SERIAL_ERRORLNPGM("Unable to prepare probe, probe not mounted");
+      return -1;
+
+    case PROBE_TRIGGERED:
+      SERIAL_ERROR_START;
+      SERIAL_ERRORLNPGM("Unable to prepare probe, probe detected contact in raised position");
+      return -1;
   }
 
   // Ensure homed in Z
@@ -161,12 +172,22 @@ int probe(Tool tool, float& measurement) {
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
-  if(!probeMounted()) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to probe, probe not mounted");
-    return -1;
-  }
+  // Check for errors
+  switch (readProbeTriggerState()) {
+    case PROBE_ON:
+      break;
 
+    case PROBE_OFF:
+    case PROBE_UNKNOWN:
+      SERIAL_ERROR_START;
+      SERIAL_ERRORLNPGM("Unable to probe, probe not mounted");
+      return -1;
+
+    case PROBE_TRIGGERED:
+      SERIAL_ERROR_START;
+      SERIAL_ERRORLNPGM("Unable to probe, probe detected contact before movement started");
+      return -1;
+  }
 
   // Move to limit
   if (moveToLimit(Z_AXIS, -1) != 0) {
