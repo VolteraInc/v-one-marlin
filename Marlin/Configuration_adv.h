@@ -211,7 +211,7 @@
 #if VOLTERA_PIN_VERSION == 1
 #define DIGIPOT_MOTOR_CURRENT {60,60,100,70} // Values 0-127 (x, y, z, e)
 #elif VOLTERA_PIN_VERSION == 2
-#define DIGIPOT_MOTOR_CURRENT {50,180,75,60} // Values 0-255 (x, y, z, e)
+#define DIGIPOT_MOTOR_CURRENT {50,180,60,60} // Values 0-255 (x, y, z, e)
 #endif
 
 // uncomment to enable an I2C based DIGIPOT like on the Azteeg X3 Pro
