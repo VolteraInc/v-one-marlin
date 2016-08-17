@@ -45,7 +45,7 @@ int measureProbeDisplacement(Tool tool, float& o_displacement) {
     return -1;
   }
 
-  float displacement = plateZ - probeContactZ;
+  float displacement = max(0, plateZ - probeContactZ);
 
   if (logging_enabled) {
     SERIAL_ECHO_START;
