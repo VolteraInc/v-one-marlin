@@ -62,8 +62,7 @@ int process_dcode(int command_code) {
 
     // Algorithms - Probe calibration plate
     case 104: {
-      if ( prepareToolToMove(tool)
-        || moveToXyPositioner(tool)) {
+      if (prepareToolToMove(tool)) {
         return -1;
       }
 
