@@ -1621,11 +1621,13 @@ void manage_inactivity()
 
   const auto now = millis();
   if (now >= nextCheckAt) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLN(readProbePinVoltage());
 
     // Schedule next check
     nextCheckAt += 1000;
 
-    if((now - previous_millis_active_cmd) >  stepper_inactive_time && stepper_inactive_time){
+    if((now - previous_millis_active_cmd) >  stepper_inactive_time && stepper_inactive_time){  
       if(blocks_queued() == false){
         refresh_cmd_timeout(); // Reseting timeout stops us from constantly checking.
         SERIAL_ECHO_START;
