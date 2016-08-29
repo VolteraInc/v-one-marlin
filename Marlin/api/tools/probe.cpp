@@ -5,7 +5,7 @@
 
 static float s_probeDisplacement = 0.0f;
 
-#if VOLTERA_PIN_VERSION == 1
+#if VOLTERA_PIN_VERSION == 1 // For B1 units?
 
 float readProbePinVoltage() {
   return 5.0;
@@ -20,6 +20,45 @@ enum ProbeTriggerStates readProbeTriggerState() {
 float readProbePinVoltage() {
   return analogRead(P_TOP_STATE_PIN) / 1024.0 * 5.0;
 }
+
+float readStableProbePinVoltage() {
+  int maxIterations = 100; // Number of times it'll try to read a stable voltage before giving up
+  int count = 0;
+  int reportThreshold = 8;
+  float referenceVoltage = readProbePinVoltage(); // Reference to check against
+
+  for(int i = 0; i < maxIterations; i++) {
+    delay(10);
+    float voltage = readProbePinVoltage();
+
+    if(voltage != referenceVoltage) {
+      referenceVoltage = voltage; // updates, smart!
+      count = 0;  // reset counter if subsequent states differ.
+
+    } else if(++count >= 4) {
+      if (i+1 >= reportThreshold) { // to report that we were coming close to failing
+        SERIAL_ECHO_START;
+        SERIAL_ECHOPGM("Warning: determine stable probe pin voltage took "); SERIAL_ECHO(i+1);
+        SERIAL_ECHOPGM(" of "); SERIAL_ECHO(maxIterations);
+        SERIAL_ECHOLNPGM(" iterations to resolve.");
+      }
+
+      if(logging_enabled) {
+        SERIAL_ECHO_START;
+        SERIAL_ECHOPGM("Determined stable probe pin voltage "); SERIAL_ECHO(voltage);
+        SERIAL_ECHOPGM(" after "); SERIAL_ECHO(i+1);
+        SERIAL_ERRORLNPGM(" iterations.");
+      }
+      return voltage;
+    }
+  }
+  SERIAL_ECHO_START;
+  SERIAL_ECHOLNPGM("Warning: Failed to determine a stable probe pin voltage, too much variation in readings.");
+  return -1.0; // If we fail
+
+}
+
+
 
 static enum ProbeTriggerStates s_classifyVoltage(float voltage) {
   // Determine state

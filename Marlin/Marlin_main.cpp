@@ -27,7 +27,7 @@
     http://reprap.org/pipermail/reprap-dev/2011-May/003323.html
  */
 
-#include "Marlin.h"
+// #include "Marlin.h"
 #include "planner.h"
 #include "stepper.h"
 #include "temperature.h"
@@ -81,6 +81,12 @@
 // G91 - Use Relative Coordinates
 // G92 - Set current position to coordinates given
 //
+//
+//
+// FSR Autoprime
+// G404 - do the autoprime
+//
+// MOVE TO's
 // G1001 - Raise until endstop hit
 // G1002 - Move to XY-Positioner
 // G1003 - Move to Z-Switch
@@ -774,6 +780,32 @@ void process_commands()
       break;
     }
 
+    // G404 - auto-priming
+    case 404: {
+
+      float FSR_ref = readStableProbePinVoltage(); // get initial reference for FSR
+      float increment = code_seen('I') ? code_value() : 0.05;
+      float FSR_measured = FSR_ref; // set initial value for FSR_measured
+      // const int maxCycles = 4;  // numbr of times to get consecutive readings before accepting as legit.
+      // const int ms = code_seen('M') ? code_value() 1; // how long to wait between samples
+      // const int cycles = code_seen('C') ? code_value() : maxCycles; //
+      SERIAL_ECHO_START;
+      SERIAL_ECHOLNPGM("FSR_ref Voltage: "); // just spit out so we can read it
+      SERIAL_ECHOLN(FSR_ref);
+
+      while(FSR_ref - FSR_measured < 0.100) {
+         // To give enough time for measurement to stabilize
+         relativeMove(getTool(), 0.0, 0.0, 0.0, increment);
+         delay(100);
+         FSR_measured = readStableProbePinVoltage();
+         SERIAL_ECHOLN(FSR_measured);
+       }
+       SERIAL_ECHO_START;
+       SERIAL_ECHOPGM("PRIMED! "); // just spit out so we can read it
+       SERIAL_ECHOLN(FSR_measured);
+       break;
+    }
+
     // G31 Reports the Probe Offset
     case 31: {
       float z_probe_offset;
@@ -806,6 +838,9 @@ void process_commands()
         }
       }
       break;
+
+
+
 
     } // switch
 
@@ -1116,7 +1151,7 @@ void process_commands()
       break;
     }
 
-    
+
     // reports current voltage on p_top for FSR
     case 126: {
       float measurement = analogRead(P_TOP_STATE_PIN) / 1024.0 * 5.0;
@@ -1627,7 +1662,7 @@ void manage_inactivity()
     // Schedule next check
     nextCheckAt += 1000;
 
-    if((now - previous_millis_active_cmd) >  stepper_inactive_time && stepper_inactive_time){  
+    if((now - previous_millis_active_cmd) >  stepper_inactive_time && stepper_inactive_time){
       if(blocks_queued() == false){
         refresh_cmd_timeout(); // Reseting timeout stops us from constantly checking.
         SERIAL_ECHO_START;

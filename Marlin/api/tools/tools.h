@@ -27,6 +27,7 @@ int probe(Tool tool, float& measurement);
 enum ProbeTriggerStates readProbeTriggerState();
 const char* probeTriggerStateAsString(enum ProbeTriggerStates state);
 float readProbePinVoltage();
+float readStableProbePinVoltage();
 
 // Dispenser
 int setDispenseHeight(Tool tool, float height);
