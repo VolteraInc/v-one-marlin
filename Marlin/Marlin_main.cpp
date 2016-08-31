@@ -46,7 +46,7 @@
 #include "commands/processing.h"
 
 
-#define VERSION_STRING  "v0.0.10"
+#define VERSION_STRING  "v0.0.11"
 
 // look here for descriptions of G-codes: http://linuxcnc.org/handbook/gcode/g-code.html
 // http://objects.reprap.org/wiki/Mendel_User_Manual:_RepRapGCodes
