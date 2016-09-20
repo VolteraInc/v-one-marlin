@@ -78,6 +78,8 @@ float calib_x_scale;
 float calib_y_scale;
 float calib_cos_theta;
 float calib_tan_theta;
+float calib_x_backlash;
+float calib_y_backlash;
 
 unsigned long axis_steps_per_sqr_second[NUM_AXIS];
 

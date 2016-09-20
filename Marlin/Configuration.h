@@ -91,6 +91,8 @@
 #define CALIB_Y_SCALE     (1.0)
 #define CALIB_COS_THETA   (1.0)
 #define CALIB_TAN_THETA   (0.0)
+#define CALIB_X_BACKLASH  (0.0) // Default assumed backlash. 
+#define CALIB_Y_BACKLASH  (0.0)
 
 #if VOLTERA_PIN_VERSION == 1
 #define XYPOS_Z_POS       (-6.0)

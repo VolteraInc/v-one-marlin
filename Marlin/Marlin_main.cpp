@@ -159,9 +159,11 @@
 // M501 - reads parameters from EEPROM (if you need reset them after you changed them temporarily).
 // M502 - reverts to the default "factory settings".  You still need to store them in EEPROM afterwards if you want to.
 // M503 - print the current settings (from memory not from EEPROM)
-// M504 - stores offsets and serial number in EEPROM
-// M505 - print the current offsets from EEPROM
-// M506 - print the current serial number from EEPROM
+// M504 - stores the serial number in EEPROM
+// M505 - stores the XY offsets in EEPROM
+// M506 - stores the axis skew offsets (Kx, Ky, Theta) in EEPROM
+// M507 - stores the axis backlash in EEPROM
+// M520 - print the current calibration settings.
 // M540 - Use S[0|1] to enable or disable the stop SD card print on endstop hit (requires ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED)
 // M600 - Pause for filament change X[pos] Y[pos] Z[relative lift] E[initial retract] L[later retract distance for removal]
 // M665 - set delta configurations
@@ -1406,8 +1408,16 @@ void process_commands()
       Config_StoreCalibration();
     }
       break;
-    //Print Offsets, Calibration, and Serial Number
-    case 507:
+
+    case 507: //M507 Store the axis backlash.
+    {
+      if(code_seen('X')) calib_x_backlash = code_value();
+      if(code_seen('Y')) calib_y_backlash = code_value();
+      Config_StoreCalibration();
+    }
+      break;
+
+    case 520: //Print Offsets, Calibration, and Serial Number
     {
       Config_PrintCalibration();
     }

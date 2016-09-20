@@ -53,6 +53,8 @@ void Config_StoreCalibration(){
   EEPROM_WRITE_VAR(i, calib_y_scale);
   EEPROM_WRITE_VAR(i, calib_cos_theta);
   EEPROM_WRITE_VAR(i, calib_tan_theta);
+  EEPROM_WRITE_VAR(i, calib_x_backlash);
+  EEPROM_WRITE_VAR(i, calib_y_backlash);
   //The write order pisses my OCD off.
 
   //We think we wrote everything fine, so validate offsets by writing the eeprom version.
@@ -207,9 +209,16 @@ void Config_PrintCalibration(){
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Scaling and Skew (A in radians):");
     SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("  M506 X"); SERIAL_PROTOCOL_F(calib_x_scale, 6);
-    SERIAL_ECHOPGM(" Y"); SERIAL_PROTOCOL_F(calib_y_scale, 6);
-    SERIAL_ECHOPGM(" A"); SERIAL_PROTOCOL_F(atan(calib_tan_theta),6); //We use atan because it preserves the sign.
+    SERIAL_ECHOPGM(" M506 X:"); SERIAL_PROTOCOL_F(calib_x_scale, 6);
+    SERIAL_ECHOPGM(" Y:"); SERIAL_PROTOCOL_F(calib_y_scale, 6);
+    SERIAL_ECHOPGM(" A:"); SERIAL_PROTOCOL_F(atan(calib_tan_theta),6); //We use atan because it preserves the sign.
+    SERIAL_ECHOLN("");
+
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Backlash Compensation:");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPGM(" M507 X:"); SERIAL_PROTOCOL_F(calib_x_backlash, 6);
+    SERIAL_ECHOPGM(" Y:"); SERIAL_PROTOCOL_F(calib_y_backlash, 6);
     SERIAL_ECHOLN("");
 
 }
@@ -233,6 +242,8 @@ void Config_RetrieveCalibration()
         EEPROM_READ_VAR(i,calib_y_scale);
         EEPROM_READ_VAR(i,calib_cos_theta);
         EEPROM_READ_VAR(i,calib_tan_theta);
+        EEPROM_READ_VAR(i,calib_x_backlash);
+        EEPROM_READ_VAR(i,calib_y_backlash);
     }
     else{
         //Print an error and revert to default.
@@ -247,7 +258,18 @@ void Config_RetrieveCalibration()
         calib_y_scale = CALIB_Y_SCALE;
         calib_cos_theta = CALIB_COS_THETA;
         calib_tan_theta = CALIB_TAN_THETA;
+        calib_x_backlash = CALIB_X_BACKLASH;
+        calib_y_backlash = CALIB_Y_BACKLASH;
     }
+
+    // It's possible that our stored backlash is garbage.
+    if (calib_x_backlash < 0.0 || calib_x_backlash > 1.0) {
+      calib_x_backlash = CALIB_X_BACKLASH;
+    }
+    if (calib_y_backlash < 0.0 || calib_y_backlash > 1.0) {
+      calib_y_backlash = CALIB_Y_BACKLASH;
+    }
+
 }
 
 
