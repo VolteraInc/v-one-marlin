@@ -551,27 +551,30 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
   //this should be done after the wait, because otherwise a M92 code within the gcode disrupts this calculation somehow
   s_applyCompensationAlgorithms(x, y, z, e);
 
-  // Convert to steps
+  // Compute the number of steps needed to reach the target
   long target[4];
   s_convertMMToSteps(x, y, z, e, target);
+  long steps_x_signed = target[X_AXIS] - position[X_AXIS];
+  long steps_y_signed = target[Y_AXIS] - position[Y_AXIS];
+  long steps_z_signed = target[Z_AXIS] - position[Z_AXIS];
+  long steps_e_signed = target[E_AXIS] - position[E_AXIS];
 
-  // Prepare to set up new block
+
+  // Prepare a new block
   block_t *block = &block_buffer[block_buffer_head];
 
-  // Mark block as not busy (Not executed bM50y the stepper interrupt)
+  // Mark block as not busy (Not executed by the stepper interrupt)
   block->busy = false;
-
-  // Compute the number of steps needed to reach the target
-  float steps_x_signed = target[X_AXIS] - position[X_AXIS];
-  float steps_y_signed = target[Y_AXIS] - position[Y_AXIS];
 
   block->steps_x = labs(steps_x_signed);
   block->steps_y = labs(steps_y_signed);
-  block->steps_z = labs(target[Z_AXIS]-position[Z_AXIS]);
-  block->steps_e = labs(target[E_AXIS]-position[E_AXIS]);
+  block->steps_z = labs(steps_z_signed);
+
+  block->steps_e = labs(steps_e_signed);
   block->steps_e *= volumetric_multiplier[active_extruder];
   block->steps_e *= extrudemultiply;
   block->steps_e /= 100;
+
   block->step_event_count = max(block->steps_x, max(block->steps_y, max(block->steps_z, block->steps_e)));
 
   // Bail if this is a zero-length block
@@ -591,10 +594,10 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
   if (steps_y_signed < 0) {
     block->direction_bits |= (1<<Y_AXIS);
   }
-  if (target[Z_AXIS] < position[Z_AXIS]) {
+  if (steps_z_signed < 0) {
     block->direction_bits |= (1<<Z_AXIS);
   }
-  if (target[E_AXIS] < position[E_AXIS]) {
+  if (steps_e_signed) {
     block->direction_bits |= (1<<E_AXIS);
   }
 
@@ -629,11 +632,10 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
 
   float delta_mm[4];
 
-  delta_mm[X_AXIS] = steps_x_signed/(axis_steps_per_unit[X_AXIS]);
-  delta_mm[Y_AXIS] = steps_y_signed/(axis_steps_per_unit[Y_AXIS]);
-
-  delta_mm[Z_AXIS] = (target[Z_AXIS]-position[Z_AXIS])/axis_steps_per_unit[Z_AXIS];
-  delta_mm[E_AXIS] = ((target[E_AXIS]-position[E_AXIS])/axis_steps_per_unit[E_AXIS])*volumetric_multiplier[active_extruder]*extrudemultiply/100.0;
+  delta_mm[X_AXIS] = steps_x_signed / axis_steps_per_unit[X_AXIS];
+  delta_mm[Y_AXIS] = steps_y_signed / axis_steps_per_unit[Y_AXIS];
+  delta_mm[Z_AXIS] = steps_z_signed / axis_steps_per_unit[Z_AXIS];
+  delta_mm[E_AXIS] = (steps_e_signed / axis_steps_per_unit[E_AXIS]) * volumetric_multiplier[active_extruder] * extrudemultiply / 100.0;
 
   if ( block->steps_x <=dropsegments && block->steps_y <=dropsegments && block->steps_z <=dropsegments )
   {
