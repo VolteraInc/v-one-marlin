@@ -511,8 +511,8 @@ static void s_applyCompensationAlgorithms(float& x, float& y, float& z, float& e
   static float s_prevDirectionX = 0;
   static float s_prevDirectionY = 0;
 
-  float directionX = sign(s_prevX - x);
-  float directionY = sign(s_prevY - y);
+  float directionX = sign(x - s_prevX);
+  float directionY = sign(y - s_prevY);
   x = applyBacklashCompensation(s_prevDirectionX, directionX, x, calib_x_backlash);
   y = applyBacklashCompensation(s_prevDirectionY, directionY, y, calib_y_backlash);
 
