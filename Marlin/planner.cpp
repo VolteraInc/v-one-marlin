@@ -56,6 +56,7 @@
 #include "stepper.h"
 #include "temperature.h"
 #include "language.h"
+#include "compensationAlgorithms/api.h"
 
 //===========================================================================
 //=============================public variables ============================
@@ -478,12 +479,60 @@ void check_axes_activity()
   }
 }
 
+int sign(float value) {
+  return value == 0 ? 0 : (value > 0 ? 1 : -1);
+}
 
-float junction_deviation = 0.1;
+static void s_applyCompensationAlgorithms(float& x, float& y, float& z, float& e)
+{
+  // Axis skew compensation
+  // Note: axis skew make homing non-trivial because when you are homing one axis, both axis are actually moving.
+  // E.g. -Y switch could trigger when you are homing X axis.
+  // This is why we allow skew compensation to be skipped
+  if (skew_adjustments_enabled) {
+    applySkewCompensation(x, y, calib_cos_theta, calib_tan_theta);
+  } else {
+    if (logging_enabled) {
+      SERIAL_ECHO_START;
+      SERIAL_ECHOPGM("Skipping skew compensation for ("); SERIAL_ECHO(x);
+      SERIAL_ECHOPGM(","); SERIAL_ECHO(y);
+      SERIAL_ECHOPGM(","); SERIAL_ECHO(z);
+      SERIAL_ECHOPGM(","); SERIAL_ECHO(e);
+      SERIAL_ECHOPGM(")\n");
+    }
+  }
+
+  // Axis scaling compensation
+  applyScalingCompensation(x, y, calib_x_scale, calib_y_scale);
+
+  // Backlash compensation
+  static float s_prevX = 0;
+  static float s_prevY = 0;
+  static float s_prevDirectionX = 0;
+  static float s_prevDirectionY = 0;
+
+  float directionX = sign(s_prevX - x);
+  float directionY = sign(s_prevY - y);
+  x = applyBacklashCompensation(s_prevDirectionX, directionX, x, calib_x_backlash);
+  y = applyBacklashCompensation(s_prevDirectionY, directionY, y, calib_y_backlash);
+
+  // Store final position and direction for next time
+  s_prevX = x;
+  s_prevY = y;
+  s_prevDirectionX = directionX;
+  s_prevDirectionY = directionY;
+}
+
+static void s_convertMMToSteps(float x, float y, float z, float e, long steps[]) {
+  steps[ X_AXIS ] = lround(x * axis_steps_per_unit[ X_AXIS ]);
+  steps[ Y_AXIS ] = lround(y * axis_steps_per_unit[ Y_AXIS ]);
+  steps[ Z_AXIS ] = lround(z * axis_steps_per_unit[ Z_AXIS ]);
+  steps[ E_AXIS ] = lround(e * axis_steps_per_unit[ E_AXIS ]);
+}
+
 // Add a new linear movement to the buffer. steps_x, _y and _z is the absolute position in
 // mm. Microseconds specify how many microseconds the move should take to perform. To aid acceleration
 // calculation the caller must also provide the physical length of the line in millimeters.
-
 void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8_t extruder)
 {
   // Calculate the buffer head after we push this byte
@@ -497,38 +546,14 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
     manage_inactivity();
   }
 
-  // The target position of the tool in absolute steps
-  // Calculate target position in absolute steps
+  // Apply compensation algorithms to compute the target position
+  // NOTE: the following comment is fishy, but could save debugging time if it's true and we trip over this later
   //this should be done after the wait, because otherwise a M92 code within the gcode disrupts this calculation somehow
+  s_applyCompensationAlgorithms(x, y, z, e);
 
-  //Given the coordinates we want to go to. Target will indicate the number of steps we need to get there.
-
-
-  float cos_theta = calib_cos_theta;
-  float tan_theta = calib_tan_theta;
-  // Because the AXIS are skewed. Homing becomes tricky because when you are homing one axis, both axis are actually moving
-  // This produces unexpected results. i.e - Y axis triggers when you are homing X axis.
-  // This is undesirable behaviour. If we are homing the axis, disable the skew check by overwriting our theta values.
-  if(!skew_adjustments_enabled){
-    if (logging_enabled) {
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM("Ignoring skew values for movement to ("); SERIAL_ECHO(x);
-      SERIAL_ECHOPGM(","); SERIAL_ECHO(y);
-      SERIAL_ECHOPGM(","); SERIAL_ECHO(z);
-      SERIAL_ECHOPGM(","); SERIAL_ECHO(e);
-      SERIAL_ECHOPGM(")\n");
-    }
-    cos_theta = 1;
-    tan_theta = 0;
-  }
-
-  //Target tells us the desired local x and y coordinates to meet the global X and Y. We take into account skew and scaling.
+  // Convert to steps
   long target[4];
-  target[X_AXIS] = lround(x*axis_steps_per_unit[X_AXIS]/(calib_x_scale*cos_theta));
-  target[Y_AXIS] = lround((y-x*tan_theta)*axis_steps_per_unit[Y_AXIS]/calib_y_scale);
-  target[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);
-  target[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]);
-
+  s_convertMMToSteps(x, y, z, e, target);
 
   // Prepare to set up new block
   block_t *block = &block_buffer[block_buffer_head];
