@@ -489,6 +489,7 @@ static void s_applyCompensationAlgorithms(float& x, float& y, float& z, float& e
   // Note: axis skew make homing non-trivial because when you are homing one axis, both axis are actually moving.
   // E.g. -Y switch could trigger when you are homing X axis.
   // This is why we allow skew compensation to be skipped
+
   if (skew_adjustments_enabled) {
     applySkewCompensation(x, y, calib_cos_theta, calib_tan_theta);
   } else {
@@ -505,22 +506,36 @@ static void s_applyCompensationAlgorithms(float& x, float& y, float& z, float& e
   // Axis scaling compensation
   applyScalingCompensation(x, y, calib_x_scale, calib_y_scale);
 
-  // Backlash compensation
+
+
+  // Backlash compensation variables.
   static float s_prevX = 0;
   static float s_prevY = 0;
-  static float s_prevDirectionX = 0;
-  static float s_prevDirectionY = 0;
+  static float s_prevMoveDirectionX = 1;
+  static float s_prevMoveDirectionY = 1;
 
+  // Extract the sign.
   float directionX = sign(x - s_prevX);
   float directionY = sign(y - s_prevY);
-  x = applyBacklashCompensation(s_prevDirectionX, directionX, x, calib_x_backlash);
-  y = applyBacklashCompensation(s_prevDirectionY, directionY, y, calib_y_backlash);
 
-  // Store final position and direction for next time
+  // If our position didn't change, use last direction.
+  if (directionX == 0){
+    directionX = s_prevMoveDirectionX;
+  }
+
+  if (directionY == 0) {
+    directionY = s_prevMoveDirectionY;
+  }
+
+  // Store new positions and direction
   s_prevX = x;
   s_prevY = y;
-  s_prevDirectionX = directionX;
-  s_prevDirectionY = directionY;
+  s_prevMoveDirectionX = directionX;
+  s_prevMoveDirectionY = directionY;
+
+  x = applyBacklashCompensation(directionX, x, calib_x_backlash);
+  y = applyBacklashCompensation(directionY, y, calib_y_backlash);
+
 }
 
 static void s_convertMMToSteps(float x, float y, float z, float e, long steps[]) {
@@ -577,6 +592,10 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
 
 float steps_x_signed = target[X_AXIS] - position[X_AXIS];
 float steps_y_signed = target[Y_AXIS] - position[Y_AXIS];
+
+
+
+
 block->steps_x = labs(steps_x_signed);
 block->steps_y = labs(steps_y_signed);
 #endif

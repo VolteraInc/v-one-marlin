@@ -1,13 +1,8 @@
 #include "../Marlin.h" // for logging
 
-float applyBacklashCompensation(int previousDirection, int newDirection, float coordinate, float offset) {
+float applyBacklashCompensation(int direction, float coordinate, float offset) {
 
-  // backlash compensation is only applied when there is a change in direction
-  if (previousDirection == newDirection) {
-    return coordinate;
-  }
-
-  float adjustedCoordinate = coordinate + (newDirection * offset);
+  float adjustedCoordinate = coordinate + (direction * offset);
 
   if (logging_enabled) {
     SERIAL_ECHO_START;
