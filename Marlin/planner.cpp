@@ -590,13 +590,13 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
   if(block->steps_y != 0) enable_y();
 #ifndef Z_LATE_ENABLE
   // Enable all
-  if(block->steps_z != 0){
+  if(block->steps_z != 0) {
     enable_z();
   }
 #endif
 
   // Enable all
-  if(block->steps_e != 0)
+  if (block->steps_e != 0)
   {
     enable_e0();
   }
@@ -610,10 +610,8 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
     if(feed_rate<minimumfeedrate) feed_rate=minimumfeedrate;
   }
 
-  //Delta_mm is the mm that our axis will actually move to meet the global coordinates.
-
+  // Delta_mm is the mm that our axis will actually move to meet the global coordinates.
   float delta_mm[4];
-
   delta_mm[X_AXIS] = steps_x_signed / axis_steps_per_unit[X_AXIS];
   delta_mm[Y_AXIS] = steps_y_signed / axis_steps_per_unit[Y_AXIS];
   delta_mm[Z_AXIS] = steps_z_signed / axis_steps_per_unit[Z_AXIS];
