@@ -561,26 +561,12 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
   // Mark block as not busy (Not executed bM50y the stepper interrupt)
   block->busy = false;
 
-// Number of steps for each axis
+  // Compute the number of steps needed to reach the target
+  float steps_x_signed = target[X_AXIS] - position[X_AXIS];
+  float steps_y_signed = target[Y_AXIS] - position[Y_AXIS];
 
-// corexy planning - these equations follow the form of the dA and dB equations on http://www.corexy.com/theory.html
-#if defined COREXY
-  #error 1
-block->steps_x = labs((target[X_AXIS]-position[X_AXIS]) + (target[Y_AXIS]-position[Y_AXIS]));
-block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-position[Y_AXIS]));
-
-// Using VOLTERA calibration values.
-#else
-
-// Given our local target and our old position we just calculate the difference in steps.
-// Position is updated before.
-
-float steps_x_signed = target[X_AXIS] - position[X_AXIS];
-float steps_y_signed = target[Y_AXIS] - position[Y_AXIS];
-block->steps_x = labs(steps_x_signed);
-block->steps_y = labs(steps_y_signed);
-#endif
-
+  block->steps_x = labs(steps_x_signed);
+  block->steps_y = labs(steps_y_signed);
   block->steps_z = labs(target[Z_AXIS]-position[Z_AXIS]);
   block->steps_e = labs(target[E_AXIS]-position[E_AXIS]);
   block->steps_e *= volumetric_multiplier[active_extruder];
@@ -599,52 +585,24 @@ block->steps_y = labs(steps_y_signed);
   // Compute direction bits for this block
   block->direction_bits = 0;
 
-// Core XY
-#ifdef COREXY
-  if ((target[X_AXIS]-position[X_AXIS]) + (target[Y_AXIS]-position[Y_AXIS]) < 0)
-  {
+  if (steps_x_signed < 0) {
     block->direction_bits |= (1<<X_AXIS);
   }
-  if ((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-position[Y_AXIS]) < 0)
-  {
+  if (steps_y_signed < 0) {
     block->direction_bits |= (1<<Y_AXIS);
   }
-
-// Voltera Calibration
-#else
-  if (steps_x_signed < 0)
-  {
-    block->direction_bits |= (1<<X_AXIS);
-  }
-  if (steps_y_signed < 0)
-  {
-    block->direction_bits |= (1<<Y_AXIS);
-  }
-
-#endif
-
-  if (target[Z_AXIS] < position[Z_AXIS])
-  {
+  if (target[Z_AXIS] < position[Z_AXIS]) {
     block->direction_bits |= (1<<Z_AXIS);
   }
-  if (target[E_AXIS] < position[E_AXIS])
-  {
+  if (target[E_AXIS] < position[E_AXIS]) {
     block->direction_bits |= (1<<E_AXIS);
   }
 
   block->active_extruder = extruder;
 
   //enable active axes
-  #ifdef COREXY
-  if((block->steps_x != 0) || (block->steps_y != 0))
-  {
-    enable_x();
-    enable_y();
-  }
-  #else
   if(block->steps_x != 0) enable_x();
   if(block->steps_y != 0) enable_y();
-  #endif
 #ifndef Z_LATE_ENABLE
   // Enable all
   if(block->steps_z != 0){
@@ -671,15 +629,8 @@ block->steps_y = labs(steps_y_signed);
 
   float delta_mm[4];
 
-  #ifdef COREXY
-    delta_mm[X_AXIS] = (((target[X_AXIS]-position[X_AXIS]) + (target[Y_AXIS]-position[Y_AXIS]))/axis_steps_per_unit[X_AXIS])/sqrt(2);
-    delta_mm[Y_AXIS] = (((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-position[Y_AXIS]))/axis_steps_per_unit[Y_AXIS])/sqrt(2);
-
-  // Voltera Calibration - target and position already take into account our corrections.
-  #else
-    delta_mm[X_AXIS] = steps_x_signed/(axis_steps_per_unit[X_AXIS]);
-    delta_mm[Y_AXIS] = steps_y_signed/(axis_steps_per_unit[Y_AXIS]);
-  #endif
+  delta_mm[X_AXIS] = steps_x_signed/(axis_steps_per_unit[X_AXIS]);
+  delta_mm[Y_AXIS] = steps_y_signed/(axis_steps_per_unit[Y_AXIS]);
 
   delta_mm[Z_AXIS] = (target[Z_AXIS]-position[Z_AXIS])/axis_steps_per_unit[Z_AXIS];
   delta_mm[E_AXIS] = ((target[E_AXIS]-position[E_AXIS])/axis_steps_per_unit[E_AXIS])*volumetric_multiplier[active_extruder]*extrudemultiply/100.0;
