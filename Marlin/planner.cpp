@@ -483,8 +483,7 @@ int sign(float value) {
   return value == 0 ? 0 : (value > 0 ? 1 : -1);
 }
 
-static void s_applyCompensationAlgorithms(float& x, float& y, float& z, float& e)
-{
+static void s_applyCompensationAlgorithms(float& x, float& y, float& z, float& e) {
   // Axis skew compensation
   // Note: axis skew make homing non-trivial because when you are homing one axis, both axis are actually moving.
   // E.g. -Y switch could trigger when you are homing X axis.
@@ -504,23 +503,6 @@ static void s_applyCompensationAlgorithms(float& x, float& y, float& z, float& e
 
   // Axis scaling compensation
   applyScalingCompensation(x, y, calib_x_scale, calib_y_scale);
-
-  // Backlash compensation
-  static float s_prevX = 0;
-  static float s_prevY = 0;
-  static float s_prevDirectionX = 0;
-  static float s_prevDirectionY = 0;
-
-  float directionX = sign(x - s_prevX);
-  float directionY = sign(y - s_prevY);
-  x = applyBacklashCompensation(s_prevDirectionX, directionX, x, calib_x_backlash);
-  y = applyBacklashCompensation(s_prevDirectionY, directionY, y, calib_y_backlash);
-
-  // Store final position and direction for next time
-  s_prevX = x;
-  s_prevY = y;
-  s_prevDirectionX = directionX;
-  s_prevDirectionY = directionY;
 }
 
 static void s_convertMMToSteps(float x, float y, float z, float e, long steps[]) {
