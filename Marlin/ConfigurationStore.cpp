@@ -263,10 +263,10 @@ void Config_RetrieveCalibration()
     }
 
     // It's possible that our stored backlash is garbage.
-    if (calib_x_backlash < 0.0 || calib_x_backlash > 1.0) {
+    if (calib_x_backlash < 0.0 || calib_x_backlash > 1.0 || isnan(calib_x_backlash)) {
       calib_x_backlash = CALIB_X_BACKLASH;
     }
-    if (calib_y_backlash < 0.0 || calib_y_backlash > 1.0) {
+    if (calib_y_backlash < 0.0 || calib_y_backlash > 1.0 || isnan(calib_y_backlash)) {
       calib_y_backlash = CALIB_Y_BACKLASH;
     }
 
