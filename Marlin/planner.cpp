@@ -579,7 +579,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
   if (steps_z_signed < 0) {
     block->direction_bits |= (1<<Z_AXIS);
   }
-  if (steps_e_signed) {
+  if (steps_e_signed < 0) {
     block->direction_bits |= (1<<E_AXIS);
   }
 
