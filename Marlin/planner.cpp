@@ -483,8 +483,7 @@ int sign(float value) {
   return value == 0 ? 0 : (value > 0 ? 1 : -1);
 }
 
-static void s_applyCompensationAlgorithms(float& x, float& y, float& z, float& e)
-{
+static void s_applyCompensationAlgorithms(float& x, float& y, float& z, float& e) {
   // Axis skew compensation
   // Note: axis skew make homing non-trivial because when you are homing one axis, both axis are actually moving.
   // E.g. -Y switch could trigger when you are homing X axis.
@@ -504,23 +503,6 @@ static void s_applyCompensationAlgorithms(float& x, float& y, float& z, float& e
 
   // Axis scaling compensation
   applyScalingCompensation(x, y, calib_x_scale, calib_y_scale);
-
-  // Backlash compensation
-  static float s_prevX = 0;
-  static float s_prevY = 0;
-  static float s_prevDirectionX = 0;
-  static float s_prevDirectionY = 0;
-
-  float directionX = sign(x - s_prevX);
-  float directionY = sign(y - s_prevY);
-  x = applyBacklashCompensation(s_prevDirectionX, directionX, x, calib_x_backlash);
-  y = applyBacklashCompensation(s_prevDirectionY, directionY, y, calib_y_backlash);
-
-  // Store final position and direction for next time
-  s_prevX = x;
-  s_prevY = y;
-  s_prevDirectionX = directionX;
-  s_prevDirectionY = directionY;
 }
 
 static void s_convertMMToSteps(float x, float y, float z, float e, long steps[]) {
@@ -551,41 +533,30 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
   //this should be done after the wait, because otherwise a M92 code within the gcode disrupts this calculation somehow
   s_applyCompensationAlgorithms(x, y, z, e);
 
-  // Convert to steps
+  // Compute the number of steps needed to reach the target
   long target[4];
   s_convertMMToSteps(x, y, z, e, target);
+  long steps_x_signed = target[X_AXIS] - position[X_AXIS];
+  long steps_y_signed = target[Y_AXIS] - position[Y_AXIS];
+  long steps_z_signed = target[Z_AXIS] - position[Z_AXIS];
+  long steps_e_signed = target[E_AXIS] - position[E_AXIS];
 
-  // Prepare to set up new block
+
+  // Prepare a new block
   block_t *block = &block_buffer[block_buffer_head];
 
-  // Mark block as not busy (Not executed bM50y the stepper interrupt)
+  // Mark block as not busy (Not executed by the stepper interrupt)
   block->busy = false;
 
-// Number of steps for each axis
+  block->steps_x = labs(steps_x_signed);
+  block->steps_y = labs(steps_y_signed);
+  block->steps_z = labs(steps_z_signed);
 
-// corexy planning - these equations follow the form of the dA and dB equations on http://www.corexy.com/theory.html
-#if defined COREXY
-  #error 1
-block->steps_x = labs((target[X_AXIS]-position[X_AXIS]) + (target[Y_AXIS]-position[Y_AXIS]));
-block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-position[Y_AXIS]));
-
-// Using VOLTERA calibration values.
-#else
-
-// Given our local target and our old position we just calculate the difference in steps.
-// Position is updated before.
-
-float steps_x_signed = target[X_AXIS] - position[X_AXIS];
-float steps_y_signed = target[Y_AXIS] - position[Y_AXIS];
-block->steps_x = labs(steps_x_signed);
-block->steps_y = labs(steps_y_signed);
-#endif
-
-  block->steps_z = labs(target[Z_AXIS]-position[Z_AXIS]);
-  block->steps_e = labs(target[E_AXIS]-position[E_AXIS]);
+  block->steps_e = labs(steps_e_signed);
   block->steps_e *= volumetric_multiplier[active_extruder];
   block->steps_e *= extrudemultiply;
   block->steps_e /= 100;
+
   block->step_event_count = max(block->steps_x, max(block->steps_y, max(block->steps_z, block->steps_e)));
 
   // Bail if this is a zero-length block
@@ -599,61 +570,33 @@ block->steps_y = labs(steps_y_signed);
   // Compute direction bits for this block
   block->direction_bits = 0;
 
-// Core XY
-#ifdef COREXY
-  if ((target[X_AXIS]-position[X_AXIS]) + (target[Y_AXIS]-position[Y_AXIS]) < 0)
-  {
+  if (steps_x_signed < 0) {
     block->direction_bits |= (1<<X_AXIS);
   }
-  if ((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-position[Y_AXIS]) < 0)
-  {
+  if (steps_y_signed < 0) {
     block->direction_bits |= (1<<Y_AXIS);
   }
-
-// Voltera Calibration
-#else
-  if (steps_x_signed < 0)
-  {
-    block->direction_bits |= (1<<X_AXIS);
-  }
-  if (steps_y_signed < 0)
-  {
-    block->direction_bits |= (1<<Y_AXIS);
-  }
-
-#endif
-
-  if (target[Z_AXIS] < position[Z_AXIS])
-  {
+  if (steps_z_signed < 0) {
     block->direction_bits |= (1<<Z_AXIS);
   }
-  if (target[E_AXIS] < position[E_AXIS])
-  {
+  if (steps_e_signed) {
     block->direction_bits |= (1<<E_AXIS);
   }
 
   block->active_extruder = extruder;
 
   //enable active axes
-  #ifdef COREXY
-  if((block->steps_x != 0) || (block->steps_y != 0))
-  {
-    enable_x();
-    enable_y();
-  }
-  #else
   if(block->steps_x != 0) enable_x();
   if(block->steps_y != 0) enable_y();
-  #endif
 #ifndef Z_LATE_ENABLE
   // Enable all
-  if(block->steps_z != 0){
+  if(block->steps_z != 0) {
     enable_z();
   }
 #endif
 
   // Enable all
-  if(block->steps_e != 0)
+  if (block->steps_e != 0)
   {
     enable_e0();
   }
@@ -667,22 +610,12 @@ block->steps_y = labs(steps_y_signed);
     if(feed_rate<minimumfeedrate) feed_rate=minimumfeedrate;
   }
 
-  //Delta_mm is the mm that our axis will actually move to meet the global coordinates.
-
+  // Delta_mm is the mm that our axis will actually move to meet the global coordinates.
   float delta_mm[4];
-
-  #ifdef COREXY
-    delta_mm[X_AXIS] = (((target[X_AXIS]-position[X_AXIS]) + (target[Y_AXIS]-position[Y_AXIS]))/axis_steps_per_unit[X_AXIS])/sqrt(2);
-    delta_mm[Y_AXIS] = (((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-position[Y_AXIS]))/axis_steps_per_unit[Y_AXIS])/sqrt(2);
-
-  // Voltera Calibration - target and position already take into account our corrections.
-  #else
-    delta_mm[X_AXIS] = steps_x_signed/(axis_steps_per_unit[X_AXIS]);
-    delta_mm[Y_AXIS] = steps_y_signed/(axis_steps_per_unit[Y_AXIS]);
-  #endif
-
-  delta_mm[Z_AXIS] = (target[Z_AXIS]-position[Z_AXIS])/axis_steps_per_unit[Z_AXIS];
-  delta_mm[E_AXIS] = ((target[E_AXIS]-position[E_AXIS])/axis_steps_per_unit[E_AXIS])*volumetric_multiplier[active_extruder]*extrudemultiply/100.0;
+  delta_mm[X_AXIS] = steps_x_signed / axis_steps_per_unit[X_AXIS];
+  delta_mm[Y_AXIS] = steps_y_signed / axis_steps_per_unit[Y_AXIS];
+  delta_mm[Z_AXIS] = steps_z_signed / axis_steps_per_unit[Z_AXIS];
+  delta_mm[E_AXIS] = (steps_e_signed / axis_steps_per_unit[E_AXIS]) * volumetric_multiplier[active_extruder] * extrudemultiply / 100.0;
 
   if ( block->steps_x <=dropsegments && block->steps_y <=dropsegments && block->steps_z <=dropsegments )
   {
