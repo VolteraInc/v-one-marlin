@@ -512,6 +512,24 @@ static void s_convertMMToSteps(float x, float y, float z, float e, long steps[])
   steps[ E_AXIS ] = lround(e * axis_steps_per_unit[ E_AXIS ]);
 }
 
+static void s_applyBacklashCompensation(long& xSteps, long& ySteps) {
+  static float s_prevMoveDirectionX = 0;
+  auto directionX = sign(xSteps);
+  if ( directionX != 0 && s_prevMoveDirectionX != directionX) {
+    s_prevMoveDirectionX = directionX;
+    float stepOffsetX = calib_x_backlash * axis_steps_per_unit[ X_AXIS ];
+    xSteps = applyBacklashCompensation(directionX, xSteps, stepOffsetX);
+  }
+
+  static float s_prevMoveDirectionY = 0;
+  auto directionY = sign(ySteps);
+  if (directionY != 0 && s_prevMoveDirectionY != directionY) {
+    s_prevMoveDirectionY = directionY;
+    float stepOffsetY = calib_y_backlash * axis_steps_per_unit[ Y_AXIS ];
+    ySteps = applyBacklashCompensation(directionY, ySteps, stepOffsetY);
+  }
+}
+
 // Add a new linear movement to the buffer. steps_x, _y and _z is the absolute position in
 // mm. Microseconds specify how many microseconds the move should take to perform. To aid acceleration
 // calculation the caller must also provide the physical length of the line in millimeters.
@@ -541,6 +559,8 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
   long steps_z_signed = target[Z_AXIS] - position[Z_AXIS];
   long steps_e_signed = target[E_AXIS] - position[E_AXIS];
 
+  // Apply backlash compensation
+  s_applyBacklashCompensation(steps_x_signed, steps_y_signed);
 
   // Prepare a new block
   block_t *block = &block_buffer[block_buffer_head];
