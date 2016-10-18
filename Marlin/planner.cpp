@@ -518,7 +518,7 @@ static void s_applyBacklashCompensation(long& xSteps, long& ySteps) {
   if ( directionX != 0 && s_prevMoveDirectionX != directionX) {
     s_prevMoveDirectionX = directionX;
     auto stepOffsetX = calib_x_backlash * axis_steps_per_unit[ X_AXIS ];
-    xSteps = applyBacklashCompensation(directionX, xSteps, stepOffsetX);
+    xSteps = applyBacklashCompensation("x", directionX, xSteps, stepOffsetX);
   }
 
   static float s_prevMoveDirectionY = 0;
@@ -526,7 +526,7 @@ static void s_applyBacklashCompensation(long& xSteps, long& ySteps) {
   if (directionY != 0 && s_prevMoveDirectionY != directionY) {
     s_prevMoveDirectionY = directionY;
     auto stepOffsetY = calib_y_backlash * axis_steps_per_unit[ Y_AXIS ];
-    ySteps = applyBacklashCompensation(directionY, ySteps, stepOffsetY);
+    ySteps = applyBacklashCompensation("y", directionY, ySteps, stepOffsetY);
   }
 }
 
