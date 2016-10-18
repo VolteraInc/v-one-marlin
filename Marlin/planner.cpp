@@ -830,29 +830,12 @@ void plan_set_position(float x, float y, float z, float e)
     SERIAL_ECHOPGM("\n");
   }
 
-  // Because the AXIS are skewed. Homing becomes tricky because when you are homing one axis, both axis are actually moving
-  // This produces unexpected results. i.e - Y axis triggers when you are homing X axis.
-  // This is undesirable behaviour. If we are homing the axis, disable the skew check by overwriting our theta values.
-  float cos_theta = calib_cos_theta;
-  float tan_theta = calib_tan_theta;
-  if(!skew_adjustments_enabled){
-    if (logging_enabled) {
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM("Ignoring skew values while setting position to ("); SERIAL_ECHO(x);
-      SERIAL_ECHOPGM(","); SERIAL_ECHO(y);
-      SERIAL_ECHOPGM(","); SERIAL_ECHO(z);
-      SERIAL_ECHOPGM(","); SERIAL_ECHO(e);
-      SERIAL_ECHOPGM(")\n");
-    }
-    cos_theta = 1;
-    tan_theta = 0;
-  }
+  // Apply compensation algorithms to compute the new position in steps
+  // Note: we don't need to apply backlash compensation because we are not moving
+  s_applyCompensationAlgorithms(x, y, z, e);
+  s_convertMMToSteps(x, y, z, e, position);
 
-  position[X_AXIS] = lround(x*axis_steps_per_unit[X_AXIS]/(calib_x_scale*cos_theta));
-  position[Y_AXIS] = lround((y-x*tan_theta)*axis_steps_per_unit[Y_AXIS]/calib_y_scale);
-  position[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);
-  position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]);
-
+  // Set stepper position
   st_set_position(position[X_AXIS], position[Y_AXIS], position[Z_AXIS], position[E_AXIS]);
   previous_nominal_speed = 0.0; // Resets planner junction speeds. Assumes start from rest.
   previous_speed[0] = 0.0;
