@@ -7,13 +7,24 @@ static const float MinDisplacement = 0.050f;
 static const float MaxDisplacement = 0.500f;
 
 static int s_measureCalibrationPlateZ(float& plateZ, float maxTravel) {
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Measuring calibration plate");
+  }
+
   enable_calibration_plate(true);
   int returnValue = measureAtSwitch(Z_AXIS, -1, maxTravel, plateZ);
   enable_calibration_plate(false);
+
   return returnValue;
 }
 
 int measureProbeDisplacement(Tool tool, float& o_displacement) {
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Measuring probe displacement");
+  }
+
   if(tool != TOOLS_PROBE) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM("Unable to measure probe displacement, probe not attached");
@@ -29,6 +40,8 @@ int measureProbeDisplacement(Tool tool, float& o_displacement) {
   float plateZ;
   float maxTravel = 2; // mm, should be within 2mm of the plate
   if (s_measureCalibrationPlateZ(plateZ, maxTravel)) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORLNPGM("Unable to measure probe displacement, the calibration plate could not be measured (measurement 1 of 2)");
     return -1;
   }
 
@@ -40,8 +53,14 @@ int measureProbeDisplacement(Tool tool, float& o_displacement) {
   // Probe the calibration plate
   // Note: we do not use the standard probe function here because
   // it would subtract the previously measured displacement (if one exists)
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Measuring the triggering positon of the probe");
+  }
   float probeContactZ;
   if(measureAtSwitch(Z_AXIS, -1, MaxDisplacement + Z_HOME_RETRACT_MM, probeContactZ)) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORLNPGM("Unable to measure probe displacement, the triggering positon of the probe could not be measured (measurement 2 of 2)");
     return -1;
   }
 
