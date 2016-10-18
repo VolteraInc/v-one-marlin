@@ -78,10 +78,11 @@ int process_vcode(int command_code) {
         return -1;
       }
 
+      float additionalRetractDistance = code_seen('R') ? code_value() : DefaultRetract;
       float measurement;
       if (
         prepareToolToMove(tool) ||
-        probe(tool, measurement)
+        probe(tool, measurement, additionalRetractDistance)
       ) {
         return -1;
       }
@@ -151,7 +152,7 @@ int process_vcode(int command_code) {
       SERIAL_ECHOLNPGM("  V1 - Move/Dispense -- V1 X100 Y100 Z10 E30 F6000");
       SERIAL_ECHOLNPGM("  V2 - Relative Move/Dispense -- V2 X5 Y3 Z-1 E2 F6000");
       SERIAL_ECHOLNPGM("  V3 - Move until limit switch triggers -- V3 -X -Y -Z F6000");
-      SERIAL_ECHOLNPGM("  V4 - Probe at current position -- V4");
+      SERIAL_ECHOLNPGM("  V4 - Probe at current position (retract by probe displacement + R) -- V4 R1");
       SERIAL_ECHOLNPGM("  V5 - raise, home XY, and reset tool preparations -- V5");
       SERIAL_ECHOLNPGM("  V6 - override planner's current position -- V6 E0");
       SERIAL_ECHOLNPGM("  V7 - override planner's current position, relatively -- V7 E-1");

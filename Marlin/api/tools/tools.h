@@ -23,7 +23,9 @@ enum ProbeTriggerStates {
   PROBE_TRIGGERED = 3,
 };
 
-int probe(Tool tool, float& measurement);
+const float NoRetract = -9999.0f;
+const float DefaultRetract = 0.2f;
+int probe(Tool tool, float& measurement, float additionalRetractDistance = DefaultRetract);
 enum ProbeTriggerStates readProbeTriggerState();
 const char* probeTriggerStateAsString(enum ProbeTriggerStates state);
 float readProbePinVoltage();

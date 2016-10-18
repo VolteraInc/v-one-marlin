@@ -763,7 +763,7 @@ void process_commands()
     // G30 Single Z Probe
     case 30: {
       float measurement;
-      if (probe(TOOLS_PROBE, measurement)) {
+      if (probe(TOOLS_PROBE, measurement, NoRetract)) {
         break;
       }
 

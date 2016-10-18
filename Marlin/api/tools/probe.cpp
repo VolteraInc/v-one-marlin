@@ -162,7 +162,7 @@ int prepareProbe(Tool tool) {
   return 0;
 }
 
-int probe(Tool tool, float& measurement) {
+int probe(Tool tool, float& measurement, float additionalRetractDistance) {
   if(tool != TOOLS_PROBE) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM("Unable to probe, probe not attached");
@@ -204,5 +204,15 @@ int probe(Tool tool, float& measurement) {
     SERIAL_ECHOPGM("probe displacement: "); SERIAL_ECHOLN(s_probeDisplacement);
     SERIAL_ECHOPGM("probe measurement: "); SERIAL_ECHOLN(measurement);
   }
+
+  // Retract, conditionally
+  if (additionalRetractDistance != NoRetract) {
+    if (retractFromSwitch(Z_AXIS, -1, s_probeDisplacement + additionalRetractDistance)) {
+      SERIAL_ERROR_START;
+      SERIAL_ERRORLNPGM("Unable to probe, retract did not complete");
+      return -1;
+    }
+  }
+
   return 0;
 }
