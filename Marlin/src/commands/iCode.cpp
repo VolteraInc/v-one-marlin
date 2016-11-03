@@ -1,9 +1,9 @@
 #include "../api/api.h"
-#include "../Marlin.h"
+#include "../../Marlin.h"
 
 #include "processing.h"
 
-#include "../ConfigurationStore.h"
+#include "../../ConfigurationStore.h"
 
 //-------------------------------------------
 // Special commands for iNternal use

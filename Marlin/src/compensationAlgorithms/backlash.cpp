@@ -1,4 +1,4 @@
-#include "../Marlin.h" // for logging
+#include "../../Marlin.h" // for logging
 
 long applyBacklashCompensation(const char* label, int direction, long steps, long offset) {
   long compensatedSteps = steps + (direction * offset);

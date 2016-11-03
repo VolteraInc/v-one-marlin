@@ -1,7 +1,7 @@
 #include "api.h"
 
-#include "../Marlin.h"
-#include "../stepper.h"
+#include "../../Marlin.h"
+#include "../../stepper.h"
 
 static const float MinDisplacement = 0.050f;
 static const float MaxDisplacement = 0.500f;

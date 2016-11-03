@@ -1,5 +1,5 @@
-#include "../../Marlin.h"
-#include "../../stepper.h"
+#include "../../../Marlin.h"
+#include "../../../stepper.h"
 #include "../api.h"
 #include "internal.h"
 

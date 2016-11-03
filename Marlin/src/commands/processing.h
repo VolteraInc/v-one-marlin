@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Configuration_adv.h"
+#include "../../Configuration_adv.h"
 
 // TODO: enhance this interface so that we don't need to expose all these vars
 extern char cmdbuffer[BUFSIZE][MAX_CMD_SIZE];

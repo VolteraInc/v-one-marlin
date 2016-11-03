@@ -1,8 +1,8 @@
 #include "api.h"
 
-#include "../Marlin.h"
-#include "../planner.h"
-#include "../stepper.h"
+#include "../../Marlin.h"
+#include "../../planner.h"
+#include "../../stepper.h"
 
 static signed char axis_homed_state[3] = {0, 0, 0};
 const float homing_feedrate[] = HOMING_FEEDRATE;
