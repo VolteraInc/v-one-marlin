@@ -503,7 +503,7 @@ float profile_remaining_time(){
   float sum;
   float delta;
 
-  if (profile_empty()){
+  if (profile_empty() || profile_complete()){
     return 0;
   }
 
@@ -557,10 +557,10 @@ void manage_heating_profile(){
     // Check if we are within 2 degrees
     if (abs(target_temperature_bed - current_temperature_bed) < 2) {
       if (logging_enabled){
-          SERIAL_ECHO_START;
-          SERIAL_ECHOPGM("Reached target temperature. Holding for "); SERIAL_ECHO(profile.duration[profile.head]);
-          SERIAL_ECHOPGM(" seconds");
-          SERIAL_ECHOPGM("\n");
+      SERIAL_ECHO_START;
+      SERIAL_ECHOPGM("Reached target temperature. Holding for "); SERIAL_ECHO(profile.duration[profile.head]);
+      SERIAL_ECHOPGM(" seconds");
+      SERIAL_ECHOPGM("\n");
       }
       profile.holdUntil = now + profile.duration[profile.head] * 1000; // Hold this temp for X seconds
       profile.ramping = false;
@@ -593,9 +593,9 @@ void manage_heating_profile(){
   setTargetBed(profile.temperature[profile.head]);
 
   if (logging_enabled){
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("New target Temperature: "); SERIAL_ECHOLN(profile.temperature[profile.head]);
-  }
+  SERIAL_ECHO_START;
+  SERIAL_ECHOPGM("New target Temperature: "); SERIAL_ECHOLN(profile.temperature[profile.head]);
+}
 }
 void manage_heater()
 {
