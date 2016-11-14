@@ -37,8 +37,8 @@ enum ProbeTriggerStates readProbeTriggerState() {
   // Note: We've seen an occasional reading of 5.0 in otherwise stable readings,
   // if the readings are ~1.0 than a simple average could take too many iterations to
   // reach <1.0. Hence, we use a counter to detect consecutive equivalent classifications.
-  int maxIterations = 10;
-  int reportThreshold = 8;
+  int maxIterations = 12;
+  int reportThreshold = 10;
   int count = 0;
   enum ProbeTriggerStates state = PROBE_OFF;
   enum ProbeTriggerStates previousState = s_classifyVoltage(readProbePinVoltage());
@@ -57,7 +57,7 @@ enum ProbeTriggerStates readProbeTriggerState() {
     if (++count >= 4) {
       if (i + 1 >= reportThreshold) {
         SERIAL_ECHO_START;
-        SERIAL_ECHOPGM("Warning: determine probe trigger state took "); SERIAL_ECHO(i+1);
+        SERIAL_ECHOPGM("Warning: determination of probe trigger state took "); SERIAL_ECHO(i+1);
         SERIAL_ECHOPGM(" of "); SERIAL_ECHO(maxIterations);
         SERIAL_ECHOLNPGM(" iterations to resolve.");
       }
