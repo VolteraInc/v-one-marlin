@@ -42,8 +42,8 @@
 #include <SPI.h>
 #endif
 
-#include "api/api.h"
-#include "commands/processing.h"
+#include "src/api/api.h"
+#include "src/commands/processing.h"
 
 
 #define VERSION_STRING  "v0.2.0"

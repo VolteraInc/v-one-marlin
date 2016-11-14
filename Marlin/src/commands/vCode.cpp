@@ -1,6 +1,6 @@
 #include "../api/api.h"
-#include "../Marlin.h"
-#include "../Stepper.h"
+#include "../../Marlin.h"
+#include "../../Stepper.h"
 
 #include "processing.h"
 

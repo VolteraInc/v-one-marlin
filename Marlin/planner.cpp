@@ -56,7 +56,7 @@
 #include "stepper.h"
 #include "temperature.h"
 #include "language.h"
-#include "compensationAlgorithms/api.h"
+#include "src/compensationAlgorithms/api.h"
 
 //===========================================================================
 //=============================public variables ============================

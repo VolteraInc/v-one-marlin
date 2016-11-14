@@ -1,8 +1,8 @@
 #include "api.h"
 
-#include "../Marlin.h"
-#include "../planner.h"
-#include "../stepper.h"
+#include "../../Marlin.h"
+#include "../../planner.h"
+#include "../../stepper.h"
 
 #include "internal.h"
 

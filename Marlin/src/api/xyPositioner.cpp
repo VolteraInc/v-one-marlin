@@ -1,6 +1,6 @@
 #include "api.h"
 
-#include "../Marlin.h"
+#include "../../Marlin.h"
 
 int moveToXyPositioner(Tool tool, bool skipMoveInZ) {
   if(logging_enabled) {
