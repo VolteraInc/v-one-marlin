@@ -295,7 +295,10 @@ extern "C"{
 void setup()
 {
   MYSERIAL.begin(BAUDRATE);
-  SERIAL_PROTOCOLLNPGM("start");
+
+  // sometimes there are noise characters in the first message,
+  // so we make the first message a bit more distinct by including dashes
+  SERIAL_PROTOCOLLNPGM("--start--");
 
   // Check startup - does nothing if bootloader sets MCUSR to 0
   byte mcu = MCUSR;
