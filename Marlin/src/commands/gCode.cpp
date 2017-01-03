@@ -8,45 +8,6 @@
 
 #include "../../motion_control.h"
 
-// look here for descriptions of G-codes: http://linuxcnc.org/handbook/gcode/g-code.html
-// http://objects.reprap.org/wiki/Mendel_User_Manual:_RepRapGCodes
-
-//Implemented Codes
-//-------------------
-// G0  -> G1
-// G1  - Coordinated Movement X Y Z E
-// G2  - CW ARC
-// G3  - CCW ARC
-// G4  - Dwell S<seconds> or P<milliseconds>
-// G10 - retract filament according to settings of M207
-// G11 - retract recover filament according to settings of M208
-
-/// XYPOSITIONER
-// G18 - Trigger in +Y
-// G19 - Trigger in -Y
-// G20 - Trigger in +X
-// G21 - Trigger in -X
-
-// AUTOTESTING
-// G24 - Test the zMIN endstop trigger position
-// G25 - Test the xAxis endstop trigger position
-// G26 - Test the yAxis endstop trigger position
-// G27 - Test the zMAX trigger position
-
-// G28 - Home all Axis
-// G29 - Detailed Z-Probe, probes the bed at 3 or more points.  Will fail if you haven't homed yet.
-// G30 - Single Z Probe, probes bed at current XY location.
-// G33 - Homes the Z axis to the bottom Z switch.
-// G90 - Use Absolute Coordinates
-// G91 - Use Relative Coordinates
-// G92 - Set current position to coordinates given
-//
-// G1001 - Raise until endstop hit
-// G1002 - Move to XY-Positioner
-// G1003 - Move to Z-Switch
-// G1004 - Relative move (same as G91; G01 <args>; G90)
-
-
 static float destination[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
 static float offset[3] = {0.0, 0.0, 0.0};
 static float feedrate = 1500.0;
@@ -134,30 +95,36 @@ static void s_prepare_arc_move(char isclockwise) {
 }
 
 int process_gcode(int command_code) {
+  // look here for descriptions of G-codes: http://linuxcnc.org/handbook/gcode/g-code.html
+  // http://objects.reprap.org/wiki/Mendel_User_Manual:_RepRapGCodes
+
   switch(command_code) {
-    case 0: // G0 -> G1
-    case 1: // G1
+    // G0, G1  - Coordinated Movement X Y Z E F
+    case 0:
+    case 1:
       if(!IsStopped()) {
         s_get_coordinates(); // For X Y Z E F
         s_prepare_move();
       }
       return 0;
 
-    case 2: // G2  - CW ARC
+    // G2  - CW ARC
+    case 2:
       if(!IsStopped()) {
         s_get_arc_coordinates();
         s_prepare_arc_move(true);
       }
       return 0;
 
-    case 3: // G3  - CCW ARC
+    // G3  - CCW ARC
+    case 3:
       if(!IsStopped()) {
         s_get_arc_coordinates();
         s_prepare_arc_move(false);
       }
       return 0;
 
-    // G4 dwell
+    // G4  - Dwell S<seconds> or P<milliseconds>
     case 4: {
       unsigned long waitUntil = 0;
       if(code_seen('P')) waitUntil = code_value(); // milliseconds to wait
@@ -169,49 +136,6 @@ int process_gcode(int command_code) {
         manage_heater();
         manage_inactivity();
       }
-      return 0;
-    }
-
-    // G33 Homes the Z axis to the z-switch.
-    case 33:
-      // Note: it is safer to assume a dispenser is attached than it is to assume a probe is.
-      return homeZ(TOOLS_DISPENSER);
-
-    // G28 Home X and Y normally, home Z to the top (legacy code relies on this behavior)
-    case 28: {
-      bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
-
-      resetToolPreparations();
-
-      if (home_all || code_seen('Z')) {
-        setHomedState(Z_AXIS, 0);
-        raise();
-
-        // Set the position so that we can process absolute movements (e.g. G1)
-        current_position[Z_AXIS] = Z_MAX_POS;
-        plan_set_position(
-          current_position[ X_AXIS ],
-          current_position[ Y_AXIS ],
-          current_position[ Z_AXIS ],
-          current_position[ E_AXIS ]
-        );
-      }
-
-      if (home_all || code_seen('X')) {
-        setHomedState(X_AXIS, 0);
-      }
-
-      if (home_all || code_seen('Y')) {
-        setHomedState(Y_AXIS, 0);
-      }
-
-      home(
-        TOOLS_NONE,
-        home_all || code_seen('X'),
-        home_all || code_seen('Y'),
-        false
-      );
-
       return 0;
     }
 
@@ -263,7 +187,8 @@ int process_gcode(int command_code) {
       return 0;
     }
 
-    // Test the zAxis - move to impossible position, and report where limit switch triggered.
+    // G24 - Test the zMIN endstop trigger position
+    // move to impossible position, and report where limit switch triggered.
     case 24: {
       feedrate = homing_feedrate[Z_AXIS]/(6);
       // move down until you find the bed
@@ -280,7 +205,8 @@ int process_gcode(int command_code) {
     }
     return 0;
 
-    // Test the xAxis - move to impossible position, and report where limit switch triggered.
+    // G25 - Test the xAxis endstop trigger position
+    // move to impossible position, and report where limit switch triggered.
     case 25: {
       // move down until you find the bed
       feedrate = homing_feedrate[X_AXIS]/(6);
@@ -297,7 +223,8 @@ int process_gcode(int command_code) {
     }
     return 0;
 
-    // Test the yAxis - move to impossible position, and report where limit switch triggered.
+    // G26 - Test the yAxis endstop trigger position
+    // move to impossible position, and report where limit switch triggered.
     case 26: {
       // move down until you find the bed
       feedrate = homing_feedrate[Y_AXIS]/(6);
@@ -314,7 +241,8 @@ int process_gcode(int command_code) {
     }
     return 0;
 
-    //Test the zAxis - move to impossible position, and report where limit switch triggered.
+    // G27 - Test the zMAX trigger position
+    // move to impossible position, and report where limit switch triggered.
     case 27: {
       // move down until you find the bed
       feedrate = homing_feedrate[Z_AXIS]/(6);
@@ -331,7 +259,45 @@ int process_gcode(int command_code) {
     }
     return 0;
 
-    // G30 Single Z Probe
+    // G28 - Home X and Y normally, home Z to the top (legacy code relies on this behavior)
+    case 28: {
+      bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
+
+      resetToolPreparations();
+
+      if (home_all || code_seen('Z')) {
+        setHomedState(Z_AXIS, 0);
+        raise();
+
+        // Set the position so that we can process absolute movements (e.g. G1)
+        current_position[Z_AXIS] = Z_MAX_POS;
+        plan_set_position(
+          current_position[ X_AXIS ],
+          current_position[ Y_AXIS ],
+          current_position[ Z_AXIS ],
+          current_position[ E_AXIS ]
+        );
+      }
+
+      if (home_all || code_seen('X')) {
+        setHomedState(X_AXIS, 0);
+      }
+
+      if (home_all || code_seen('Y')) {
+        setHomedState(Y_AXIS, 0);
+      }
+
+      home(
+        TOOLS_NONE,
+        home_all || code_seen('X'),
+        home_all || code_seen('Y'),
+        false
+      );
+
+      return 0;
+    }
+
+    // G30 - Single Z Probe, probes bed at current XY location.
     case 30: {
       float measurement;
       if (probe(TOOLS_PROBE, measurement, NoRetract)) {
@@ -347,7 +313,7 @@ int process_gcode(int command_code) {
       return 0;
     }
 
-    // G31 Reports the Probe Offset
+    // G31 - Reports the Probe Offset
     case 31: {
       float z_probe_offset;
       if (measureProbeDisplacement(TOOLS_PROBE, z_probe_offset)) {
@@ -358,15 +324,23 @@ int process_gcode(int command_code) {
       return 0;
     }
 
-    case 90: // G90
+    // G33 - Homes the Z axis to the Z-switch.
+    case 33:
+      // Note: it is safer to assume a dispenser is attached than it is to assume a probe is.
+      return homeZ(TOOLS_DISPENSER);
+
+    // G90 - Use Absolute Coordinates
+    case 90:
       relative_mode = false;
       return 0;
 
-    case 91: // G91
+    // G91 - Use Relative Coordinates
+    case 91:
       relative_mode = true;
       return 0;
 
-    case 92: // G92
+    // G92 - Set current position to coordinates given
+    case 92:
       st_synchronize();
       for(int8_t i=0; i < NUM_AXIS; i++) {
         if(code_seen(axis_codes[i])) {
