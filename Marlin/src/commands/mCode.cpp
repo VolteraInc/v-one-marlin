@@ -3,6 +3,7 @@
 #include "../../Marlin.h"
 #include "../../stepper.h"
 #include "../../temperature.h"
+#include "../../temperature_profile.h"
 #include "../../ConfigurationStore.h"
 #include "../../language.h"
 

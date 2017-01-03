@@ -31,6 +31,7 @@
 #include "Marlin.h"
 #include "planner.h"
 #include "temperature.h"
+#include "temperature_profile.h"
 #include "watchdog.h"
 #include "ConfigurationStore.h"
 #include "language.h"
