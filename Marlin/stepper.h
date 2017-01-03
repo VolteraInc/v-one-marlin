@@ -30,10 +30,6 @@
 #define NORM_E_DIR() WRITE(E0_DIR_PIN, !INVERT_E0_DIR)
 #define REV_E_DIR() WRITE(E0_DIR_PIN, INVERT_E0_DIR)
 
-#ifdef ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED
-extern bool abort_on_endstop_hit;
-#endif
-
 // Initialize and start the stepper motor subsystem
 void st_init();
 

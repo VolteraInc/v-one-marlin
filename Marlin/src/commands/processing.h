@@ -7,6 +7,8 @@ extern char cmdbuffer[BUFSIZE][MAX_CMD_SIZE];
 extern char* strchr_pointer;
 extern int bufindr;
 
+extern bool pending_temp_change;
+
 bool command_prefix_seen(char prefix); // check if the given prefix matches the first letter of the current command
 bool code_seen(char code); // find the given code
 float code_value(); // the float that follows the found code
@@ -16,8 +18,8 @@ char code_prefix(); // the character before the found code
 extern unsigned long previous_millis_active_cmd;
 void refresh_cmd_timeout();
 
-//int process_gcode();
-//int process_mcode();
+int process_gcode(int command_code);
+int process_mcode(int command_code);
 int process_vcode(int command_code);
 int process_dcode(int command_code);
 int process_icode(int command_code);

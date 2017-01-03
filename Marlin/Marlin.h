@@ -1,8 +1,7 @@
 // Tonokip RepRap firmware rewrite based off of Hydra-mmm firmware.
 // License: GPL
 
-#ifndef MARLIN_H
-#define MARLIN_H
+#pragma once
 
 #define  FORCE_INLINE __attribute__((always_inline)) inline
 
@@ -148,12 +147,6 @@ enum AxisEnum {X_AXIS=0, Y_AXIS=1, Z_AXIS=2, E_AXIS=3};
 void FlushSerialRequestResend();
 void ClearToSend();
 
-void get_coordinates();
-#ifdef DELTA
-void calculate_delta(float cartesian[3]);
-extern float delta[3];
-#endif
-void prepare_move();
 void kill();
 void Stop();
 
@@ -161,7 +154,6 @@ void handle_glow_leds();
 
 bool IsStopped();
 
-void prepare_arc_move(char isclockwise);
 void clamp_to_software_endstops(float target[3]);
 
 void refresh_cmd_timeout(void);
@@ -192,6 +184,8 @@ extern float xypos_y_pos;
 
 extern const char axis_codes[NUM_AXIS];
 
+extern bool glow_led_override;
+
 extern bool logging_enabled;
 
 extern unsigned long starttime;
@@ -205,4 +199,4 @@ extern void digipot_i2c_set_current( int channel, float current );
 extern void digipot_i2c_init();
 #endif
 
-#endif
+void setStepperInactiveDuration(unsigned long duration);
