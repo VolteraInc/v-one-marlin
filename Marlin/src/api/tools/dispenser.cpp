@@ -5,54 +5,42 @@
 
 static float s_dispenseHeight = 0.0f;
 
-int prepareDispenser(Tool tool) {
-  if (raise()) {
-    return -1;
-  }
+// We can not detect if the dispenser is mounted
+// the best we can do is check if another tool is mounted.
+int s_confirmNoOtherToolsMountedOrTriggered(const char * context, Tool tool) {
+    switch (readToolState(tool)) {
+      case TOOL_STATE_NOT_MOUNTED:
+        return 0;
 
-  if(probeMounted()) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to prepare dispenser, the probe is mounted");
-    return -1;
-  }
+      case TOOL_STATE_MOUNTED:
+        SERIAL_ERROR_START;
+        SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context); SERIAL_ERRORLNPGM(", another tool was detected");
+        return -1;
 
-  // Wiggle E to mesh gears.
-  if (meshGears()) {
-    return -1;
-  }
+      case TOOL_STATE_TRIGGERED:
+        SERIAL_ERROR_START;
+        SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context); SERIAL_ERRORLNPGM(", tool reported contact before movement started");
+        return -1;
 
-  // Ensure homed in Z
-  if (!homedZ()) {
-    if (homeZ(tool)) {
-      return -1;
+      default:
+        SERIAL_ERROR_START;
+        SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context); SERIAL_ERRORLNPGM(", could not determine if tool mounted");
+        return -1;
     }
-  }
+}
 
-  Point2D toolPosition;
-  if (xyPositionerFindCenter(tool, defaultXyPositionerCycles, toolPosition.x, toolPosition.y)) {
-    return -1;
-  }
-
-  auto const dx = abs(xypos_x_pos - toolPosition.x);
-  auto const dy = abs(xypos_y_pos - toolPosition.y);
-
-  if(dx > 1 || dy > 1){
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Calculated XY center is very different than calibrated. ");
-    SERIAL_ERRORPGM("Calibrated X: "); SERIAL_ERROR(xypos_x_pos);
-    SERIAL_ERRORPGM(" Y: "); SERIAL_ERROR(xypos_y_pos);
-    SERIAL_ERRORPGM(" Measured X: "); SERIAL_ERROR(toolPosition.x);
-    SERIAL_ERRORPGM(" Y: "); SERIAL_ERRORLN(toolPosition.y);
-    return -1;
-  }
-
-  // Overwrite the current position with constant position.
-  setPosition(xypos_x_pos, xypos_y_pos, current_position[Z_AXIS], current_position[E_AXIS]);
-
-  if (raise()) {
-    return -1;
-  }
-  return 0;
+int prepareDispenser(Tool tool) {
+  const char* context = "prepare dispenser";
+  return (
+    raise() ||
+    meshGears() ||
+    confirmRequiredToolAttached(context, tool, TOOLS_DISPENSER) ||
+    s_confirmNoOtherToolsMountedOrTriggered(context, tool) ||
+    ensureHomedInXY() ||
+    ensureHomedInZ(tool) ||
+    centerTool(tool) ||
+    raise()
+  );
 }
 
 float getDispenseHeight(Tool tool) {
