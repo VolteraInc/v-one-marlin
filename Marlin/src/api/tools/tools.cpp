@@ -8,8 +8,7 @@
 
 static Tool s_tool = TOOLS_NONE;
 
-static bool s_probeReady = false;
-static bool s_dispenserReady = false;
+static bool s_toolPrepared = false;
 
 void sendToolStatusUpdate() {
   SERIAL_PROTOCOLPGM("toolUpdate");
@@ -17,36 +16,21 @@ void sendToolStatusUpdate() {
   SERIAL_PROTOCOLPGM("\n");
 }
 
+
+static int s_prepareTool(Tool tool) {
+  switch (tool) {
+    case TOOLS_PROBE: return prepareProbe(tool);
+    case TOOLS_DISPENSER: return prepareDispenser(tool);
+    default: return 0;
+  }
+}
+
 int prepareToolToMove(Tool tool) {
-  // Ensure homed in X, Y
-  if (!homedXY()) {
-    if (homeXY()) {
+  if (!s_toolPrepared) {
+    if (s_prepareTool(tool)) {
       return -1;
     }
-  }
-
-  // Perform tool-specific preparations
-  switch (tool) {
-    case TOOLS_PROBE:
-      if (!s_probeReady) {
-        if (prepareProbe(tool)) {
-          return -1;
-        }
-        s_probeReady = true;
-      }
-      break;
-
-    case TOOLS_DISPENSER:
-      if (!s_dispenserReady) {
-        if (prepareDispenser(tool)) {
-          return -1;
-        }
-        s_dispenserReady = true;
-      }
-      break;
-
-    case TOOLS_NONE:
-      break;
+    s_toolPrepared = true;
   }
   return 0;
 }
@@ -70,21 +54,9 @@ Tool getTool() {
 }
 
 int resetToolPreparations() {
-  switch (s_tool) {
-    case TOOLS_PROBE:
-      s_probeReady = false;
-      setDispenseHeight(TOOLS_DISPENSER, 0.0f);
-      s_dispenserReady = false;
-      setHomedState(Z_AXIS, 0);
-      break;
-    case TOOLS_DISPENSER:
-      setDispenseHeight(TOOLS_DISPENSER, 0.0f);
-      s_dispenserReady = false;
-      setHomedState(Z_AXIS, 0);
-      break;
-    case TOOLS_NONE:
-      break;
-  }
+  s_toolPrepared = false;
+  setDispenseHeight(TOOLS_DISPENSER, 0.0f);
+  setHomedState(Z_AXIS, 0);
   return 0;
 }
 
@@ -113,8 +85,7 @@ int outputToolStatus() {
   SERIAL_ECHOPGM("  z: "); SERIAL_ECHOLN(getHomedState(Z_AXIS));
 
   SERIAL_ECHOPGM("Status\n");
-  SERIAL_ECHOPGM("  Probe Ready: "); SERIAL_ECHOLN(s_probeReady);
-  SERIAL_ECHOPGM("  Dispenser Ready: "); SERIAL_ECHOLN(s_dispenserReady);
+  SERIAL_ECHOPGM("  Prepared: "); SERIAL_ECHOLN(s_toolPrepared);
 
   return 0;
 }
