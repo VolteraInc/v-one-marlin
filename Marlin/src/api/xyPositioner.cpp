@@ -8,7 +8,6 @@ int moveToXyPositioner(Tool tool, bool skipMoveInZ) {
     SERIAL_ECHOLNPGM("Move to xy positioner");
   }
 
-  // Make sure we have a probe
   switch(tool) {
     case TOOLS_DISPENSER:
     case TOOLS_PROBE:
