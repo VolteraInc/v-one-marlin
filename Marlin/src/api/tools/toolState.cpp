@@ -6,18 +6,15 @@ float readPogoPinVoltage() {
   return analogRead(P_TOP_STATE_PIN) / 1024.0 * 5.0;
 }
 
-static enum ToolStates s_classifyVoltage(Tool tool, float voltage) {
-  // The pick-and-place tool's voltage classification is inverted relative to the probe
-  // TODO: see how drill behaves
+static enum ToolStates s_classifyVoltage(Tool, float voltage) {
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Classifying voltage "); SERIAL_ECHOLN(voltage);
   }
-  const auto invert = tool == TOOLS_PNP;
   if (voltage < 1.0) {
-    return invert ? TOOL_STATE_MOUNTED : TOOL_STATE_TRIGGERED;
+    return TOOL_STATE_TRIGGERED;
   } else if (voltage <= 4.0) {
-    return invert ? TOOL_STATE_TRIGGERED : TOOL_STATE_MOUNTED;
+    return TOOL_STATE_MOUNTED;
   } else {
     return TOOL_STATE_NOT_MOUNTED;
   }
