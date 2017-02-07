@@ -91,7 +91,7 @@
 #define CALIB_Y_SCALE     (1.0)
 #define CALIB_COS_THETA   (1.0)
 #define CALIB_TAN_THETA   (0.0)
-#define CALIB_X_BACKLASH  (0.0) // Default assumed backlash. 
+#define CALIB_X_BACKLASH  (0.0) // Default assumed backlash.
 #define CALIB_Y_BACKLASH  (0.0)
 
 #if VOLTERA_PIN_VERSION == 1
@@ -258,17 +258,6 @@
 
 // FIND YOUR OWN: "M303 E-1 C8 S90" to run autotune on the bed at 90 degreesC for 8 cycles.
 #endif // PIDTEMPBED
-
-
-
-//this prevents dangerous Extruder moves, i.e. if the temperature is under the limit
-//can be software-disabled for whatever purposes by
-//#define PREVENT_DANGEROUS_EXTRUDE
-//if PREVENT_DANGEROUS_EXTRUDE is on, you can still disable (uncomment) very long bits of extrusion separately.
-//#define PREVENT_LENGTHY_EXTRUDE
-
-#define EXTRUDE_MINTEMP 170
-#define EXTRUDE_MAXLENGTH (X_MAX_LENGTH+Y_MAX_LENGTH) //prevent extrusion of very large distances.
 
 //===========================================================================
 //=============================Mechanical Settings===========================

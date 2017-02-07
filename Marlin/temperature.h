@@ -18,8 +18,7 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef temperature_h
-#define temperature_h
+#pragma once
 
 #include "Marlin.h"
 #include "planner.h"
@@ -30,7 +29,6 @@
 // public functions
 void tp_init();  //initialize the heating
 void manage_heater(); //it is critical that this is called periodically.
-void manage_heating_profile();
 
 // low level conversion routines
 // do not use these routines and variables outside of temperature.cpp
@@ -139,12 +137,4 @@ FORCE_INLINE void autotempShutdown(){
  #endif
 }
 
-int profile_validate_input(const int temperature, const int duration);
-bool profile_empty();
-float profile_remaining_time();
-void profile_add(const int temperature, const int duration);
-void profile_reset();
-
 void PID_autotune(float temp, int extruder, int ncycles);
-
-#endif
