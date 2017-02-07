@@ -51,7 +51,7 @@ int process_vcode(int command_code) {
       if (prepareToolToMove(tool)) {
         return -1;
       }
-      const float feedrate = code_seen('F') ? code_value() : getDefaultFeedrate();
+      const auto feedrate = code_seen('F') ? code_value() : getDefaultFeedrate();
       if (code_seen('Z') && code_prefix() == '-') {
         if (moveToLimit(Z_AXIS, -1, feedrate)) { return -1; }
       }
@@ -77,8 +77,8 @@ int process_vcode(int command_code) {
         return -1;
       }
 
-      float additionalRetractDistance = code_seen('R') ? code_value() : DefaultRetract;
-      float measurement;
+      const auto additionalRetractDistance = code_seen('R') ? code_value() : DefaultRetract;
+      auto measurement = 0.0f;
       if (
         prepareToolToMove(tool) ||
         probe(tool, measurement, additionalRetractDistance)
@@ -104,20 +104,6 @@ int process_vcode(int command_code) {
         resetToolPreparations() ||
         homeXY()
       );
-
-    // Set current position
-    case 6:
-      if (code_seen('X') || code_seen('Y') || code_seen('Z')) {
-        return setPosition(
-          code_seen('X') ? code_value() : current_position[ X_AXIS ],
-          code_seen('Y') ? code_value() : current_position[ Y_AXIS ],
-          code_seen('Z') ? code_value() : current_position[ Z_AXIS ],
-          code_seen('E') ? code_value() : current_position[ E_AXIS ]
-        );
-      } else if (code_seen('E')) {
-        return setPositionEOnly(code_value());
-      }
-      return 0;
 
     //-------------------------------------------
     // Tool status
@@ -151,15 +137,18 @@ int process_vcode(int command_code) {
       SERIAL_ECHOLNPGM("  V1 - Move/Dispense -- V1 X100 Y100 Z10 E30 F6000");
       SERIAL_ECHOLNPGM("  V2 - Relative Move/Dispense -- V2 X5 Y3 Z-1 E2 F6000");
       SERIAL_ECHOLNPGM("  V3 - Move until limit switch triggers -- V3 -X -Y -Z F6000");
-      SERIAL_ECHOLNPGM("  V4 - Probe at current position (retract by probe displacement + R) -- V4 R1");
       SERIAL_ECHOLNPGM("  V5 - raise, home XY, and reset tool preparations -- V5");
-      SERIAL_ECHOLNPGM("  V6 - override planner's current position -- V6 E0");
-      SERIAL_ECHOLNPGM("  V7 - override planner's current position, relatively -- V7 E-1");
       SERIAL_ECHOLNPGM("");
       SERIAL_ECHOLNPGM("Tool Commands");
-      SERIAL_ECHOLNPGM("  V100 - Tool status");
-      SERIAL_ECHOLNPGM("  V101 - attach/detach tool -- V101 or V101 P or V101 D");
-      SERIAL_ECHOLNPGM("  V102 - set dispense height (must have dispenser attached) -- V102 Z0.140");
+      SERIAL_ECHOLNPGM("  General");
+      SERIAL_ECHOLNPGM("    V100 - Tool status");
+      SERIAL_ECHOLNPGM("    V101 - detach tool (i.e. set tool to none), attach options listed below");
+      SERIAL_ECHOLNPGM("  Dispenser");
+      SERIAL_ECHOLNPGM("    V101 D - attach dispenser");
+      SERIAL_ECHOLNPGM("    V102 - set dispense height (must have dispenser attached) -- V102 Z0.140");
+      SERIAL_ECHOLNPGM("  Probe");
+      SERIAL_ECHOLNPGM("    V101 P - attach probe");
+      SERIAL_ECHOLNPGM("    V4 - Probe at current position (retract by probe displacement + R) -- V4 R1");
       return 0;
   }
 }

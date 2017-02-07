@@ -60,7 +60,7 @@ int process_dcode(int command_code) {
         return 0;
       }
 
-    // Algorithms - Probe calibration plate
+    // Algorithms - Measure probe displacement
     case 104: {
       if (prepareToolToMove(tool)) {
         return -1;
@@ -156,7 +156,7 @@ int process_dcode(int command_code) {
       SERIAL_ECHOLNPGM("  D101 - prepare tool to move");
       SERIAL_ECHOLNPGM("  D102 - Home -- D102 or D102 XY");
       SERIAL_ECHOLNPGM("  D103 - xy positioner -- D103 or D103 M (move-only)");
-      SERIAL_ECHOLNPGM("  D104 - probe displacement");
+      SERIAL_ECHOLNPGM("  D104 - measure probe displacement");
       SERIAL_ECHOLNPGM("  D105 - measure at switch -- D105 -X");
       SERIAL_ECHOLNPGM("  D106 - read probe pin's voltage (C=cycles M=milliseconds between readings) -- D106 C10 M5 ");
       SERIAL_ECHOLNPGM("");
