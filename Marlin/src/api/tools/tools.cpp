@@ -236,7 +236,6 @@ int lowerUntilToolContacts(Tool tool) {
 
   switch (tool) {
     case TOOLS_PROBE:
-    case TOOLS_PNP:
       break;
     default:
       SERIAL_ERROR_START;
