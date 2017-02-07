@@ -58,3 +58,8 @@ int calibrateKeyPositions(Tool tool, long cycles = defaultXyPositionerCycles);
 
 // Calibration plate
 int measureProbeDisplacement(Tool tool, float& displacement);
+
+// Bed
+bool isOverBed(float x, float y);
+bool haveBedHeightMap();
+float bedHeightAt(float x, float y);

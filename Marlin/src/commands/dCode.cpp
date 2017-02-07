@@ -133,6 +133,18 @@ int process_dcode(int command_code) {
       return 0;
     }
 
+    // Algorithms - Bed height
+    case 107: {
+      float x = code_seen('X') ? code_value() : current_position[ X_AXIS ];
+      float y = code_seen('Y') ? code_value() : current_position[ Y_AXIS ];
+      float height = bedHeightAt(x, y);
+      SERIAL_ECHO_START;
+      SERIAL_ECHOPGM("Bed height at ("); SERIAL_ECHO(x);
+      SERIAL_ECHOPGM(", "); SERIAL_ECHO(y);
+      SERIAL_ECHOPGM(") is "); SERIAL_ECHOLN(height);
+      return 0;
+    }
+
     //-------------------------------------------
     // List Commands
     default:
