@@ -190,3 +190,99 @@ int moveZ(Tool tool, float z, float f, bool applyDispenseHeight) {
   }
   return 0;
 }
+
+int confirmRequiredToolAttached(const char* context, Tool tool, Tool requiredTool) {
+  if (tool != requiredTool) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context); SERIAL_ERRORPGM(", ");
+    SERIAL_ERROR(toolTypeAsString(requiredTool)); SERIAL_ERRORLNPGM(" not attached");
+    return -1;
+  }
+  return 0;
+}
+
+int confirmMountedAndNotTriggered(const char* context, Tool tool) {
+  switch (readToolState(tool)) {
+    case TOOL_STATE_MOUNTED:
+      return 0;
+
+    case TOOL_STATE_NOT_MOUNTED:
+      SERIAL_ERROR_START;
+      SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context); SERIAL_ERRORLNPGM(", no tool mounted");
+      return -1;
+
+    case TOOL_STATE_TRIGGERED:
+      SERIAL_ERROR_START;
+      SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context); SERIAL_ERRORLNPGM(", tool reported contact before movement started");
+      return -1;
+
+    default:
+      SERIAL_ERROR_START;
+      SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context); SERIAL_ERRORLNPGM(", could not determine if tool mounted");
+      return -1;
+  }
+}
+
+int ensureHomedInXY() {
+  if (homedXY()) {
+    return 0;
+  }
+  return homeXY();
+}
+
+int ensureHomedInZ(Tool tool) {
+  if (homedZ()) {
+    return 0;
+  }
+  return homeZ(tool);
+}
+
+int centerTool(Tool tool) {
+  float toolX, toolY;
+  if (xyPositionerFindCenter(tool, defaultXyPositionerCycles, toolX, toolY)) {
+    return -1;
+  }
+
+  auto const dx = abs(xypos_x_pos - toolX);
+  auto const dy = abs(xypos_y_pos - toolY);
+  if (dx > 1 || dy > 1) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORPGM("Calculated XY center is very different than calibrated. ");
+    SERIAL_ERRORPGM("Calibrated X: "); SERIAL_ERROR(xypos_x_pos);
+    SERIAL_ERRORPGM(" Y: "); SERIAL_ERROR(xypos_y_pos);
+    SERIAL_ERRORPGM(" Measured X: "); SERIAL_ERROR(toolX);
+    SERIAL_ERRORPGM(" Y: "); SERIAL_ERRORLN(toolY);
+    return -1;
+  }
+
+  // Overwrite the current position with constant position.
+  setPosition(xypos_x_pos, xypos_y_pos, current_position[Z_AXIS], current_position[E_AXIS]);
+  return 0;
+}
+
+int lowerUntilToolContacts(Tool tool) {
+  st_synchronize();
+
+  switch (tool) {
+    case TOOLS_PROBE:
+    case TOOLS_PNP:
+      break;
+    default:
+      SERIAL_ERROR_START;
+      SERIAL_ERRORPGM("Unable to lower until contact, ");
+      SERIAL_ERROR(toolTypeAsString(tool)); SERIAL_ERRORLNPGM(" does not support this operation");
+      return -1;
+  }
+
+  return
+    confirmMountedAndNotTriggered("lower until contact", tool) ||
+    moveToLimit(Z_AXIS, -1);
+  ;
+}
+
+int retractToolConditionally(float distance, float additionalRetractDistance) {
+  if (additionalRetractDistance == NoRetract) {
+    return 0;
+  }
+  return retractFromSwitch(Z_AXIS, -1, distance + additionalRetractDistance);
+}
