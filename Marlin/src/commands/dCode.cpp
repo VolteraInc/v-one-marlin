@@ -119,7 +119,7 @@ int process_dcode(int command_code) {
 
       // Collect the voltage readings
       for (int i = 0; i < cycles; ++i) {
-        voltages[i] = readProbePinVoltage();
+        voltages[i] = readPogoPinVoltage();
         delay(ms);
       }
 

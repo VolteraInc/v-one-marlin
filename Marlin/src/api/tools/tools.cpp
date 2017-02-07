@@ -102,7 +102,7 @@ int outputToolStatus() {
   SERIAL_ECHOPGM("  type: "); SERIAL_ECHOLN(toolTypeAsString(s_tool));
 
   SERIAL_ECHOPGM("Probe\n");
-  SERIAL_ECHOPGM("  trigger status: "); SERIAL_ECHOLN(probeTriggerStateAsString(readProbeTriggerState()));
+  SERIAL_ECHOPGM("  trigger status: "); SERIAL_ECHOLN(toolStateAsString(readToolState(s_tool)));
 
   SERIAL_ECHOPGM("Dispenser\n");
   SERIAL_ECHOPGM("  dispense height: "); SERIAL_ECHOLN(getDispenseHeight(TOOLS_DISPENSER));
