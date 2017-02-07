@@ -74,13 +74,6 @@ int measureProbeDisplacement(Tool tool, float& o_displacement) {
     SERIAL_ECHOPGM(")\n");
   }
 
-#if VOLTERA_PIN_VERSION == 1
-  displacement = 0.050f;
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("This printer does not have a calibration plate, reverting to constant probe displacement of: "); SERIAL_ECHO(displacement);
-  SERIAL_ECHOPGM("\n");
-#endif
-
   if (displacement < MinDisplacement || displacement > MaxDisplacement) {
     SERIAL_ERROR_START;
     SERIAL_ERRORPGM("Unable to measure probe displacement, measured value "); SERIAL_ERROR(displacement);
