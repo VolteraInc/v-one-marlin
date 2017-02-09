@@ -27,6 +27,7 @@
   #include "temperature.h"
   #include "language.h"
   #include "speed_lookuptable.h"
+  #include "src/api/api.h"
   #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
   #include <SPI.h>
   #endif
@@ -240,7 +241,7 @@ void enable_calibration_plate(bool enable) {
 
   void st_wake_up() {
   //  TCNT1 = 0;
-    ENABLE_STEPPER_DRIVER_INTERRUPT();
+    //ENABLE_STEPPER_DRIVER_INTERRUPT();
   }
 
   void step_wait(){
@@ -319,6 +320,9 @@ FORCE_INLINE void trapezoid_generator_reset() {
   // It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately.
 ISR(TIMER1_COMPA_vect)
 {
+  drill_monitor();
+
+
   // If there is no current block, attempt to pop one from the buffer
   if (current_block == NULL) {
   // Anything in the buffer?
@@ -444,7 +448,7 @@ ISR(TIMER1_COMPA_vect)
     count_direction[Z_AXIS]=-1;
 
       bool z_min = READ_PIN(Z_MIN);
-      bool p_top = READ_PIN(P_TOP);
+      bool p_top = true; //READ_PIN(P_TOP);
 
 #if defined(P_BOT_PIN) && P_BOT_PIN > -1
       bool p_bot = calibration_plate_enabled ? READ_PIN(P_BOT) : false;
@@ -492,6 +496,8 @@ ISR(TIMER1_COMPA_vect)
 
 
   for(int8_t i=0; i < step_loops; i++) { // Take multiple steps per interrupt (For high speed moves)
+
+    drill_monitor();
   #ifndef AT90USB
   MSerial.checkRx(); // Check for serial chars.
   #endif
@@ -783,7 +789,7 @@ void st_init()
 
   OCR1A = 0x4000;
   TCNT1 = 0;
-  ENABLE_STEPPER_DRIVER_INTERRUPT();
+  //ENABLE_STEPPER_DRIVER_INTERRUPT();
 
   #ifdef ADVANCE
   #if defined(TCCR0A) && defined(WGM01)
@@ -797,9 +803,8 @@ void st_init()
   #endif //ADVANCE
 
   sei();
+  DISABLE_STEPPER_DRIVER_INTERRUPT();
 }
-
-
   // Block until all buffered steps are executed
 void st_synchronize()
 {
@@ -866,7 +871,7 @@ void quickStop()
   while(blocks_queued())
     plan_discard_current_block();
   current_block = NULL;
-  ENABLE_STEPPER_DRIVER_INTERRUPT();
+  //ENABLE_STEPPER_DRIVER_INTERRUPT();
 }
 #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
 

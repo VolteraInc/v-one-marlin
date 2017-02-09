@@ -51,7 +51,6 @@ float st_get_position_mm(uint8_t axis);
 // to notify the subsystem that it is time to go to work.
 void st_wake_up();
 
-
 bool endstop_triggered(int axis);
 
 bool readAndResetEndstops(bool triggered[3], long stepsWhenTriggered[3]);

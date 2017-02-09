@@ -1095,31 +1095,6 @@ void process_commands()
 
       SERIAL_PROTOCOLLN("");
       break;
-    case 122: //M122 - We let the planner know where we are. -  Added by VOLTERA
-        {
-          st_synchronize();
-          // If no axes are specified, we reset the Z axis (for compat with the old software)
-          // Otherwise, we reset the specified axes
-          bool z_default = !((code_seen(axis_codes[X_AXIS])) || (code_seen(axis_codes[Y_AXIS])) || (code_seen(axis_codes[Z_AXIS]))|| (code_seen(axis_codes[E_AXIS])));
-          if (code_seen(axis_codes[X_AXIS])) current_position[X_AXIS] = st_get_position_mm(X_AXIS);
-          if (code_seen(axis_codes[Y_AXIS])) current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
-          if (code_seen(axis_codes[Z_AXIS]) || z_default) current_position[Z_AXIS]  = st_get_position_mm(Z_AXIS);
-          if (code_seen(axis_codes[E_AXIS])) current_position[E_AXIS] = st_get_position_mm(E_AXIS);
-          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-        }
-        break;
-    case 123: // M123 - set software endstop(s) to current position - specify axis/es and T for top (max) and B for bottom (min). These are reset upon homing
-      if (code_seen(axis_codes[X_AXIS])) (code_seen('T') ? max_pos : min_pos)[X_AXIS] = current_position[X_AXIS];
-      if (code_seen(axis_codes[Y_AXIS])) (code_seen('T') ? max_pos : min_pos)[Y_AXIS] = current_position[Y_AXIS];
-      if (code_seen(axis_codes[Z_AXIS])) (code_seen('T') ? max_pos : min_pos)[Z_AXIS] = current_position[Z_AXIS];
-
-      break;
-
-    // Reports the current state of the Probe
-    case 125: {
-      SERIAL_PROTOCOLPGM("Probe: "); SERIAL_PROTOCOLLN(probeTriggerStateAsString(readProbeTriggerState()));
-      break;
-    }
 
     case 119: // M119
       SERIAL_PROTOCOLLN(MSG_M119_REPORT);
@@ -1173,6 +1148,70 @@ void process_commands()
       #endif
       break;
       //TODO: update for all axis, use for loop
+
+    case 122: //M122 - We let the planner know where we are. -  Added by VOLTERA
+        {
+          st_synchronize();
+          // If no axes are specified, we reset the Z axis (for compat with the old software)
+          // Otherwise, we reset the specified axes
+          bool z_default = !((code_seen(axis_codes[X_AXIS])) || (code_seen(axis_codes[Y_AXIS])) || (code_seen(axis_codes[Z_AXIS]))|| (code_seen(axis_codes[E_AXIS])));
+          if (code_seen(axis_codes[X_AXIS])) current_position[X_AXIS] = st_get_position_mm(X_AXIS);
+          if (code_seen(axis_codes[Y_AXIS])) current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
+          if (code_seen(axis_codes[Z_AXIS]) || z_default) current_position[Z_AXIS]  = st_get_position_mm(Z_AXIS);
+          if (code_seen(axis_codes[E_AXIS])) current_position[E_AXIS] = st_get_position_mm(E_AXIS);
+          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+        }
+        break;
+    case 123: // M123 - set software endstop(s) to current position - specify axis/es and T for top (max) and B for bottom (min). These are reset upon homing
+      if (code_seen(axis_codes[X_AXIS])) (code_seen('T') ? max_pos : min_pos)[X_AXIS] = current_position[X_AXIS];
+      if (code_seen(axis_codes[Y_AXIS])) (code_seen('T') ? max_pos : min_pos)[Y_AXIS] = current_position[Y_AXIS];
+      if (code_seen(axis_codes[Z_AXIS])) (code_seen('T') ? max_pos : min_pos)[Z_AXIS] = current_position[Z_AXIS];
+
+      break;
+
+    // Reports the current state of the Probe
+    case 125: {
+      SERIAL_PROTOCOLPGM("Probe: "); SERIAL_PROTOCOLLN(probeTriggerStateAsString(readProbeTriggerState()));
+      break;
+    }
+
+    case 126: //Turn Drill ON at a Feedrate.
+        drill_disable();
+        SERIAL_PROTOCOLLN("Drill Disabled");
+      break;
+
+    case 127: // Turn Drill OFF
+        drill_enable();
+        SERIAL_PROTOCOLLN("Drill Enabled");
+        break;
+
+    case 128: // Set Drill feedrate
+      {
+        if(code_seen('F')){
+          int drill_speed = code_value();
+          if (drill_speed >= 0 && drill_speed < 256) {
+            drill_set_speed(drill_speed);
+            SERIAL_PROTOCOL("Drill Speed:");
+            SERIAL_PROTOCOLLN(drill_speed);
+          }
+        }
+        break;
+      }
+
+      case 129: // Set Drill feedrate
+        {
+          if(code_seen('F')){
+            int drill_frequency = code_value();
+            if (drill_frequency >= 10 && drill_frequency < 500) {
+              float period_ms = drill_set_frequency((float)drill_frequency);
+              SERIAL_PROTOCOL("Period MS");
+              SERIAL_PROTOCOLLN(period_ms);
+            }
+          }
+          break;
+        }
+
+
 
     case 200: // M200 D<millimeters> set filament diameter and set E axis units to cubic millimeters (use S0 to set back to millimeters).
       {
@@ -1651,6 +1690,7 @@ void manage_inactivity()
     }
   }
 
+  drill_monitor();
   handle_glow_leds();
   check_axes_activity();
 }
