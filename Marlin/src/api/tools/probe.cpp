@@ -7,6 +7,7 @@ static float s_probeDisplacement = 0.0f;
 
 int prepareProbe(Tool tool) {
   const char* context = "prepare probe";
+  enable_p_top(true);
   return (
     raise() ||
     confirmRequiredToolAttached(context, tool, TOOLS_PROBE) ||

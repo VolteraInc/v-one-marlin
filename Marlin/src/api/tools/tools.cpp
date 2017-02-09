@@ -55,6 +55,7 @@ Tool getTool() {
 
 int resetToolPreparations() {
   s_toolPrepared = false;
+  enable_p_top(false);
   setDispenseHeight(TOOLS_DISPENSER, 0.0f);
   setRotationSpeed(TOOLS_ROUTER, 0.0f);
   setHomedState(Z_AXIS, 0);
