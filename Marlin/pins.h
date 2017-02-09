@@ -70,7 +70,7 @@
     #define DIGIPOT_ADDRESS {0x00,0x03,0x02,0x01} // X Y Z E digipot channels to stepper driver mapping
     // Refer to http://www.intersil.com/content/dam/Intersil/documents/isl2/isl23448.pdf
 
-  #elif VOLTERA_PIN_VERSION == 2 //Pinout for version 3. (What B1 Shipped with)
+  #elif VOLTERA_PIN_VERSION == 2 //Pinout for version 3. (What B2 Shipped with)
 
     #define X_STEP_PIN         30
     #define X_DIR_PIN          31
@@ -102,6 +102,7 @@
     #define P_BOT_PIN         54
     #define P_TOP_PIN         56
     #define P_TOP_STATE_PIN   2 // Analog NUMBERING
+    #define ROUTER_COMMS_PIN  56 // same as P_TOP_PIN
 
     //The P_TOP pin is measured in both digital and analog,
     // P_TOP_STATE_MIN is used to get ON, OFF, TRIGGERED status.
@@ -171,4 +172,3 @@
 #endif
 
 #endif
-

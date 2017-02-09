@@ -53,6 +53,7 @@ bool endstop_triggered(int axis);
 bool readAndResetEndstops(bool triggered[3], long stepsWhenTriggered[3]);
 void clear_endstop(int axis);
 
+void enable_p_top(bool enable);
 void enable_calibration_plate(bool enable);
 
 void checkStepperErrors(); //Print errors detected by the stepper

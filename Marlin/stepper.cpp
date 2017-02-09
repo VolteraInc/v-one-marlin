@@ -78,6 +78,8 @@
   static bool old_z_min_endstop=false;
   static bool old_z_max_endstop=false;
 
+
+  static bool p_top_enabled = false;
   static bool calibration_plate_enabled = false;
 
   volatile long count_position[NUM_AXIS] = { 0, 0, 0, 0};
@@ -210,6 +212,12 @@ void clear_endstop(int axis) {
       case Y_AXIS: endstop_y_hit = false; break;
       case Z_AXIS: endstop_z_hit = false; break;
     }
+  CRITICAL_SECTION_END;
+}
+
+void enable_p_top(bool enable) {
+  CRITICAL_SECTION_START;
+    p_top_enabled = enable;
   CRITICAL_SECTION_END;
 }
 
@@ -440,14 +448,9 @@ ISR(TIMER1_COMPA_vect)
 
     count_direction[Z_AXIS]=-1;
 
-      bool z_min = READ_PIN(Z_MIN);
-      bool p_top = READ_PIN(P_TOP);
-
-#if defined(P_BOT_PIN) && P_BOT_PIN > -1
-      bool p_bot = calibration_plate_enabled ? READ_PIN(P_BOT) : false;
-#else
-      bool p_bot = false;
-#endif
+    bool z_min = READ_PIN(Z_MIN);
+    bool p_top = p_top_enabled ? READ_PIN(P_TOP) : false;
+    bool p_bot = calibration_plate_enabled ? READ_PIN(P_BOT) : false;
 
   bool z_min_endstop = z_min || p_top || p_bot;
   if(z_min_endstop && old_z_min_endstop && (current_block->steps_z > 0)) {
@@ -489,6 +492,7 @@ ISR(TIMER1_COMPA_vect)
 
 
   for(int8_t i=0; i < step_loops; i++) { // Take multiple steps per interrupt (For high speed moves)
+
   #ifndef AT90USB
   MSerial.checkRx(); // Check for serial chars.
   #endif
@@ -795,7 +799,6 @@ void st_init()
 
   sei();
 }
-
 
   // Block until all buffered steps are executed
 void st_synchronize()
