@@ -1198,21 +1198,6 @@ void process_commands()
         break;
       }
 
-      case 129: // Set Drill feedrate
-        {
-          if(code_seen('F')){
-            int drill_frequency = code_value();
-            if (drill_frequency >= 10 && drill_frequency < 500) {
-              float period_ms = drill_set_frequency((float)drill_frequency);
-              SERIAL_PROTOCOL("Period MS");
-              SERIAL_PROTOCOLLN(period_ms);
-            }
-          }
-          break;
-        }
-
-
-
     case 200: // M200 D<millimeters> set filament diameter and set E axis units to cubic millimeters (use S0 to set back to millimeters).
       {
         float area = .0;
@@ -1690,7 +1675,6 @@ void manage_inactivity()
     }
   }
 
-  drill_monitor();
   handle_glow_leds();
   check_axes_activity();
 }

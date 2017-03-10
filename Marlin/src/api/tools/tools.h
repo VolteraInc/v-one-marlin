@@ -38,5 +38,3 @@ float getDispenseHeight(Tool tool);
 void drill_enable();
 void drill_disable();
 void drill_set_speed(int new_feedrate);
-float drill_set_frequency(float new_frequency);
-void drill_monitor();

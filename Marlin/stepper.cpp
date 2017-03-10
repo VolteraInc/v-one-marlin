@@ -320,7 +320,6 @@ FORCE_INLINE void trapezoid_generator_reset() {
   // It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately.
 ISR(TIMER1_COMPA_vect)
 {
-  drill_monitor();
 
 
   // If there is no current block, attempt to pop one from the buffer
@@ -497,7 +496,6 @@ ISR(TIMER1_COMPA_vect)
 
   for(int8_t i=0; i < step_loops; i++) { // Take multiple steps per interrupt (For high speed moves)
 
-    drill_monitor();
   #ifndef AT90USB
   MSerial.checkRx(); // Check for serial chars.
   #endif

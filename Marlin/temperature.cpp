@@ -1155,7 +1155,6 @@ int read_max6675()
 ISR(TIMER0_COMPB_vect)
 {
 
-  drill_monitor();
   //these variables are only accesible from the ISR, but static, so they don't lose their value
   static unsigned char temp_count = 0;
   static unsigned long raw_temp_0_value = 0;
