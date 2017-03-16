@@ -66,10 +66,10 @@ enum ToolStates readToolState(Tool tool) {
 
 const char* toolStateAsString(enum ToolStates state) {
   switch(state) {
-    case TOOL_STATE_TRIGGERED: return "triggered";
+    case TOOL_STATE_TRIGGERED: return "Triggered";
     case TOOL_STATE_MOUNTED: return "Mounted";
-    case TOOL_STATE_NOT_MOUNTED: return "not mounted";
-    case TOOL_STATE_UNKNOWN: return "unknown";
+    case TOOL_STATE_NOT_MOUNTED: return "Not Mounted";
+    case TOOL_STATE_UNKNOWN: return "Unknown";
   }
-  return "unknown";
+  return "Unknown";
 }
