@@ -276,10 +276,10 @@ void PID_autotune(float temp, int extruder, int ncycles) {
       int p;
       if (extruder<0){
         p=soft_pwm_bed;
-        SERIAL_PROTOCOLPGM("ok B:");
+        SERIAL_PROTOCOLPGM(" B:");
       }else{
         p=soft_pwm[extruder];
-        SERIAL_PROTOCOLPGM("ok T:");
+        SERIAL_PROTOCOLPGM(" T:");
       }
 
       SERIAL_PROTOCOL(input);

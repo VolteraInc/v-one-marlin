@@ -1,6 +1,7 @@
 #include "processing.h"
 
 #include "../api/api.h"
+#include "../../language.h"
 #include "../../Marlin.h"
 #include "../../stepper.h"
 #include "../../planner.h"
@@ -102,7 +103,9 @@ int process_gcode(int command_code) {
     // G0, G1  - Coordinated Movement X Y Z E F
     case 0:
     case 1:
-      if(!IsStopped()) {
+      if(IsStopped()) {
+        SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
+      } else {
         s_get_coordinates(); // For X Y Z E F
         s_prepare_move();
       }
@@ -110,7 +113,9 @@ int process_gcode(int command_code) {
 
     // G2  - CW ARC
     case 2:
-      if(!IsStopped()) {
+      if(IsStopped()) {
+        SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
+      } else {
         s_get_arc_coordinates();
         s_prepare_arc_move(true);
       }
@@ -118,7 +123,9 @@ int process_gcode(int command_code) {
 
     // G3  - CCW ARC
     case 3:
-      if(!IsStopped()) {
+      if(IsStopped()) {
+        SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
+      } else {
         s_get_arc_coordinates();
         s_prepare_arc_move(false);
       }

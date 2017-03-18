@@ -76,12 +76,6 @@ bool logging_enabled = false;
 //===========================================================================
 //=============================Private Variables=============================
 //===========================================================================
-static long gcode_N, gcode_LastN, Stopped_gcode_LastN = 0;
-
-static int bufindw = 0;
-static int buflen = 0;
-static char serial_char;
-static int serial_count = 0;
 
 //Inactivity shutdown variables
 static unsigned long previous_millis_serial_rx = 0;
@@ -241,133 +235,45 @@ static void s_checkForEndstopHits() {
   }
 }
 
-void loop() {
-  if(buflen < (BUFSIZE-1))
-    get_command();
+void read_commands() {
+  static char command[MAX_CMD_SIZE];
+  static int index = 0;
 
-  if(buflen) {
-    // Refresh the timeouts before processing so that that we have
-    // the entire timeout duration to process the command
-    // (ie. manage_inactivity is called while processing the command)
-    previous_millis_serial_rx = millis();
-    refresh_cmd_timeout();
+  while (MYSERIAL.available() > 0 && !command_queue.full()) {
+    char ch = MYSERIAL.read();
 
-    process_commands();
-
-    // Refresh the timeouts after processing so that the user/sw
-    // has then entire timeout duration to issue another command
-    previous_millis_serial_rx = millis();
-    refresh_cmd_timeout();
-
-    buflen = (buflen-1);
-    bufindr = (bufindr + 1)%BUFSIZE;
-  }
-
-  manage_heating_profile();
-  manage_heater();
-  manage_inactivity();
-  s_checkForEndstopHits();
-  checkBufferEmpty();
-  periodic_output();
-}
-
-void get_command() {
-  while( MYSERIAL.available() > 0  && buflen < BUFSIZE) {
-    serial_char = MYSERIAL.read();
-    if(serial_char == '\n' ||
-       serial_char == '\r' ||
-       serial_count >= (MAX_CMD_SIZE - 1) )
-    {
-      if(!serial_count) { //if empty line
-        return;
-      }
-      cmdbuffer[bufindw][serial_count] = 0; //terminate string
-      if(strchr(cmdbuffer[bufindw], 'N') != NULL)
-      {
-        strchr_pointer = strchr(cmdbuffer[bufindw], 'N');
-        gcode_N = (strtol(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL, 10));
-        if(gcode_N != gcode_LastN+1 && (strstr_P(cmdbuffer[bufindw], PSTR("M110")) == NULL) ) {
-          SERIAL_ERROR_START;
-          SERIAL_ERRORPGM(MSG_ERR_LINE_NO);
-          SERIAL_ERRORLN(gcode_LastN);
-          //Serial.println(gcode_N);
-          FlushSerialRequestResend();
-          serial_count = 0;
-          return;
+    // End of command
+    if (ch == '\n' || ch == '\r') {
+      // Handle empty lines
+      if(index == 0 || index >= (MAX_CMD_SIZE - 1)) {
+        // We output a message, because this is a symptom that something is wrong
+        SERIAL_ECHO_START;
+        SERIAL_ECHOLNPGM("Received a blank command, ignoring");
+      } else {
+        // Add to command queue
+        command[index] = 0; // terminate string
+        command_queue.push(command);
         }
 
-        if(strchr(cmdbuffer[bufindw], '*') != NULL)
-        {
-          byte checksum = 0;
-          byte count = 0;
-          while(cmdbuffer[bufindw][count] != '*') checksum = checksum^cmdbuffer[bufindw][count++];
-          strchr_pointer = strchr(cmdbuffer[bufindw], '*');
+      // Reset the write position for the next command
+      index = 0;
 
-          if( (int)(strtod(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL)) != checksum) {
+    // Command too long
+    } else if (index >= (MAX_CMD_SIZE - 1)) {
+      command[index] = 0; // terminate string (so we can include it in the error)
+      index = 0; // reset write index
             SERIAL_ERROR_START;
-            SERIAL_ERRORPGM(MSG_ERR_CHECKSUM_MISMATCH);
-            SERIAL_ERRORLN(gcode_LastN);
-            FlushSerialRequestResend();
-            serial_count = 0;
-            return;
-          }
-          //if no errors, continue parsing
-        }
-        else
-        {
-          SERIAL_ERROR_START;
-          SERIAL_ERRORPGM(MSG_ERR_NO_CHECKSUM);
-          SERIAL_ERRORLN(gcode_LastN);
-          FlushSerialRequestResend();
-          serial_count = 0;
-          return;
-        }
+      SERIAL_ERRORPGM("Unable to process command, command is too long, will ignore until end of command found --");
+      SERIAL_ERRORLN(command);
 
-        gcode_LastN = gcode_N;
-        //if no errors, continue parsing
-      }
-      else  // if we don't receive 'N' but still see '*'
-      {
-        if((strchr(cmdbuffer[bufindw], '*') != NULL))
-        {
-          SERIAL_ERROR_START;
-          SERIAL_ERRORPGM(MSG_ERR_NO_LINENUMBER_WITH_CHECKSUM);
-          SERIAL_ERRORLN(gcode_LastN);
-          serial_count = 0;
-          return;
-        }
-      }
-      if((strchr(cmdbuffer[bufindw], 'G') != NULL)){
-        strchr_pointer = strchr(cmdbuffer[bufindw], 'G');
-        switch((int)((strtod(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL)))){
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-          if(Stopped == false) { // If printer is stopped by an error the G[0-3] codes are ignored.
-            ACK_CMD
-          }
-          else {
-            SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
-          }
-          break;
-        default:
-          break;
-        }
-
-      }
-      bufindw = (bufindw + 1)%BUFSIZE;
-      buflen += 1;
-      serial_count = 0; //clear buffer
-    }
-    else
-    {
-      cmdbuffer[bufindw][serial_count++] = serial_char;
+    // Add character to command
+    } else {
+      command[index++] = ch;
     }
   }
 }
 
-void process_commands() {
+void process_command() {
   if (command_prefix_seen('V')) {
     process_vcode((int)code_value());
   } else if (command_prefix_seen('D')) {
@@ -381,23 +287,39 @@ void process_commands() {
   } else {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM(MSG_UNKNOWN_COMMAND);
-    SERIAL_ECHO(cmdbuffer[bufindr]);
+    SERIAL_ECHO(command_queue.front());
     SERIAL_ECHOLNPGM("\"");
   }
-
-  ClearToSend();
 }
 
-void FlushSerialRequestResend() {
-  //char cmdbuffer[bufindr][100]="Resend:";
-  MYSERIAL.flush();
-  SERIAL_PROTOCOLPGM(MSG_RESEND);
-  SERIAL_PROTOCOLLN(gcode_LastN + 1);
-  ClearToSend();
-}
+void loop() {
+  read_commands();
 
-void ClearToSend() {
-  ACK_CMD
+  if(!command_queue.empty()) {
+    // Refresh the timeouts before processing so that that we have
+    // the entire timeout duration to process the command
+    // (ie. manage_inactivity is called while processing the command)
+    previous_millis_serial_rx = millis();
+    refresh_cmd_timeout();
+
+    process_command();
+    command_queue.pop();
+
+    // Send Acknowledgement
+    SERIAL_PROTOCOLLNPGM(MSG_OK);
+
+    // Refresh the timeouts after processing so that the user/sw
+    // has then entire timeout duration to issue another command
+    previous_millis_serial_rx = millis();
+    refresh_cmd_timeout();
+  }
+
+  manage_heating_profile();
+  manage_heater();
+  manage_inactivity();
+  s_checkForEndstopHits();
+  checkBufferEmpty();
+  periodic_output();
 }
 
 void clamp_to_software_endstops(float target[3]) {
@@ -575,7 +497,6 @@ void Stop() {
   disable_heater();
   if(Stopped == false) {
     Stopped = true;
-    Stopped_gcode_LastN = gcode_LastN; // Save last g_code for restart
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
   }

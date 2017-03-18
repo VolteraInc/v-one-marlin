@@ -150,8 +150,7 @@ int process_mcode(int command_code) {
         return -1;
       }
 
-      SERIAL_PROTOCOLPGM(MSG_OK " ");
-      SERIAL_PROTOCOLPGM(" T:");
+      SERIAL_PROTOCOLPGM("T:");
       SERIAL_PROTOCOL_F(0.0,1);
       SERIAL_PROTOCOLPGM(" /");
       SERIAL_PROTOCOL_F(0.0,1 );
@@ -501,7 +500,6 @@ int process_mcode(int command_code) {
       #endif
 
       updatePID();
-      ACK_CMD
       SERIAL_PROTOCOLPGM(" p:"); SERIAL_PROTOCOL(Kp);
       SERIAL_PROTOCOLPGM(" i:"); SERIAL_PROTOCOL(unscalePID_i(Ki));
       SERIAL_PROTOCOLPGM(" d:"); SERIAL_PROTOCOL(unscalePID_d(Kd));
@@ -536,7 +534,6 @@ int process_mcode(int command_code) {
       if(code_seen('D')) bedKd = scalePID_d(code_value());
 
       updatePID();
-      ACK_CMD
       SERIAL_PROTOCOLPGM(" p:"); SERIAL_PROTOCOL(bedKp);
       SERIAL_PROTOCOLPGM(" i:"); SERIAL_PROTOCOL(unscalePID_i(bedKi));
       SERIAL_PROTOCOLPGM(" d:"); SERIAL_PROTOCOL(unscalePID_d(bedKd));
@@ -573,7 +570,9 @@ int process_mcode(int command_code) {
 
     // M504 - Store the Serial Number.
     case 504: {
-      if(code_seen('S')) memcpy(product_serial_number, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], sizeof(product_serial_number));
+      if (code_seen('S')) {
+        memcpy(product_serial_number, code_value_raw(), sizeof(product_serial_number));
+      }
 
       product_serial_number[10] = '\0'; //Terminate the string.
       Config_StoreCalibration();

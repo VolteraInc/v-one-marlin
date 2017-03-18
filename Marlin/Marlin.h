@@ -97,10 +97,6 @@ FORCE_INLINE void serialprintPGM(const char *str)
   }
 }
 
-
-void get_command();
-void process_commands();
-
 void manage_inactivity();
 
 void setHomedState(int axis, int value);
