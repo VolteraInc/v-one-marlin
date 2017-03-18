@@ -4,7 +4,7 @@
 
   Copyright (c) 2009-2011 Simen Svale Skogsrud
   Copyright (c) 2011 Sungeun K. Jeon
-  
+
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
@@ -21,7 +21,9 @@
 
 #pragma once
 
-// Execute an arc in offset mode format. position == current xyz, target == target xyz, 
+void clamp_to_software_endstops(float target[3]);
+
+// Execute an arc in offset mode format. position == current xyz, target == target xyz,
 // offset == offset from current xyz, axis_XXX defines circle plane in tool space, axis_linear is
 // the direction of helical travel, radius == circle radius, isclockwise boolean. Used
 // for vector transformation direction.

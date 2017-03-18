@@ -253,7 +253,7 @@ void read_commands() {
         // Add to command queue
         command[index] = 0; // terminate string
         command_queue.push(command);
-        }
+      }
 
       // Reset the write position for the next command
       index = 0;
@@ -262,7 +262,7 @@ void read_commands() {
     } else if (index >= (MAX_CMD_SIZE - 1)) {
       command[index] = 0; // terminate string (so we can include it in the error)
       index = 0; // reset write index
-            SERIAL_ERROR_START;
+      SERIAL_ERROR_START;
       SERIAL_ERRORPGM("Unable to process command, command is too long, will ignore until end of command found --");
       SERIAL_ERRORLN(command);
 
@@ -320,20 +320,6 @@ void loop() {
   s_checkForEndstopHits();
   checkBufferEmpty();
   periodic_output();
-}
-
-void clamp_to_software_endstops(float target[3]) {
-  if (min_software_endstops) {
-    if (target[X_AXIS] < min_pos[X_AXIS]) target[X_AXIS] = min_pos[X_AXIS];
-    if (target[Y_AXIS] < min_pos[Y_AXIS]) target[Y_AXIS] = min_pos[Y_AXIS];
-    if (target[Z_AXIS] < min_pos[Z_AXIS]) target[Z_AXIS] = min_pos[Z_AXIS];
-  }
-
-  if (max_software_endstops) {
-    if (target[X_AXIS] > max_pos[X_AXIS]) target[X_AXIS] = max_pos[X_AXIS];
-    if (target[Y_AXIS] > max_pos[Y_AXIS]) target[Y_AXIS] = max_pos[Y_AXIS];
-    if (target[Z_AXIS] > max_pos[Z_AXIS]) target[Z_AXIS] = max_pos[Z_AXIS];
-  }
 }
 
 void manage_inactivity() {

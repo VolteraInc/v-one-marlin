@@ -150,7 +150,6 @@ void handle_glow_leds();
 
 bool IsStopped();
 
-void clamp_to_software_endstops(float target[3]);
 
 void refresh_cmd_timeout(void);
 
