@@ -97,8 +97,7 @@ int process_dcode(int command_code) {
       SERIAL_ECHOPGM(" returnValue:"); SERIAL_ECHO(returnValue);
       SERIAL_ECHOPGM(" axis:"); SERIAL_ECHO(axis_codes[axis]);
       SERIAL_ECHOPGM(" direction:"); SERIAL_ECHO(direction);
-      SERIAL_ECHOPGM(" measurement:"); SERIAL_ECHO(measurement);
-      SERIAL_ECHOPGM("\n");
+      SERIAL_ECHOPGM(" measurement:"); SERIAL_ECHOLN(measurement);
       return 0;
     }
 
@@ -113,7 +112,7 @@ int process_dcode(int command_code) {
         SERIAL_ECHO_START;
         SERIAL_ECHOPGM("Warning: The requested number of cycles ("); SERIAL_ECHO(cycles);
         SERIAL_ECHOPGM(") exceeds the maximum ("); SERIAL_ECHO(maxCycles);
-        SERIAL_ECHOPGM(")");
+        SERIAL_ECHOLNPGM(")");
         return 0;
       }
 
