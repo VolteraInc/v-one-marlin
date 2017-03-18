@@ -1,5 +1,4 @@
-#ifndef CONFIGURATION_ADV_H
-#define CONFIGURATION_ADV_H
+#pragma once
 
 //===========================================================================
 //=============================Thermal Settings  ============================
@@ -377,6 +376,3 @@ const unsigned int dropsegments=1; //everything with less than this number of st
   #undef BED_MINTEMP
   #undef BED_MAXTEMP
 #endif
-
-
-#endif //__CONFIGURATION_ADV_H

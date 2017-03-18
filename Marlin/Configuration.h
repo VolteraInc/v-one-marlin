@@ -1,6 +1,4 @@
-#ifndef CONFIGURATION_H
-#define CONFIGURATION_H
-
+#pragma once
 // This configuration file contains the basic settings.
 // Advanced settings can be found in Configuration_adv.h
 // BASIC SETTINGS: select your board type, temperature sensor type, axis scaling, and endstop configuration
@@ -106,8 +104,6 @@
 
 // Define this to set a custom name for your generic Mendel,
 #define CUSTOM_MENDEL_NAME "V-ONE"
-
-#define ACK_CMD SERIAL_PROTOCOLPGM(MSG_OK "\n");
 
 // Define this to set a unique identifier for this printer, (Used by some programs to differentiate between machines)
 // You can use an online service to generate a random UUID. (eg http://www.uuidgenerator.net/version4)
@@ -574,5 +570,3 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 
 #include "Configuration_adv.h"
 #include "thermistortables.h"
-
-#endif //__CONFIGURATION_H

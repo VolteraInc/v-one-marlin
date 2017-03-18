@@ -1,5 +1,4 @@
-#ifndef THERMISTORTABLES_H_
-#define THERMISTORTABLES_H_
+#pragma once
 
 #include "Marlin.h"
 
@@ -698,7 +697,7 @@ const short temptable_51[][2] PROGMEM = {
 };
 #endif
 
-#if (THERMISTORHEATER_0 == 52) || (THERMISTORHEATER_1 == 52) || (THERMISTORHEATER_2 == 52) || (THERMISTORBED == 52) 
+#if (THERMISTORHEATER_0 == 52) || (THERMISTORHEATER_1 == 52) || (THERMISTORHEATER_2 == 52) || (THERMISTORBED == 52)
 // 200k ATC Semitec 204GT-2 (WITH 1kohm RESISTOR FOR PULLUP, R9 ON SANGUINOLOLU! NOT FOR 4.7kohm PULLUP! THIS IS NOT NORMAL!)
 // Verified by linagee. Source: http://shop.arcol.hu/static/datasheets/thermistors.pdf
 // Calculated using 1kohm pullup, voltage divider math, and manufacturer provided temp/resistance
@@ -739,7 +738,7 @@ const short temptable_52[][2] PROGMEM = {
 };
 #endif
 
-#if (THERMISTORHEATER_0 == 55) || (THERMISTORHEATER_1 == 55) || (THERMISTORHEATER_2 == 55) || (THERMISTORBED == 55) 
+#if (THERMISTORHEATER_0 == 55) || (THERMISTORHEATER_1 == 55) || (THERMISTORHEATER_2 == 55) || (THERMISTORBED == 55)
 // 100k ATC Semitec 104GT-2 (Used on ParCan) (WITH 1kohm RESISTOR FOR PULLUP, R9 ON SANGUINOLOLU! NOT FOR 4.7kohm PULLUP! THIS IS NOT NORMAL!)
 // Verified by linagee. Source: http://shop.arcol.hu/static/datasheets/thermistors.pdf
 // Calculated using 1kohm pullup, voltage divider math, and manufacturer provided temp/resistance
@@ -858,7 +857,7 @@ const short temptable_60[][2] PROGMEM = {
 #endif
 
 // Pt1000 and Pt100 handling
-// 
+//
 // Rt=R0*(1+a*T+b*T*T) [for T>0]
 // a=3.9083E-3, b=-5.775E-7
 
@@ -870,7 +869,7 @@ const short temptable_60[][2] PROGMEM = {
 
 #if (THERMISTORHEATER_0 == 110) || (THERMISTORHEATER_1 == 110) || (THERMISTORHEATER_2 == 110) || (THERMISTORBED == 110) // Pt100 with 1k0 pullup
 const short temptable_110[][2] PROGMEM = {
-// only few values are needed as the curve is very flat  
+// only few values are needed as the curve is very flat
   PtLine(0,100,1000)
   PtLine(50,100,1000)
   PtLine(100,100,1000)
@@ -882,7 +881,7 @@ const short temptable_110[][2] PROGMEM = {
 #endif
 #if (THERMISTORHEATER_0 == 147) || (THERMISTORHEATER_1 == 147) || (THERMISTORHEATER_2 == 147) || (THERMISTORBED == 147) // Pt100 with 4k7 pullup
 const short temptable_147[][2] PROGMEM = {
-// only few values are needed as the curve is very flat  
+// only few values are needed as the curve is very flat
   PtLine(0,100,4700)
   PtLine(50,100,4700)
   PtLine(100,100,4700)
@@ -911,7 +910,7 @@ const short temptable_1010[][2] PROGMEM = {
 #endif
 #if (THERMISTORHEATER_0 == 1047) || (THERMISTORHEATER_1 == 1047) || (THERMISTORHEATER_2 == 1047) || (THERMISTORBED == 1047) // Pt1000 with 4k7 pullup
 const short temptable_1047[][2] PROGMEM = {
-// only few values are needed as the curve is very flat  
+// only few values are needed as the curve is very flat
   PtLine(0,1000,4700)
   PtLine(50,1000,4700)
   PtLine(100,1000,4700)
@@ -1013,5 +1012,3 @@ const short temptable_1047[][2] PROGMEM = {
 #  define HEATER_BED_RAW_LO_TEMP 0
 # endif
 #endif
-
-#endif //THERMISTORTABLES_H_
