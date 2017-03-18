@@ -58,6 +58,10 @@ void mc_arc(float *position, float *target, float *offset, uint8_t axis_0, uint8
   if (angular_travel < 0) { angular_travel += 2*M_PI; }
   if (isclockwise) { angular_travel -= 2*M_PI; }
 
+  // Make a circle if the angular rotation is 0
+  if (angular_travel == 0 && position[X_AXIS] == target[X_AXIS] && position[Y_AXIS] == target[Y_AXIS])
+    angular_travel += 2*M_PI;
+
   float millimeters_of_travel = hypot(angular_travel * radius, fabs(linear_travel));
   if (millimeters_of_travel < 0.001) {
     return;
