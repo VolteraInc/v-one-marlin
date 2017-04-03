@@ -11,6 +11,7 @@ void CommandQueue::push(const char* command) {
   }
 
   strcpy(&commands[write_index][0], command);
+  ++commands_in_queue;
   ++write_index;
   if (write_index == BUFSIZE) {
     write_index = 0;
@@ -31,7 +32,7 @@ void CommandQueue::pop() {
   }
 
   commands[read_index][0] = 0; // write a empty string to make it clear this command is done
-  commands_in_queue -= 1;
+  --commands_in_queue;
   ++read_index;
   if (read_index == BUFSIZE) {
     read_index = 0;
