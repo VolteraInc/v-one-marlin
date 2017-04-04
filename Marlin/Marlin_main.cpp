@@ -165,6 +165,14 @@ void setup() {
   glow_force_green = READ_PIN(Z_MIN);
 }
 
+void outputBedTemperatureUpdate(float current, float target, float timeRemaining) {
+  SERIAL_PROTOCOLPGM("bedTemperatureUpdate");
+  SERIAL_PROTOCOLPGM(" current:"); SERIAL_PROTOCOL_F(current,1);
+  SERIAL_PROTOCOLPGM(" target:"); SERIAL_PROTOCOL_F(target,1);
+  SERIAL_PROTOCOLPGM(" timeRemaining:"); SERIAL_PROTOCOL_F(timeRemaining,1);
+  SERIAL_PROTOCOLPGM("\n");
+}
+
 void periodic_output() {
   static struct {
     float position[NUM_AXIS];
@@ -194,16 +202,24 @@ void periodic_output() {
     const auto target = degTargetBed();
     const auto timeRemaining = profile_remaining_time();
 
-    // Output temperature if curing profile is active or on changes.
+    // Output temperature if temp or target changes or we are running a heating profile
     // NOTE: The temp sensor is noisy so filter small changes.
-    if ( !profile_empty() || abs(prev.temperature.current - current) >= 0.5 || prev.temperature.target != target) {
+    bool tempChanged = abs(prev.temperature.current - current) >= 0.5;
+    bool targetChanged = prev.temperature.target != target;
+    if ( !profile_empty() || tempChanged || targetChanged) {
+        if (targetChanged) {
+          // Output an extra data point to signal the change in target temp
+          // otherwise you will have a confusing sloped line from the previous
+          // temp update to this one.
+          // NOTE: sending a 0 for time remaining -- not sure what else to send
+          // and this is better than the current time remaining of what may be
+          // a different profile.
+          outputBedTemperatureUpdate(current, prev.temperature.target, 0);
+        }
+        outputBedTemperatureUpdate(current, target, timeRemaining);
+
         prev.temperature.current = current;
         prev.temperature.target = target;
-        SERIAL_PROTOCOLPGM("bedTemperatureUpdate");
-        SERIAL_PROTOCOLPGM(" current:"); SERIAL_PROTOCOL_F(current,1);
-        SERIAL_PROTOCOLPGM(" target:"); SERIAL_PROTOCOL_F(target,1);
-        SERIAL_PROTOCOLPGM(" timeRemaining:"); SERIAL_PROTOCOL_F(timeRemaining,1);
-        SERIAL_PROTOCOLPGM("\n");
     }
   }
 }
