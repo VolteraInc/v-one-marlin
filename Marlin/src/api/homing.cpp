@@ -83,7 +83,7 @@ static void axisIsAtHome(int axis) {
   }
 }
 
-static int homeAxis(int axis) {
+static int s_homeAxis(int axis) {
   int returnValue = -1;
   if (logging_enabled) {
     SERIAL_ECHO_START;
@@ -145,18 +145,17 @@ DONE:
   return returnValue;
 }
 
-int home(Tool tool, bool homingX, bool homingY, bool homingZ) {
-
+int rawHome(Tool tool, bool homingX, bool homingY, bool homingZ) {
   // Homing Y first moves the print head out of the way, which
   // which allows the user to access the board/bed sooner
   if (homingY) {
-    if (homeAxis(Y_AXIS)) {
+    if (s_homeAxis(Y_AXIS)) {
       return -1;
     }
   }
 
   if (homingX) {
-    if (homeAxis(X_AXIS)) {
+    if (s_homeAxis(X_AXIS)) {
       return -1;
     }
   }
@@ -204,7 +203,7 @@ int homeZ(Tool tool) {
   // Home Z to the z-switch
   if (
     moveToZSwitchXY(tool) ||
-    homeAxis(Z_AXIS)
+    s_homeAxis(Z_AXIS)
   ) {
     return -1;
   }
@@ -232,5 +231,7 @@ int homeZ(Tool tool) {
 }
 
 int homeXY() {
-  return home(TOOLS_NONE, true, true, false);
+  return (
+    rawhome(TOOLS_NONE, true, true, false)
+  );
 }

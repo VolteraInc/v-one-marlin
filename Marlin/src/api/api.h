@@ -38,11 +38,11 @@ int setPosition(float x, float y, float z, float e);
 int meshGears();
 
 // Homing
-int home(Tool tool, bool homeX = true, bool homeY = true, bool homeZ = true);
 bool homedXY();
 int homeXY();
 int homeZ(Tool tool);
 bool homedZ();
+int rawHome(Tool tool, bool homeX = true, bool homeY = true, bool homeZ = true);
 int getHomedState(int axis);
 void setHomedState(int axis, int value);
 void sendHomedStatusUpdate();

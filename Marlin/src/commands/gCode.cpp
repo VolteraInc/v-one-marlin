@@ -294,7 +294,7 @@ int process_gcode(int command_code) {
         setHomedState(Y_AXIS, 0);
       }
 
-      home(
+      rawHome(
         TOOLS_NONE,
         home_all || code_seen('X'),
         home_all || code_seen('Y'),
