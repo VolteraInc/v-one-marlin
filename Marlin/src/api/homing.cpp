@@ -226,6 +226,6 @@ int homeZ(Tool tool) {
 int homeXY() {
   return (
     raise() ||
-    rawhome(TOOLS_NONE, true, true, false)
+    rawHome(TOOLS_NONE, true, true, false)
   );
 }
