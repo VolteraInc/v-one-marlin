@@ -98,13 +98,6 @@ static int s_homeAxis(int axis) {
   // the homed state disables those safety checks.
   setHomedState(axis, 0);
 
-  // To prevent crashes, raise Z
-  if (axis == X_AXIS || axis == Y_AXIS) {
-    if(raise()) {
-      goto DONE;
-    }
-  }
-
   // Raise flag to let planner know we are homing an axis so it ignores skew adjustments.
   plan_enable_skew_adjustment(false);
 
@@ -232,6 +225,7 @@ int homeZ(Tool tool) {
 
 int homeXY() {
   return (
+    raise() ||
     rawhome(TOOLS_NONE, true, true, false)
   );
 }

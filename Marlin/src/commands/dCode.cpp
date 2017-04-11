@@ -24,6 +24,11 @@ int process_dcode(int command_code) {
     // Algorithms - Homing
     case 102: {
       bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
+      if (code_seen('Z')) {
+        if (raise()) {
+          return -1;
+        }
+      }
       return rawHome(
         tool,
         home_all || code_seen('X'),
