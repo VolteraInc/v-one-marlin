@@ -5,6 +5,7 @@ enum Tool {
   TOOLS_NONE = 0,
   TOOLS_PROBE = 1,
   TOOLS_DISPENSER = 2,
+  TOOLS_ROUTER = 3,
 };
 
 const char* toolTypeAsString(Tool tool);
@@ -36,3 +37,7 @@ int probe(Tool tool, float& measurement, float additionalRetractDistance = Defau
 // Dispenser
 int setDispenseHeight(Tool tool, float height);
 float getDispenseHeight(Tool tool);
+
+// Router
+int setRotationSpeed(Tool tool, float speed);
+float getRotationSpeed(Tool tool);

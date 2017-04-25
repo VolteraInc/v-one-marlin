@@ -16,11 +16,11 @@ void sendToolStatusUpdate() {
   SERIAL_PROTOCOLPGM("\n");
 }
 
-
 static int s_prepareTool(Tool tool) {
   switch (tool) {
     case TOOLS_PROBE: return prepareProbe(tool);
     case TOOLS_DISPENSER: return prepareDispenser(tool);
+    case TOOLS_ROUTER: return prepareRouter(tool);
     default: return 0;
   }
 }
@@ -56,6 +56,7 @@ Tool getTool() {
 int resetToolPreparations() {
   s_toolPrepared = false;
   setDispenseHeight(TOOLS_DISPENSER, 0.0f);
+  setRotationSpeed(TOOLS_ROUTER, 0.0f);
   setHomedState(Z_AXIS, 0);
   return 0;
 }
@@ -65,6 +66,7 @@ const char* toolTypeAsString(Tool tool) {
     case TOOLS_NONE: return "None";
     case TOOLS_PROBE: return "Probe";
     case TOOLS_DISPENSER: return "Dispenser";
+    case TOOLS_ROUTER: return "Router";
     default: return "unknown";
   }
 }
@@ -78,6 +80,9 @@ int outputToolStatus() {
 
   SERIAL_ECHOPGM("Dispenser\n");
   SERIAL_ECHOPGM("  dispense height: "); SERIAL_ECHOLN(getDispenseHeight(TOOLS_DISPENSER));
+
+  SERIAL_ECHOPGM("Router\n");
+  SERIAL_ECHOPGM("  Speed: "); SERIAL_ECHOLN(getRotationSpeed(TOOLS_ROUTER));
 
   SERIAL_ECHOPGM("Homing\n");
   SERIAL_ECHOPGM("  x: "); SERIAL_ECHOLN(getHomedState(X_AXIS));

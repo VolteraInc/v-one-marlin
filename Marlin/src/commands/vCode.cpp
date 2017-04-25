@@ -114,6 +114,7 @@ int process_vcode(int command_code) {
     case 101:
       if (code_seen('P')) setTool(TOOLS_PROBE);
       else if (code_seen('D')) setTool(TOOLS_DISPENSER);
+      else if (code_seen('R')) setTool(TOOLS_ROUTER);
       else setTool(TOOLS_NONE);
       return 0;
 
@@ -121,6 +122,10 @@ int process_vcode(int command_code) {
     // Note: Change will be applied to next movement
     case 102:
       return setDispenseHeight(tool, code_seen('Z') ? code_value() : 0.0f);
+
+    // Set rotation speed
+    case 110:
+      return setRotationSpeed(tool, code_seen('R') ? code_value() : 0.0f);
 
     //-------------------------------------------
     // Deprecated
@@ -149,6 +154,9 @@ int process_vcode(int command_code) {
       SERIAL_ECHOLNPGM("  Probe");
       SERIAL_ECHOLNPGM("    V101 P - attach probe");
       SERIAL_ECHOLNPGM("    V4 - Probe at current position (retract by probe displacement + R) -- V4 R1");
+      SERIAL_ECHOLNPGM("  Router");
+      SERIAL_ECHOLNPGM("    V101 R - attach router");
+      SERIAL_ECHOLNPGM("    V110 - set router rotation speed -- V110 R100, no value or 0 means stop");
       return 0;
   }
 }
