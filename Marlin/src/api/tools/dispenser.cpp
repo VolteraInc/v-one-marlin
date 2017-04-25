@@ -47,7 +47,7 @@ float getDispenseHeight(Tool tool) {
   // Confirm we have a dispenser
   if (tool != TOOLS_DISPENSER) {
     SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Warning: dispense height requested for "); SERIAL_ERROR(toolTypeAsString(getTool()));
+    SERIAL_ECHOPGM("Warning: dispense height requested for "); SERIAL_ERROR(toolTypeAsString(tool));
     SERIAL_ECHOPGM(" returning "); SERIAL_ECHOLN(s_dispenseHeight);
   }
   return s_dispenseHeight;
@@ -62,7 +62,7 @@ int setDispenseHeight(Tool tool, float height) {
   // Confirm we have a dispenser
   if (tool != TOOLS_DISPENSER) {
     SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to set dispensing height, current tool is "); SERIAL_ERRORLN(toolTypeAsString(getTool()));
+    SERIAL_ERRORPGM("Unable to set dispensing height, tool is "); SERIAL_ERRORLN(toolTypeAsString(tool));
     return -1;
   }
 
