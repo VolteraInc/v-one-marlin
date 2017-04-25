@@ -8,14 +8,10 @@ int moveToXyPositioner(Tool tool, bool skipMoveInZ) {
     SERIAL_ECHOLNPGM("Move to xy positioner");
   }
 
-  switch(tool) {
-    case TOOLS_DISPENSER:
-    case TOOLS_PROBE:
-      break;
-    default:
-      SERIAL_ERROR_START;
-      SERIAL_ERRORLNPGM("Unable to move to xy-positioner, no tool attached");
-      return -1;
+  if (tool == TOOLS_NONE) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORLNPGM("Unable to move to xy-positioner, no tool attached");
+    return -1;
   }
 
   // Raise, unless we are really close to the target x,y position

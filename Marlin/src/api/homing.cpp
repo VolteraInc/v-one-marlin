@@ -183,14 +183,10 @@ int moveToZSwitchXY(Tool tool) {
 
 int homeZ(Tool tool) {
 
-  switch(tool) {
-    case TOOLS_DISPENSER:
-    case TOOLS_PROBE:
-      break;
-    default:
-      SERIAL_ERROR_START;
-      SERIAL_ERRORLNPGM("Unable to home Z-axis, no tool attached");
-      return -1;
+  if (tool == TOOLS_NONE) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORLNPGM("Unable to home Z-axis, no tool attached");
+    return -1;
   }
 
   // Home Z to the z-switch
