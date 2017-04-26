@@ -69,21 +69,6 @@ int process_mcode(int command_code) {
       }
       return 0;
 
-    // M31 - take time since the start of the SD print or an M109 command
-    case 31: {
-      stoptime = millis();
-      char time[30];
-      unsigned long t = (stoptime - starttime) / 1000;
-      int sec,min;
-      min = t / 60;
-      sec = t % 60;
-      sprintf_P(time, PSTR("%i min, %i sec"), min, sec);
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLN(time);
-      autotempShutdown();
-      return 0;;
-    }
-
     // M82 - Treat E codes as absolute (default)
     case 82:
       axis_relative_modes[3] = false;
@@ -125,14 +110,6 @@ int process_mcode(int command_code) {
       if (code_seen('B')) analogWrite(LED_BLUE_PIN, constrain(code_value(), 0, 255));
 
       glow_led_override = code_seen('R') || code_seen('V') || code_seen('B');
-      return 0;
-
-    case 102:
-      override_p_bot = true;
-      return 0;
-
-    case 103:
-      override_p_bot = false;
       return 0;
 
     // M104 - Set extruder target temp

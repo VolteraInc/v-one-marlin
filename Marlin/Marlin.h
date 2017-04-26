@@ -172,10 +172,6 @@ extern float current_position[NUM_AXIS] ;
 extern float min_pos[3];
 extern float max_pos[3];
 extern float zprobe_zoffset;
-extern int fanSpeed;
-extern bool override_p_bot;
-extern char product_serial_number[15];
-extern float min_z_x_pos;
 extern float min_z_y_pos;
 extern float xypos_x_pos;
 extern float xypos_y_pos;
@@ -185,9 +181,6 @@ extern const char axis_codes[NUM_AXIS];
 extern bool glow_led_override;
 
 extern bool logging_enabled;
-
-extern unsigned long starttime;
-extern unsigned long stoptime;
 
 // Handling multiple extruders pins
 extern uint8_t active_extruder;

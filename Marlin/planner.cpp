@@ -547,7 +547,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
     return;
   }
 
-  block->fan_speed = fanSpeed;
+  block->fan_speed = 0;
 
   // Compute direction bits for this block
   block->direction_bits = 0;
