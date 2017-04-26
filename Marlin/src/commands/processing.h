@@ -16,13 +16,6 @@ const char* code_value_raw(); // pointer to the char that follows the found code
 char code_prefix(); // the character before the found code
 
 
-extern unsigned long previous_millis_active_cmd;
-void refresh_cmd_timeout();
-
-
-extern bool pending_temp_change;
-
-
 int process_gcode(int command_code);
 int process_mcode(int command_code);
 int process_vcode(int command_code);
