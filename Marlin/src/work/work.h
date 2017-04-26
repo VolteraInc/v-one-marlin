@@ -11,6 +11,8 @@ extern bool glow_led_override;
 void leds_init();
 void glow_leds();
 
+void toolChanges();
+
 void periodic_output();
 
 void reportBufferEmpty();

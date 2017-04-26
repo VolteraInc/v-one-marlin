@@ -199,7 +199,7 @@ int homeZ(Tool tool) {
 
   if (readToolState(tool) == TOOL_STATE_TRIGGERED) {
     SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to home Z-axis, probe triggered before contacting z-switch");
+    SERIAL_ERRORLNPGM("Unable to home Z-axis, tool triggered before contacting z-switch");
     return -1;
   }
 

@@ -5,37 +5,13 @@
 
 static float s_dispenseHeight = 0.0f;
 
-// We can not detect if the dispenser is mounted
-// the best we can do is check if another tool is mounted.
-int s_confirmNoOtherToolsMountedOrTriggered(const char * context, Tool tool) {
-    switch (readToolState(tool)) {
-      case TOOL_STATE_NOT_MOUNTED:
-        return 0;
-
-      case TOOL_STATE_MOUNTED:
-        SERIAL_ERROR_START;
-        SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context); SERIAL_ERRORLNPGM(", another tool was detected");
-        return -1;
-
-      case TOOL_STATE_TRIGGERED:
-        SERIAL_ERROR_START;
-        SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context); SERIAL_ERRORLNPGM(", tool reported contact before movement started");
-        return -1;
-
-      default:
-        SERIAL_ERROR_START;
-        SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context); SERIAL_ERRORLNPGM(", could not determine if tool mounted");
-        return -1;
-    }
-}
-
 int prepareDispenser(Tool tool) {
   const char* context = "prepare dispenser";
   return (
     raise() ||
     meshGears() ||
     confirmRequiredToolAttached(context, tool, TOOLS_DISPENSER) ||
-    s_confirmNoOtherToolsMountedOrTriggered(context, tool) ||
+    confirmMountedAndNotTriggered(context, tool) ||
     ensureHomedInXY() ||
     ensureHomedInZ(tool) ||
     centerTool(tool) ||
