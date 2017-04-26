@@ -6,11 +6,11 @@
 #include "../../temperature_profile.h"
 #include "../../ConfigurationStore.h"
 #include "../../language.h"
+#include "../work/work.h" // pending_temp_change HACK
 
 static uint8_t tmp_extruder;
 bool CooldownNoWait = true;
 bool target_direction;
-bool pending_temp_change = false;
 
 bool setTargetedHotend(int code){
   tmp_extruder = active_extruder;

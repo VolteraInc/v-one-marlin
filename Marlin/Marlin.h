@@ -180,7 +180,6 @@ extern float xypos_y_pos;
 
 extern const char axis_codes[NUM_AXIS];
 
-extern bool glow_led_override;
 
 extern bool logging_enabled;
 

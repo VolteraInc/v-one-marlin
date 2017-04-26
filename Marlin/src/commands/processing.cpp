@@ -55,9 +55,3 @@ char code_prefix() {
 
   return command[index];
 }
-
-
-unsigned long previous_millis_active_cmd = 0;
-void refresh_cmd_timeout() {
-  previous_millis_active_cmd = millis();
-}
