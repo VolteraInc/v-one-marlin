@@ -59,11 +59,9 @@ float max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
 float zprobe_zoffset;
 
 uint8_t active_extruder = 0;
-int fanSpeed=0;
 
 bool glow_led_override = false;
 bool glow_force_green = false; // For taking pictures of the printer without a PC attached.
-bool override_p_bot = false;
 float min_z_x_pos;
 float min_z_y_pos;
 float xypos_x_pos;
@@ -83,10 +81,6 @@ static unsigned long previous_millis_serial_rx = 0;
 // After this long without serial traffic *and* no movement, everything shuts down
 static unsigned long heater_inactive_time = DEFAULT_HEATER_DEACTIVE_TIME * 1000l;
 static unsigned long stepper_inactive_time = DEFAULT_STEPPER_DEACTIVE_TIME * 1000l;
-
-unsigned long starttime = 0;
-unsigned long stoptime = 0;
-
 
 bool Stopped = false;
 
