@@ -36,14 +36,11 @@ int prepareToolToMove(Tool tool) {
 }
 
 void setTool(Tool tool) {
-  if (logging_enabled) {
-    SERIAL_ECHOPGM("Swapping "); SERIAL_ECHO(toolTypeAsString(s_tool));
-    SERIAL_ECHOPGM(" for "); SERIAL_ECHO(toolTypeAsString(tool));
-    SERIAL_ECHOPGM("\n");
-  }
   if (s_tool == tool) {
     return;
   }
+  SERIAL_ECHOPGM("Swapping "); SERIAL_ECHO(toolTypeAsString(s_tool));
+  SERIAL_ECHOPGM(" for "); SERIAL_ECHOLN(toolTypeAsString(tool));
   s_tool = tool;
   resetToolPreparations();
   sendToolStatusUpdate();
@@ -77,12 +74,17 @@ int outputToolStatus() {
   SERIAL_ECHOPGM("  type: "); SERIAL_ECHOLN(toolTypeAsString(s_tool));
 
   SERIAL_ECHOPGM("Probe\n");
-  SERIAL_ECHOPGM("  trigger status: "); SERIAL_ECHOLN(toolStateAsString(readToolState(s_tool)));
+  SERIAL_ECHOPGM("  status: "); SERIAL_ECHOLN(
+    toolStateAsString(s_tool == TOOLS_PROBE ? readToolState(s_tool) : TOOL_STATE_NOT_MOUNTED)
+  );
 
   SERIAL_ECHOPGM("Dispenser\n");
   SERIAL_ECHOPGM("  dispense height: "); SERIAL_ECHOLN(getDispenseHeight(TOOLS_DISPENSER));
 
   SERIAL_ECHOPGM("Router\n");
+  SERIAL_ECHOPGM("  status: "); SERIAL_ECHOLN(
+    toolStateAsString(s_tool == TOOLS_ROUTER ? readToolState(s_tool) : TOOL_STATE_NOT_MOUNTED)
+  );
   SERIAL_ECHOPGM("  Speed: "); SERIAL_ECHOLN(getRotationSpeed(TOOLS_ROUTER));
 
   SERIAL_ECHOPGM("Homing\n");
@@ -180,10 +182,31 @@ int confirmRequiredToolAttached(const char* context, Tool tool, Tool requiredToo
 
 int confirmMountedAndNotTriggered(const char* context, Tool tool) {
   switch (readToolState(tool)) {
-    case TOOL_STATE_MOUNTED:
-      return 0;
+    case TOOL_STATE_PROBE_MOUNTED:
+      if (tool == TOOLS_PROBE) {
+        return 0;
+      }
+
+      SERIAL_ERROR_START;
+      SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context);
+      SERIAL_ERRORLNPGM(", probe is mounted");
+      return -1;
+
+    case TOOL_STATE_ROUTER_MOUNTED:
+      if (tool == TOOLS_ROUTER) {
+        return 0;
+      }
+
+      SERIAL_ERROR_START;
+      SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context);
+      SERIAL_ERRORLNPGM(", router is mounted");
+      return -1;
 
     case TOOL_STATE_NOT_MOUNTED:
+      // Note: The dispense does not contact the pogo pins so it shows as 'Not Mounted'
+      if (tool == TOOLS_DISPENSER) {
+        return 0;
+      }
       SERIAL_ERROR_START;
       SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context); SERIAL_ERRORLNPGM(", no tool mounted");
       return -1;

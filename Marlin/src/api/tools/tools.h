@@ -20,9 +20,11 @@ void sendToolStatusUpdate();
 enum ToolStates {
   TOOL_STATE_UNKNOWN = 0,
   TOOL_STATE_NOT_MOUNTED = 1,
-  TOOL_STATE_MOUNTED = 2,
-  TOOL_STATE_TRIGGERED = 3,
+  TOOL_STATE_TRIGGERED = 2,
+  TOOL_STATE_PROBE_MOUNTED = 3,
+  TOOL_STATE_ROUTER_MOUNTED = 4
 };
+Tool determineMountedTool(Tool tool);
 enum ToolStates readToolState(Tool tool);
 const char* toolStateAsString(enum ToolStates state);
 float readPogoPinVoltage();

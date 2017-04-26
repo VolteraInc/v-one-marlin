@@ -154,6 +154,7 @@ void periodic_work() {
   checkForEndstopHits();
   reportBufferEmpty();
   periodic_output();
+  toolChanges();
 }
 
 void loop() {
