@@ -69,7 +69,7 @@ static void process_command() {
   }
 }
 
-void process_serial_commands() {
+void processSerialCommands() {
   read_commands();
 
   if(!command_queue.empty()) {
