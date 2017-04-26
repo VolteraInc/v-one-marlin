@@ -137,13 +137,8 @@ FORCE_INLINE block_t *plan_get_current_block()
 }
 
 // Gets the current block. Returns NULL if buffer empty
-FORCE_INLINE bool blocks_queued()
-{
-  if (block_buffer_head == block_buffer_tail) {
-    return false;
-  }
-  else
-    return true;
+FORCE_INLINE bool blocks_queued() {
+  return block_buffer_head != block_buffer_tail;
 }
 
 void reset_acceleration_rates();
