@@ -800,12 +800,10 @@ void st_init()
   sei();
 }
 
-  // Block until all buffered steps are executed
-void st_synchronize()
-{
-  while( blocks_queued()) {
-    manage_heater();
-    manage_inactivity();
+// Block until all buffered steps are executed
+void st_synchronize() {
+  while(blocks_queued()) {
+    periodic_work();
   }
   if (logging_enabled) {
     SERIAL_ECHO_START;

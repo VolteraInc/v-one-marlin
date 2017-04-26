@@ -391,8 +391,7 @@ int process_mcode(int command_code) {
           SERIAL_PROTOCOLLN("");
           codenum = millis();
         }
-        manage_heater();
-        manage_inactivity();
+        periodic_work();
       }
       pending_temp_change = false;
       refresh_cmd_timeout();
