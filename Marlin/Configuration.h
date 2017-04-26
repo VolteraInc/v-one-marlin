@@ -298,12 +298,6 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #define Z_ENABLE_ON 0
 #define E_ENABLE_ON 0 // For all extruders
 
-// Disables axis when it's not being used.
-#define DISABLE_X false
-#define DISABLE_Y false
-#define DISABLE_Z false
-#define DISABLE_E false // For all extruders
-
 #define INVERT_X_DIR true    // for Mendel set to false, for Orca set to true
 #define INVERT_Y_DIR true   // for Mendel set to true, for Orca set to false
 #define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true

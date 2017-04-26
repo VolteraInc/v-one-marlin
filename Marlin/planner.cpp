@@ -443,39 +443,6 @@ void getHighESpeed()
 }
 #endif
 
-void check_axes_activity()
-{
-  unsigned char x_active = 0;
-  unsigned char y_active = 0;
-  unsigned char z_active = 0;
-  unsigned char e_active = 0;
-  block_t *block;
-
-  if(block_buffer_tail != block_buffer_head)
-  {
-    uint8_t block_index = block_buffer_tail;
-    while(block_index != block_buffer_head)
-    {
-      block = &block_buffer[block_index];
-      if(block->steps_x != 0) x_active++;
-      if(block->steps_y != 0) y_active++;
-      if(block->steps_z != 0) z_active++;
-      if(block->steps_e != 0) e_active++;
-      block_index = (block_index+1) & (BLOCK_BUFFER_SIZE - 1);
-    }
-  }
-  if((DISABLE_X) && (x_active == 0)) disable_x();
-  if((DISABLE_Y) && (y_active == 0)) disable_y();
-  if((DISABLE_Z) && (z_active == 0))
-  {
-    disable_z();
-  }
-  if((DISABLE_E) && (e_active == 0))
-  {
-    disable_e0();
-  }
-}
-
 int sign(float value) {
   return value == 0 ? 0 : (value > 0 ? 1 : -1);
 }

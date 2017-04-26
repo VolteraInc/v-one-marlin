@@ -372,7 +372,6 @@ void manage_inactivity() {
   }
 
   handle_glow_leds();
-  check_axes_activity();
 }
 
 void checkBufferEmpty() {
