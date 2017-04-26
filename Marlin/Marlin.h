@@ -138,7 +138,8 @@ extern float current_position[NUM_AXIS] ;
 
 extern float min_pos[3];
 extern float max_pos[3];
-extern float zprobe_zoffset;
+extern char product_serial_number[15];
+extern float min_z_x_pos;
 extern float min_z_y_pos;
 extern float xypos_x_pos;
 extern float xypos_y_pos;
