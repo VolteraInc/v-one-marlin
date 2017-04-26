@@ -96,6 +96,7 @@ bool Stopped = false;
 //===========================================================================
 
 void checkBufferEmpty();
+void manage_inactivity();
 
 void serial_echopair_P(const char *s_P, float v)
     { serialprintPGM(s_P); SERIAL_ECHO(v); }
@@ -308,13 +309,25 @@ void process_command() {
   }
 }
 
+void periodic_work() {
+  manage_heating_profile();
+  manage_heater();
+  manage_inactivity();
+  handle_glow_leds();
+  s_checkForEndstopHits();
+  checkBufferEmpty();
+  periodic_output();
+}
+
 void loop() {
   read_commands();
 
   if(!command_queue.empty()) {
     // Refresh the timeouts before processing so that that we have
     // the entire timeout duration to process the command
-    // (ie. manage_inactivity is called while processing the command)
+    // Note: this is necessary because some commands block
+    // (aka busy-wait) but will still check for inactivity
+    // (ie. they all call periodic_work())
     previous_millis_serial_rx = millis();
     refresh_cmd_timeout();
 
@@ -330,12 +343,7 @@ void loop() {
     refresh_cmd_timeout();
   }
 
-  manage_heating_profile();
-  manage_heater();
-  manage_inactivity();
-  s_checkForEndstopHits();
-  checkBufferEmpty();
-  periodic_output();
+  periodic_work();
 }
 
 void manage_inactivity() {
@@ -343,12 +351,11 @@ void manage_inactivity() {
 
   const auto now = millis();
   if (now >= nextCheckAt) {
-
     // Schedule next check
     nextCheckAt += 1000;
 
-    if((now - previous_millis_active_cmd) >  stepper_inactive_time && stepper_inactive_time){
-      if(blocks_queued() == false){
+    if((now - previous_millis_active_cmd) > stepper_inactive_time && stepper_inactive_time) {
+      if(!blocks_queued()) {
         refresh_cmd_timeout(); // Reseting timeout stops us from constantly checking.
         SERIAL_ECHO_START;
         SERIAL_ECHOPGM("The stepper has been inactive for more than "); SERIAL_ECHO(stepper_inactive_time);
@@ -370,8 +377,6 @@ void manage_inactivity() {
       disable_heater();
     }
   }
-
-  handle_glow_leds();
 }
 
 void checkBufferEmpty() {

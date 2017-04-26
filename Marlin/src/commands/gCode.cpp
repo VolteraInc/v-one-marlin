@@ -139,9 +139,8 @@ int process_gcode(int command_code) {
 
       st_synchronize();
       waitUntil += millis();  // keep track of when we started waiting
-      while(millis() < waitUntil ){ // TODO: dangerous! could skip work on loop
-        manage_heater();
-        manage_inactivity();
+      while(millis() < waitUntil) {
+        periodic_work();
       }
       return 0;
     }

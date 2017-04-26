@@ -98,7 +98,9 @@ FORCE_INLINE void serialprintPGM(const char *str)
   }
 }
 
-void manage_inactivity();
+// Code that blocks/spins/waits should call this so that things like heating
+// and motor inactivity properly monitored
+void periodic_work();
 
 void setHomedState(int axis, int value);
 #if defined(X_ENABLE_PIN) && X_ENABLE_PIN > -1
