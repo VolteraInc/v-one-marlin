@@ -17,4 +17,4 @@ void reportBufferEmpty();
 
 void checkForEndstopHits();
 
-void process_serial_commands();
+void processSerialCommands();

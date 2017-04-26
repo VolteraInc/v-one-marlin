@@ -157,7 +157,7 @@ void periodic_work() {
 }
 
 void loop() {
-  process_serial_commands();
+  processSerialCommands();
   periodic_work();
 }
 
