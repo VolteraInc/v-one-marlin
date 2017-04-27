@@ -10,7 +10,7 @@ int prepareRouter(Tool tool) {
   return (
     setRotationSpeed(tool, 0.0f) ||
     raise() ||
-    confirmRequiredToolAttached(context, tool, TOOLS_ROUTER) ||
+    confirmMountedAndNotTriggered(context, tool, TOOLS_ROUTER) ||
     ensureHomedInXY() ||
     ensureHomedInZ(tool) ||
     centerTool(tool) ||

@@ -170,17 +170,14 @@ int moveZ(Tool tool, float z, float f, bool applyDispenseHeight) {
   return 0;
 }
 
-int confirmRequiredToolAttached(const char* context, Tool tool, Tool requiredTool) {
+int confirmMountedAndNotTriggered(const char* context, Tool tool, Tool requiredTool) {
   if (tool != requiredTool) {
     SERIAL_ERROR_START;
     SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context); SERIAL_ERRORPGM(", ");
     SERIAL_ERROR(toolTypeAsString(requiredTool)); SERIAL_ERRORLNPGM(" not attached");
     return -1;
   }
-  return 0;
-}
 
-int confirmMountedAndNotTriggered(const char* context, Tool tool) {
   switch (readToolState(tool)) {
     case TOOL_STATE_PROBE_MOUNTED:
       if (tool == TOOLS_PROBE) {
@@ -263,18 +260,16 @@ int centerTool(Tool tool) {
 int lowerUntilToolContacts(Tool tool) {
   st_synchronize();
 
-  switch (tool) {
-    case TOOLS_PROBE:
-      break;
-    default:
-      SERIAL_ERROR_START;
-      SERIAL_ERRORPGM("Unable to lower until contact, ");
-      SERIAL_ERROR(toolTypeAsString(tool)); SERIAL_ERRORLNPGM(" does not support this operation");
-      return -1;
+  if (tool != TOOLS_PROBE) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORPGM("Unable to lower until contact, ");
+    SERIAL_ERROR(toolTypeAsString(tool));
+    SERIAL_ERRORLNPGM(" does not support this operation");
+    return -1;
   }
 
   return
-    confirmMountedAndNotTriggered("lower until contact", tool) ||
+    confirmMountedAndNotTriggered("lower until contact", tool, TOOLS_PROBE) ||
     moveToLimit(Z_AXIS, -1);
   ;
 }
