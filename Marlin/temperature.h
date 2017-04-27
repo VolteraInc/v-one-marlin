@@ -40,9 +40,6 @@ extern float current_temperature[EXTRUDERS];
 #endif
 extern int target_temperature_bed;
 extern float current_temperature_bed;
-#ifdef TEMP_SENSOR_1_AS_REDUNDANT
-  extern float redundant_temperature;
-#endif
 
 #ifdef PIDTEMP
   extern float Kp,Ki,Kd,Kc;
