@@ -57,10 +57,6 @@ extern float current_temperature_bed;
 #endif
 
 
-#ifdef BABYSTEPPING
-  extern volatile int babystepsTodo[3];
-#endif
-
 //high level conversion routines, for use outside of temperature.cpp
 //inline so that there is no performance decrease.
 //deg=degreeCelsius

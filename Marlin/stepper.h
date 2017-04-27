@@ -66,10 +66,4 @@ uint8_t digiPotGetCurrent(uint8_t axis);
 void digiPotWrite(uint8_t address, uint8_t value);
 uint8_t digiPotRead(uint8_t address);
 
-#ifdef BABYSTEPPING
-  void babystep(const uint8_t axis,const bool direction); // perform a short step with a single stepper motor, outside of any convention
-#endif
-
-
-
 #endif
