@@ -128,48 +128,20 @@ int process_mcode(int command_code) {
       }
 
       SERIAL_PROTOCOLPGM("T:");
-      SERIAL_PROTOCOL_F(0.0,1);
+      SERIAL_PROTOCOL_F(0.0, 1);
       SERIAL_PROTOCOLPGM(" /");
-      SERIAL_PROTOCOL_F(0.0,1 );
-      #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-        SERIAL_PROTOCOLPGM(" B:");
-        SERIAL_PROTOCOL_F(degBed(),1);
-        SERIAL_PROTOCOLPGM(" /");
-        SERIAL_PROTOCOL_F(degTargetBed(),1);
-      #endif //TEMP_BED_PIN
+      SERIAL_PROTOCOL_F(0.0, 1 );
+
+      SERIAL_PROTOCOLPGM(" B:");
+      SERIAL_PROTOCOL_F(degBed(), 1);
+      SERIAL_PROTOCOLPGM(" /");
+      SERIAL_PROTOCOL_F(degTargetBed(), 1);
 
       SERIAL_PROTOCOLPGM(" @:");
-      #ifdef EXTRUDER_WATTS
-        SERIAL_PROTOCOL((EXTRUDER_WATTS * getHeaterPower(tmp_extruder))/127);
-        SERIAL_PROTOCOLPGM("W");
-      #else
-        SERIAL_PROTOCOL(getHeaterPower(tmp_extruder));
-      #endif
+      SERIAL_PROTOCOL(getHeaterPower(tmp_extruder));
 
       SERIAL_PROTOCOLPGM(" B@:");
-      #ifdef BED_WATTS
-        SERIAL_PROTOCOL((BED_WATTS * getHeaterPower(-1))/127);
-        SERIAL_PROTOCOLPGM("W");
-      #else
-        SERIAL_PROTOCOL(getHeaterPower(-1));
-      #endif
-
-      #ifdef SHOW_TEMP_ADC_VALUES
-        #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-          SERIAL_PROTOCOLPGM("    ADC B:");
-          SERIAL_PROTOCOL_F(degBed(),1);
-          SERIAL_PROTOCOLPGM("C->");
-          SERIAL_PROTOCOL_F(rawBedTemp()/OVERSAMPLENR,0);
-        #endif
-        for (int8_t cur_extruder = 0; cur_extruder < EXTRUDERS; ++cur_extruder) {
-          SERIAL_PROTOCOLPGM("  T");
-          SERIAL_PROTOCOL(cur_extruder);
-          SERIAL_PROTOCOLPGM(":");
-          SERIAL_PROTOCOL_F(degHotend(cur_extruder),1);
-          SERIAL_PROTOCOLPGM("C->");
-          SERIAL_PROTOCOL_F(rawHotendTemp(cur_extruder)/OVERSAMPLENR,0);
-        }
-      #endif
+      SERIAL_PROTOCOL(getHeaterPower(-1));
 
       SERIAL_PROTOCOLLN("");
       return 0;
