@@ -10,8 +10,7 @@ int prepareDispenser(Tool tool) {
   return (
     raise() ||
     meshGears() ||
-    confirmRequiredToolAttached(context, tool, TOOLS_DISPENSER) ||
-    confirmMountedAndNotTriggered(context, tool) ||
+    confirmMountedAndNotTriggered(context, tool, TOOLS_DISPENSER) ||
     ensureHomedInXY() ||
     ensureHomedInZ(tool) ||
     centerTool(tool) ||

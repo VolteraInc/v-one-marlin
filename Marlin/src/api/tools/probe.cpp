@@ -10,8 +10,7 @@ int prepareProbe(Tool tool) {
   enable_p_top(true);
   return (
     raise() ||
-    confirmRequiredToolAttached(context, tool, TOOLS_PROBE) ||
-    confirmMountedAndNotTriggered(context, tool) ||
+    confirmMountedAndNotTriggered(context, tool, TOOLS_PROBE) ||
     ensureHomedInXY() ||
     ensureHomedInZ(tool) ||
     centerTool(tool) ||
@@ -33,7 +32,7 @@ int s_recordMeasurement(float& measurement) {
 
 int probe(Tool tool, float& measurement, float additionalRetractDistance) {
   return (
-    confirmRequiredToolAttached("probe", tool, TOOLS_PROBE) ||
+    confirmMountedAndNotTriggered("probe", tool, TOOLS_PROBE) ||
     lowerUntilToolContacts(tool) ||
     s_recordMeasurement(measurement) ||
     retractToolConditionally(s_probeDisplacement, additionalRetractDistance)
