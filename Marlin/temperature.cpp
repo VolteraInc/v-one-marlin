@@ -42,10 +42,6 @@ int current_temperature_raw[EXTRUDERS] = { 0 };
 float current_temperature[EXTRUDERS] = { 0.0 };
 int current_temperature_bed_raw = 0;
 float current_temperature_bed = 0.0;
-#ifdef TEMP_SENSOR_1_AS_REDUNDANT
-  int redundant_temperature_raw = 0;
-  float redundant_temperature = 0.0;
-#endif
 #ifdef PIDTEMP
   float Kp=DEFAULT_Kp;
   float Ki=(DEFAULT_Ki*PID_dT);
@@ -125,13 +121,8 @@ static int maxttemp[EXTRUDERS] = ARRAY_BY_EXTRUDERS( 16383, 16383, 16383 );
 static int bed_maxttemp_raw = HEATER_BED_RAW_HI_TEMP;
 #endif
 
-#ifdef TEMP_SENSOR_1_AS_REDUNDANT
-  static void *heater_ttbl_map[2] = {(void *)HEATER_0_TEMPTABLE, (void *)HEATER_1_TEMPTABLE };
-  static uint8_t heater_ttbllen_map[2] = { HEATER_0_TEMPTABLE_LEN, HEATER_1_TEMPTABLE_LEN };
-#else
-  static void *heater_ttbl_map[EXTRUDERS] = ARRAY_BY_EXTRUDERS( (void *)HEATER_0_TEMPTABLE, (void *)HEATER_1_TEMPTABLE, (void *)HEATER_2_TEMPTABLE );
-  static uint8_t heater_ttbllen_map[EXTRUDERS] = ARRAY_BY_EXTRUDERS( HEATER_0_TEMPTABLE_LEN, HEATER_1_TEMPTABLE_LEN, HEATER_2_TEMPTABLE_LEN );
-#endif
+static void *heater_ttbl_map[EXTRUDERS] = ARRAY_BY_EXTRUDERS( (void *)HEATER_0_TEMPTABLE, (void *)HEATER_1_TEMPTABLE, (void *)HEATER_2_TEMPTABLE );
+static uint8_t heater_ttbllen_map[EXTRUDERS] = ARRAY_BY_EXTRUDERS( HEATER_0_TEMPTABLE_LEN, HEATER_1_TEMPTABLE_LEN, HEATER_2_TEMPTABLE_LEN );
 
 static float analog2temp(int raw, uint8_t e);
 static float analog2tempBed(int raw);
@@ -394,18 +385,6 @@ void manage_heater() {
         }
     }
     #endif
-    #ifdef TEMP_SENSOR_1_AS_REDUNDANT
-      if(fabs(current_temperature[0] - redundant_temperature) > MAX_REDUNDANT_TEMP_SENSOR_DIFF) {
-        disable_heater();
-        if(IsStopped() == false) {
-          SERIAL_ERROR_START;
-          SERIAL_ERRORLNPGM("Extruder switched off. Temperature difference between temp sensors is too high !");
-        }
-        #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
-          Stop();
-        #endif
-      }
-    #endif
   } // End extruder for loop
 
   #if (defined(EXTRUDER_0_AUTO_FAN_PIN) && EXTRUDER_0_AUTO_FAN_PIN > -1) || \
@@ -499,20 +478,14 @@ void manage_heater() {
 // Derived from RepRap FiveD extruder::getTemperature()
 // For hot end temperature measurement.
 static float analog2temp(int raw, uint8_t e) {
-#ifdef TEMP_SENSOR_1_AS_REDUNDANT
-  if(e > EXTRUDERS)
-#else
-  if(e >= EXTRUDERS)
-#endif
-  {
-      SERIAL_ERROR_START;
-      SERIAL_ERROR((int)e);
-      SERIAL_ERRORLNPGM(" - Invalid extruder number !");
-      kill();
+  if(e >= EXTRUDERS) {
+    SERIAL_ERROR_START;
+    SERIAL_ERROR((int)e);
+    SERIAL_ERRORLNPGM(" - Invalid extruder number !");
+    kill();
   }
   #ifdef HEATER_0_USES_MAX6675
-    if (e == 0)
-    {
+    if (e == 0) {
       return 0.25 * raw;
     }
   #endif
@@ -581,9 +554,7 @@ static void updateTemperaturesFromRawValues() {
         current_temperature[e] = analog2temp(current_temperature_raw[e], e);
     }
     current_temperature_bed = analog2tempBed(current_temperature_bed_raw);
-    #ifdef TEMP_SENSOR_1_AS_REDUNDANT
-      redundant_temperature = analog2temp(redundant_temperature_raw, 1);
-    #endif
+
     //Reset the watchdog after we know we have a temperature measurement.
     watchdog_reset();
 
@@ -998,9 +969,6 @@ ISR(TIMER0_COMPB_vect) {
     if (!temp_meas_ready) //Only update the raw values if they have been read. Else we could be updating them during reading.
     {
       current_temperature_raw[0] = raw_temp_0_value;
-#ifdef TEMP_SENSOR_1_AS_REDUNDANT
-      redundant_temperature_raw = raw_temp_1_value;
-#endif
       current_temperature_bed_raw = raw_temp_bed_value;
     }
 
