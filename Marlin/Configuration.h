@@ -214,6 +214,10 @@
 #define MAX_BED_POWER 255 // limits duty cycle to bed; 255=full current
 
 #ifdef PIDTEMPBED
+  // Calibrated on Apr 28, 2017 using built-in autotune: 'M303 E-1 C8 S200'
+  #define  DEFAULT_bedKp 27.50
+  #define  DEFAULT_bedKi 3.41
+  #define  DEFAULT_bedKd 55.42
 #endif
 
 //===========================================================================
