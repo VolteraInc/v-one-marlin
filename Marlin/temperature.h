@@ -22,9 +22,6 @@
 
 #include "Marlin.h"
 #include "planner.h"
-#ifdef PID_ADD_EXTRUSION_RATE
-  #include "stepper.h"
-#endif
 
 // public functions
 void tp_init();  //initialize the heating

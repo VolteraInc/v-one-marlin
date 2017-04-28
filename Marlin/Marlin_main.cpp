@@ -31,6 +31,7 @@
 #include "Marlin.h"
 #include "macros.h"
 #include "planner.h"
+#include "stepper.h"
 #include "temperature.h"
 #include "temperature_profile.h"
 #include "watchdog.h"
