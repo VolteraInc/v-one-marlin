@@ -573,24 +573,8 @@ void tp_init() {
 #endif //PIDTEMPBED
   }
 
-  #if defined(HEATER_0_PIN) && (HEATER_0_PIN > -1)
-    SET_OUTPUT(HEATER_0_PIN);
-  #endif
-  #if defined(HEATER_1_PIN) && (HEATER_1_PIN > -1)
-    SET_OUTPUT(HEATER_1_PIN);
-  #endif
-  #if defined(HEATER_2_PIN) && (HEATER_2_PIN > -1)
-    SET_OUTPUT(HEATER_2_PIN);
-  #endif
-  #if defined(HEATER_BED_PIN) && (HEATER_BED_PIN > -1)
-    SET_OUTPUT(HEATER_BED_PIN);
-  #endif
-  #if defined(FAN_PIN) && (FAN_PIN > -1)
-    SET_OUTPUT(FAN_PIN);
-    #ifdef FAN_SOFT_PWM
-    soft_pwm_fan = fanSpeedSoftPwm / 2;
-    #endif
-  #endif
+  SET_OUTPUT(HEATER_0_PIN);
+  SET_OUTPUT(HEATER_BED_PIN);
 
   // Set analog inputs
   ADCSRA = 1<<ADEN | 1<<ADSC | 1<<ADIF | 0x07;
@@ -778,9 +762,7 @@ ISR(TIMER0_COMPB_vect) {
   static unsigned char temp_state = 8;
   static unsigned char pwm_count = (1 << SOFT_PWM_SCALE);
   static unsigned char soft_pwm_0;
-  #if HEATER_BED_PIN > -1
   static unsigned char soft_pwm_b;
-  #endif
 
   if(pwm_count == 0){
     soft_pwm_0 = soft_pwm[0];

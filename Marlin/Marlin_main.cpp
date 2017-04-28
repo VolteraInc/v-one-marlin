@@ -179,7 +179,7 @@ void kill() {
 
 void Stop() {
   disable_heater();
-  if(Stopped == false) {
+  if (!Stopped) {
     Stopped = true;
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
