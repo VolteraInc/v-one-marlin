@@ -379,132 +379,86 @@ void bed_max_temp_error(void) {
 
 // Timer 0 is shared with millis
 ISR(TIMER0_COMPB_vect) {
-  static unsigned char temp_count = 0;
-  static unsigned long raw_temp_0_value = 0;
-  static unsigned long raw_temp_bed_value = 0;
-  static unsigned char temp_state = 8;
 
   //---------------------------------------------
   // soft PWM
   static unsigned char pwm_count = (1 << SOFT_PWM_SCALE);
-  static unsigned char soft_pwm_0;
   static unsigned char soft_pwm_b;
 
   if(pwm_count == 0){
-    soft_pwm_0 = soft_pwm[0];
-    if(soft_pwm_0 > 0) {
-      WRITE(HEATER_0_PIN,1);
-    } else WRITE(HEATER_0_PIN,0);
-
-    #if defined(HEATER_BED_PIN) && HEATER_BED_PIN > -1
     soft_pwm_b = soft_pwm_bed;
-    if(soft_pwm_b > 0) WRITE(HEATER_BED_PIN,1); else WRITE(HEATER_BED_PIN,0);
-    #endif
+    if(soft_pwm_b > 0) {
+      WRITE(HEATER_BED_PIN, 1);
+    } else {
+      WRITE(HEATER_BED_PIN, 0);
+    }
   }
-  if(soft_pwm_0 < pwm_count) {
-    WRITE(HEATER_0_PIN,0);
+  if(soft_pwm_b < pwm_count) {
+    WRITE(HEATER_BED_PIN, 0);
   }
-
-  #if defined(HEATER_BED_PIN) && HEATER_BED_PIN > -1
-  if(soft_pwm_b < pwm_count) WRITE(HEATER_BED_PIN,0);
-  #endif
 
   pwm_count += (1 << SOFT_PWM_SCALE);
   pwm_count &= 0x7f;
 
   //---------------------------------------------
   // Temperature monitoring & other ADC reading
-  switch(temp_state) {
-    case 0: // Prepare TEMP_0
-      #if defined(TEMP_0_PIN) && (TEMP_0_PIN > -1)
-        #if TEMP_0_PIN > 7
-          ADCSRB = 1<<MUX5;
-        #else
-          ADCSRB = 0;
-        #endif
-        ADMUX = ((1 << REFS0) | (TEMP_0_PIN & 0x07));
-        ADCSRA |= 1<<ADSC; // Start conversion
-      #endif
-      temp_state = 1;
+  // These state are used to manage use of the analog-digital converter (ADC).
+  // The ADC must be setup to read a particular pin then we must wait before
+  // retrieving the value. Waiting is implemented by exiting this ISR then
+  // reading the ADC the next time it is called.
+  enum AdcReadState {
+    PrepareTemp_BED,
+    MeasureTemp_BED,
+    Prepare_P_TOP,
+    Measure_P_TOP,
+    StartupDelay // Startup, delay initial reading a tiny bit so the hardware can settle
+  };
+  static unsigned char adc_read_state = StartupDelay;
+
+  static unsigned char sample_count = 0;
+  static unsigned long raw_bed_temp = 0;
+  static unsigned long raw_p_top = 0;
+
+  #define START_ADC(pin) ADCSRB = 0; ADMUX = _BV(REFS0) | (pin & 0x07); SBI(ADCSRA, ADSC)
+
+  switch(adc_read_state) {
+
+    case PrepareTemp_BED:
+      START_ADC(TEMP_BED_PIN);
+      adc_read_state = MeasureTemp_BED;
       break;
-    case 1: // Measure TEMP_0
-      #if defined(TEMP_0_PIN) && (TEMP_0_PIN > -1)
-        raw_temp_0_value += ADC;
-      #endif
-      temp_state = 2;
+    case MeasureTemp_BED:
+      raw_bed_temp += ADC;
+      adc_read_state = Prepare_P_TOP;
       break;
-    case 2: // Prepare TEMP_BED
-      #if defined(TEMP_BED_PIN) && (TEMP_BED_PIN > -1)
-        #if TEMP_BED_PIN > 7
-          ADCSRB = 1<<MUX5;
-        #else
-          ADCSRB = 0;
-        #endif
-        ADMUX = ((1 << REFS0) | (TEMP_BED_PIN & 0x07));
-        ADCSRA |= 1<<ADSC; // Start conversion
-      #endif
-      temp_state = 3;
+
+    case Prepare_P_TOP:
+      START_ADC(P_TOP_STATE_PIN);
+      adc_read_state = Measure_P_TOP;
       break;
-    case 3: // Measure TEMP_BED
-      #if defined(TEMP_BED_PIN) && (TEMP_BED_PIN > -1)
-        raw_temp_bed_value += ADC;
-      #endif
-      temp_state = 4;
+    case Measure_P_TOP:
+      raw_p_top += ADC;
+      adc_read_state = PrepareTemp_BED;
+      ++sample_count;
       break;
-    case 4: // Prepare TEMP_1
-      #if defined(TEMP_1_PIN) && (TEMP_1_PIN > -1)
-        #if TEMP_1_PIN > 7
-          ADCSRB = 1<<MUX5;
-        #else
-          ADCSRB = 0;
-        #endif
-        ADMUX = ((1 << REFS0) | (TEMP_1_PIN & 0x07));
-        ADCSRA |= 1<<ADSC; // Start conversion
-      #endif
-      temp_state = 5;
-      break;
-    case 5: // Measure TEMP_1
-      #if defined(TEMP_1_PIN) && (TEMP_1_PIN > -1)
-        raw_temp_1_value += ADC;
-      #endif
-      temp_state = 6;
-      break;
-    case 6: // Prepare TEMP_2
-      #if defined(TEMP_2_PIN) && (TEMP_2_PIN > -1)
-        #if TEMP_2_PIN > 7
-          ADCSRB = 1<<MUX5;
-        #else
-          ADCSRB = 0;
-        #endif
-        ADMUX = ((1 << REFS0) | (TEMP_2_PIN & 0x07));
-        ADCSRA |= 1<<ADSC; // Start conversion
-      #endif
-      temp_state = 7;
-      break;
-    case 7: // Measure TEMP_2
-      #if defined(TEMP_2_PIN) && (TEMP_2_PIN > -1)
-        raw_temp_2_value += ADC;
-      #endif
-      temp_state = 0;
-      temp_count++;
-      break;
-    case 8: //Startup, delay initial temp reading a tiny bit so the hardware can settle.
-      temp_state = 0;
+
+    case StartupDelay:
+      adc_read_state = 0;
       break;
   }
 
-  if(temp_count >= OVERSAMPLENR) // 8 * 16 * 1/(16000000/64/256)  = 131ms.
+  if(sample_count >= OVERSAMPLENR) // 8 * 16 * 1/(16000000/64/256)  = 131ms.
   {
     // Only update the raw values if they have been read. Else we could be updating them during reading.
     if (!temp_meas_ready) {
       current_temperature_raw[0] = 0;
-      current_temperature_bed_raw = raw_temp_bed_value;
+      current_temperature_bed_raw = raw_bed_temp;
     }
 
     temp_meas_ready = true;
-    temp_count = 0;
-    raw_temp_0_value = 0;
-    raw_temp_bed_value = 0;
+    sample_count = 0;
+    raw_bed_temp = 0;
+    raw_p_top = 0;
 
 
 #if HEATER_BED_RAW_LO_TEMP > HEATER_BED_RAW_HI_TEMP
