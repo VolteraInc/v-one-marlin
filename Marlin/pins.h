@@ -15,12 +15,6 @@
  #endif
 #endif
 
-
-// uncomment one of the following lines for RAMPS v1.3 or v1.0, comment both for v1.2 or 1.1
-// #define RAMPS_V_1_3
-// #define RAMPS_V_1_0
-
-
 #if MOTHERBOARD == 33 || MOTHERBOARD == 34 || MOTHERBOARD == 35 || MOTHERBOARD == 77 || MOTHERBOARD == 67 || MOTHERBOARD == 68
 
   #define LARGE_FLASH true
@@ -104,9 +98,9 @@
     #define P_TOP_STATE_PIN   2 // Analog NUMBERING
     #define ROUTER_COMMS_PIN  56 // same as P_TOP_PIN
 
-    //The P_TOP pin is measured in both digital and analog,
-    // P_TOP_STATE_MIN is used to get ON, OFF, TRIGGERED status.
-    // P_TOP_MIN is used probing
+    // The P_TOP pin is measured in both digital and analog,
+    // P_TOP_STATE_PIN is used to get ON, OFF, TRIGGERED status.
+    // P_TOP_PIN is used probing
 
     #define LED_RED_PIN        5
     #define LED_GREEN_PIN      2
@@ -124,19 +118,6 @@
   #define SDPOWER            -1
   #define SDSS               -1
   #define LED_PIN            -1
-  #define FAN_PIN            -1 // IO pin. Buffer needed
-
-  #if MOTHERBOARD == 35
-    #define HEATER_0_PIN       8
-  #else
-    #define HEATER_0_PIN       8   // EXTRUDER 1
-  #endif
-
-  #define HEATER_1_PIN       -1    // EXTRUDER 2 (FAN On Sprinter)
-  #define HEATER_2_PIN       -1
-  #define TEMP_0_PIN         -1   // ANALOG NUMBERING
-  #define TEMP_1_PIN         -1   // ANALOG NUMBERING
-  #define TEMP_2_PIN         -1   // ANALOG NUMBERING
 
   #if MOTHERBOARD == 68
     #define BEEPER 33
@@ -152,8 +133,6 @@
 #endif // MOTHERBOARD == 33 || MOTHERBOARD == 34 || MOTHERBOARD == 35 || MOTHERBOARD == 77
 
 #endif //MOTHERBOARD == 3 || MOTHERBOARD == 33 || MOTHERBOARD == 34 || MOTHERBOARD == 35 || MOTHERBOARD == 77
-
-
 
 #ifndef KNOWN_BOARD
 #error Unknown MOTHERBOARD value in configuration.h

@@ -80,10 +80,7 @@ static volatile bool temp_meas_ready = false;
 // static int maxttemp_raw[EXTRUDERS] = ARRAY_BY_EXTRUDERS( HEATER_0_RAW_HI_TEMP , HEATER_1_RAW_HI_TEMP , HEATER_2_RAW_HI_TEMP );
 static int minttemp[EXTRUDERS] = ARRAY_BY_EXTRUDERS( 0, 0, 0 );
 static int maxttemp[EXTRUDERS] = ARRAY_BY_EXTRUDERS( 16383, 16383, 16383 );
-//static int bed_minttemp_raw = HEATER_BED_RAW_LO_TEMP; /* No bed mintemp error implemented?!? */
-#ifdef BED_MAXTEMP
 static int bed_maxttemp_raw = HEATER_BED_RAW_HI_TEMP;
-#endif
 
 static float analog2tempBed(int raw);
 static void updateTemperaturesFromRawValues();
@@ -92,10 +89,6 @@ static void updateTemperaturesFromRawValues();
 int watch_start_temp[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0,0,0);
 unsigned long watchmillis[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0,0,0);
 #endif //WATCH_TEMP_PERIOD
-
-#ifndef SOFT_PWM_SCALE
-#define SOFT_PWM_SCALE 0
-#endif
 
 //===========================================================================
 //=============================   functions      ============================
@@ -344,15 +337,13 @@ void tp_init() {
   // Wait for temperature measurement to settle
   delay(250);
 
-  #ifdef BED_MAXTEMP
-    while(analog2tempBed(bed_maxttemp_raw) > BED_MAXTEMP) {
-      #if HEATER_BED_RAW_LO_TEMP < HEATER_BED_RAW_HI_TEMP
-        bed_maxttemp_raw -= OVERSAMPLENR;
-      #else
-        bed_maxttemp_raw += OVERSAMPLENR;
-      #endif
-    }
-  #endif //BED_MAXTEMP
+  while(analog2tempBed(bed_maxttemp_raw) > BED_MAXTEMP) {
+    #if HEATER_BED_RAW_LO_TEMP < HEATER_BED_RAW_HI_TEMP
+      bed_maxttemp_raw -= OVERSAMPLENR;
+    #else
+      bed_maxttemp_raw += OVERSAMPLENR;
+    #endif
+  }
 }
 
 void setWatch() {
@@ -516,8 +507,7 @@ ISR(TIMER0_COMPB_vect) {
     raw_temp_bed_value = 0;
 
 
-  /* No bed MINTEMP error? */
-# if HEATER_BED_RAW_LO_TEMP > HEATER_BED_RAW_HI_TEMP
+#if HEATER_BED_RAW_LO_TEMP > HEATER_BED_RAW_HI_TEMP
     if(current_temperature_bed_raw <= bed_maxttemp_raw) {
 #else
     if(current_temperature_bed_raw >= bed_maxttemp_raw) {
