@@ -3,6 +3,7 @@
 #include "../../temperature.h"
 #include "../../planner.h"
 #include "../api/api.h"
+#include "../../macros.h"
 
 unsigned long previous_millis_serial_rx = 0;
 static unsigned long previous_millis_active_cmd = 0;

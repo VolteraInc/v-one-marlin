@@ -156,11 +156,6 @@ bool IsStopped();
 
 void refresh_cmd_timeout(void);
 
-#ifndef CRITICAL_SECTION_START
-  #define CRITICAL_SECTION_START  unsigned char _sreg = SREG; cli();
-  #define CRITICAL_SECTION_END    SREG = _sreg;
-#endif //CRITICAL_SECTION_START
-
 extern const float homing_feedrate[];
 extern bool axis_relative_modes[];
 extern int feedmultiply;

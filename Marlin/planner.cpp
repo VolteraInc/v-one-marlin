@@ -57,6 +57,7 @@
 #include "temperature.h"
 #include "language.h"
 #include "src/compensationAlgorithms/api.h"
+#include "macros.h"
 
 //===========================================================================
 //=============================public variables ============================
