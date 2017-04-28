@@ -1,28 +1,12 @@
-#ifndef CONFIG_STORE_H
-#define CONFIG_STORE_H
+#pragma once
 
-#include "Configuration.h"
+// Functions for store, reading settings from EEPROM
 
 void Config_ResetDefault();
-
-#ifndef DISABLE_M503
 void Config_PrintSettings();
-#else
-FORCE_INLINE void Config_PrintSettings() {}
-#endif
+void Config_StoreSettings();
+void Config_RetrieveSettings();
 
-#ifdef VOLTERA
 void Config_RetrieveCalibration();
 void Config_PrintCalibration();
 void Config_StoreCalibration();
-#endif
-
-#ifdef EEPROM_SETTINGS
-void Config_StoreSettings();
-void Config_RetrieveSettings();
-#else
-FORCE_INLINE void Config_StoreSettings() {}
-FORCE_INLINE void Config_RetrieveSettings() { Config_ResetDefault(); Config_PrintSettings(); }
-#endif
-
-#endif//CONFIG_STORE_H

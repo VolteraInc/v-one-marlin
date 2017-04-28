@@ -43,14 +43,6 @@ int current_temperature_raw[EXTRUDERS] = { 0 };
 float current_temperature[EXTRUDERS] = { 0.0 };
 int current_temperature_bed_raw = 0;
 float current_temperature_bed = 0.0;
-#ifdef PIDTEMP
-  float Kp=DEFAULT_Kp;
-  float Ki=(DEFAULT_Ki*PID_dT);
-  float Kd=(DEFAULT_Kd/PID_dT);
-  #ifdef PID_ADD_EXTRUSION_RATE
-    float Kc=DEFAULT_Kc;
-  #endif
-#endif //PIDTEMP
 
 #ifdef PIDTEMPBED
   float bedKp=DEFAULT_bedKp;
@@ -65,21 +57,6 @@ unsigned char soft_pwm_bed;
 //===========================================================================
 static volatile bool temp_meas_ready = false;
 
-#ifdef PIDTEMP
-  //static cannot be external:
-  static float temp_iState[EXTRUDERS] = { 0 };
-  static float temp_dState[EXTRUDERS] = { 0 };
-  static float pTerm[EXTRUDERS];
-  static float iTerm[EXTRUDERS];
-  static float dTerm[EXTRUDERS];
-  //int output;
-  static float pid_error[EXTRUDERS];
-  static float temp_iState_min[EXTRUDERS];
-  static float temp_iState_max[EXTRUDERS];
-  // static float pid_input[EXTRUDERS];
-  // static float pid_output[EXTRUDERS];
-  static bool pid_reset[EXTRUDERS];
-#endif //PIDTEMP
 #ifdef PIDTEMPBED
   //static cannot be external:
   static float temp_iState_bed = { 0 };
@@ -270,11 +247,6 @@ void PID_autotune(float temp, int extruder, int ncycles) {
 }
 
 void updatePID() {
-#ifdef PIDTEMP
-  for(int e = 0; e < EXTRUDERS; e++) {
-     temp_iState_max[e] = PID_INTEGRAL_DRIVE_MAX / Ki;
-  }
-#endif
 #ifdef PIDTEMPBED
   temp_iState_max_bed = PID_INTEGRAL_DRIVE_MAX / bedKi;
 #endif
@@ -294,80 +266,6 @@ void manage_heater() {
     return;
 
   updateTemperaturesFromRawValues();
-
-  for(int e = 0; e < EXTRUDERS; e++)
-  {
-
-  #ifdef PIDTEMP
-    pid_input = current_temperature[e];
-
-    #ifndef PID_OPENLOOP
-        pid_error[e] = target_temperature[e] - pid_input;
-        if(pid_error[e] > PID_FUNCTIONAL_RANGE) {
-          pid_output = BANG_MAX;
-          pid_reset[e] = true;
-        }
-        else if(pid_error[e] < -PID_FUNCTIONAL_RANGE || target_temperature[e] == 0) {
-          pid_output = 0;
-          pid_reset[e] = true;
-        }
-        else {
-          if(pid_reset[e] == true) {
-            temp_iState[e] = 0.0;
-            pid_reset[e] = false;
-          }
-          pTerm[e] = Kp * pid_error[e];
-          temp_iState[e] += pid_error[e];
-          temp_iState[e] = constrain(temp_iState[e], temp_iState_min[e], temp_iState_max[e]);
-          iTerm[e] = Ki * temp_iState[e];
-
-          //K1 defined in Configuration.h in the PID settings
-          #define K2 (1.0-K1)
-          dTerm[e] = (Kd * (pid_input - temp_dState[e]))*K2 + (K1 * dTerm[e]);
-          pid_output = constrain(pTerm[e] + iTerm[e] - dTerm[e], 0, PID_MAX);
-        }
-        temp_dState[e] = pid_input;
-    #else
-          pid_output = constrain(target_temperature[e], 0, PID_MAX);
-    #endif //PID_OPENLOOP
-    #ifdef PID_DEBUG
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM(" PID_DEBUG "); SERIAL_ECHO(e);
-    SERIAL_ECHOPGM(": Input "); SERIAL_ECHO(pid_input);
-    SERIAL_ECHOPGM(" Output "); SERIAL_ECHO(pid_output);
-    SERIAL_ECHOPGM(" pTerm "); SERIAL_ECHO(pTerm[e]);
-    SERIAL_ECHOPGM(" iTerm "); SERIAL_ECHO(iTerm[e]);
-    SERIAL_ECHOPGM(" dTerm "); SERIAL_ECHOLN(dTerm[e]);
-    #endif //PID_DEBUG
-  #else /* PID off */
-    pid_output = 0;
-    if(current_temperature[e] < target_temperature[e]) {
-      pid_output = PID_MAX;
-    }
-  #endif
-
-    // Check if temperature is within the correct range
-    if((current_temperature[e] > minttemp[e]) && (current_temperature[e] < maxttemp[e]))
-    {
-      soft_pwm[e] = (int)pid_output >> 1;
-    }
-    else {
-      soft_pwm[e] = 0;
-    }
-
-    #ifdef WATCH_TEMP_PERIOD
-    if(watchmillis[e] && millis() - watchmillis[e] > WATCH_TEMP_PERIOD)
-    {
-        if(degHotend(e) < watch_start_temp[e] + WATCH_TEMP_INCREASE) {
-            setTargetHotend(0, e);
-            SERIAL_ECHO_START;
-            SERIAL_ECHOPGMLN("Heating failed");
-        } else {
-            watchmillis[e] = 0;
-        }
-    }
-    #endif
-  } // End extruder for loop
 
   if(millis() - previous_millis_bed_heater < BED_CHECK_INTERVAL)
     return;
@@ -419,9 +317,6 @@ static float analog2tempBed(int raw) {
 // function is called from normal context as it is too slow to
 // run in interrupts and will block the stepper routine
 static void updateTemperaturesFromRawValues() {
-  for (uint8_t e = 0; e < EXTRUDERS; ++e) {
-    current_temperature[e] = 0;
-  }
   current_temperature_bed = analog2tempBed(current_temperature_bed_raw);
 
   //Reset the watchdog after we know we have a temperature measurement.
@@ -433,17 +328,6 @@ static void updateTemperaturesFromRawValues() {
 }
 
 void tp_init() {
-  // Finish init of mult extruder arrays
-  for(int e = 0; e < EXTRUDERS; e++) {
-    // populate with the first value
-    maxttemp[e] = maxttemp[0];
-#ifdef PIDTEMP
-    temp_iState_min[e] = 0.0;
-    temp_iState_max[e] = PID_INTEGRAL_DRIVE_MAX / Ki;
-#endif //PIDTEMP
-  }
-
-  SET_OUTPUT(HEATER_0_PIN);
   SET_OUTPUT(HEATER_BED_PIN);
 
   // Set analog inputs
@@ -644,7 +528,7 @@ ISR(TIMER0_COMPB_vect) {
 
 }
 
-#ifdef PIDTEMP
+#ifdef PIDTEMPBED
 // Apply the scale factors to the PID values
 
 float scalePID_i(float i) {
@@ -663,4 +547,4 @@ float unscalePID_d(float d) {
 	return d * PID_dT;
 }
 
-#endif //PIDTEMP
+#endif //PIDTEMPBED
