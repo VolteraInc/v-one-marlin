@@ -76,10 +76,6 @@ static volatile bool temp_meas_ready = false;
 # define ARRAY_BY_EXTRUDERS(v1, v2, v3) { v1 }
 
 // Init min and max temp with extreme values to prevent false errors during startup
-// static int minttemp_raw[EXTRUDERS] = ARRAY_BY_EXTRUDERS( HEATER_0_RAW_LO_TEMP , HEATER_1_RAW_LO_TEMP , HEATER_2_RAW_LO_TEMP );
-// static int maxttemp_raw[EXTRUDERS] = ARRAY_BY_EXTRUDERS( HEATER_0_RAW_HI_TEMP , HEATER_1_RAW_HI_TEMP , HEATER_2_RAW_HI_TEMP );
-static int minttemp[EXTRUDERS] = ARRAY_BY_EXTRUDERS( 0, 0, 0 );
-static int maxttemp[EXTRUDERS] = ARRAY_BY_EXTRUDERS( 16383, 16383, 16383 );
 static int bed_maxttemp_raw = HEATER_BED_RAW_HI_TEMP;
 
 static float analog2tempBed(int raw);
@@ -252,9 +248,6 @@ int getHeaterPower(int heater) {
 }
 
 void manage_heater() {
-  float pid_input;
-  float pid_output;
-
   if(temp_meas_ready != true)   //better readability
     return;
 
