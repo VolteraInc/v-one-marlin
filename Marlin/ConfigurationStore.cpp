@@ -93,22 +93,22 @@ void Config_StoreSettings()
   EEPROM_WRITE_VAR(i,absPreheatHPBTemp);
   EEPROM_WRITE_VAR(i,absPreheatFanSpeed);
   EEPROM_WRITE_VAR(i,zprobe_zoffset);
-  #ifdef PIDTEMP
-    EEPROM_WRITE_VAR(i,Kp);
-    EEPROM_WRITE_VAR(i,Ki);
-    EEPROM_WRITE_VAR(i,Kd);
-  #else
-		float dummy = 3000.0f;
-    EEPROM_WRITE_VAR(i,dummy);
-		dummy = 0.0f;
-    EEPROM_WRITE_VAR(i,dummy);
-    EEPROM_WRITE_VAR(i,dummy);
-  #endif
-    int lcd_contrast = 32;
+
+  // PID settings
+  float dummy = 3000.0f;
+  EEPROM_WRITE_VAR(i,dummy);
+  dummy = 0.0f;
+  EEPROM_WRITE_VAR(i,dummy);
+  EEPROM_WRITE_VAR(i,dummy);
+
+  // LCD settings
+  int lcd_contrast = 32;
   EEPROM_WRITE_VAR(i,lcd_contrast);
+
   char ver2[4]=EEPROM_VERSION;
   i=EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i,ver2); // validate data
+
   SERIAL_ECHO_START;
   SERIAL_ECHOLNPGM("Settings Stored");
 }
@@ -161,16 +161,6 @@ void Config_PrintSettings()
     SERIAL_ECHOPAIR(" Z" ,max_z_jerk);
     SERIAL_ECHOPAIR(" E" ,max_e_jerk);
     SERIAL_ECHOLN("");
-
-#ifdef PIDTEMP
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("PID settings:");
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("   M301 P",Kp);
-    SERIAL_ECHOPAIR(" I" ,unscalePID_i(Ki));
-    SERIAL_ECHOPAIR(" D" ,unscalePID_d(Kd));
-    SERIAL_ECHOLN("");
-#endif
 }
 #endif
 
@@ -295,18 +285,18 @@ void Config_RetrieveSettings()
         EEPROM_READ_VAR(i,absPreheatHPBTemp);
         EEPROM_READ_VAR(i,absPreheatFanSpeed);
         EEPROM_READ_VAR(i,zprobe_zoffset);
-        #ifndef PIDTEMP
+
         float Kp,Ki,Kd;
-        #endif
         // do not need to scale PID values as the values in EEPROM are already scaled
         EEPROM_READ_VAR(i,Kp);
         EEPROM_READ_VAR(i,Ki);
         EEPROM_READ_VAR(i,Kd);
+
         int lcd_contrast;
         EEPROM_READ_VAR(i,lcd_contrast);
 
-		    // Call updatePID (similar to when we have processed M301)
-		    updatePID();
+        // Call updatePID (similar to when we have processed M301)
+        updatePID();
         SERIAL_ECHO_START;
         SERIAL_ECHOLNPGM("Stored settings retrieved");
     }
@@ -351,18 +341,6 @@ void Config_ResetDefault()
     absPreheatHPBTemp = ABS_PREHEAT_HPB_TEMP;
     absPreheatFanSpeed = ABS_PREHEAT_FAN_SPEED;
 #endif
-#ifdef PIDTEMP
-    Kp = DEFAULT_Kp;
-    Ki = scalePID_i(DEFAULT_Ki);
-    Kd = scalePID_d(DEFAULT_Kd);
-
-    // call updatePID (similar to when we have processed M301)
-    updatePID();
-
-#ifdef PID_ADD_EXTRUSION_RATE
-    Kc = DEFAULT_Kc;
-#endif//PID_ADD_EXTRUSION_RATE
-#endif//PIDTEMP
 
 SERIAL_ECHO_START;
 SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");

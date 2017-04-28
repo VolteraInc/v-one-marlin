@@ -37,14 +37,6 @@ extern float current_temperature[EXTRUDERS];
 extern int target_temperature_bed;
 extern float current_temperature_bed;
 
-#ifdef PIDTEMP
-  extern float Kp,Ki,Kd,Kc;
-  float scalePID_i(float i);
-  float scalePID_d(float d);
-  float unscalePID_i(float i);
-  float unscalePID_d(float d);
-
-#endif
 #ifdef PIDTEMPBED
   extern float bedKp,bedKi,bedKd;
 #endif

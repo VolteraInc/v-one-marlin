@@ -437,30 +437,6 @@ int process_mcode(int command_code) {
     }
     return 0;
 
-#ifdef PIDTEMP
-    // M301 - Set PID parameters P I and D
-    case 301: {
-      if(code_seen('P')) Kp = code_value();
-      if(code_seen('I')) Ki = scalePID_i(code_value());
-      if(code_seen('D')) Kd = scalePID_d(code_value());
-
-      #ifdef PID_ADD_EXTRUSION_RATE
-      if(code_seen('C')) Kc = code_value();
-      #endif
-
-      updatePID();
-      SERIAL_PROTOCOLPGM(" p:"); SERIAL_PROTOCOL(Kp);
-      SERIAL_PROTOCOLPGM(" i:"); SERIAL_PROTOCOL(unscalePID_i(Ki));
-      SERIAL_PROTOCOLPGM(" d:"); SERIAL_PROTOCOL(unscalePID_d(Kd));
-      #ifdef PID_ADD_EXTRUSION_RATE
-      //Kc does not have scaling applied above, or in resetting defaults
-      SERIAL_PROTOCOLPGM(" c:"); SERIAL_PROTOCOL(Kc);
-      #endif
-      SERIAL_PROTOCOLLN("");
-      return 0;
-    }
-#endif //PIDTEMP
-
     // M303 - PID relay autotune S<temperature> sets the target temperature. (default target temperature = 150C)
     case 303: {
       float temp = 150.0;
@@ -489,7 +465,7 @@ int process_mcode(int command_code) {
       SERIAL_PROTOCOLLN("");
       return 0;
     }
-#endif //PIDTEMP
+#endif //PIDTEMPBED
 
 
     // M400 - Finish all moves
