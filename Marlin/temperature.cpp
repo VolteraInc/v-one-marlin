@@ -32,6 +32,7 @@
 #include "Marlin.h"
 #include "temperature.h"
 #include "watchdog.h"
+#include "macros.h"
 
 //===========================================================================
 //=============================public variables============================

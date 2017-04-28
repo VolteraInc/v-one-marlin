@@ -7,6 +7,7 @@
 #include "../../ConfigurationStore.h"
 #include "../../language.h"
 #include "../work/work.h" // pending_temp_change HACK
+#include "../../macros.h"
 
 static uint8_t tmp_extruder;
 bool CooldownNoWait = true;
