@@ -39,5 +39,5 @@ int setDispenseHeight(Tool tool, float height);
 float getDispenseHeight(Tool tool);
 
 // Router
-int setRotationSpeed(Tool tool, float speed);
+int setRotationSpeed(Tool tool, int speed);
 float getRotationSpeed(Tool tool);
