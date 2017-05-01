@@ -72,12 +72,6 @@ const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
 bool logging_enabled = false;
 
 //===========================================================================
-//=============================Private Variables=============================
-//===========================================================================
-
-bool Stopped = false;
-
-//===========================================================================
 //=============================Routines======================================
 //===========================================================================
 
@@ -177,16 +171,3 @@ void kill() {
   SERIAL_ERRORLNPGM(MSG_ERR_KILLED);
   while(1) { /* Intentionally left empty */ } // Wait for reset
 }
-
-void Stop() {
-  disable_heater();
-  if (!Stopped) {
-    Stopped = true;
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
-  }
-}
-
-bool IsStopped() {
-  return Stopped;
-};

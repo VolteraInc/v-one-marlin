@@ -13,36 +13,6 @@ static uint8_t tmp_extruder;
 bool CooldownNoWait = true;
 bool target_direction;
 
-bool setTargetedHotend(int code){
-  tmp_extruder = active_extruder;
-  if(code_seen('T')) {
-    tmp_extruder = code_value();
-    if(tmp_extruder >= EXTRUDERS) {
-      SERIAL_ECHO_START;
-      switch(code){
-        case 104:
-          SERIAL_ECHO(MSG_M104_INVALID_EXTRUDER);
-          break;
-        case 105:
-          SERIAL_ECHO(MSG_M105_INVALID_EXTRUDER);
-          break;
-        case 109:
-          SERIAL_ECHO(MSG_M109_INVALID_EXTRUDER);
-          break;
-        case 218:
-          SERIAL_ECHO(MSG_M218_INVALID_EXTRUDER);
-          break;
-        case 221:
-          SERIAL_ECHO(MSG_M221_INVALID_EXTRUDER);
-          break;
-      }
-      SERIAL_ECHOLN(tmp_extruder);
-      return true;
-    }
-  }
-  return false;
-}
-
 int process_mcode(int command_code) {
   switch(command_code) {
     // M17 - Enable/Power all stepper motors
@@ -113,21 +83,8 @@ int process_mcode(int command_code) {
       glow_led_override = code_seen('R') || code_seen('V') || code_seen('B');
       return 0;
 
-    // M104 - Set extruder target temp
-    case 104:
-      if (setTargetedHotend(104)) {
-        return -1;
-      }
-      if (code_seen('S')) setTargetHotend(code_value(), tmp_extruder);
-      setWatch();
-      return 0;;
-
     // M105 - Read current temp
     case 105 :
-      if(setTargetedHotend(105)) {
-        return -1;
-      }
-
       SERIAL_PROTOCOLPGM("T:");
       SERIAL_PROTOCOL_F(0.0, 1);
       SERIAL_PROTOCOLPGM(" /");
@@ -315,7 +272,6 @@ int process_mcode(int command_code) {
     //        Sxxx Wait for bed current temp to reach target temp. Waits only when heating
     //        Rxxx Wait for bed current temp to reach target temp. Waits when heating and cooling
     case 190: {
-#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
       if (code_seen('S')) {
         setTargetBed(code_value());
         CooldownNoWait = true;
@@ -331,9 +287,8 @@ int process_mcode(int command_code) {
       while ( target_direction ? (isHeatingBed()) : (isCoolingBed() && (CooldownNoWait==false)) ) {
         // Print Temp Reading every 1 second while heating up.
         if((millis() - codenum) > 1000) {
-          float tt = degHotend(active_extruder);
           SERIAL_PROTOCOLPGM("T:");
-          SERIAL_PROTOCOL(tt);
+          SERIAL_PROTOCOL(0);
           SERIAL_PROTOCOLPGM(" E:");
           SERIAL_PROTOCOL((int)active_extruder);
           SERIAL_PROTOCOLPGM(" B:");
@@ -346,7 +301,6 @@ int process_mcode(int command_code) {
       pending_temp_change = false;
       refresh_cmd_timeout();
 
-#endif
       return 0;
     }
 
@@ -426,7 +380,11 @@ int process_mcode(int command_code) {
       if(code_seen('S')) {
         int tmp_code = code_value();
         if (code_seen('T')) {
-          if(setTargetedHotend(221)) {
+          tmp_extruder = code_value();
+          if(tmp_extruder >= EXTRUDERS) {
+            SERIAL_ERROR_START;
+            SERIAL_ERROR(MSG_M221_INVALID_EXTRUDER);
+            SERIAL_ERRORLN(tmp_extruder);
             return -1;
           }
           extruder_multiply[tmp_extruder] = tmp_code;

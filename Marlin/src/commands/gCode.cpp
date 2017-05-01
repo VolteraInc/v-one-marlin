@@ -103,32 +103,20 @@ int process_gcode(int command_code) {
     // G0, G1  - Coordinated Movement X Y Z E F
     case 0:
     case 1:
-      if(IsStopped()) {
-        SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
-      } else {
-        s_get_coordinates(); // For X Y Z E F
-        s_prepare_move();
-      }
+      s_get_coordinates(); // For X Y Z E F
+      s_prepare_move();
       return 0;
 
     // G2  - CW ARC
     case 2:
-      if(IsStopped()) {
-        SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
-      } else {
-        s_get_arc_coordinates();
-        s_prepare_arc_move(true);
-      }
+      s_get_arc_coordinates();
+      s_prepare_arc_move(true);
       return 0;
 
     // G3  - CCW ARC
     case 3:
-      if(IsStopped()) {
-        SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
-      } else {
-        s_get_arc_coordinates();
-        s_prepare_arc_move(false);
-      }
+      s_get_arc_coordinates();
+      s_prepare_arc_move(false);
       return 0;
 
     // G4  - Dwell S<seconds> or P<milliseconds>
