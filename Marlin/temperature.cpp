@@ -40,7 +40,13 @@
 int target_temperature_bed = 0;
 
 int current_temperature_bed_raw = 0;
-float current_temperature_bed = 0.0;
+float current_temperature_bed = 0.0f;
+
+int current_p_top_raw = 0;
+float current_p_top = 0.0f;
+
+static bool p_top_in_comms_mode = false;;
+static unsigned long p_top_usage_overlap_time = 0;
 
 #ifdef PIDTEMPBED
   float bedKp=DEFAULT_bedKp;
@@ -53,7 +59,7 @@ unsigned char soft_pwm_bed;
 //===========================================================================
 //=============================private variables============================
 //===========================================================================
-static volatile bool temp_meas_ready = false;
+static volatile bool adc_samples_ready = false;
 
 #ifdef PIDTEMPBED
   //static cannot be external:
@@ -75,7 +81,7 @@ static volatile bool temp_meas_ready = false;
 static int bed_maxttemp_raw = HEATER_BED_RAW_HI_TEMP;
 
 static float analog2tempBed(int raw);
-static void updateTemperaturesFromRawValues();
+static void updateAdcValuesFromRaw();
 
 //===========================================================================
 //=============================   functions      ============================
@@ -118,8 +124,8 @@ void PID_autotune(float temp, int extruder, int ncycles) {
   }
 
  for(;;) {
-    if(temp_meas_ready == true) { // temp sample ready
-      updateTemperaturesFromRawValues();
+    if(adc_samples_ready) {
+      updateAdcValuesFromRaw();
 
       input = current_temperature_bed;
 
@@ -235,10 +241,10 @@ int getHeaterPower(int heater) {
 }
 
 void manage_heater() {
-  if(temp_meas_ready != true)   //better readability
+  if(!adc_samples_ready)
     return;
 
-  updateTemperaturesFromRawValues();
+  updateAdcValuesFromRaw();
 
   if(millis() - previous_millis_bed_heater < BED_CHECK_INTERVAL)
     return;
@@ -285,15 +291,16 @@ static float analog2tempBed(int raw) {
   return celsius;
 }
 
-// Called to get the raw values into the actual temperatures.
-// The raw values are created in interrupt context, and this
-// function is called from normal context as it is too slow to
-// run in interrupts and will block the stepper routine
-static void updateTemperaturesFromRawValues() {
+// Tranfers the sampled, adc'd values from interrupt context into
+// normal context
+// Note: Comments in the original marlin code claim that this code
+// is too slow to run in interrupts and will block the stepper routine
+static void updateAdcValuesFromRaw() {
   current_temperature_bed = analog2tempBed(current_temperature_bed_raw);
+  current_p_top = current_p_top_raw / OVERSAMPLENR;
 
   CRITICAL_SECTION_START;
-  temp_meas_ready = false;
+  adc_samples_ready = false;
   CRITICAL_SECTION_END;
 }
 
@@ -363,16 +370,27 @@ ISR(TIMER0_COMPB_vect) {
     MeasureTemp_BED,
     Prepare_P_TOP,
     Measure_P_TOP,
-    StartupDelay // Startup, delay initial reading a tiny bit so the hardware can settle
+    StartupDelay, // Startup, delay initial reading a tiny bit so the hardware can settle
+    TemporarilyDisabled
   };
   static unsigned char adc_read_state = StartupDelay;
+  static unsigned long no_adc_reads_until = 0;
 
   static unsigned char sample_count = 0;
   static unsigned long raw_bed_temp = 0;
   static unsigned long raw_p_top = 0;
 
-  #define START_ADC(pin) ADCSRB = 0; ADMUX = _BV(REFS0) | (pin & 0x07); SBI(ADCSRA, ADSC)
+  if (p_top_in_comms_mode && adc_read_state != TemporarilyDisabled) {
+    adc_read_state = TemporarilyDisabled;
+    no_adc_reads_until = millis() + 2000;
 
+    // Reset samples
+    sample_count = 0;
+    raw_bed_temp = 0;
+    raw_p_top = 0;
+  }
+
+  #define START_ADC(pin) ADCSRB = 0; ADMUX = _BV(REFS0) | (pin & 0x07); SBI(ADCSRA, ADSC)
   switch(adc_read_state) {
 
     case PrepareTemp_BED:
@@ -391,23 +409,38 @@ ISR(TIMER0_COMPB_vect) {
     case Measure_P_TOP:
       raw_p_top += ADC;
       adc_read_state = PrepareTemp_BED;
+
       ++sample_count;
       break;
 
     case StartupDelay:
-      adc_read_state = 0;
+      adc_read_state = PrepareTemp_BED;
+      break;
+
+    case TemporarilyDisabled:
+      // We can't wait forever, temperature readings are needed for safe operation
+      if (millis() >= no_adc_reads_until) {
+        no_adc_reads_until = 0;
+        adc_read_state = PrepareTemp_BED;
+
+        // if still in comms mode report an error (if there isn't one already)
+        if (p_top_in_comms_mode && p_top_usage_overlap_time == 0) {
+          p_top_usage_overlap_time = millis();
+        }
+      }
       break;
   }
 
-  if(sample_count >= OVERSAMPLENR) // 8 * 16 * 1/(16000000/64/256)  = 131ms.
-  {
-    // Only update the raw values if they have been read. Else we could be updating them during reading.
-    if (!temp_meas_ready) {
-      current_temperature_raw[0] = 0;
+  // 8 * 16 * 1/(16000000/64/256)  = 131ms. TODO: update these numbers now that we only read 2 pins
+  if (sample_count >= OVERSAMPLENR) {
+    // Only update the shared values if they have been read
+    // otherwise we could be updating them during reading.
+    if (!adc_samples_ready) {
       current_temperature_bed_raw = raw_bed_temp;
+      current_p_top_raw = raw_bed_temp;
+      adc_samples_ready = true;
     }
 
-    temp_meas_ready = true;
     sample_count = 0;
     raw_bed_temp = 0;
     raw_p_top = 0;
