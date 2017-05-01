@@ -48,12 +48,6 @@ float current_p_top = 0.0f;
 static bool p_top_in_comms_mode = false;;
 static unsigned long p_top_usage_overlap_time = 0;
 
-#ifdef PIDTEMPBED
-  float bedKp=DEFAULT_bedKp;
-  float bedKi=(DEFAULT_bedKi*PID_dT);
-  float bedKd=(DEFAULT_bedKd/PID_dT);
-#endif //PIDTEMPBED
-
 unsigned char soft_pwm_bed;
 
 //===========================================================================
@@ -61,21 +55,7 @@ unsigned char soft_pwm_bed;
 //===========================================================================
 static volatile bool adc_samples_ready = false;
 
-#ifdef PIDTEMPBED
-  //static cannot be external:
-  static float temp_iState_bed = { 0 };
-  static float temp_dState_bed = { 0 };
-  static float pTerm_bed;
-  static float iTerm_bed;
-  static float dTerm_bed;
-  //int output;
-  static float pid_error_bed;
-  static float temp_iState_min_bed;
-  static float temp_iState_max_bed;
-#else //PIDTEMPBED
-	static unsigned long  previous_millis_bed_heater;
-#endif //PIDTEMPBED
-  static unsigned char soft_pwm[EXTRUDERS];
+static unsigned long  previous_millis_bed_heater;
 
 // Init min and max temp with extreme values to prevent false errors during startup
 static int bed_maxttemp_raw = HEATER_BED_RAW_HI_TEMP;
@@ -87,180 +67,8 @@ static void updateAdcValuesFromRaw();
 //=============================   functions      ============================
 //===========================================================================
 
-void PID_autotune(float temp, int extruder, int ncycles) {
-  float input = 0.0;
-  int cycles=0;
-  bool heating = true;
-
-  unsigned long temp_millis = millis();
-  unsigned long t1=temp_millis;
-  unsigned long t2=temp_millis;
-  long t_high = 0;
-  long t_low = 0;
-
-  long bias, d;
-  float Ku, Tu;
-  float Kp, Ki, Kd;
-  float max = 0, min = 10000;
-
-  if (extruder != -1){
-    SERIAL_ECHOLNPGM("PID Autotune failed. Bad extruder number.");
-    return;
-  }
-
-  SERIAL_ECHOLNPGM("PID Autotune start");
-
-  disable_heater(); // switch off all heaters.
-
-  if (extruder<0)
-  {
-     soft_pwm_bed = (MAX_BED_POWER)/2;
-     bias = d = (MAX_BED_POWER)/2;
-   }
-   else
-   {
-     soft_pwm[extruder] = (PID_MAX)/2;
-     bias = d = (PID_MAX)/2;
-  }
-
- for(;;) {
-    if(adc_samples_ready) {
-      updateAdcValuesFromRaw();
-
-      input = current_temperature_bed;
-
-      max=max(max,input);
-      min=min(min,input);
-      if(heating == true && input > temp) {
-        if(millis() - t2 > 5000) {
-          heating=false;
-          if (extruder<0)
-            soft_pwm_bed = (bias - d) >> 1;
-          else
-            soft_pwm[extruder] = (bias - d) >> 1;
-          t1=millis();
-          t_high=t1 - t2;
-          max=temp;
-        }
-      }
-      if(heating == false && input < temp) {
-        if(millis() - t1 > 5000) {
-          heating=true;
-          t2=millis();
-          t_low=t2 - t1;
-          if(cycles > 0) {
-            bias += (d*(t_high - t_low))/(t_low + t_high);
-            bias = constrain(bias, 20 ,(extruder<0?(MAX_BED_POWER):(PID_MAX))-20);
-            if(bias > (extruder<0?(MAX_BED_POWER):(PID_MAX))/2) d = (extruder<0?(MAX_BED_POWER):(PID_MAX)) - 1 - bias;
-            else d = bias;
-
-            SERIAL_PROTOCOLPGM(" bias: "); SERIAL_PROTOCOL(bias);
-            SERIAL_PROTOCOLPGM(" d: "); SERIAL_PROTOCOL(d);
-            SERIAL_PROTOCOLPGM(" min: "); SERIAL_PROTOCOL(min);
-            SERIAL_PROTOCOLPGM(" max: "); SERIAL_PROTOCOLLN(max);
-            if(cycles > 2) {
-              Ku = (4.0*d)/(3.14159*(max-min)/2.0);
-              Tu = ((float)(t_low + t_high)/1000.0);
-              SERIAL_PROTOCOLPGM(" Ku: "); SERIAL_PROTOCOL(Ku);
-              SERIAL_PROTOCOLPGM(" Tu: "); SERIAL_PROTOCOLLN(Tu);
-              Kp = 0.6*Ku;
-              Ki = 2*Kp/Tu;
-              Kd = Kp*Tu/8;
-              SERIAL_PROTOCOLLNPGM(" Classic PID ");
-              SERIAL_PROTOCOLPGM(" Kp: "); SERIAL_PROTOCOLLN(Kp);
-              SERIAL_PROTOCOLPGM(" Ki: "); SERIAL_PROTOCOLLN(Ki);
-              SERIAL_PROTOCOLPGM(" Kd: "); SERIAL_PROTOCOLLN(Kd);
-              /*
-              Kp = 0.33*Ku;
-              Ki = Kp/Tu;
-              Kd = Kp*Tu/3;
-              SERIAL_PROTOCOLLNPGM(" Some overshoot ")
-              SERIAL_PROTOCOLPGM(" Kp: "); SERIAL_PROTOCOLLN(Kp);
-              SERIAL_PROTOCOLPGM(" Ki: "); SERIAL_PROTOCOLLN(Ki);
-              SERIAL_PROTOCOLPGM(" Kd: "); SERIAL_PROTOCOLLN(Kd);
-              Kp = 0.2*Ku;
-              Ki = 2*Kp/Tu;
-              Kd = Kp*Tu/3;
-              SERIAL_PROTOCOLLNPGM(" No overshoot ")
-              SERIAL_PROTOCOLPGM(" Kp: "); SERIAL_PROTOCOLLN(Kp);
-              SERIAL_PROTOCOLPGM(" Ki: "); SERIAL_PROTOCOLLN(Ki);
-              SERIAL_PROTOCOLPGM(" Kd: "); SERIAL_PROTOCOLLN(Kd);
-              */
-            }
-          }
-          if (extruder<0)
-            soft_pwm_bed = (bias + d) >> 1;
-          else
-            soft_pwm[extruder] = (bias + d) >> 1;
-          cycles++;
-          min=temp;
-        }
-      }
-    }
-    if(input > (temp + 20)) {
-      SERIAL_PROTOCOLLNPGM("PID Autotune failed! Temperature too high");
-      return;
-    }
-    if(millis() - temp_millis > 2000) {
-      int p;
-      if (extruder<0){
-        p=soft_pwm_bed;
-        SERIAL_PROTOCOLPGM(" B:");
-      }else{
-        p=soft_pwm[extruder];
-        SERIAL_PROTOCOLPGM(" T:");
-      }
-
-      SERIAL_PROTOCOL(input);
-      SERIAL_PROTOCOLPGM(" @:");
-      SERIAL_PROTOCOLLN(p);
-
-      temp_millis = millis();
-    }
-    if(((millis() - t1) + (millis() - t2)) > (10L*60L*1000L*2L)) {
-      SERIAL_PROTOCOLLNPGM("PID Autotune failed! timeout");
-      return;
-    }
-    if(cycles > ncycles) {
-      SERIAL_PROTOCOLLNPGM("PID Autotune finished! Put the last Kp, Ki and Kd constants from above into Configuration.h");
-      return;
-    }
-  }
-}
-
-void updatePID() {
-#ifdef PIDTEMPBED
-  temp_iState_max_bed = PID_INTEGRAL_DRIVE_MAX / bedKi;
-#endif
-}
-
-int getHeaterPower(int heater) {
-	if (heater<0)
-		return soft_pwm_bed;
-  return soft_pwm[heater];
-}
-
-void manage_heater() {
-  if(!adc_samples_ready)
-    return;
-
-  updateAdcValuesFromRaw();
-
-  if(millis() - previous_millis_bed_heater < BED_CHECK_INTERVAL)
-    return;
-  previous_millis_bed_heater = millis();
-
-  // Check if bed temperature is within the correct range
-  if((current_temperature_bed > BED_MINTEMP) && (current_temperature_bed < BED_MAXTEMP)) {
-    if(current_temperature_bed >= target_temperature_bed) {
-      soft_pwm_bed = 0;
-    } else {
-      soft_pwm_bed = MAX_BED_POWER>>1;
-    }
-  } else {
-    soft_pwm_bed = 0;
-    WRITE(HEATER_BED_PIN, 0);
-  }
+int getSoftPwmBed() {
+	return soft_pwm_bed;
 }
 
 #define PGM_RD_W(x)   (short)pgm_read_word(&x)
@@ -304,6 +112,12 @@ static void updateAdcValuesFromRaw() {
   CRITICAL_SECTION_END;
 }
 
+void disable_heater() {
+  setTargetBed(0);
+  soft_pwm_bed = 0;
+  WRITE(HEATER_BED_PIN, 0);
+}
+
 void tp_init() {
   SET_OUTPUT(HEATER_BED_PIN);
 
@@ -330,10 +144,27 @@ void tp_init() {
   }
 }
 
-void disable_heater() {
-  setTargetBed(0);
-  soft_pwm_bed = 0;
-  WRITE(HEATER_BED_PIN, 0);
+void manage_heater() {
+  if(!adc_samples_ready)
+    return;
+
+  updateAdcValuesFromRaw();
+
+  if(millis() - previous_millis_bed_heater < BED_CHECK_INTERVAL)
+    return;
+  previous_millis_bed_heater = millis();
+
+  // Check if bed temperature is within the correct range
+  if((current_temperature_bed > BED_MINTEMP) && (current_temperature_bed < BED_MAXTEMP)) {
+    if(current_temperature_bed >= target_temperature_bed) {
+      soft_pwm_bed = 0;
+    } else {
+      soft_pwm_bed = MAX_BED_POWER>>1;
+    }
+  } else {
+    soft_pwm_bed = 0;
+    WRITE(HEATER_BED_PIN, 0);
+  }
 }
 
 // Timer 0 is shared with millis
@@ -373,7 +204,7 @@ ISR(TIMER0_COMPB_vect) {
     StartupDelay, // Startup, delay initial reading a tiny bit so the hardware can settle
     TemporarilyDisabled
   };
-  static unsigned char adc_read_state = StartupDelay;
+  static enum AdcReadState adc_read_state = StartupDelay;
   static unsigned long no_adc_reads_until = 0;
 
   static unsigned char sample_count = 0;
@@ -431,6 +262,7 @@ ISR(TIMER0_COMPB_vect) {
       break;
   }
 
+  // One we collect enough samples, report values and reset
   // 8 * 16 * 1/(16000000/64/256)  = 131ms. TODO: update these numbers now that we only read 2 pins
   if (sample_count >= OVERSAMPLENR) {
     // Only update the shared values if they have been read
@@ -441,29 +273,9 @@ ISR(TIMER0_COMPB_vect) {
       adc_samples_ready = true;
     }
 
+    // Reset
     sample_count = 0;
     raw_bed_temp = 0;
     raw_p_top = 0;
   }
 }
-
-#ifdef PIDTEMPBED
-// Apply the scale factors to the PID values
-
-float scalePID_i(float i) {
-	return i * PID_dT;
-}
-
-float unscalePID_i(float i) {
-	return i / PID_dT;
-}
-
-float scalePID_d(float d) {
-    return d / PID_dT;
-}
-
-float unscalePID_d(float d) {
-	return d * PID_dT;
-}
-
-#endif //PIDTEMPBED

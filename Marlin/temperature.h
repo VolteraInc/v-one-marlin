@@ -32,11 +32,6 @@ void manage_heater(); //it is critical that this is called periodically.
 extern int target_temperature_bed;
 extern float current_temperature_bed;
 
-#ifdef PIDTEMPBED
-  extern float bedKp,bedKi,bedKd;
-#endif
-
-
 //high level conversion routines, for use outside of temperature.cpp
 //inline so that there is no performance decrease.
 //deg=degreeCelsius
@@ -61,8 +56,5 @@ FORCE_INLINE bool isCoolingBed() {
   return target_temperature_bed < current_temperature_bed;
 };
 
-int getHeaterPower(int heater);
+int getSoftPwmBed();
 void disable_heater();
-void updatePID();
-
-void PID_autotune(float temp, int extruder, int ncycles);

@@ -255,8 +255,6 @@ void Config_RetrieveSettings() {
       EEPROM_READ_VAR(i, max_z_jerk);
       EEPROM_READ_VAR(i, max_e_jerk);
 
-      // Call updatePID (similar to when we have processed M301)
-      updatePID();
       SERIAL_ECHO_START;
       SERIAL_ECHOLNPGM("Stored settings retrieved");
     } else {
