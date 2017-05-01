@@ -85,22 +85,12 @@ int process_mcode(int command_code) {
 
     // M105 - Read current temp
     case 105 :
-      SERIAL_PROTOCOLPGM("T:");
-      SERIAL_PROTOCOL_F(0.0, 1);
-      SERIAL_PROTOCOLPGM(" /");
-      SERIAL_PROTOCOL_F(0.0, 1 );
-
-      SERIAL_PROTOCOLPGM(" B:");
-      SERIAL_PROTOCOL_F(degBed(), 1);
-      SERIAL_PROTOCOLPGM(" /");
-      SERIAL_PROTOCOL_F(degTargetBed(), 1);
-
-      SERIAL_PROTOCOLPGM(" @:");
-      SERIAL_PROTOCOL(getHeaterPower(tmp_extruder));
-
-      SERIAL_PROTOCOLPGM(" B@:");
-      SERIAL_PROTOCOL(getHeaterPower(-1));
-
+      SERIAL_PROTOCOLPGM("T:"); SERIAL_PROTOCOL_F(0.0, 1);
+      SERIAL_PROTOCOLPGM(" /"); SERIAL_PROTOCOL_F(0.0, 1 );
+      SERIAL_PROTOCOLPGM(" B:"); SERIAL_PROTOCOL_F(degBed(), 1);
+      SERIAL_PROTOCOLPGM(" /"); SERIAL_PROTOCOL_F(degTargetBed(), 1);
+      SERIAL_PROTOCOLPGM(" @:"); SERIAL_PROTOCOL(0);
+      SERIAL_PROTOCOLPGM(" B@:"); SERIAL_PROTOCOL(getSoftPwmBed());
       SERIAL_PROTOCOLLN("");
       return 0;
 
@@ -394,37 +384,6 @@ int process_mcode(int command_code) {
       }
     }
     return 0;
-
-    // M303 - PID relay autotune S<temperature> sets the target temperature. (default target temperature = 150C)
-    case 303: {
-      float temp = 150.0;
-      int e=0;
-      int c=5;
-      if (code_seen('E')) e=code_value();
-        if (e<0)
-          temp=70;
-      if (code_seen('S')) temp=code_value();
-      if (code_seen('C')) c=code_value();
-      PID_autotune(temp, e, c);
-      return 0;
-    }
-
-#ifdef PIDTEMPBED
-    /// M304 - Set bed PID parameters P I and D
-    case 304: {
-      if(code_seen('P')) bedKp = code_value();
-      if(code_seen('I')) bedKi = scalePID_i(code_value());
-      if(code_seen('D')) bedKd = scalePID_d(code_value());
-
-      updatePID();
-      SERIAL_PROTOCOLPGM(" p:"); SERIAL_PROTOCOL(bedKp);
-      SERIAL_PROTOCOLPGM(" i:"); SERIAL_PROTOCOL(unscalePID_i(bedKi));
-      SERIAL_PROTOCOLPGM(" d:"); SERIAL_PROTOCOL(unscalePID_d(bedKd));
-      SERIAL_PROTOCOLLN("");
-      return 0;
-    }
-#endif //PIDTEMPBED
-
 
     // M400 - Finish all moves
     case 400:
