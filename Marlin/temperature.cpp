@@ -292,9 +292,6 @@ static float analog2tempBed(int raw) {
 static void updateTemperaturesFromRawValues() {
   current_temperature_bed = analog2tempBed(current_temperature_bed_raw);
 
-  //Reset the watchdog after we know we have a temperature measurement.
-  watchdog_reset();
-
   CRITICAL_SECTION_START;
   temp_meas_ready = false;
   CRITICAL_SECTION_END;
