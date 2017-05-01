@@ -143,6 +143,8 @@ void setup() {
 }
 
 void periodic_work() {
+  watchdog_reset();
+
   manage_heating_profile();
   manage_heater();
   manage_inactivity();
@@ -151,6 +153,8 @@ void periodic_work() {
   reportBufferEmpty();
   periodic_output();
   toolChanges();
+
+  watchdog_reset();
 }
 
 void loop() {
