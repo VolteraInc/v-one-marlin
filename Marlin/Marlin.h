@@ -122,12 +122,8 @@ void FlushSerialRequestResend();
 void ClearToSend();
 
 void kill();
-void Stop();
 
 void handle_glow_leds();
-
-bool IsStopped();
-
 
 void refresh_cmd_timeout(void);
 

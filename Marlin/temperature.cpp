@@ -37,10 +37,8 @@
 //===========================================================================
 //=============================public variables============================
 //===========================================================================
-int target_temperature[EXTRUDERS] = { 0 };
 int target_temperature_bed = 0;
-int current_temperature_raw[EXTRUDERS] = { 0 };
-float current_temperature[EXTRUDERS] = { 0.0 };
+
 int current_temperature_bed_raw = 0;
 float current_temperature_bed = 0.0;
 
@@ -73,18 +71,11 @@ static volatile bool temp_meas_ready = false;
 #endif //PIDTEMPBED
   static unsigned char soft_pwm[EXTRUDERS];
 
-# define ARRAY_BY_EXTRUDERS(v1, v2, v3) { v1 }
-
 // Init min and max temp with extreme values to prevent false errors during startup
 static int bed_maxttemp_raw = HEATER_BED_RAW_HI_TEMP;
 
 static float analog2tempBed(int raw);
 static void updateTemperaturesFromRawValues();
-
-#ifdef WATCH_TEMP_PERIOD
-int watch_start_temp[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0,0,0);
-unsigned long watchmillis[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0,0,0);
-#endif //WATCH_TEMP_PERIOD
 
 //===========================================================================
 //=============================   functions      ============================
@@ -106,14 +97,10 @@ void PID_autotune(float temp, int extruder, int ncycles) {
   float Kp, Ki, Kd;
   float max = 0, min = 10000;
 
-  if ((extruder > EXTRUDERS)
-  #if (TEMP_BED_PIN <= -1)
-       ||(extruder < 0)
-  #endif
-       ){
-          SERIAL_ECHOLNPGM("PID Autotune failed. Bad extruder number.");
-          return;
-        }
+  if (extruder != -1){
+    SERIAL_ECHOLNPGM("PID Autotune failed. Bad extruder number.");
+    return;
+  }
 
   SERIAL_ECHOLNPGM("PID Autotune start");
 
@@ -134,7 +121,7 @@ void PID_autotune(float temp, int extruder, int ncycles) {
     if(temp_meas_ready == true) { // temp sample ready
       updateTemperaturesFromRawValues();
 
-      input = (extruder<0)?current_temperature_bed:current_temperature[extruder];
+      input = current_temperature_bed;
 
       max=max(max,input);
       min=min(min,input);
@@ -339,36 +326,11 @@ void tp_init() {
   }
 }
 
-void setWatch() {
-#ifdef WATCH_TEMP_PERIOD
-  for (int e = 0; e < EXTRUDERS; e++)
-  {
-    if(degHotend(e) < degTargetHotend(e) - (WATCH_TEMP_INCREASE * 2))
-    {
-      watch_start_temp[e] = degHotend(e);
-      watchmillis[e] = millis();
-    }
-  }
-#endif
-}
-
 void disable_heater() {
-  for(int i=0;i<EXTRUDERS;i++)
-    setTargetHotend(0,i);
   setTargetBed(0);
-
   soft_pwm_bed = 0;
   WRITE(HEATER_BED_PIN, 0);
 }
-
-void bed_max_temp_error(void) {
-  if(!IsStopped()) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Temperature heated bed switched off. MAXTEMP triggered !!");
-  }
-  Stop();
-}
-
 
 // Timer 0 is shared with millis
 ISR(TIMER0_COMPB_vect) {
@@ -452,17 +414,7 @@ ISR(TIMER0_COMPB_vect) {
     sample_count = 0;
     raw_bed_temp = 0;
     raw_p_top = 0;
-
-
-#if HEATER_BED_RAW_LO_TEMP > HEATER_BED_RAW_HI_TEMP
-    if(current_temperature_bed_raw <= bed_maxttemp_raw) {
-#else
-    if(current_temperature_bed_raw >= bed_maxttemp_raw) {
-#endif
-       bed_max_temp_error();
-    }
   }
-
 }
 
 #ifdef PIDTEMPBED
