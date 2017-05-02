@@ -183,9 +183,9 @@ void manage_heater() {
   const auto overlap_time = p_top_usage_overlap_time;
   if (overlap_time) {
     SERIAL_ECHO_START;
-    SERIAL_ECHO("WARNING: Overlapping use of pin detected (ms=");
+    SERIAL_ECHOPGM("WARNING: Overlapping use of pin detected (ms=");
     SERIAL_ECHO(overlap_time);
-    SERIAL_ECHOLN(")");
+    SERIAL_ECHOLNPGM(")");
 
     // Reset so we can detect additional occurences
     CRITICAL_SECTION_START;
