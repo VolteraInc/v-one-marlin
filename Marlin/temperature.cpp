@@ -150,6 +150,23 @@ void tp_init() {
 }
 
 void manage_heater() {
+
+  // Report overlapping use of p_top
+  // Note: if this warning is seen then we need to allocate more time
+  // or reduce then number of retries when using the pin for communication.
+  const auto overlap_time = p_top_usage_overlap_time;
+  if (overlap_time) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHO("WARNING: Overlapping use of pin detected (ms=");
+    SERIAL_ECHO(overlap_time);
+    SERIAL_ECHOLN(")");
+
+    // Reset so we can detect additional occurences
+    CRITICAL_SECTION_START;
+    p_top_usage_overlap_time = 0;
+    CRITICAL_SECTION_END;
+  }
+
   if(!adc_samples_ready)
     return;
 
@@ -216,6 +233,11 @@ ISR(TIMER0_COMPB_vect) {
   static unsigned long raw_bed_temp = 0;
   static unsigned long raw_p_top = 0;
 
+  // Note: we use a timeout here as a safety mechanism.
+  // i.e. a bug or unexpectedly long communication sequence
+  // should not disable temperature management.
+  // Also, we need a timeout after returning to read mode to allow
+  // noise to settle out of the ADC (or all pins, not just P_TOP).
   if (p_top_in_comms_mode && adc_read_state != TemporarilyDisabled) {
     adc_read_state = TemporarilyDisabled;
     no_adc_reads_until = millis() + 2000;
