@@ -70,12 +70,13 @@ const char* toolTypeAsString(Tool tool) {
 }
 
 int outputToolStatus() {
+  const auto toolState = getToolState(s_tool);
   SERIAL_ECHOPGM("Tool\n");
   SERIAL_ECHOPGM("  type: "); SERIAL_ECHOLN(toolTypeAsString(s_tool));
 
   SERIAL_ECHOPGM("Probe\n");
   SERIAL_ECHOPGM("  status: "); SERIAL_ECHOLN(
-    toolStateAsString(s_tool == TOOLS_PROBE ? readToolState(s_tool) : TOOL_STATE_NOT_MOUNTED)
+    toolStateAsString(s_tool == TOOLS_PROBE ? toolState : TOOL_STATE_NOT_MOUNTED)
   );
 
   SERIAL_ECHOPGM("Dispenser\n");
@@ -83,7 +84,7 @@ int outputToolStatus() {
 
   SERIAL_ECHOPGM("Router\n");
   SERIAL_ECHOPGM("  status: "); SERIAL_ECHOLN(
-    toolStateAsString(s_tool == TOOLS_ROUTER ? readToolState(s_tool) : TOOL_STATE_NOT_MOUNTED)
+    toolStateAsString(s_tool == TOOLS_ROUTER ? toolState : TOOL_STATE_NOT_MOUNTED)
   );
   SERIAL_ECHOPGM("  Speed: "); SERIAL_ECHOLN(getRotationSpeed(TOOLS_ROUTER));
 
@@ -178,7 +179,7 @@ int confirmMountedAndNotTriggered(const char* context, Tool tool, Tool requiredT
     return -1;
   }
 
-  switch (readToolState(tool)) {
+  switch (getToolState(tool)) {
     case TOOL_STATE_PROBE_MOUNTED:
       if (tool == TOOLS_PROBE) {
         return 0;

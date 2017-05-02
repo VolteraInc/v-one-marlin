@@ -25,9 +25,8 @@ enum ToolStates {
   TOOL_STATE_ROUTER_MOUNTED = 4
 };
 Tool determineMountedTool(Tool tool);
-enum ToolStates readToolState(Tool tool);
+enum ToolStates getToolState(Tool tool);
 const char* toolStateAsString(enum ToolStates state);
-float readPogoPinVoltage();
 
 // Retract constants
 const float NoRetract = -9999.0f;

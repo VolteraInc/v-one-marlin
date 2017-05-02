@@ -58,3 +58,10 @@ FORCE_INLINE bool isCoolingBed() {
 
 int getSoftPwmBed();
 void disable_heater();
+
+//-----------------------------------------------
+// ADC reads
+
+// Note: Way easier to add this getter here, than to pull out
+// ADC reads into their own module
+float get_p_top_voltage();

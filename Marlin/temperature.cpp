@@ -55,7 +55,7 @@ unsigned char soft_pwm_bed;
 //===========================================================================
 static volatile bool adc_samples_ready = false;
 
-static unsigned long  previous_millis_bed_heater;
+static unsigned long previous_millis_bed_heater;
 
 // Init min and max temp with extreme values to prevent false errors during startup
 static int bed_maxttemp_raw = HEATER_BED_RAW_HI_TEMP;
@@ -69,6 +69,10 @@ static void updateAdcValuesFromRaw();
 
 int getSoftPwmBed() {
 	return soft_pwm_bed;
+}
+
+float get_p_top_voltage() {
+  return current_p_top;
 }
 
 #define PGM_RD_W(x)   (short)pgm_read_word(&x)
@@ -105,7 +109,8 @@ static float analog2tempBed(int raw) {
 // is too slow to run in interrupts and will block the stepper routine
 static void updateAdcValuesFromRaw() {
   current_temperature_bed = analog2tempBed(current_temperature_bed_raw);
-  current_p_top = current_p_top_raw / OVERSAMPLENR;
+
+  current_p_top = 5.0 * ((current_p_top_raw / OVERSAMPLENR) >> 10);
 
   CRITICAL_SECTION_START;
   adc_samples_ready = false;
@@ -234,7 +239,7 @@ ISR(TIMER0_COMPB_vect) {
       break;
 
     case Prepare_P_TOP:
-      START_ADC(P_TOP_STATE_PIN);
+      START_ADC(P_TOP_STATE_PIN); // same pin as P_TOP_PIN / ROUTER_COMMS_PIN
       adc_read_state = Measure_P_TOP;
       break;
     case Measure_P_TOP:
