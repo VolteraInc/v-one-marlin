@@ -8,7 +8,7 @@
 // Router - serial comms
 
 
-// baudrate of 300 is based on the rise and fall times of the capacitor on ptop
+// baudrate of 300 is based on the rise and fall times of the capacitor on ptop (600-800 us)
 static const int baud = 300;
 
 static const int dummy_pin = A3;
@@ -20,15 +20,17 @@ static SoftwareSerial s_router_write(dummy_pin, ROUTER_COMMS_PIN);
 static void readMode() {
   s_router_write.end();
   set_p_top_mode(P_TOP_COMMS_READ_MODE);
+  SET_OUTPUT(dummy_pin);
   s_router_read.listen();
-  s_router_read.begin(300);
+  s_router_read.begin(baud);
 }
 
 static void writeMode() {
   s_router_read.end();
   set_p_top_mode(P_TOP_COMMS_WRITE_MODE);
+  SET_INPUT(dummy_pin);
   s_router_write.listen();
-  s_router_write.begin(300);
+  s_router_write.begin(baud);
 }
 
 static void normalMode() {
@@ -77,12 +79,13 @@ static int s_write(char* msg) {
     s_router_write.print(msg);
 
     // Receive/parse acknowledgement characters, timeout eventually
-    const auto now = millis();
-    static const unsigned int timeout = 300; //ms
-    const auto tryUntil = now + timeout;
+    static const unsigned int timeout = 1000; //ms
     enum AckState ackState = ACK_NONE;
     readMode();
-    while (tryUntil <= now) {
+    const auto now = millis();
+    const auto tryUntil = now + timeout;
+
+    while (millis() <= tryUntil) {
       if (s_router_read.available() > 1) {
         char ch = s_router_read.read();
         ackState = updateAckState(ackState, ch);
