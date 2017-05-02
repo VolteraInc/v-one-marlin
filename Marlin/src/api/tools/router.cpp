@@ -72,6 +72,7 @@ static int s_write(char* msg) {
   int returnValue = 0;
   int attempt = 1;
   do {
+    SERIAL_ECHO_START;
     SERIAL_ECHO(attempt == 1 ? "Writing " : "Resending "); SERIAL_ECHOLN(msg);
     writeMode();
     s_router_write.print(msg);
@@ -91,7 +92,7 @@ static int s_write(char* msg) {
         }
       }
     }
-  } while(attempt <= 2);
+  } while(++attempt <= 2);
   returnValue = -1; // failed to sent
 
 DONE:
@@ -157,12 +158,12 @@ int setRotationSpeed(Tool tool, int speed) {
   // Send the speed to the router
   if (s_sendRouterRotationSpeed(speed)) {
     SERIAL_ERROR_START;
-    SERIAL_ERROR("Unable to set the router's speed, confirm router is attached and powered");
+    SERIAL_ERRORLNPGM("Unable to set the router's speed, confirm router is attached and powered");
 
     // Attempt to stop the router (just in case)
     if (speed != 0 && s_sendRouterRotationSpeed(0)) {
       SERIAL_ECHO_START;
-      SERIAL_ECHO("Unable to confirm that router's speed was set to 0");
+      SERIAL_ECHOLNPGM("Unable to confirm that router's speed was set to 0");
     }
     return -1;
   }

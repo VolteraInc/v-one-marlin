@@ -136,7 +136,7 @@ static float analog2tempBed(int raw) {
 static void updateAdcValuesFromRaw() {
   current_temperature_bed = analog2tempBed(current_temperature_bed_raw);
 
-  current_p_top = 5.0 * ((current_p_top_raw / OVERSAMPLENR) >> 10);
+  current_p_top = 5.0 * ((current_p_top_raw / OVERSAMPLENR) / 1024.0f);
 
   CRITICAL_SECTION_START;
   adc_samples_ready = false;
@@ -316,13 +316,14 @@ ISR(TIMER0_COMPB_vect) {
   }
 
   // One we collect enough samples, report values and reset
-  // 8 * 16 * 1/(16000000/64/256)  = 131ms. TODO: update these numbers now that we only read 2 pins
+  // Note: Samples accumulate every 66ms (measured).
+  // This matches the expected frequency: 4 states * 16 samples * 1/(16000000/64/256) ~= 66ms
   if (sample_count >= OVERSAMPLENR) {
     // Only update the shared values if they have been read
     // otherwise we could be updating them during reading.
     if (!adc_samples_ready) {
       current_temperature_bed_raw = raw_bed_temp;
-      current_p_top_raw = raw_bed_temp;
+      current_p_top_raw = raw_p_top;
       adc_samples_ready = true;
     }
 
