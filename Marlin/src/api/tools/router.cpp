@@ -107,7 +107,7 @@ static int s_write(char* msg) {
 
 static int s_sendRouterRotationSpeed(int percent) {
   SERIAL_ECHO_START;
-  SERIAL_ECHO("Set rotation speed percentage to "); SERIAL_ECHOLN(percent);
+  SERIAL_ECHOPGM("Set rotation speed percentage to "); SERIAL_ECHOLN(percent);
   char message[11];
   const int crc = CRC8(percent);
   sprintf(message, "R%u %u\r\n", percent, crc);
