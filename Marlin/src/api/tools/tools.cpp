@@ -39,10 +39,11 @@ void setTool(Tool tool) {
   if (s_tool == tool) {
     return;
   }
+  SERIAL_ECHO_START;
   SERIAL_ECHOPGM("Swapping "); SERIAL_ECHO(toolTypeAsString(s_tool));
   SERIAL_ECHOPGM(" for "); SERIAL_ECHOLN(toolTypeAsString(tool));
-  s_tool = tool;
   resetToolPreparations();
+  s_tool = tool;
   sendToolStatusUpdate();
 }
 
@@ -54,7 +55,9 @@ int resetToolPreparations() {
   s_toolPrepared = false;
   enable_p_top(false);
   setDispenseHeight(TOOLS_DISPENSER, 0.0f);
-  setRotationSpeed(TOOLS_ROUTER, 0);
+  if (getTool() == TOOLS_ROUTER) {
+    setRotationSpeed(TOOLS_ROUTER, 0);
+  }
   setHomedState(Z_AXIS, 0);
   return 0;
 }
