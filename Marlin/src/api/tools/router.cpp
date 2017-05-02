@@ -1,4 +1,5 @@
 #include "../../../Marlin.h"
+#include "../../../temperature.h"
 #include "../../../stepper.h"
 #include "../api.h"
 #include "internal.h"
@@ -19,52 +20,37 @@ static SoftwareSerial s_router_write(dummy_pin, ROUTER_COMMS_PIN);
 
 static void readMode() {
   s_router_write.end();
-  SET_INPUT(ROUTER_COMMS_PIN);
+  set_p_top_mode(P_TOP_COMMS_READ_MODE);
   s_router_read.listen();
   s_router_read.begin(300);
 }
 
 static void writeMode() {
   s_router_read.end();
-  SET_OUTPUT(ROUTER_COMMS_PIN);
+  set_p_top_mode(P_TOP_COMMS_WRITE_MODE);
   s_router_write.listen();
   s_router_write.begin(300);
 }
 
-static void ensureInitialized() {
-  static bool initialized = false;
-  if (!initialized) {
-    initialized = true;
-    readMode();
-  }
+static void normalMode() {
+  s_router_write.end();
+  s_router_read.end();
+  set_p_top_mode(P_TOP_NORMAL_MODE);
 }
 
-static bool confirmResponse(char* message){
-  int try_count = 0;
-  static const int timeout = 300; //ms
-  readMode();
-  static int wait_time = millis();
-  while (try_count < 2) {
-
-    if (wait_time-millis() > timeout){
-      try_count++;
-      writeMode();
-      s_router_write.print(message);
-      readMode();
-      wait_time = millis();
-    }
-
-    while (s_router_read.available()>1) {
-      if(s_router_read.read() != 1) {
-        try_count++;
-        writeMode();
-        s_router_write.print(message);
-        readMode();
-        wait_time = millis();
-        break;
-      }
-      return 1;
-    }
+enum AckState {
+  ACK_NONE,
+  ACK_O,
+  ACK_OK,
+  ACK_OK_CR,
+  ACK_OK_CR_LF
+};
+static enum AckState updateAckState(enum AckState state, char ch) {
+  switch (state) {
+    default:        return ch == 'O' ? ACK_O : ACK_NONE;
+    case ACK_O:     return ch == 'K' ? ACK_OK : ACK_NONE;
+    case ACK_OK:    return ch == '\r' ? ACK_OK_CR : ACK_NONE;
+    case ACK_OK_CR: return ch == '\n' ? ACK_OK_CR_LF : ACK_NONE;
   }
 }
 
@@ -82,21 +68,44 @@ static uint8_t CRC8(uint8_t data) {
   return crc;
 }
 
-static void s_sendRouterRotationSpeed(int percent) {
+static int s_write(char* msg) {
+  int returnValue = 0;
+  int attempt = 1;
+  do {
+    SERIAL_ECHO(attempt == 1 ? "Writing " : "Resending "); SERIAL_ECHOLN(msg);
+    writeMode();
+    s_router_write.print(msg);
+
+    // Receive/parse acknowledgement characters, timeout eventually
+    const auto now = millis();
+    static const unsigned int timeout = 300; //ms
+    const auto tryUntil = now + timeout;
+    enum AckState ackState = ACK_NONE;
+    readMode();
+    while (tryUntil <= now) {
+      if (s_router_read.available() > 1) {
+        char ch = s_router_read.read();
+        ackState = updateAckState(ackState, ch);
+        if (ackState == ACK_OK_CR_LF) {
+          goto DONE;
+        }
+      }
+    }
+  } while(attempt <= 2);
+  returnValue = -1; // failed to sent
+
+DONE:
+  normalMode();
+  return returnValue;
+}
+
+static int s_sendRouterRotationSpeed(int percent) {
   SERIAL_ECHO_START;
   SERIAL_ECHO("Set rotation speed percentage to "); SERIAL_ECHOLN(percent);
-
-  const int crc = CRC8(percent);
-  ensureInitialized();
-
-
   char message[11];
+  const int crc = CRC8(percent);
   sprintf(message, "R%u %u\r\n", percent, crc);
-  writeMode();
-  s_router_write.print(message);
-  if(confirmResponse(message)) {
-    // DO WHAT YOU GOTTA DO
-  }
+  return s_write(message);
 }
 
 
@@ -129,7 +138,7 @@ float getRotationSpeed(Tool tool) {
 int setRotationSpeed(Tool tool, int speed) {
   if (logging_enabled) {
     SERIAL_ECHOPGM("Setting rotation speed to "); SERIAL_ECHO(speed);
-    SERIAL_ECHOPGM("units\n");
+    SERIAL_ECHOLNPGM(" percent");
   }
 
   if (tool != TOOLS_ROUTER) {
@@ -141,12 +150,24 @@ int setRotationSpeed(Tool tool, int speed) {
   if ( speed > 100 || speed < 0) {
     SERIAL_ERROR_START;
     SERIAL_ERRORPGM("Unable to set rotation speed to "); SERIAL_ERROR(speed);
-    SERIAL_ERRORPGM("units, value is outside expected range\n");
+    SERIAL_ERRORLNPGM(" percent, value is outside expected range");
     return -1;
   }
 
-  s_rotationSpeed = speed;
-  s_sendRouterRotationSpeed(s_rotationSpeed); // Need to set = speed first?
+  // Send the speed to the router
+  if (s_sendRouterRotationSpeed(speed)) {
+    SERIAL_ERROR_START;
+    SERIAL_ERROR("Unable to set the router's speed, confirm router is attached and powered");
 
+    // Attempt to stop the router (just in case)
+    if (speed != 0 && s_sendRouterRotationSpeed(0)) {
+      SERIAL_ECHO_START;
+      SERIAL_ECHO("Unable to confirm that router's speed was set to 0");
+    }
+    return -1;
+  }
+
+  // success
+  s_rotationSpeed = speed;
   return 0;
 }
