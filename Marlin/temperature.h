@@ -62,6 +62,15 @@ void disable_heater();
 //-----------------------------------------------
 // ADC reads
 
+enum PTopModes {
+  P_TOP_NORMAL_MODE,
+  P_TOP_COMMS_WRITE_MODE,
+  P_TOP_COMMS_READ_MODE,
+};
+
+// safely change p_top usege modes
+void set_p_top_mode(enum PTopModes mode);
+
 // Note: Way easier to add this getter here, than to pull out
 // ADC reads into their own module
 float get_p_top_voltage();

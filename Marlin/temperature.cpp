@@ -75,6 +75,32 @@ float get_p_top_voltage() {
   return current_p_top;
 }
 
+void set_p_top_mode(enum PTopModes mode) {
+  // Note: changing a form OUTPUT to INPUT generates noise for all analog reads
+  // that's why we've encapsulate this code here
+  bool comms_mode = false;
+  switch(mode) {
+    case P_TOP_COMMS_WRITE_MODE:
+      SET_OUTPUT(ROUTER_COMMS_PIN);
+      comms_mode = true;
+      break;
+    case P_TOP_COMMS_READ_MODE:
+      SET_INPUT(ROUTER_COMMS_PIN);
+      comms_mode = true;
+      break;
+    default:
+      SET_INPUT(ROUTER_COMMS_PIN);
+      comms_mode = false;
+      break;
+  }
+
+  if (p_top_in_comms_mode != comms_mode) {
+    CRITICAL_SECTION_START;
+    p_top_in_comms_mode = comms_mode;
+    CRITICAL_SECTION_END;
+  }
+}
+
 #define PGM_RD_W(x)   (short)pgm_read_word(&x)
 
 // Derived from RepRap FiveD extruder::getTemperature()
