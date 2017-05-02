@@ -1,5 +1,6 @@
 #include "../api/api.h"
 #include "../../Marlin.h"
+#include "../../temperature.h"
 
 #include "processing.h"
 
@@ -106,7 +107,7 @@ int process_dcode(int command_code) {
       return 0;
     }
 
-    // Algorithms - Read probe pin voltage
+    // Algorithms - Read voltage of left pogo pin (aka p_top)
     case 106: {
       const int maxCycles = 50;
       float voltages[maxCycles];
@@ -123,7 +124,7 @@ int process_dcode(int command_code) {
 
       // Collect the voltage readings
       for (int i = 0; i < cycles; ++i) {
-        voltages[i] = readPogoPinVoltage();
+        voltages[i] = get_p_top_voltage();
         delay(ms);
       }
 
@@ -162,7 +163,7 @@ int process_dcode(int command_code) {
       SERIAL_ECHOLNPGM("  D103 - xy positioner -- D103 or D103 M (move-only)");
       SERIAL_ECHOLNPGM("  D104 - measure probe displacement");
       SERIAL_ECHOLNPGM("  D105 - measure at switch -- D105 -X");
-      SERIAL_ECHOLNPGM("  D106 - read probe pin's voltage (C=cycles M=milliseconds between readings) -- D106 C10 M5 ");
+      SERIAL_ECHOLNPGM("  D106 - read left pogo pin's voltage (C=cycles M=milliseconds between readings) -- D106 C10 M5 ");
       SERIAL_ECHOLNPGM("");
       return 0;
   }
