@@ -109,8 +109,8 @@ int process_dcode(int command_code) {
 
     // Algorithms - Read voltage of left pogo pin (aka p_top)
     case 106: {
-      const int maxCycles = 50;
-      float voltages[maxCycles];
+      const int maxCycles = 250;
+      float rawVoltages[maxCycles];
       const int cycles = code_seen('C') ? code_value() : maxCycles;
       const int ms = code_seen('M') ? code_value() : 1;
 
@@ -123,16 +123,22 @@ int process_dcode(int command_code) {
       }
 
       // Collect the voltage readings
+      // Note: set p_top mode to disable ADC reads for a little while
+      // (2 seconds). This is hacky but ADC reads use the same interrupt timer
+      // as millis() so this is the only way to disable reads without disabling
+      // millis()
+      set_p_top_mode(P_TOP_COMMS_READ_MODE);
       for (int i = 0; i < cycles; ++i) {
-        voltages[i] = get_p_top_voltage();
+        rawVoltages[i] = analogRead(P_TOP_STATE_PIN);
         delay(ms);
       }
+      set_p_top_mode(P_TOP_NORMAL_MODE);
 
       // Output the voltage readings
       SERIAL_ECHO_START;
       SERIAL_ECHOLNPGM("Voltages");
       for (int i = 0; i < cycles; ++i) {
-        SERIAL_ECHOLN(voltages[i]);
+        SERIAL_ECHOLN(rawToVoltage(rawVoltages[i]));
       }
 
       return 0;
