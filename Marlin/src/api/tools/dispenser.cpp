@@ -30,6 +30,7 @@ float getDispenseHeight(Tool tool) {
 
 int setDispenseHeight(Tool tool, float height) {
   if (logging_enabled) {
+    SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Dispense height set to "); SERIAL_ECHO(height);
     SERIAL_ECHOPGM("mm\n");
   }
