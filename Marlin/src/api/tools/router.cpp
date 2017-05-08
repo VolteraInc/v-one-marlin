@@ -142,6 +142,7 @@ float getRotationSpeed(Tool tool) {
 
 int setRotationSpeed(Tool tool, float speed) {
   if (logging_enabled) {
+    SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Setting rotation speed to "); SERIAL_ECHO(speed);
     SERIAL_ECHOLNPGM(" percent");
   }
