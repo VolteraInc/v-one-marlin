@@ -1,9 +1,9 @@
 #include "../../../Marlin.h"
-#include "../../../temperature.h" // get_p_top_voltage
+#include "../../../temperature.h" // next_p_top_voltage()
 #include "../../../stepper.h"
 #include "../api.h"
 
-static enum ToolStates s_classifyVoltage(Tool, float voltage) {
+enum ToolStates classifyVoltage(Tool, float voltage) {
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Classifying voltage "); SERIAL_ECHOLN(voltage);
@@ -24,25 +24,55 @@ static enum ToolStates s_classifyVoltage(Tool, float voltage) {
   }
 }
 
-enum ToolStates getToolState(Tool tool) {
-  return s_classifyVoltage(tool, get_p_top_voltage());
-}
+enum ToolStates determineToolState(Tool tool) {
+  // Stabilize the reading
+  // Notes:
+  //    - There is a capacitor on the p_top line, this means the voltage
+  //      falls quickly, but climbs slowly. e.g climbing from 3.5 to 5 take about 30ms.
+  //    - We use a counter to detect consecutive equivalent classifications because
+  //      averaging would add even more lag.
+  int maxIterations = 10;
+  int warningThreshold = 4;
+  int count = 0;
+  static enum ToolStates previousState = TOOL_STATE_UNKNOWN;
+  const auto start = millis();
+  for (int i = 0; i < maxIterations; ++i) {
+    enum ToolStates state = classifyVoltage(tool, next_p_top_voltage());
 
-Tool determineMountedTool(Tool tool) {
-  switch (getToolState(tool)) {
-    case TOOL_STATE_PROBE_MOUNTED:
-    case TOOL_STATE_TRIGGERED:
-      return TOOLS_PROBE;
+    if (previousState == state) {
+      ++count;
 
-    case TOOL_STATE_ROUTER_MOUNTED:
-      return TOOLS_ROUTER;
+      // Return state if it has not changed since this function was last called
+      // or if we've collect enough consistent consecutive readings
+      if (i == 0 || count >= 2) {
+        if (i + 1 >= warningThreshold) {
+          SERIAL_ECHO_START;
+          SERIAL_ECHOPGM("Warning: determination of tool state took "); SERIAL_ECHO(i+1);
+          SERIAL_ECHOPGM(" of "); SERIAL_ECHO(maxIterations);
+          SERIAL_ECHOLNPGM(" iterations to resolve.");
+        }
 
-    case TOOL_STATE_NOT_MOUNTED:
-      return tool == TOOLS_DISPENSER ? TOOLS_DISPENSER : TOOLS_NONE;
+        if (logging_enabled) {
+          const auto stop = millis();
+          SERIAL_ECHO_START;
+          SERIAL_ECHOPGM("Determined tool state '"); SERIAL_ECHO(toolStateAsString(state));
+          SERIAL_ECHOPGM("' after "); SERIAL_ECHO(i+1);
+          SERIAL_ECHOPGM(" iterations ("); SERIAL_ECHO(stop-start);
+          SERIAL_ECHOLNPGM(" ms)");
+        }
 
-    default:
-      return TOOLS_NONE;
+        return state;
+      }
+    } else {
+      // classification differs from previous, reset counter
+      count = 1;
+      previousState = state;
+    }
   }
+
+  SERIAL_ECHO_START;
+  SERIAL_ECHOLNPGM("Warning: Unable to determine tool's state, too much variation in readings.");
+  return TOOL_STATE_UNKNOWN;
 }
 
 const char* toolStateAsString(enum ToolStates state) {

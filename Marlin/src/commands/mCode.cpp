@@ -225,7 +225,7 @@ int process_mcode(int command_code) {
 
     // M125 - Output current Probe status to serial port
     case 125:
-      SERIAL_PROTOCOLPGM("Probe: "); SERIAL_PROTOCOLLN(toolStateAsString(getToolState(getTool())));
+      SERIAL_PROTOCOLPGM("Probe: "); SERIAL_PROTOCOLLN(toolStateAsString(determineToolState(getTool())));
       return 0;
 
     // M140 - Set bed target temp

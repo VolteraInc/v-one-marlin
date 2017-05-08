@@ -52,6 +52,8 @@ Tool getTool() {
 }
 
 int resetToolPreparations() {
+  SERIAL_ECHO_START;
+  SERIAL_ECHOLNPGM("Reset tool preparations");
   s_toolPrepared = false;
   enable_p_top(false);
   setDispenseHeight(TOOLS_DISPENSER, 0.0f);
@@ -73,7 +75,7 @@ const char* toolTypeAsString(Tool tool) {
 }
 
 int outputToolStatus() {
-  const auto toolState = getToolState(s_tool);
+  const auto toolState = determineToolState(s_tool);
   SERIAL_ECHOPGM("Tool\n");
   SERIAL_ECHOPGM("  type: "); SERIAL_ECHOLN(toolTypeAsString(s_tool));
 
@@ -182,7 +184,7 @@ int confirmMountedAndNotTriggered(const char* context, Tool tool, Tool requiredT
     return -1;
   }
 
-  switch (getToolState(tool)) {
+  switch (determineToolState(tool)) {
     case TOOL_STATE_PROBE_MOUNTED:
       if (tool == TOOLS_PROBE) {
         return 0;

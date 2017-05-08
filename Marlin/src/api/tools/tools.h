@@ -24,8 +24,8 @@ enum ToolStates {
   TOOL_STATE_PROBE_MOUNTED = 3,
   TOOL_STATE_ROUTER_MOUNTED = 4
 };
-Tool determineMountedTool(Tool tool);
-enum ToolStates getToolState(Tool tool);
+enum ToolStates classifyVoltage(Tool tool, float voltage);
+enum ToolStates determineToolState(Tool tool);
 const char* toolStateAsString(enum ToolStates state);
 
 // Retract constants
