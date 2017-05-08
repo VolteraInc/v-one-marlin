@@ -261,23 +261,6 @@ int centerTool(Tool tool) {
   return 0;
 }
 
-int lowerUntilToolContacts(Tool tool) {
-  st_synchronize();
-
-  if (tool != TOOLS_PROBE) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to lower until contact, ");
-    SERIAL_ERROR(toolTypeAsString(tool));
-    SERIAL_ERRORLNPGM(" does not support this operation");
-    return -1;
-  }
-
-  return
-    confirmMountedAndNotTriggered("lower until contact", tool, TOOLS_PROBE) ||
-    moveToLimit(Z_AXIS, -1);
-  ;
-}
-
 int retractToolConditionally(float distance, float additionalRetractDistance) {
   if (additionalRetractDistance == NoRetract) {
     return 0;
