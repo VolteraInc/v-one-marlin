@@ -33,7 +33,7 @@ int s_recordMeasurement(float& measurement) {
 int probe(Tool tool, float& measurement, float additionalRetractDistance) {
   return (
     confirmMountedAndNotTriggered("probe", tool, TOOLS_PROBE) ||
-    lowerUntilToolContacts(tool) ||
+    moveToLimit(Z_AXIS, -1) ||
     s_recordMeasurement(measurement) ||
     retractToolConditionally(s_probeDisplacement, additionalRetractDistance)
   );

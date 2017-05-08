@@ -10,5 +10,4 @@ int confirmMountedAndNotTriggered(const char* context, Tool tool, Tool requiredT
 int ensureHomedInXY();
 int ensureHomedInZ(Tool tool);
 int centerTool(Tool tool);
-int lowerUntilToolContacts(Tool tool);
 int retractToolConditionally(float distance, float additionalRetractDistance);
