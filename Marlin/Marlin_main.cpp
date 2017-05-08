@@ -143,23 +143,30 @@ void setup() {
 }
 
 void periodic_work() {
-  watchdog_reset();
-
+  manage_adc();
   manage_heating_profile();
   manage_heater();
   manage_inactivity();
   glow_leds();
-  checkForEndstopHits();
-  reportBufferEmpty();
-  periodic_output();
-  toolChanges();
-
-  watchdog_reset();
 }
 
 void loop() {
+  watchdog_reset();
   processSerialCommands();
+
+  watchdog_reset();
   periodic_work();
+
+  watchdog_reset();
+
+  // This work is excluded from periodic_work() becuase we
+  // don't want to do these in the middle of processing a command
+  checkForEndstopHits(); // will detect expected hits as errors
+  reportBufferEmpty();   // not important enough to monitor
+  periodic_output();     // will generate excessive output
+  toolChanges();         // handling a tool change mid command is needlessly complicated
+
+  watchdog_reset();
 }
 
 void kill() {
