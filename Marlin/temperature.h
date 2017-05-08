@@ -61,6 +61,10 @@ void disable_heater();
 
 //-----------------------------------------------
 // ADC reads
+// Note: Way easier to add p_top functions here getter here,
+// than to pull out ADC reads into their own module
+
+void manage_adc();
 
 enum PTopModes {
   P_TOP_NORMAL_MODE,
@@ -68,9 +72,15 @@ enum PTopModes {
   P_TOP_COMMS_READ_MODE,
 };
 
-// safely change p_top usege modes
+// safely change p_top usage modes
 void set_p_top_mode(enum PTopModes mode);
 
-// Note: Way easier to add this getter here, than to pull out
-// ADC reads into their own module
+// convert an analog value read from a pin to a voltage
+float rawToVoltage(int value);
+
+// Returns most recent sample of p_top's voltage,
 float get_p_top_voltage();
+
+// Returns a newly sampled voltage value,
+// blocks if a new value is not ready.
+float next_p_top_voltage();
