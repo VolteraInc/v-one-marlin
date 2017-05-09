@@ -12,7 +12,7 @@
 static const int baud = 300;
 
 static const int dummy_pin = A3;
-static SoftwareSerial s_router_read(ROUTER_COMMS_PIN, dummy_pin);
+// static SoftwareSerial s_router_read(ROUTER_COMMS_PIN, dummy_pin);
 static SoftwareSerial s_router_write(dummy_pin, ROUTER_COMMS_PIN);
 
 //
@@ -20,24 +20,20 @@ static SoftwareSerial s_router_write(dummy_pin, ROUTER_COMMS_PIN);
 static void readMode() {
   s_router_write.end();
   set_p_top_mode(P_TOP_COMMS_READ_MODE);
-  SET_OUTPUT(dummy_pin);
-  s_router_read.listen();
-  s_router_read.begin(baud);
 }
 
 static void writeMode() {
-  s_router_read.end();
   set_p_top_mode(P_TOP_COMMS_WRITE_MODE);
-  SET_INPUT(dummy_pin);
-  s_router_write.listen();
   s_router_write.begin(baud);
+  s_router_write.listen();
 }
 
 static void normalMode() {
   s_router_write.end();
-  s_router_read.end();
   set_p_top_mode(P_TOP_NORMAL_MODE);
 }
+
+
 
 enum AckState {
   ACK_NONE,
@@ -55,6 +51,7 @@ static enum AckState updateAckState(enum AckState state, char ch) {
   }
 }
 
+
 static uint8_t CRC8(uint8_t data) {
   uint8_t crc = 0x00;
   uint8_t extract = data;
@@ -70,36 +67,41 @@ static uint8_t CRC8(uint8_t data) {
 }
 
 static int s_write(char* msg) {
-  int returnValue = 0;
+  int return_value = -1;
   int attempt = 1;
+  static const unsigned int timeout = 300; //ms
+  static const long sample_period = 10;
+
   do {
     SERIAL_ECHO_START;
     SERIAL_ECHO(attempt == 1 ? "Writing " : "Resending "); SERIAL_ECHOLN(msg);
     writeMode();
     s_router_write.print(msg);
-
-    // Receive/parse acknowledgement characters, timeout eventually
-    static const unsigned int timeout = 1000; //ms
-    enum AckState ackState = ACK_NONE;
     readMode();
+
     const auto now = millis();
+    auto last_sample = now;
     const auto tryUntil = now + timeout;
+    int sample_count = 0;
 
     while (millis() <= tryUntil) {
-      if (s_router_read.available() > 1) {
-        char ch = s_router_read.read();
-        ackState = updateAckState(ackState, ch);
-        if (ackState == ACK_OK_CR_LF) {
-          goto DONE;
-        }
+        if(millis() - last_sample >= sample_period) {
+        sample_count += !digitalRead(ROUTER_COMMS_PIN);
+        last_sample = millis();
       }
     }
-  } while(++attempt <= 2);
-  returnValue = -1; // failed to sent
 
-DONE:
+    if (sample_count >= 3) {
+      return_value = 0;
+      SERIAL_ECHO("Confirmed on attempt ");SERIAL_ECHO(attempt);
+      SERIAL_ECHO(" with sample count ");SERIAL_ECHOLN(sample_count);
+      break;
+    }
+
+  } while(++attempt <= 2);
+
   normalMode();
-  return returnValue;
+  return return_value;
 }
 
 static int s_sendRouterRotationSpeed(int percent) {
