@@ -37,14 +37,10 @@ int moveToXyPositioner(Tool tool, bool skipMoveInZ) {
 }
 
 int xyPositionerTouch(Tool tool, int axis, int direction, float& measurement) {
-  switch(tool) {
-    case TOOLS_DISPENSER:
-    case TOOLS_PROBE:
-      break;
-    default:
-      SERIAL_ERROR_START;
-      SERIAL_ERRORLNPGM("Unable to touch xy-positioner switches, no tool attached");
-      return -1;
+  if (tool == TOOLS_NONE) {
+    SERIAL_ERROR_START;
+    SERIAL_ERRORLNPGM("Unable to touch xy-positioner switches, no tool attached");
+    return -1;
   }
 
   // Move according to the given axis and direction until a switch is triggered
