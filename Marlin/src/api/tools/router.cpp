@@ -120,7 +120,7 @@ static int s_sendRouterRotationSpeed(int percent) {
 static int s_rotationSpeed = 0;
 
 int prepareRouter(Tool tool) {
-  const char* context = "prepare probe";
+  const char* context = "prepare router";
   return (
     setRotationSpeed(tool, 0) ||
     raise() ||
