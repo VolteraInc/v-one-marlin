@@ -266,7 +266,7 @@ ISR(TIMER0_COMPB_vect) {
   // noise to settle out of the ADC (or all pins, not just P_TOP).
   if (p_top_in_comms_mode && adc_read_state != TemporarilyDisabled) {
     adc_read_state = TemporarilyDisabled;
-    no_adc_reads_until = millis() + 2000;
+    no_adc_reads_until = millis() + 2500;
 
     // Reset samples
     sample_count = 0;
