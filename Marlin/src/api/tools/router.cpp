@@ -69,13 +69,13 @@ static int s_write(char* msg) {
 
     if (sample_count >= 3) {
       return_value = 0;
-      SERIAL_ECHO("Confirmed on attempt ");SERIAL_ECHO(attempt);
-      SERIAL_ECHO(" with sample count ");SERIAL_ECHOLN(sample_count);
-      break;
+      SERIAL_ECHOPGM("Confirmed on attempt "); SERIAL_ECHO(attempt);
+      SERIAL_ECHOPGM(" with sample count "); SERIAL_ECHOLN(sample_count);
+      goto DONE;
     }
-
   } while(++attempt <= 2);
 
+DONE:
   normalMode();
   return return_value;
 }
