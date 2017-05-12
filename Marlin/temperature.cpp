@@ -46,10 +46,11 @@ unsigned char soft_pwm_bed;
 //===========================================================================
 //=============================private variables============================
 //===========================================================================
+static unsigned long COMMS_MODE_TIMEOUT = 2500u; //ms
 static volatile bool adc_samples_ready = false;
 static int current_temperature_bed_raw = 0;
 static int current_p_top_raw = 0;
-static unsigned long p_top_usage_overlap_time = 0;
+static bool overlap_detected = false;
 static bool p_top_in_comms_mode = false;;
 
 // -----------------------------------------------
@@ -75,6 +76,27 @@ void set_p_top_mode(enum PTopModes mode) {
   }
 
   if (p_top_in_comms_mode != comms_mode) {
+    static unsigned long start_time = 0;
+    if (comms_mode) {
+      start_time = millis();
+      if (logging_enabled) {
+        SERIAL_ECHO_START;
+        SERIAL_ECHOPGM("Entering p_top comms mode "); SERIAL_ECHOLN(start_time);
+      }
+    } else {
+      if (logging_enabled) {
+        SERIAL_ECHO_START;
+        SERIAL_ECHOPGM("Exiting p_top comms mode "); SERIAL_ECHOLN(millis());
+      }
+      const unsigned long duration = millis() - start_time;
+      if (duration >= COMMS_MODE_TIMEOUT) {
+        SERIAL_ECHO_START;
+        SERIAL_ECHOPGM("WARNING: Overlapping use of pin detected, pin was in use for ");
+        SERIAL_ECHO(duration);
+        SERIAL_ECHOLNPGM("ms");
+      }
+    }
+
     CRITICAL_SECTION_START;
     p_top_in_comms_mode = comms_mode;
     CRITICAL_SECTION_END;
@@ -151,16 +173,13 @@ void manage_adc() {
   // Report overlapping use of p_top
   // Note: if this warning is seen then we need to allocate more time
   // or reduce then number of retries when using the pin for communication.
-  const auto overlap_time = p_top_usage_overlap_time;
-  if (overlap_time) {
+  if (overlap_detected) {
     SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("WARNING: Overlapping use of pin detected (ms=");
-    SERIAL_ECHO(overlap_time);
-    SERIAL_ECHOLNPGM(")");
+    SERIAL_ECHOLNPGM("WARNING: Overlapping use of pin detected, any voltages reported during the overlap are invalid");
 
     // Reset so we can detect additional occurences
     CRITICAL_SECTION_START;
-    p_top_usage_overlap_time = 0;
+    overlap_detected = false;
     CRITICAL_SECTION_END;
   }
 
@@ -272,7 +291,7 @@ ISR(TIMER0_COMPB_vect) {
   // noise to settle out of the ADC (or all pins, not just P_TOP).
   if (p_top_in_comms_mode && adc_read_state != TemporarilyDisabled) {
     adc_read_state = TemporarilyDisabled;
-    no_adc_reads_until = millis() + 2500;
+    no_adc_reads_until = millis() + COMMS_MODE_TIMEOUT;
 
     // Reset samples
     sample_count = 0;
@@ -314,8 +333,8 @@ ISR(TIMER0_COMPB_vect) {
         adc_read_state = PrepareTemp_BED;
 
         // if still in comms mode report an error (if there isn't one already)
-        if (p_top_in_comms_mode && p_top_usage_overlap_time == 0) {
-          p_top_usage_overlap_time = millis();
+        if (p_top_in_comms_mode) {
+          overlap_detected = true;
         }
       }
       break;
