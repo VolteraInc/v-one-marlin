@@ -26,7 +26,7 @@ void setStepperInactiveDuration(unsigned long duration) {
 
 void manage_inactivity() {
   // Run periodically
-  static auto nextCheckAt = 0u;
+  static unsigned long nextCheckAt = 0;
   const auto now = millis();
   if (now < nextCheckAt) {
     return;

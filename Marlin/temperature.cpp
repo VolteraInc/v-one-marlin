@@ -183,7 +183,7 @@ void disable_heater() {
 
 void manage_heater() {
   // Run periodically
-  static auto nextCheckAt = 0u;
+  static unsigned long nextCheckAt = 0;
   const auto now = millis();
   if (now < nextCheckAt) {
     return;
