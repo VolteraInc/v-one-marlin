@@ -8,15 +8,10 @@
 // ----------------------------------------------
 // Router - serial comms
 
-
 // baudrate of 300 is based on the rise and fall times of the capacitor on ptop (600-800 us)
 static const int baud = 300;
-
 static const int dummy_pin = A3;
-// static SoftwareSerial s_router_read(ROUTER_COMMS_PIN, dummy_pin);
 static SoftwareSerial s_router_write(dummy_pin, ROUTER_COMMS_PIN);
-
-//
 
 static void readMode() {
   s_router_write.end();
@@ -33,25 +28,6 @@ static void normalMode() {
   s_router_write.end();
   set_p_top_mode(P_TOP_NORMAL_MODE);
 }
-
-
-
-enum AckState {
-  ACK_NONE,
-  ACK_O,
-  ACK_OK,
-  ACK_OK_CR,
-  ACK_OK_CR_LF
-};
-static enum AckState updateAckState(enum AckState state, char ch) {
-  switch (state) {
-    default:        return ch == 'O' ? ACK_O : ACK_NONE;
-    case ACK_O:     return ch == 'K' ? ACK_OK : ACK_NONE;
-    case ACK_OK:    return ch == '\r' ? ACK_OK_CR : ACK_NONE;
-    case ACK_OK_CR: return ch == '\n' ? ACK_OK_CR_LF : ACK_NONE;
-  }
-}
-
 
 static uint8_t CRC8(uint8_t data) {
   uint8_t crc = 0x00;
