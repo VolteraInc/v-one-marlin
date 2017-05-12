@@ -45,8 +45,6 @@ static uint8_t CRC8(uint8_t data) {
 static int s_write(char* msg) {
   int return_value = -1;
   int attempt = 1;
-  static const unsigned int timeout = 300; //ms
-  static const long sample_period = 10;
 
   do {
     SERIAL_ECHO_START;
@@ -55,16 +53,15 @@ static int s_write(char* msg) {
     s_router_write.print(msg);
     readMode();
 
-    const auto now = millis();
-    auto last_sample = now;
-    const auto tryUntil = now + timeout;
-    int sample_count = 0;
 
+    // We must wait the full duration, otherwise the router will still be signalling
+    // on this pin when we return to normalMode.
+    const auto now = millis();
+    const unsigned long tryUntil = now + 300; //ms
+    int sample_count = 0;
     while (millis() <= tryUntil) {
-        if(millis() - last_sample >= sample_period) {
-        sample_count += !digitalRead(ROUTER_COMMS_PIN);
-        last_sample = millis();
-      }
+      sample_count += !digitalRead(ROUTER_COMMS_PIN);
+      delay(10);
     }
 
     if (sample_count >= 3) {
