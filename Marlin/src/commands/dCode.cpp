@@ -86,24 +86,28 @@ int process_dcode(int command_code) {
 
     // Algorithms - Measure at switch
     case 105: {
-      float measurement;
-      const int axis = (
-        code_seen('X') ? X_AXIS : (
-          code_seen('Y') ? Y_AXIS : (
-            code_seen('Z') ? Z_AXIS : Z_AXIS
+      const int cycles = code_seen('C') ? code_value() : 1;
+      for (int i = 0; i < cycles; ++i) {
+        float measurement;
+        const int axis = (
+          code_seen('X') ? X_AXIS : (
+            code_seen('Y') ? Y_AXIS : (
+              code_seen('Z') ? Z_AXIS : Z_AXIS
+            )
           )
-        )
-      );
-      const int direction = code_prefix() == '-' ? -1 : 1;
-      const int returnValue = measureAtSwitch(axis, direction, useDefaultMaxTravel, measurement);
+        );
+        const int direction = code_prefix() == '-' ? -1 : 1;
+        const int returnValue = measureAtSwitch(axis, direction, useDefaultMaxTravel, measurement);
 
-      // Output
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM("measureAtSwitch");
-      SERIAL_ECHOPGM(" returnValue:"); SERIAL_ECHO(returnValue);
-      SERIAL_ECHOPGM(" axis:"); SERIAL_ECHO(axis_codes[axis]);
-      SERIAL_ECHOPGM(" direction:"); SERIAL_ECHO(direction);
-      SERIAL_ECHOPGM(" measurement:"); SERIAL_ECHOLN(measurement);
+        // Output
+        SERIAL_ECHO_START;
+        SERIAL_ECHOPGM("measureAtSwitch");
+        SERIAL_ECHOPGM(" returnValue:"); SERIAL_ECHO(returnValue);
+        SERIAL_ECHOPGM(" axis:"); SERIAL_ECHO(axis_codes[axis]);
+        SERIAL_ECHOPGM(" direction:"); SERIAL_ECHO(direction);
+        SERIAL_ECHOPGM(" measurement:"); SERIAL_ECHO_F(measurement, 6);
+        SERIAL_ECHOLN("");
+      }
       return 0;
     }
 
