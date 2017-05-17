@@ -460,25 +460,21 @@ int process_mcode(int command_code) {
 
     // - M906 Get all digital potentiometer values.
     case 906: {
-#if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
-        SERIAL_PROTOCOLLNPGM("Stepper Driver Currents (Max: 255)");
-        SERIAL_PROTOCOLPGM("M907 X:"); SERIAL_PROTOCOL((int)digiPotGetCurrent(X_AXIS));
-        SERIAL_PROTOCOLPGM("  Y:"); SERIAL_PROTOCOL((int)digiPotGetCurrent(Y_AXIS));
-        SERIAL_PROTOCOLPGM("  Z:"); SERIAL_PROTOCOL((int)digiPotGetCurrent(Z_AXIS));
-        SERIAL_PROTOCOLPGM("  E:"); SERIAL_PROTOCOLLN((int)digiPotGetCurrent(E_AXIS));
-#endif
+      SERIAL_PROTOCOLLNPGM("Stepper Driver Currents (Max: 255)");
+      SERIAL_PROTOCOLPGM("M907 X:"); SERIAL_PROTOCOL((int)digiPotGetCurrent(X_AXIS));
+      SERIAL_PROTOCOLPGM("  Y:"); SERIAL_PROTOCOL((int)digiPotGetCurrent(Y_AXIS));
+      SERIAL_PROTOCOLPGM("  Z:"); SERIAL_PROTOCOL((int)digiPotGetCurrent(Z_AXIS));
+      SERIAL_PROTOCOLPGM("  E:"); SERIAL_PROTOCOLLN((int)digiPotGetCurrent(E_AXIS));
       return 0;
     }
 
     // M907 - Set digital trimpot motor current using axis codes.
     case 907: {
-#if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
       for(int i = 0; i < NUM_AXIS; ++i) {
         if(code_seen(axis_codes[i])) {
           digiPotSetCurrent(i, code_value());
         }
       }
-#endif
       return 0;
     }
 
