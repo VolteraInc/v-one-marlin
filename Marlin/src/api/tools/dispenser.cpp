@@ -9,8 +9,8 @@ int prepareDispenser(Tool tool) {
   const char* context = "prepare dispenser";
   return (
     raise() ||
-    meshGears() ||
     confirmMountedAndNotTriggered(context, tool, TOOLS_DISPENSER) ||
+    meshGears() ||
     ensureHomedInXY() ||
     ensureHomedInZ(tool) ||
     centerTool(tool) ||
