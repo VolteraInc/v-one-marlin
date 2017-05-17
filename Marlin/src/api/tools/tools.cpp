@@ -233,13 +233,6 @@ int ensureHomedInXY() {
   return homeXY();
 }
 
-int ensureHomedInZ(Tool tool) {
-  if (homedZ()) {
-    return 0;
-  }
-  return homeZ(tool);
-}
-
 int centerTool(Tool tool) {
   float toolX, toolY;
   if (xyPositionerFindCenter(tool, defaultXyPositionerCycles, toolX, toolY)) {

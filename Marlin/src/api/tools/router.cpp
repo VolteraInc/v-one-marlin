@@ -98,9 +98,12 @@ int prepareRouter(Tool tool) {
     raise() ||
     confirmMountedAndNotTriggered(context, tool, TOOLS_ROUTER) ||
     setRotationSpeed(tool, 0) ||
+
     ensureHomedInXY() ||
-    ensureHomedInZ(tool) ||
+    homeZ(tool) || // home Z so we can enter the xy pos with decent precision
     centerTool(tool) ||
+    homeZ(tool) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
+
     raise()
   );
 }
