@@ -8,6 +8,5 @@ int prepareRouter(Tool tool);
 
 int confirmMountedAndNotTriggered(const char* context, Tool tool, Tool requiredTool);
 int ensureHomedInXY();
-int ensureHomedInZ(Tool tool);
 int centerTool(Tool tool);
 int retractToolConditionally(float distance, float additionalRetractDistance);
