@@ -95,9 +95,9 @@ static int s_rotationSpeed = 0;
 int prepareRouter(Tool tool) {
   const char* context = "prepare router";
   return (
-    setRotationSpeed(tool, 0) ||
     raise() ||
     confirmMountedAndNotTriggered(context, tool, TOOLS_ROUTER) ||
+    setRotationSpeed(tool, 0) ||
     ensureHomedInXY() ||
     ensureHomedInZ(tool) ||
     centerTool(tool) ||
