@@ -222,9 +222,6 @@ void enable_calibration_plate(bool enable) {
   //
   //  The trapezoid is the shape the speed curve over time. It starts at block->initial_rate, accelerates
   //  first block->accelerate_until step_events_completed, then keeps going at constant speed until
-  //  first block->accelerate_until step_events_completed, then keeps going at constant speed until
-  //  first block->accelerate_until step_events_completed, then keeps going at constant speed until
-  //  first block->accelerate_until step_events_completed, then keeps going at constant speed until
   //  step_events_completed reaches block->decelerate_after after which it decelerates until the trapezoid generator is reset.
   //  The slope of acceleration is calculated with the leib ramp alghorithm.
 
@@ -463,9 +460,6 @@ ISR(TIMER1_COMPA_vect) {
     // Calculare new timer value
     unsigned short timer;
     unsigned short step_rate;
-    if (step_events_completed <= (unsigned long int)current_block->accelerate_until) {
-    if (step_events_completed <= (unsigned long int)current_block->accelerate_until) {
-    if (step_events_completed <= (unsigned long int)current_block->accelerate_until) {
     if (step_events_completed <= (unsigned long int)current_block->accelerate_until) {
 
       MultiU24X24toH16(acc_step_rate, acceleration_time, current_block->acceleration_rate);
