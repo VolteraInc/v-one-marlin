@@ -515,29 +515,16 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
 
   block->active_extruder = extruder;
 
-  //enable active axes
-  if(block->steps_x != 0) enable_x();
-  if(block->steps_y != 0) enable_y();
-#ifndef Z_LATE_ENABLE
-  // Enable all
-  if(block->steps_z != 0) {
-    enable_z();
-  }
-#endif
+  // enable active axes
+  if (block->steps_x != 0) { enable_x(); }
+  if (block->steps_y != 0) { enable_y(); }
+  if (block->steps_z != 0) { enable_z(); }
+  if (block->steps_e != 0) { enable_e0(); }
 
-  // Enable all
-  if (block->steps_e != 0)
-  {
-    enable_e0();
-  }
-
-  if (block->steps_e == 0)
-  {
-    if(feed_rate<mintravelfeedrate) feed_rate=mintravelfeedrate;
-  }
-  else
-  {
-    if(feed_rate<minimumfeedrate) feed_rate=minimumfeedrate;
+  if (block->steps_e == 0) {
+    if (feed_rate < mintravelfeedrate) { feed_rate = mintravelfeedrate; }
+  } else {
+    if (feed_rate < minimumfeedrate) { feed_rate = minimumfeedrate; }
   }
 
   // Delta_mm is the mm that our axis will actually move to meet the global coordinates.
