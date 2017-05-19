@@ -86,6 +86,10 @@ int process_dcode(int command_code) {
 
     // Algorithms - Measure at switch
     case 105: {
+      if (prepareToolToMove(tool)) {
+        return -1;
+      }
+      
       const int cycles = code_seen('C') ? code_value() : 1;
       for (int i = 0; i < cycles; ++i) {
         float measurement;
