@@ -204,7 +204,7 @@
 #endif // ADVANCE
 
 // Arc interpretation settings:
-#define MM_PER_ARC_SEGMENT 0.1
+#define MM_PER_ARC_SEGMENT 0.050 // 50um, based on cutting a .5mm hole with a .4mm bit, which requires traversal of a 100um circle
 #define N_ARC_CORRECTION 25
 
 const unsigned int dropsegments=1; //everything with less than this number of steps will be ignored as move and joined with the next movement
