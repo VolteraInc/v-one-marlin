@@ -414,7 +414,7 @@ ISR(TIMER1_COMPA_vect) {
       count_direction[E_AXIS] = 1;
     }
 
-    for(int8_t i=0; i < step_loops; i++) { // Take multiple steps per interrupt (For high speed moves)
+    for (int8_t i = 0; i < step_loops; i++) { // Take multiple steps per interrupt (For high speed moves)
 
       // Check for serial chars
       MSerial.checkRx();
@@ -482,8 +482,7 @@ ISR(TIMER1_COMPA_vect) {
       // step_rate = deceleration_time * current_block->acceleration_rate >> 24
       if (step_rate > acc_step_rate) { // Check step_rate stays positive
         step_rate = current_block->final_rate;
-      }
-      else {
+      } else {
         step_rate = acc_step_rate - step_rate; // Decelerate from aceleration end point.
       }
 
