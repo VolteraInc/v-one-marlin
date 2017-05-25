@@ -151,56 +151,20 @@ int process_mcode(int command_code) {
     // M119 - Output Endstop status to serial port
     case 119:
       SERIAL_PROTOCOLLN(MSG_M119_REPORT);
-      #if defined(X_MIN_PIN) && X_MIN_PIN > -1
-        SERIAL_PROTOCOLPGM(MSG_X_MIN);
-        SERIAL_PROTOCOLLN(READ_PIN(X_MIN) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
-      #endif
-      #if defined(X_MAX_PIN) && X_MAX_PIN > -1
-        SERIAL_PROTOCOLPGM(MSG_X_MAX);
-        SERIAL_PROTOCOLLN(READ_PIN(X_MAX) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
-      #endif
-      #if defined(Y_MIN_PIN) && Y_MIN_PIN > -1
-        SERIAL_PROTOCOLPGM(MSG_Y_MIN);
-        SERIAL_PROTOCOLLN(READ_PIN(Y_MIN) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
-      #endif
-      #if defined(Y_MAX_PIN) && Y_MAX_PIN > -1
-        SERIAL_PROTOCOLPGM(MSG_Y_MAX);
-        SERIAL_PROTOCOLLN(READ_PIN(Y_MAX) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
-      #endif
-      #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
-        SERIAL_PROTOCOLPGM(MSG_Z_MIN);
-        SERIAL_PROTOCOLLN(READ_PIN(Z_MIN) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
-      #endif
-      #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
-        SERIAL_PROTOCOLPGM(MSG_Z_MAX);
-        SERIAL_PROTOCOLLN(READ_PIN(Z_MAX) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
-      #endif
-      #if defined(P_TOP_PIN) && P_TOP_PIN > -1
-        SERIAL_PROTOCOLPGM(MSG_P_TOP);
-        SERIAL_PROTOCOLLN(READ_PIN(P_TOP) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
-      #endif
-        #if defined(P_BOT_PIN) && P_BOT_PIN > -1
-        SERIAL_PROTOCOLPGM(MSG_P_BOT);
-        SERIAL_PROTOCOLLN(READ_PIN(P_BOT) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
-      #endif
-      #if defined(XY_MIN_X_PIN) && XY_MIN_X_PIN > -1
-        SERIAL_PROTOCOLPGM(MSG_XY_MIN_X);
-        SERIAL_PROTOCOLLN(READ_PIN(XY_MIN_X) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
-      #endif
-      #if defined(XY_MAX_X_PIN) && XY_MAX_X_PIN > -1
-        SERIAL_PROTOCOLPGM(MSG_XY_MAX_X);
-        SERIAL_PROTOCOLLN(READ_PIN(XY_MAX_X) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
-      #endif
-      #if defined(XY_MIN_Y_PIN) && XY_MIN_Y_PIN > -1
-        SERIAL_PROTOCOLPGM(MSG_XY_MIN_Y);
-        SERIAL_PROTOCOLLN(READ_PIN(XY_MIN_Y) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
-      #endif
-      #if defined(XY_MAX_Y_PIN) && XY_MAX_Y_PIN > -1
-        SERIAL_PROTOCOLPGM(MSG_XY_MAX_Y);
-        SERIAL_PROTOCOLLN(READ_PIN(XY_MAX_Y) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
-      #endif
+      SERIAL_PROTOCOLPGM(MSG_X_MIN); SERIAL_PROTOCOLLN(READ_PIN(X_MIN) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
+      SERIAL_PROTOCOLPGM(MSG_Y_MIN); SERIAL_PROTOCOLLN(READ_PIN(Y_MIN) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
+
+      SERIAL_PROTOCOLPGM(MSG_Z_MIN); SERIAL_PROTOCOLLN(READ_PIN(Z_MIN) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
+      SERIAL_PROTOCOLPGM(MSG_Z_MAX); SERIAL_PROTOCOLLN(READ_PIN(Z_MAX) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
+
+      SERIAL_PROTOCOLPGM(MSG_P_TOP); SERIAL_PROTOCOLLN(READ_PIN(P_TOP) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
+      SERIAL_PROTOCOLPGM(MSG_P_BOT); SERIAL_PROTOCOLLN(READ_PIN(P_BOT) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
+
+      SERIAL_PROTOCOLPGM(MSG_XY_MIN_X); SERIAL_PROTOCOLLN(READ_PIN(XY_MIN_X) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
+      SERIAL_PROTOCOLPGM(MSG_XY_MAX_X); SERIAL_PROTOCOLLN(READ_PIN(XY_MAX_X) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
+      SERIAL_PROTOCOLPGM(MSG_XY_MIN_Y); SERIAL_PROTOCOLLN(READ_PIN(XY_MIN_Y) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
+      SERIAL_PROTOCOLPGM(MSG_XY_MAX_Y); SERIAL_PROTOCOLLN(READ_PIN(XY_MAX_Y) ? MSG_ENDSTOP_HIT : MSG_ENDSTOP_OPEN);
       return 0;
-      //TODO: update for all axis, use for loop
 
     // M122 - We let the planner know where we are. -  Added by VOLTERA
     case 122: {
@@ -479,8 +443,54 @@ int process_mcode(int command_code) {
     }
 
     //-------------------------------------------
-    // TODO: List Commands
+    // List Commands
     default:
+      SERIAL_ECHO_START;
+      SERIAL_ECHOLNPGM("M-Commands");
+      SERIAL_ECHOLNPGM("  Configuration, temperature control and Utility commands");
+      SERIAL_ECHOLNPGM("");
+
+      SERIAL_ECHOLNPGM("Utilities");
+      SERIAL_ECHOLNPGM("  M400 - Finish all moves");
+      SERIAL_ECHOLNPGM("  M93  - Manually control LEDs. Set the RGB LEDs using R[1-255] V[1-255] B[1-255] (uses V instead of G for green)");
+      SERIAL_ECHOLNPGM("");
+
+      SERIAL_ECHOLNPGM("Temperature");
+      SERIAL_ECHOLNPGM("  M105 - Output current temperature");
+      SERIAL_ECHOLNPGM("  M141 - Append a temperature and duration to the heating profile (max 10 commands) -- M141 T200 D60");
+      SERIAL_ECHOLNPGM("  M142 - Stop heating and discard heating profile");
+      SERIAL_ECHOLNPGM("");
+
+      SERIAL_ECHOLNPGM("Status");
+      SERIAL_ECHOLNPGM("  M114 - Output status (planner and stepper position, queued moves, etc)");
+      SERIAL_ECHOLNPGM("  M115 - Output version string");
+      SERIAL_ECHOLNPGM("  M119 - Output limit switch status");
+      SERIAL_ECHOLNPGM("  M125 - Output current Probe status to serial port");
+      SERIAL_ECHOLNPGM("");
+
+      SERIAL_ECHOLNPGM("Motors");
+      SERIAL_ECHOLNPGM("  M17  - Enable (Power) all stepper motors");
+      SERIAL_ECHOLNPGM("  M18  - Disable motors until next move -- M18 X Y Z E or M18 for all");
+      SERIAL_ECHOLNPGM("       - set inactivity timeout in seconds -- M18 S60, S0 to disable");
+      SERIAL_ECHOLNPGM("");
+
+      SERIAL_ECHOLNPGM("Configuration");
+      SERIAL_ECHOLNPGM("  M500 - write configuration to EEPROM");
+      SERIAL_ECHOLNPGM("  M501 - read (ie. reset) configuration from EEPROM");
+      SERIAL_ECHOLNPGM("  M502 - revert to factory defaults (still need to write to EEPROM)");
+      SERIAL_ECHOLNPGM("  M503 - output configuration");
+      SERIAL_ECHOLNPGM("");
+
+      SERIAL_ECHOLNPGM("Internal use");
+      SERIAL_ECHOLNPGM("  M92  - Set axis steps per unit - same syntax as G92");
+      SERIAL_ECHOLNPGM("  M520 - output calibrated positions and factors");
+      SERIAL_ECHOLNPGM("  M906 - output driver current settings");
+      SERIAL_ECHOLNPGM("  M201 - Set max acceleration in units/s^2 for print moves (M201 X1000 Y1000)");
+      SERIAL_ECHOLNPGM("  M203 - Set maximum feedrate that your machine can sustain (M203 X200 Y200 Z300 E10000) in mm/sec");
+      SERIAL_ECHOLNPGM("  M204 - Set default acceleration: S normal moves T filament only moves (M204 S3000 T7000) in mm/sec^2");
+      SERIAL_ECHOLNPGM("         also sets minimum segment time in ms (B20000) to prevent buffer under-runs and M20 minimum feedrate");
+      SERIAL_ECHOLNPGM("  M205 - advanced settings:  minimum travel speed S=while printing T=travel only,  B=minimum segment time X= maximum xy jerk, Z=maximum Z jerk, E=maximum E jerk");
+      SERIAL_ECHOLNPGM("");
       return 0;
   }
 }

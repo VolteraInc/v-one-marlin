@@ -89,7 +89,7 @@ int process_dcode(int command_code) {
       if (prepareToolToMove(tool)) {
         return -1;
       }
-      
+
       const int cycles = code_seen('C') ? code_value() : 1;
       for (int i = 0; i < cycles; ++i) {
         float measurement;
@@ -168,6 +168,8 @@ int process_dcode(int command_code) {
     // List Commands
     default:
       SERIAL_ECHO_START;
+      SERIAL_ECHOLNPGM("D-Commands");
+      SERIAL_ECHOLNPGM("  For manual debugging. subject to change");
       SERIAL_ECHOLNPGM("General Commands");
       SERIAL_ECHOLNPGM("  D1 - Toggle logging ON/OFF (default: OFF)");
       SERIAL_ECHOLNPGM("");

@@ -137,6 +137,9 @@ int process_vcode(int command_code) {
     // List Commands
     default:
       SERIAL_ECHO_START;
+      SERIAL_ECHOLNPGM("V-Commands");
+      SERIAL_ECHOLNPGM("  smart commands to simplify interactions. These commands will");
+      SERIAL_ECHOLNPGM("  automatically home, calibrate tool, etc. if needed ");
       SERIAL_ECHOLNPGM("Movement Commands");
       SERIAL_ECHOLNPGM("  V0 - Movement status");
       SERIAL_ECHOLNPGM("  V1 - Move/Dispense -- V1 X100 Y100 Z10 E30 F6000");
