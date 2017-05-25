@@ -4,10 +4,10 @@
 #include "../api.h"
 
 enum ToolStates classifyVoltage(Tool, float voltage) {
-  if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Classifying voltage "); SERIAL_ECHOLN(voltage);
-  }
+  // if (logging_enabled) {
+  //   SERIAL_ECHO_START;
+  //   SERIAL_ECHOPGM("Classifying voltage "); SERIAL_ECHOLN(voltage);
+  // }
   if (voltage < 1.0) { // expected 0.7 (once stable)
     return TOOL_STATE_TRIGGERED;
   } else if (voltage <= 3.2) {
