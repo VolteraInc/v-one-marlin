@@ -471,7 +471,7 @@ int process_mcode(int command_code) {
       SERIAL_ECHOLNPGM("Motors");
       SERIAL_ECHOLNPGM("  M17  - Enable (Power) all stepper motors");
       SERIAL_ECHOLNPGM("  M18  - Disable motors until next move -- M18 X Y Z E or M18 for all");
-      SERIAL_ECHOLNPGM("       - set inactivity timeout in seconds -- M18 S60, S0 to disable");
+      SERIAL_ECHOLNPGM("         set inactivity timeout in seconds -- M18 S60, S0 to disable");
       SERIAL_ECHOLNPGM("");
 
       SERIAL_ECHOLNPGM("Configuration");
