@@ -51,16 +51,18 @@ static void read_commands() {
 }
 
 static void process_command() {
-  if (command_prefix_seen('V')) {
-    process_vcode((int)code_value());
-  } else if (command_prefix_seen('D')) {
-    process_dcode((int)code_value());
-  } else if (command_prefix_seen('I')) {
-    process_icode((int)code_value());
-  } else if(command_prefix_seen('G')) {
-    process_gcode((int)code_value());
-  } else if(command_prefix_seen('M')) {
-    process_mcode((int)code_value());
+  if        (command_prefix_seen('V')) { int code = (int)code_value(); process_vcode(code_seen('?') ? -1 : code);
+  } else if (command_prefix_seen('D')) { int code = (int)code_value(); process_dcode(code_seen('?') ? -1 : code);
+  } else if (command_prefix_seen('I')) { int code = (int)code_value(); process_icode(code_seen('?') ? -1 : code);
+  } else if (command_prefix_seen('G')) { int code = (int)code_value(); process_gcode(code_seen('?') ? -1 : code);
+  } else if (command_prefix_seen('M')) { int code = (int)code_value(); process_mcode(code_seen('?') ? -1 : code);
+} else if (command_prefix_seen('?')) {
+    // Output usage for common commands V and D
+    // Notes:
+    //   G- and M-commands are mostly for internal use
+    //   I-Commands are entirely for internal use
+    process_vcode();
+    process_dcode();
   } else {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM(MSG_UNKNOWN_COMMAND);

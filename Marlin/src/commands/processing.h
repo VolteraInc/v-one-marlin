@@ -16,8 +16,8 @@ const char* code_value_raw(); // pointer to the char that follows the found code
 char code_prefix(); // the character before the found code
 
 
-int process_gcode(int command_code);
-int process_mcode(int command_code);
-int process_vcode(int command_code);
-int process_dcode(int command_code);
-int process_icode(int command_code);
+int process_gcode(int command_code = -1);
+int process_mcode(int command_code = -1);
+int process_vcode(int command_code = -1);
+int process_dcode(int command_code = -1);
+int process_icode(int command_code = -1);

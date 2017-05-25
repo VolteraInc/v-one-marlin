@@ -349,9 +349,34 @@ int process_gcode(int command_code) {
       }
       return 0;
 
-      //-------------------------------------------
-      // TODO: List Commands
-      default:
-        return 0;
+    //-------------------------------------------
+    // List Commands
+    default:
+      SERIAL_ECHO_START;
+      SERIAL_ECHOLNPGM("G-Commands");
+      SERIAL_ECHOLNPGM("  non-smart commands. It's up to the user to ensure homing and ");
+      SERIAL_ECHOLNPGM("  calibration are performed, if they are needed.");
+      SERIAL_ECHOLNPGM("");
+
+      SERIAL_ECHOLNPGM("Movement/Utilities");
+      SERIAL_ECHOLNPGM("  G1 - move to the given position -- G1 X10.3 Y23.4 Z3.3 E32 F3000");
+      SERIAL_ECHOLNPGM("  G2 - clockwise arc from current location to given location with arc center at given offset");
+      SERIAL_ECHOLNPGM("       if no target location given current location is used (so you get a circle) -- G2 I5 will make a 10mm circle at X+5");
+      SERIAL_ECHOLNPGM("  G3 - counter-clockwise arc");
+      SERIAL_ECHOLNPGM("");
+
+      SERIAL_ECHOLNPGM("Utilities");
+      SERIAL_ECHOLNPGM("  G4 - Dwell for a given duration -- G4 S<seconds> or P<milliseconds>");
+      SERIAL_ECHOLNPGM(" G90 - Use Absolute Coordinates");
+      SERIAL_ECHOLNPGM(" G91 - Use Relative Coordinates");
+      SERIAL_ECHOLNPGM(" G92 - Set current position to coordinates given -- G92 Z3.4");
+      SERIAL_ECHOLNPGM("");
+
+      SERIAL_ECHOLNPGM("Homing/Probing - deprecated");
+      SERIAL_ECHOLNPGM(" G28 - Home axes -- G28 X, G28 XY, G28");
+      SERIAL_ECHOLNPGM(" G30 - Probe bed at current position");
+      SERIAL_ECHOLNPGM(" G33 - Home to z-switch");
+      SERIAL_ECHOLNPGM("");
+      return 0;
   }
 }
