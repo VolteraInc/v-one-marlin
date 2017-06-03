@@ -125,7 +125,10 @@ int process_vcode(int command_code) {
 
     // Set rotation speed
     case 110:
-      return setRotationSpeed(tool, code_seen('R') ? code_value() : 0.0f);
+      return (
+        prepareToolToMove(tool) ||
+        setRotationSpeed(tool, code_seen('R') ? code_value() : 0.0f)
+      );
 
     //-------------------------------------------
     // Deprecated
