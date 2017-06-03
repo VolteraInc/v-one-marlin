@@ -124,6 +124,11 @@ int setRotationSpeed(Tool tool, int speed) {
     SERIAL_ECHOLNPGM(" percent");
   }
 
+  // Finish pending moves before setting router speed.
+  // Note: Whether we are starting, stopping or just changing speeds
+  // having the change sync'd with movements makes it predictable.
+  st_synchronize();
+
   if (tool != TOOLS_ROUTER) {
     SERIAL_ERROR_START;
     SERIAL_ERRORPGM("Unable to set router rotation speed, tool is "); SERIAL_ERRORLN(toolTypeAsString(tool));
