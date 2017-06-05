@@ -69,6 +69,7 @@ static int s_write(char* msg) {
       return_value = 0;
       SERIAL_ECHOPGM("Confirmed on attempt "); SERIAL_ECHO(attempt);
       SERIAL_ECHOPGM(" with sample count "); SERIAL_ECHOLN(sample_count);
+      delay(1000); // give router time to ramp up to speed
       goto DONE;
     }
   } while(++attempt <= 2);
@@ -135,7 +136,7 @@ int setRotationSpeed(Tool tool, int speed) {
     return -1;
   }
 
-  if ( speed > 100 || speed < 0) {
+  if (speed > 100 || speed < 0) {
     SERIAL_ERROR_START;
     SERIAL_ERRORPGM("Unable to set rotation speed to "); SERIAL_ERROR(speed);
     SERIAL_ERRORLNPGM(" percent, value is outside expected range");
