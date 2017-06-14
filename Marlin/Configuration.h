@@ -99,7 +99,7 @@
 #endif
 
 //Default Serial number for the Voltera V-One
-#define PRODUCT_SERIAL    ("V1-00-0000")
+#define PRODUCT_SERIAL    ("V1-00-0000-120")
 
 
 // Define this to set a custom name for your generic Mendel,
