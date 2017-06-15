@@ -27,6 +27,7 @@ enum ToolStates {
 enum ToolStates classifyVoltage(Tool tool, float voltage);
 enum ToolStates determineToolState(Tool tool);
 const char* toolStateAsString(enum ToolStates state);
+int confirmMountedAndNotTriggered(const char* context, Tool tool, Tool requiredTool);
 
 // Retract constants
 const float NoRetract = -9999.0f;

@@ -51,6 +51,23 @@ int process_icode(int command_code) {
       return 0;
     }
 
+    case 3: {
+      const bool shouldSave = code_seen('S');
+      const int gridSize = code_seen('G') ? code_value() : 4;
+      if (mapBed(tool, gridSize)) {
+        return -1;
+      }
+
+      outputBedMap();
+
+      if (shouldSave) {
+        SERIAL_ECHO_START;
+        SERIAL_ECHOLNPGM("TODO: Storing bed mapping");
+      }
+
+      return 0;
+    }
+
     //-------------------------------------------
     // Error if command unknown
     default:

@@ -60,6 +60,9 @@ int calibrateKeyPositions(Tool tool, long cycles = defaultXyPositionerCycles);
 int measureProbeDisplacement(Tool tool, float& displacement);
 
 // Bed
+class Plane;
 bool isOverBed(float x, float y);
-bool haveBedHeightMap();
-float bedHeightAt(float x, float y);
+bool haveBedMap();
+int bedHeightAt(float x, float y, float &z);
+int mapBed(Tool tool, int gridSize);
+void outputBedMap();

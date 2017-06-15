@@ -156,11 +156,14 @@ int process_dcode(int command_code) {
     case 107: {
       float x = code_seen('X') ? code_value() : current_position[ X_AXIS ];
       float y = code_seen('Y') ? code_value() : current_position[ Y_AXIS ];
-      float height = bedHeightAt(x, y);
+      float z;
+      if (bedHeightAt(x, y, z)) {
+        return -1;
+      };
       SERIAL_ECHO_START;
       SERIAL_ECHOPGM("Bed height at ("); SERIAL_ECHO(x);
       SERIAL_ECHOPGM(", "); SERIAL_ECHO(y);
-      SERIAL_ECHOPGM(") is "); SERIAL_ECHOLN(height);
+      SERIAL_ECHOPGM(") is "); SERIAL_ECHOLN(z);
       return 0;
     }
 
@@ -180,6 +183,7 @@ int process_dcode(int command_code) {
       SERIAL_ECHOLNPGM("  D104 - measure probe displacement");
       SERIAL_ECHOLNPGM("  D105 - measure at switch -- D105 -X");
       SERIAL_ECHOLNPGM("  D106 - read left pogo pin's voltage (C=cycles M=milliseconds between readings) -- D106 C10 M5 ");
+      SERIAL_ECHOLNPGM("  D107 - compute bed height based on bed map -- D107 X50.2 Y65.2 ");
       SERIAL_ECHOLNPGM("");
       return 0;
   }
