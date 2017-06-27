@@ -574,7 +574,7 @@ int process_mcode(int command_code) {
         memcpy(product_serial_number, code_value_raw(), sizeof(product_serial_number));
       }
 
-      product_serial_number[10] = '\0'; //Terminate the string.
+      product_serial_number[14] = '\0'; //Terminate the string.
       Config_StoreCalibration();
       return 0;
     }
