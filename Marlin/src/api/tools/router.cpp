@@ -68,7 +68,7 @@ static int s_write(char* msg) {
       return_value = 0;
       SERIAL_ECHOPGM("Confirmed on attempt "); SERIAL_ECHO(attempt);
       SERIAL_ECHOPGM(" with sample count "); SERIAL_ECHOLN(sample_count);
-      delay(3000); // give router time to ramp up to speed
+      delay(RouterRampUpDuration); // give router time to ramp up to speed
       goto DONE;
     }
   } while(++attempt <= 2);

@@ -40,5 +40,6 @@ int setDispenseHeight(Tool tool, float height);
 float getDispenseHeight(Tool tool);
 
 // Router
+const unsigned long RouterRampUpDuration = 3000u + 500u; //Take 3s to ramp from 0 to max and we want some buffer too
 int setRotationSpeed(Tool tool, int speed);
 float getRotationSpeed(Tool tool);
