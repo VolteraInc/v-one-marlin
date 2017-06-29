@@ -22,7 +22,8 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
         value++;
     }while(--size);
 }
-#define EEPROM_READ_VAR(pos, value) _EEPROM_readData(pos, (uint8_t*)&value, sizeof(value))
+#define EEPROM_READ_VAR_SIZE(pos, value, size) _EEPROM_readData(pos, (uint8_t*)&value, size)
+#define EEPROM_READ_VAR(pos, value) EEPROM_READ_VAR_SIZE(pos, value, sizeof(value))
 //======================================================================================
 
 
@@ -30,7 +31,9 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 
 #define EEPROM_OFFSET 200
 #define EEPROM_OFFSET_CALIB 50
-#define EEPROM_VERSION "V10"
+#define EEPROM_VERSION_V10 "V10"
+#define EEPROM_VERSION_V11 "V11"
+#define EEPROM_VERSION EEPROM_VERSION_V11
 
 // IMPORTANT:  Whenever there are changes made to the variables stored in EEPROM
 // in the functions below, also increment the version number. This makes sure that
@@ -221,12 +224,23 @@ void Config_RetrieveCalibration()
 
     // Read version of stored settings
     char stored_ver[4];
-    char ver[4]=EEPROM_VERSION;
-    EEPROM_READ_VAR(i,stored_ver); //read stored version
-    if (strncmp(ver,stored_ver,3) == 0)
-    {
-        // version number match
+    EEPROM_READ_VAR(i, stored_ver);
+    const bool isV10 = strncmp(stored_ver, EEPROM_VERSION_V10, 3) == 0;
+    const bool isCurrent = strncmp(stored_ver, EEPROM_VERSION, 3) == 0;
+
+    if (isCurrent || isV10) {
+        if (isV10) {
+          EEPROM_READ_VAR_SIZE(i, product_serial_number, 12);
+          // Note: we do not upgrade-and-write the stored values using
+          // the new format, yet. This allows users to revert to older
+          // firmware without loosing settings. Once enough time
+          // has passed we can overwrite.
+          // Also if the user stores settings we'll use the latest format,
+          // to avoid creating special cases in the write code, for what
+          // should be an extremely rare scenario.
+        } else {
           EEPROM_READ_VAR(i, product_serial_number);
+        }
         EEPROM_READ_VAR(i,min_z_x_pos);
         EEPROM_READ_VAR(i,min_z_y_pos);
         EEPROM_READ_VAR(i,xypos_x_pos);
