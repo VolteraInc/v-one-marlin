@@ -230,7 +230,7 @@ void Config_RetrieveCalibration()
 
     if (isCurrent || isV10) {
         if (isV10) {
-          EEPROM_READ_VAR_SIZE(i, product_serial_number, 12);
+          EEPROM_READ_VAR_SIZE(i, product_serial_number, 11);
           // Note: we do not upgrade-and-write the stored values using
           // the new format, yet. This allows users to revert to older
           // firmware without loosing settings. Once enough time
