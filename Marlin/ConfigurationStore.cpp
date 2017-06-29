@@ -61,6 +61,7 @@ void Config_StoreCalibration(){
   char ver2[4]=EEPROM_VERSION;
   i=EEPROM_OFFSET_CALIB;
   EEPROM_WRITE_VAR(i,ver2); // validate data
+
   SERIAL_ECHO_START;
   SERIAL_ECHOLNPGM("Offsets Stored");
 }
@@ -68,9 +69,12 @@ void Config_StoreCalibration(){
 #ifdef EEPROM_SETTINGS
 void Config_StoreSettings()
 {
+  // Mark the stored settings as invalid
   char ver[4]= "000";
   int i=EEPROM_OFFSET;
-  EEPROM_WRITE_VAR(i,ver); // invalidate data first
+  EEPROM_WRITE_VAR(i,ver);
+
+  // Record settings
   EEPROM_WRITE_VAR(i,axis_steps_per_unit);
   EEPROM_WRITE_VAR(i,max_feedrate);
   EEPROM_WRITE_VAR(i,max_acceleration_units_per_sq_second);
@@ -104,11 +108,14 @@ void Config_StoreSettings()
     EEPROM_WRITE_VAR(i,dummy);
     EEPROM_WRITE_VAR(i,dummy);
   #endif
-    int lcd_contrast = 32;
+  int lcd_contrast = 32;
   EEPROM_WRITE_VAR(i,lcd_contrast);
+
+  // Now write the version, which marks the stored data as valid
   char ver2[4]=EEPROM_VERSION;
   i=EEPROM_OFFSET;
-  EEPROM_WRITE_VAR(i,ver2); // validate data
+  EEPROM_WRITE_VAR(i,ver2);
+
   SERIAL_ECHO_START;
   SERIAL_ECHOLNPGM("Settings Stored");
 }
@@ -210,14 +217,16 @@ void Config_PrintCalibration(){
 // Attempts to load from EEPROM, reverts to default if not possible.
 void Config_RetrieveCalibration()
 {
-    int i=EEPROM_OFFSET_CALIB;
+    int i = EEPROM_OFFSET_CALIB;
+
+    // Read version of stored settings
     char stored_ver[4];
     char ver[4]=EEPROM_VERSION;
     EEPROM_READ_VAR(i,stored_ver); //read stored version
     if (strncmp(ver,stored_ver,3) == 0)
     {
         // version number match
-        EEPROM_READ_VAR(i,product_serial_number);
+          EEPROM_READ_VAR(i, product_serial_number);
         EEPROM_READ_VAR(i,min_z_x_pos);
         EEPROM_READ_VAR(i,min_z_y_pos);
         EEPROM_READ_VAR(i,xypos_x_pos);
@@ -228,8 +237,7 @@ void Config_RetrieveCalibration()
         EEPROM_READ_VAR(i,calib_tan_theta);
         EEPROM_READ_VAR(i,calib_x_backlash);
         EEPROM_READ_VAR(i,calib_y_backlash);
-    }
-    else{
+    } else {
         //Print an error and revert to default.
         SERIAL_ECHO_START;
         SERIAL_ECHOLNPGM("Error. EEPROM Offsets missing. Is the unit calibrated?");
