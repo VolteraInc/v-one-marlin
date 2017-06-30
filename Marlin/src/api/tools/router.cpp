@@ -3,6 +3,7 @@
 #include "../../../stepper.h"
 #include "../api.h"
 #include "internal.h"
+#include <SoftwareSerial.h>
 
 // ----------------------------------------------
 // Router - serial comms
@@ -90,7 +91,7 @@ static int s_sendRouterRotationSpeed(int percent) {
 
 // ----------------------------------------------
 // Router - tool
-static float s_rotationSpeed = 0.0f;
+static int s_rotationSpeed = 0;
 
 int prepareRouter(Tool tool) {
   const char* context = "prepare router";
@@ -117,7 +118,7 @@ float getRotationSpeed(Tool tool) {
   return s_rotationSpeed;
 }
 
-int setRotationSpeed(Tool tool, float speed) {
+int setRotationSpeed(Tool tool, int speed) {
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Setting rotation speed to "); SERIAL_ECHO(speed);
