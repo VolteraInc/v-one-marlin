@@ -87,17 +87,11 @@ void serial_echopair_P(const char *s_P, float v);
 void serial_echopair_P(const char *s_P, double v);
 void serial_echopair_P(const char *s_P, unsigned long v);
 
-
-//Things to write to serial from Program memory. Saves 400 to 2k of RAM.
-FORCE_INLINE void serialprintPGM(const char *str)
-{
-  char ch=pgm_read_byte(str);
-  while(ch)
-  {
-    MYSERIAL.write(ch);
-    ch=pgm_read_byte(++str);
-  }
+// For serial printing from PROGMEM. (Saves loads of SRAM.)
+FORCE_INLINE void serialprintPGM(const char* str) {
+  while (char ch = pgm_read_byte(str++)) MYSERIAL.write(ch);
 }
+
 
 // Code that blocks/spins/waits should call this so that things like heating
 // and motor inactivity properly monitored
