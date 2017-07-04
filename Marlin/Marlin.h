@@ -62,8 +62,8 @@
 #define SERIAL_PROTOCOL_F(x,y) (MYSERIAL.print((x),(y)))
 #define SERIAL_PROTOCOLPGM(x) (serialprintPGM(PSTR(x)))
 #define SERIAL_PROTOCOLLN(x) (MYSERIAL.println(x))
-#define SERIAL_PROTOCOLLNPGM(x) (serialprintPGM(PSTR(x)),MYSERIAL.print('\n'))
 
+#define SERIAL_PROTOCOLLNPGM(x) (serialprintPGM(PSTR(x "\n")))
 
 const char errormagic[] PROGMEM = "Error:";
 const char echomagic[] PROGMEM = "echo:";
