@@ -27,7 +27,7 @@ int process_icode(int command_code) {
 
     // Calibrate the locations of the z-switch and xy-positioner
     case 2: {
-      const long defaultCycles = 5;
+      const long defaultCycles = 2;
       const long cycles = code_seen('C') ? code_value_long() : defaultCycles;
       if (calibrateKeyPositions(tool, cycles)) {
         return -1;
