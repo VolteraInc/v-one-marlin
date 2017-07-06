@@ -78,10 +78,11 @@ int process_vcode(int command_code) {
       }
 
       const auto additionalRetractDistance = code_seen('R') ? code_value() : DefaultRetract;
+      const auto speed = code_seen('F') ? code_value() : useDefaultFeedrate;
       auto measurement = 0.0f;
       if (
         prepareToolToMove(tool) ||
-        probe(tool, measurement, additionalRetractDistance)
+        probe(tool, measurement, speed, additionalRetractDistance)
       ) {
         return -1;
       }
