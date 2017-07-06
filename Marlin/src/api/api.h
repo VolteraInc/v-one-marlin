@@ -50,10 +50,11 @@ int moveToZSwitchXY(Tool tool);
 
 // XY positioner
 const float defaultXyPositionerCycles = 2;
+enum HowToMoveToZ { useConfiguredZ, usePlateBackOffForZ };
 int xyPositionerTouch(Tool tool, int axis, int direction, float& measurement);
-int xyPositionerFindCenter(Tool tool, long cycles, float& centerX, float& centerY);
+int xyPositionerFindCenter(Tool tool, long cycles, float& centerX, float& centerY, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
 const bool skipMoveInZ = true;
-int moveToXyPositioner(Tool tool, bool skipMoveInZ = false);
+int moveToXyPositioner(Tool tool, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
 int calibrateKeyPositions(Tool tool, long cycles = defaultXyPositionerCycles);
 
 // Calibration plate
