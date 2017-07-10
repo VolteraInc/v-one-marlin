@@ -21,7 +21,7 @@ static int s_prepareTool(Tool tool) {
     case TOOLS_PROBE: return prepareProbe(tool);
     case TOOLS_DISPENSER: return prepareDispenser(tool);
     case TOOLS_ROUTER: return prepareRouter(tool);
-    default: return 0;
+    default: return ensureHomedInXY();
   }
 }
 
@@ -183,7 +183,7 @@ int confirmMountedAndNotTriggered(const char* context, Tool tool, Tool requiredT
     if (requiredTool == TOOLS_NONE) {
       SERIAL_ERROR(toolTypeAsString(tool)); SERIAL_ERRORLNPGM(" is attached");
     } else {
-    SERIAL_ERROR(toolTypeAsString(requiredTool)); SERIAL_ERRORLNPGM(" not attached");
+      SERIAL_ERROR(toolTypeAsString(requiredTool)); SERIAL_ERRORLNPGM(" not attached");
     }
     return -1;
   }
