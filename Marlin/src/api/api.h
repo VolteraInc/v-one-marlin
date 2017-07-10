@@ -61,6 +61,7 @@ int calibrateKeyPositions(Tool tool, long cycles = defaultXyPositionerCycles);
 int measureProbeDisplacement(Tool tool, float& displacement);
 
 // Bed
+const float bedBoundsMinY = 40.0f;
 bool isOverBed(float x, float y);
 bool haveBedHeightMap();
 float bedHeightAt(float x, float y);

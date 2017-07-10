@@ -1,9 +1,8 @@
+#include "../api/api.h"
 #include "../../Marlin.h"
 
 // static s_heightMap = [];
 bool s_haveBedHeightMap = false;
-
-static const float bedBoundsMinY = 40.0;
 
 bool isOverBed(float x, float y) {
   return (
