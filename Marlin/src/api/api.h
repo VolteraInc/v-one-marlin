@@ -68,3 +68,6 @@ float bedHeightAt(float x, float y);
 
 // LEDs
 int overrideLeds(char r, char b, char g, short pace = 3); // 3 = fast pulse
+
+// burn-in
+int runBurnInSequence(Tool tool, int steps = 5);

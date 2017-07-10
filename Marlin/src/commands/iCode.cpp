@@ -51,6 +51,21 @@ int process_icode(int command_code) {
       return 0;
     }
 
+    // Run burn-in sequence
+    case 3: {
+      const int cycles = code_seen('C') ? code_value() : 1;
+      for (int i = 0; i < cycles; ++i) {
+        if (
+          prepareToolToMove(tool) ||
+          runBurnInSequence(tool)
+        ) {
+          return -1;
+        }
+      }
+      return 0;
+    }
+
+
     //-------------------------------------------
     // Error if command unknown
     default:
