@@ -180,7 +180,11 @@ int confirmMountedAndNotTriggered(const char* context, Tool tool, Tool requiredT
   if (tool != requiredTool) {
     SERIAL_ERROR_START;
     SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context); SERIAL_ERRORPGM(", ");
+    if (requiredTool == TOOLS_NONE) {
+      SERIAL_ERROR(toolTypeAsString(tool)); SERIAL_ERRORLNPGM(" is attached");
+    } else {
     SERIAL_ERROR(toolTypeAsString(requiredTool)); SERIAL_ERRORLNPGM(" not attached");
+    }
     return -1;
   }
 
@@ -207,7 +211,7 @@ int confirmMountedAndNotTriggered(const char* context, Tool tool, Tool requiredT
 
     case TOOL_STATE_NOT_MOUNTED:
       // Note: The dispense does not contact the pogo pins so it shows as 'Not Mounted'
-      if (tool == TOOLS_DISPENSER) {
+      if (tool == TOOLS_DISPENSER || tool == TOOLS_NONE) {
         return 0;
       }
       SERIAL_ERROR_START;
