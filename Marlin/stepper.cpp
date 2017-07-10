@@ -298,6 +298,9 @@ FORCE_INLINE void trapezoid_generator_reset() {
   //    SERIAL_ECHOLN(current_block->final_advance/256.0);
 }
 
+int idx = 0;
+unsigned int a[5] = {0};
+
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse.
 // It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately.
 ISR(TIMER1_COMPA_vect) {
@@ -386,10 +389,21 @@ ISR(TIMER1_COMPA_vect) {
       bool p_bot = calibration_plate_enabled ? READ_PIN(P_BOT) : false;
 
       bool z_min_endstop = z_min || p_top || p_bot;
-      if (z_min_endstop && old_z_min_endstop && (current_block->steps_z > 0)) {
-        endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
-        endstop_z_hit = true;
-        step_events_completed = current_block->step_event_count;
+      if (z_min_endstop) {
+        a[idx++] = count_position[Z_AXIS];
+        if (z_min_endstop && old_z_min_endstop && (current_block->steps_z > 0)) {
+          endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
+          endstop_z_hit = true;
+          step_events_completed = current_block->step_event_count;
+
+          SERIAL_ECHO_START;
+          for (unsigned int i = 0; i < 5; ++i) {
+            SERIAL_ECHO("a["); SERIAL_ECHO(i); SERIAL_ECHO("] = "); SERIAL_ECHO(a[i]); SERIAL_ECHO(", ");
+            a[i] = 0;
+          }
+          SERIAL_EOL;
+          idx = 0;
+        }
       }
       old_z_min_endstop = z_min_endstop;
 
