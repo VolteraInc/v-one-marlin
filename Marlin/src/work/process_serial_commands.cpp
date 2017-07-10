@@ -89,9 +89,8 @@ void processSerialCommands() {
     // Send Acknowledgement
     SERIAL_PROTOCOLLNPGM(MSG_OK);
 
-    // Refresh the timeouts after processing so that the user/sw
+    // Refresh the timeout after processing so that the user/sw
     // has then entire timeout duration to issue another command
-    refresh_serial_rx_timeout();
     refresh_cmd_timeout();
   }
 }
