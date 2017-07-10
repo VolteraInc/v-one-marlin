@@ -3,6 +3,7 @@
 #include "../api.h"
 #include "internal.h"
 
+extern float axis_steps_per_unit[4];
 static float s_probeDisplacement = 0.0f;
 
 int s_partiallyPrepareProbe(const char* context, Tool tool) {
@@ -27,23 +28,46 @@ int prepareProbe(Tool tool) {
 }
 
 int s_recordMeasurement(float& measurement) {
-  measurement = current_position[Z_AXIS] + s_probeDisplacement;
+  // the point of contact is 1 step above the current height
+  // This is becuase the stepper needs 2 steps to detect a hit
+  const float height = current_position[Z_AXIS] + 1 / axis_steps_per_unit[Z_AXIS];
+  measurement = height + s_probeDisplacement;
   if (logging_enabled) {
     SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("probe height: "); SERIAL_ECHOLN(current_position[Z_AXIS]);
-    SERIAL_ECHOPGM("probe displacement: "); SERIAL_ECHOLN(s_probeDisplacement);
-    SERIAL_ECHOPGM("probe measurement: "); SERIAL_ECHOLN(measurement);
+    SERIAL_ECHOPAIR("probe height: ", height );
+    SERIAL_ECHOPAIR(", displacement: ", s_probeDisplacement);
+    SERIAL_ECHOPAIR(", measurement: ", measurement);
+    SERIAL_EOL;
   }
   return 0;
 }
 
 int probe(Tool tool, float& measurement, float speed, float additionalRetractDistance) {
-  return (
+  float fastMeasurement;
+  float retractDistance = .5;
+  if (
     confirmMountedAndNotTriggered("probe", tool, TOOLS_PROBE) ||
-    moveToLimit(Z_AXIS, -1, speed) ||
+
+    moveToLimit(Z_AXIS, -1) ||
+    s_recordMeasurement(fastMeasurement) ||
+    retractFromSwitch(Z_AXIS, -1, retractDistance) ||
+
+    moveToLimit(Z_AXIS, -1, speed, retractDistance + 0.030) ||
     s_recordMeasurement(measurement) ||
     retractToolConditionally(s_probeDisplacement, additionalRetractDistance)
-  );
+  ) {
+    return -1;
+  }
+
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("fastMeasurement: ", fastMeasurement);
+    SERIAL_ECHOPAIR(", slowMeasurement: ", measurement);
+    SERIAL_ECHOPAIR(", delta: ", fastMeasurement - measurement);
+    SERIAL_EOL;
+  }
+
+  return 0;
 }
 
 int calibrateKeyPositions(Tool tool, long cycles) {
