@@ -2,12 +2,23 @@
 #include "../../temperature.h"
 #include "work.h" // previous_millis_serial_rx HACK
 
-bool glow_led_override = false;
-bool glow_force_green = false; // For taking pictures of the printer without a PC attached.
 bool pending_temp_change = false;
 
-void leds_init() {
-  glow_force_green = READ_PIN(Z_MIN);
+static struct {
+  char r,g,b;
+  short pace;
+} s_overrideLeds;
+
+int overrideLeds(char r, char g, char b, short pace) {
+  s_overrideLeds.r = r;
+  s_overrideLeds.g = g;
+  s_overrideLeds.b = b;
+  s_overrideLeds.pace = pace;
+  return 0;
+}
+
+static bool overridingLeds() {
+  return s_overrideLeds.r || s_overrideLeds.b || s_overrideLeds.g;
 }
 
 void glow_leds() {
@@ -20,11 +31,6 @@ void glow_leds() {
   static unsigned short glow_led_counter;
   static unsigned long glow_led_last_tick;
   static unsigned short glow_led_pace; // ms/step
-  if (glow_led_override) {
-    // Set this to 0 so we start from 0 when glow_led_override is unset
-    glow_led_counter = 0;
-    return;
-  }
 
   /*
   (in order of precedence)
@@ -45,7 +51,13 @@ void glow_leds() {
 
   float bedTemp = degBed();
   float targetTemp = degTargetBed();
-  if(bedTemp > 50.0){
+
+  if (overridingLeds()) {
+    glow_led_states[0] = s_overrideLeds.r;
+    glow_led_states[1] = s_overrideLeds.g;
+    glow_led_states[2] = s_overrideLeds.b;
+    glow_led_pace = s_overrideLeds.pace;
+  } else if (bedTemp > 50.0) {
     glow_led_states[0] = 255;
     glow_led_states[1] = 0;
     glow_led_states[2] = 0;
@@ -67,7 +79,7 @@ void glow_leds() {
     glow_led_states[2] = 255;
     glow_led_pace = 30;
     quick_change = true;
-  } else if (glow_force_green || ((now - previous_millis_serial_rx) < stepper_inactive_time && previous_millis_serial_rx)) {
+  } else if ((now - previous_millis_serial_rx) < stepper_inactive_time && previous_millis_serial_rx) {
     glow_led_states[0] = 0;
     glow_led_states[1] = 255;
     glow_led_states[2] = 0;

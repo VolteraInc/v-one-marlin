@@ -138,7 +138,6 @@ void setup() {
   plan_init();  // Initialize planner;
   watchdog_init();
   st_init();    // Initialize stepper, this enables interrupts!
-  leds_init();
 }
 
 void periodic_work() {

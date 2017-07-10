@@ -64,3 +64,6 @@ int measureProbeDisplacement(Tool tool, float& displacement);
 bool isOverBed(float x, float y);
 bool haveBedHeightMap();
 float bedHeightAt(float x, float y);
+
+// LEDs
+int overrideLeds(char r, char b, char g, short pace = 3); // 3 = fast pulse

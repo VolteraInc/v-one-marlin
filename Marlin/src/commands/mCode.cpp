@@ -73,14 +73,15 @@ int process_mcode(int command_code) {
     // M93 - Manually control LEDs. Set the RGB LEDs using R[1-255] V[1-255] B[1-255] (uses V instead of G for green)
     case 93:
       // Syntax is M93 R:nnn V:nnn B:nnn (0 <= nnn <= 255)
-      // V because vert (using 'G' derails the parser, unsurprisingly)
       // (Call with no arguments to release LEDs)
-
-      if (code_seen('R')) analogWrite(LED_RED_PIN, constrain(code_value(), 0, 255));
-      if (code_seen('V')) analogWrite(LED_GREEN_PIN, constrain(code_value(), 0, 255));
-      if (code_seen('B')) analogWrite(LED_BLUE_PIN, constrain(code_value(), 0, 255));
-
-      glow_led_override = code_seen('R') || code_seen('V') || code_seen('B');
+      // Note: 'G' _use_ to break the gcode parser, so we accepted V (as in vert).
+      // we continue to support V for backkwards compat.
+      return overrideLeds(
+        code_seen('R') ? constrain(code_value(), 0, 255) : 0,
+        (code_seen('G') || code_seen('V')) ? constrain(code_value(), 0, 255) : 0,
+        code_seen('B') ? constrain(code_value(), 0, 255) : 0,
+        code_seen('P') ? code_value() : 30
+      );
       return 0;
 
     // M105 - Read current temp

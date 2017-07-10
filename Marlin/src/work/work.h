@@ -7,8 +7,6 @@ void refresh_serial_rx_timeout();
 void manage_inactivity();
 
 extern bool pending_temp_change;
-extern bool glow_led_override;
-void leds_init();
 void glow_leds();
 
 void toolChanges();
