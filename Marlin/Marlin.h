@@ -85,8 +85,8 @@ const char echomagic[] PROGMEM = "echo:";
 
 #define SERIAL_ECHOPAIR(name,value) (serial_echopair_P(PSTR(name),(value)))
 
-void serial_echopair_P(const char *s_P, float v);
-void serial_echopair_P(const char *s_P, double v);
+void serial_echopair_P(const char *s_P, float v, unsigned int precision = 6);
+void serial_echopair_P(const char *s_P, double v, unsigned int precision = 6);
 void serial_echopair_P(const char *s_P, unsigned long v);
 
 // For serial printing from PROGMEM. (Saves loads of SRAM.)
