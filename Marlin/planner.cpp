@@ -720,11 +720,11 @@ void plan_set_position(float x, float y, float z, float e)
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Resetting planner position to");
-    SERIAL_ECHOPGM(" X:"); SERIAL_ECHO(x);
-    SERIAL_ECHOPGM(" Y:"); SERIAL_ECHO(y);
-    SERIAL_ECHOPGM(" Z:"); SERIAL_ECHO(z);
-    SERIAL_ECHOPGM(" E:"); SERIAL_ECHO(e);
-    SERIAL_ECHOPGM("\n");
+    SERIAL_ECHOPAIR(" X:", x);
+    SERIAL_ECHOPAIR(" Y:", y);
+    SERIAL_ECHOPAIR(" Z:", z);
+    SERIAL_ECHOPAIR(" E:", e);
+    SERIAL_EOL;
   }
 
   // Apply compensation algorithms to compute the new position in steps
