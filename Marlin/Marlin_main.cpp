@@ -146,7 +146,9 @@ void setup() {
   if (READ_PIN(Z_MIN)) {
     raise();
     if (READ_PIN(Z_MIN)) {
-      runBurnInSequence(getTool());
+      const auto tool = getTool();
+      prepareToolToMove(tool);
+      runBurnInSequence(tool);
     }
   }
 }
