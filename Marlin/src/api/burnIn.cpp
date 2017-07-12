@@ -109,11 +109,17 @@ int runBurnInSequence(Tool tool, int steps) {
       100, 10
     )
   ) {
-    overrideLeds(255, 80, 0, 3); // fast pulse yellow
+    overrideLeds(255, 80, 0, 0); // blink yellow
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM("Unable to perform burn-in sequence");
     return -1;
   }
+
+  // Success, pulse leds and go to finished position
+  // (trying to make it obvious that we are done)
+  overrideLeds(0, 0, 255, 3); // pulse blue
+  raise();
+  moveXY(tool, bedCenterX, max_pos[Y_AXIS]);
 
   return 0;
 }
