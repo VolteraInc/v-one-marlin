@@ -82,11 +82,11 @@ int runBurnInSequence(Tool tool, int steps) {
     setPosition(0, 0, Z_MAX_POS, 0) ||
 
     // Entire volume, default (fast) speeds
-    // Note: takes about 4min to complete 5 steps
+    // Note: takes about 5min to complete 5 steps
     runCrossPlaneSequence(
       tool,
       steps,
-      { min_pos[X_AXIS], min_pos[Y_AXIS], 10.0f },
+      { min_pos[X_AXIS], min_pos[Y_AXIS], 1.0f },
       { max_pos[X_AXIS], max_pos[Y_AXIS], Z_MAX_POS - 2 },
       useDefaultFeedrate, useDefaultFeedrate
     ) ||
