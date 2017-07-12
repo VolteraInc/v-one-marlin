@@ -1,5 +1,6 @@
 #include "../api/api.h"
 #include "../../Marlin.h"
+#include "../../stepper.h"
 
 struct Point3d {
   float x, y, z;
@@ -117,9 +118,10 @@ int runBurnInSequence(Tool tool, int steps) {
 
   // Success, pulse leds and go to finished position
   // (trying to make it obvious that we are done)
-  overrideLeds(0, 0, 255, 3); // pulse blue
   raise();
   moveXY(tool, bedCenterX, max_pos[Y_AXIS]);
+  st_synchronize();
+  overrideLeds(0, 0, 255, 3); // pulse blue
 
   return 0;
 }
