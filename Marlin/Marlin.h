@@ -58,8 +58,8 @@
   #define MYSERIAL MSerial
 #endif
 
-#define SERIAL_CHAR(x) (MYSERIAL.write(x))
-#define SERIAL_EOL SERIAL_CHAR('\n')
+#define SERIAL_EOL MYSERIAL.print("\n")
+#define SERIAL_PAIR(name,value) (serial_echopair_P(PSTR(name),(value)))
 
 #define SERIAL_PROTOCOL(x) (MYSERIAL.print(x))
 #define SERIAL_PROTOCOL_F(x,y) (MYSERIAL.print((x),(y)))
@@ -88,10 +88,24 @@ const char echomagic[] PROGMEM = "echo:";
 void serial_echopair_P(const char *s_P, float v, unsigned int precision = 6);
 void serial_echopair_P(const char *s_P, double v, unsigned int precision = 6);
 void serial_echopair_P(const char *s_P, unsigned long v);
+void serial_echopair_P(const char *s_P, unsigned v);
+void serial_echopair_P(const char *s_P, int v);
+void serial_echopair_P(const char *s_P, bool v);
+void serial_echopair_P(const char *s_P, char v);
 
 // For serial printing from PROGMEM. (Saves loads of SRAM.)
 FORCE_INLINE void serialprintPGM(const char* str) {
   while (char ch = pgm_read_byte(str++)) MYSERIAL.write(ch);
+}
+
+template <typename T>
+void serialArray(const T A[], size_t size) {
+  for (auto i = 0u; i < size; ++i) {
+    if (i != 0) {
+      MYSERIAL.print(',');
+    }
+    MYSERIAL.print(A[i]);
+  }
 }
 
 

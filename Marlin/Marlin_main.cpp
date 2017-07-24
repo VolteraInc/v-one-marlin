@@ -80,6 +80,14 @@ void serial_echopair_P(const char *s_P, double v, unsigned int precision)
     { serialprintPGM(s_P); SERIAL_ECHO_F(v, precision); }
 void serial_echopair_P(const char *s_P, unsigned long v)
     { serialprintPGM(s_P); SERIAL_ECHO(v); }
+void serial_echopair_P(const char *s_P, unsigned v)
+    { serialprintPGM(s_P); SERIAL_ECHO(v); }
+void serial_echopair_P(const char *s_P, int v)
+    { serialprintPGM(s_P); SERIAL_ECHO(v); }
+void serial_echopair_P(const char *s_P, bool v)
+    { serialprintPGM(s_P); SERIAL_ECHO(v ? "1" : "0"); }
+void serial_echopair_P(const char *s_P, char v)
+    { serialprintPGM(s_P); SERIAL_ECHO(v); }
 
 extern "C" {
   extern unsigned int __bss_end;
