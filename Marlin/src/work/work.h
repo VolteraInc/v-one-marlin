@@ -1,4 +1,4 @@
-
+#pragma once
 
 extern unsigned long previous_millis_serial_rx;
 extern unsigned long stepper_inactive_time;
@@ -18,3 +18,6 @@ void reportBufferEmpty();
 void checkForEndstopHits();
 
 void processSerialCommands();
+
+void manufacturing_init();
+void manufacturing_procedures();

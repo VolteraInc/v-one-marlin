@@ -146,19 +146,7 @@ void setup() {
   plan_init();  // Initialize planner;
   watchdog_init();
   st_init();    // Initialize stepper, this enables interrupts!
-
-  // Run burn-in
-  // Note: we check then raise then check again just in case
-  // a tool is contacting the switch. if it is, the raising is
-  // good idea.
-  if (READ_PIN(Z_MIN)) {
-    raise();
-    if (READ_PIN(Z_MIN)) {
-      const auto tool = getTool();
-      prepareToolToMove(tool);
-      runBurnInSequence(tool);
-    }
-  }
+  manufacturing_init();
 }
 
 void periodic_work() {
@@ -167,6 +155,7 @@ void periodic_work() {
   manage_heater();
   manage_inactivity();
   glow_leds();
+  manufacturing_procedures();
 }
 
 void loop() {

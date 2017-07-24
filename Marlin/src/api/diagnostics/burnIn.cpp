@@ -1,6 +1,6 @@
-#include "../api/api.h"
-#include "../../Marlin.h"
-#include "../../stepper.h"
+#include "../../api/api.h"
+#include "../../../Marlin.h"
+#include "../../../stepper.h"
 
 struct Point3d {
   float x, y, z;
@@ -70,13 +70,14 @@ static int runCrossPlaneSequence(Tool tool, int steps, const Point3d& a, const P
   return 0;
 }
 
-int runBurnInSequence(Tool tool, int steps) {
+int burnInSequence(Tool tool, int steps) {
   const float bedCenterX = min_pos[X_AXIS] + (max_pos[X_AXIS] - min_pos[X_AXIS]) / 2;
   const float bedCenterY = bedBoundsMinY + (max_pos[Y_AXIS] - bedBoundsMinY) / 2;
 
   if (
     raise() ||
     confirmMountedAndNotTriggered("perform burn-in sequence", tool, TOOLS_NONE) ||
+    prepareToolToMove(tool) ||
 
     // Move to a known location to start
     moveXY(tool, 0, 0) ||
@@ -110,18 +111,9 @@ int runBurnInSequence(Tool tool, int steps) {
       100, 10
     )
   ) {
-    overrideLeds(255, 80, 0, 0); // blink yellow
     SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to perform burn-in sequence");
+    SERIAL_ERRORLNPGM("Unable to complete burn-in sequence");
     return -1;
   }
-
-  // Success, pulse leds and go to finished position
-  // (trying to make it obvious that we are done)
-  raise();
-  moveXY(tool, bedCenterX, max_pos[Y_AXIS]);
-  st_synchronize();
-  overrideLeds(0, 0, 255, 3); // pulse blue
-
   return 0;
 }

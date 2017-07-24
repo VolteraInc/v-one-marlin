@@ -36,12 +36,16 @@ const float DefaultProbeSpeed = 30;
 // Tool functions
 int confirmMountedAndNotTriggered(const char* context, Tool tool, Tool requiredTool);
 
+
 // Probe
 int probe(Tool tool, float& measurement, float speed = DefaultProbeSpeed, float additionalRetractDistance = DefaultRetract);
+int partiallyPrepareProbe(const char* context, Tool tool);
+
 
 // Dispenser
 int setDispenseHeight(Tool tool, float height);
 float getDispenseHeight(Tool tool);
+
 
 // Router
 const unsigned long RouterRampUpDuration = 3000u + 500u; //Take 3s to ramp from 0 to max and we want some buffer too

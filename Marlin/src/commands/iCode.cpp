@@ -1,5 +1,6 @@
-#include "../api/api.h"
 #include "../../Marlin.h"
+#include "../api/api.h"
+#include "../api/diagnostics/diagnostics.h"
 
 #include "processing.h"
 
@@ -18,53 +19,39 @@ int process_icode(int command_code) {
       min_z_x_pos = MIN_Z_X_POS;
       min_z_y_pos = MIN_Z_Y_POS;
 
-      SERIAL_ECHOPGM("Reset Positions to\n");
-      SERIAL_ECHOPGM(" xyPositioner_x:"); SERIAL_ECHOLN(xypos_x_pos);
-      SERIAL_ECHOPGM(" xyPositioner_y:"); SERIAL_ECHOLN(xypos_y_pos);
-      SERIAL_ECHOPGM(" zSwitch_x:"); SERIAL_ECHOLN(min_z_x_pos);
-      SERIAL_ECHOPGM(" zSwitch_y:"); SERIAL_ECHOLN(min_z_y_pos);
+      SERIAL_ECHO_START;
+      SERIAL_ECHOLNPGM("Reset Positions to");
+      SERIAL_ECHOPAIR(" xyPositioner_x:", xypos_x_pos);
+      SERIAL_ECHOPAIR(" xyPositioner_y:", xypos_y_pos);
+      SERIAL_ECHOPAIR(" zSwitch_x:", min_z_x_pos);
+      SERIAL_ECHOPAIR(" zSwitch_y:", min_z_y_pos);
+      SERIAL_EOL;
       return 0;
 
     // Calibrate the locations of the z-switch and xy-positioner
     case 2: {
-      const int defaultCycles = 2;
-      const int cycles = code_seen('C') ? code_value() : defaultCycles;
-      if (calibrateKeyPositions(tool, cycles)) {
+      const unsigned cycles = code_seen('C') ? code_value() : defaultSwitchPositionCalibrationCycles;
+      if (runCalibrateSwitchPositions(tool, cycles)) {
         return -1;
       }
 
       // Output
-      SERIAL_PROTOCOLPGM("positionCalibration");
-      SERIAL_PROTOCOLPGM(" cycles:"); SERIAL_PROTOCOL(cycles);
-      SERIAL_PROTOCOLPGM(" xyPositioner_x:"); SERIAL_PROTOCOL(xypos_x_pos);
-      SERIAL_PROTOCOLPGM(" xyPositioner_y:"); SERIAL_PROTOCOL(xypos_y_pos);
-      SERIAL_PROTOCOLPGM(" zSwitch_x:"); SERIAL_PROTOCOL(min_z_x_pos);
-      SERIAL_PROTOCOLPGM(" zSwitch_y:"); SERIAL_PROTOCOL(min_z_y_pos);
-      SERIAL_PROTOCOLPGM("\n");
-
-      SERIAL_PROTOCOLLNPGM("Storing settings...");
-      Config_StoreCalibration();
-      Config_RetrieveCalibration();
-
+      SERIAL_ECHO_START;
+      SERIAL_ECHOPGM("positionCalibration");
+      SERIAL_ECHOPAIR(" cycles:", cycles);
+      SERIAL_ECHOPAIR(" xyPositioner_x:", xypos_x_pos);
+      SERIAL_ECHOPAIR(" xyPositioner_y:", xypos_y_pos);
+      SERIAL_ECHOPAIR(" zSwitch_x:", min_z_x_pos);
+      SERIAL_ECHOPAIR(" zSwitch_y:", min_z_y_pos);
+      SERIAL_EOL;
       Config_PrintCalibration();
 
       return 0;
     }
 
     // Run burn-in sequence
-    case 3: {
-      const int cycles = code_seen('C') ? code_value() : 1;
-      for (int i = 0; i < cycles; ++i) {
-        if (
-          prepareToolToMove(tool) ||
-          runBurnInSequence(tool)
-        ) {
-          return -1;
-        }
-      }
-      return 0;
-    }
-
+    case 3:
+      return runBurnInSequence(tool);
 
     //-------------------------------------------
     // Error if command unknown

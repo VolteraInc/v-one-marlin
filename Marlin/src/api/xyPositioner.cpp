@@ -57,7 +57,7 @@ int xyPositionerTouch(Tool tool, int axis, int direction, float& measurement) {
 
   // Move according to the given axis and direction until a switch is triggered
   const auto slow = homing_feedrate[axis] / 6;
-  if (moveToLimit(axis, direction, slow, 5.0f)) {
+  if (moveToLimit(axis, direction, slow, 6.0f)) {
     return -1;
   }
   measurement = current_position[axis];
@@ -79,7 +79,7 @@ static int s_findCenter(Tool tool, long cycles, float& o_centerX, float& o_cente
     // Compute center X
     if ( moveXY(tool, centerX, centerY) // applies new centerY on 2nd iteration
       || xyPositionerTouch(tool, X_AXIS, 1, measurement1) // measure +x
-      || moveXY(tool, centerX, centerY) // recenter
+      || relativeMove(tool, -5.0f, 0, 0, 0)
       || xyPositionerTouch(tool, X_AXIS, -1, measurement2)) { // measure -x
       return -1;
     }
@@ -97,7 +97,7 @@ static int s_findCenter(Tool tool, long cycles, float& o_centerX, float& o_cente
     // Compute center Y
     if ( moveXY(tool, centerX, centerY) // applies new centerX
       || xyPositionerTouch(tool, Y_AXIS, 1, measurement1) // measure +y
-      || moveXY(tool, centerX, centerY) // recenter
+      || relativeMove(tool, 0, -5.0f, 0, 0)
       || xyPositionerTouch(tool, Y_AXIS, -1, measurement2)) { // measure -y
       return -1;
     }
