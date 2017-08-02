@@ -104,6 +104,10 @@ void set_p_top_mode(enum PTopModes mode) {
   }
 }
 
+bool periodicAnalogReadsEnabled() {
+  return !p_top_in_comms_mode;
+}
+
 // Derived from RepRap FiveD extruder::getTemperature()
 // For bed temperature measurement.
 static float analog2tempBed(int raw) {
