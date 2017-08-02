@@ -17,6 +17,8 @@ void sendToolStatusUpdate() {
 }
 
 static int s_prepareTool(Tool tool) {
+  SERIAL_ECHO_START;
+  SERIAL_ECHOLNPGM("Preparing tool");
   switch (tool) {
     case TOOLS_PROBE: return prepareProbe(tool);
     case TOOLS_DISPENSER: return prepareDispenser(tool);
