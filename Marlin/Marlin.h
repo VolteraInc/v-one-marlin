@@ -16,14 +16,11 @@
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>
 
-
 #include "fastio.h"
 #include "Configuration.h"
 #include "pins.h"
 
-#ifndef AT90USB
-#define  HardwareSerial_h // trick to disable the standard HWserial
-#endif
+#define HardwareSerial_h // trick to disable the standard HWserial
 
 #if (ARDUINO >= 100)
 # include "Arduino.h"
@@ -31,10 +28,6 @@
 # include "WProgram.h"
   //Arduino < 1.0.0 does not define this, so we need to do it ourselves
 # define analogInputToDigitalPin(p) ((p) + A0)
-#endif
-
-#ifdef AT90USB
-#include "HardwareSerial.h"
 #endif
 
 #include "MarlinSerial.h"
