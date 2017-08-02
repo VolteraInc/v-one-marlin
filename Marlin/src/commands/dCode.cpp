@@ -201,6 +201,9 @@ int process_dcode(int command_code) {
       return 0; // alway succeed
     }
 
+    // Set rotation speed (without tool prep)
+    case 110:
+      return setRotationSpeed(tool, code_seen('R') ? code_value() : 1.0f);
 
     //-------------------------------------------
     // List Commands
@@ -218,6 +221,7 @@ int process_dcode(int command_code) {
       SERIAL_ECHOLNPGM("  D104 - measure probe displacement");
       SERIAL_ECHOLNPGM("  D105 - measure at switch -- D105 -X");
       SERIAL_ECHOLNPGM("  D106 - read left pogo pin's voltage (C=cycles M=milliseconds between readings) -- D106 C10 M5 ");
+      SERIAL_ECHOLNPGM("  D110 - set router rotation speed -- V110 R100, no value or 1 means stop, 0 resets router");
       SERIAL_ECHOLNPGM("");
       return 0;
   }
