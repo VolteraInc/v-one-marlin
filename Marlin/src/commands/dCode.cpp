@@ -164,6 +164,44 @@ int process_dcode(int command_code) {
       return 0;
     }
 
+    // Algorithms - measure at switch release
+    case 108: {
+      if (prepareToolToMove(tool)) {
+        return -1;
+      }
+
+      const int axis = (
+        code_seen('X') ? X_AXIS : (
+          code_seen('Y') ? Y_AXIS : (
+            code_seen('Z') ? Z_AXIS : Z_AXIS
+          )
+        )
+      );
+      const int direction = code_prefix() == '-' ? -1 : 1;
+      auto pin = code_seen('P') ? code_value() : P_TOP_STATE_PIN;
+      auto delay = code_seen('M') ? code_value() : DefaultMeasureAtSwitchReleaseDelay;
+      auto startPosition = current_position[axis];
+      auto releaseStartedAt = startPosition;
+      auto releaseCompletedAt = startPosition;
+      auto returnValue = measureAtSwitchRelease(axis, direction, pin, releaseStartedAt, releaseCompletedAt, delay);
+
+      // Output
+      SERIAL_ECHO_START;
+      SERIAL_ECHOPGM("measureAtSwitchRelease");
+      SERIAL_PAIR(", axis:", axis_codes[axis]);
+      SERIAL_PAIR(", direction:", direction);
+      SERIAL_PAIR(", pin:", pin);
+      SERIAL_PAIR(", delay:", delay);
+      SERIAL_PAIR(", returnValue:", returnValue);
+      SERIAL_PAIR(", releaseStartedAt:", releaseStartedAt);
+      SERIAL_PAIR(", releaseCompletedAt:", releaseCompletedAt);
+      SERIAL_PAIR(", startPosition:", startPosition);
+      SERIAL_EOL;
+
+      return 0; // alway succeed
+    }
+
+
     //-------------------------------------------
     // List Commands
     default:
