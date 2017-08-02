@@ -31,17 +31,30 @@ const char* toolStateAsString(enum ToolStates state);
 // Retract constants
 const float NoRetract = -9999.0f;
 const float DefaultRetract = 0.2f;
-const float DefaultProbeSpeed = 30;
 
 // Tool functions
 int confirmMountedAndNotTriggered(const char* context, Tool tool, Tool requiredTool);
 
 
 // Probe
-int probe(Tool tool, float& measurement, float speed = DefaultProbeSpeed, float additionalRetractDistance = DefaultRetract);
-int partiallyPrepareProbe(const char* context, Tool tool);
-float getProbeDisplacement();
+namespace probe {
+  const float DefaultSpeed = 30;
+  const float DefaultMaxSamples = 30u;
+  const float DefaultMaxTouchesPerSample = 10u;
 
+  int probe(
+    Tool tool,
+    float& measurement,
+    float speed = DefaultSpeed,
+    float additionalRetractDistance = DefaultRetract,
+    unsigned maxSamples = DefaultMaxSamples,
+    unsigned maxTouchesPerSample = DefaultMaxTouchesPerSample,
+    unsigned* o_samplesTaken = nullptr,
+    unsigned* o_touchesUsed = nullptr
+  );
+  int partiallyPrepareProbe(const char* context, Tool tool);
+  float getProbeDisplacement();
+}
 
 // Dispenser
 int setDispenseHeight(Tool tool, float height);

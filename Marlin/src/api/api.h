@@ -4,8 +4,10 @@
 #include "./movement/movement.h"
 
 // Measurement
+const auto DefaultMeasureAtSwitchReleaseDelay = 0u;
 int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement);
 int retractFromSwitch(int axis, int direction, float retractDistance = useDefaultRetractDistance);
+int measureAtSwitchRelease(int axis, int direction, unsigned pin, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms = DefaultMeasureAtSwitchReleaseDelay);
 
 
 // Move before homing

@@ -78,11 +78,21 @@ int process_vcode(int command_code) {
       }
 
       const auto additionalRetractDistance = code_seen('R') ? code_value() : DefaultRetract;
-      const auto speed = code_seen('F') ? code_value() : DefaultProbeSpeed;
-      auto measurement = 0.0f;
+      const auto speed = code_seen('F') ? code_value() : probe::DefaultSpeed;
+      const auto maxSamples = code_seen('S') ? code_value() : probe::DefaultMaxSamples;
+      const auto maxTouchesPerSample = code_seen('T') ? code_value() : probe::DefaultMaxTouchesPerSample;
+      auto samplesTaken = 0u;
+      auto touchesUsed = 0u;
+      auto measurement = -9999.9f;
       if (
         prepareToolToMove(tool) ||
-        probe(tool, measurement, speed, additionalRetractDistance)
+        probe::probe(
+          tool,
+          measurement,
+          speed, additionalRetractDistance,
+          maxSamples, maxTouchesPerSample,
+          &samplesTaken, &touchesUsed
+        )
       ) {
         return -1;
       }
@@ -92,7 +102,9 @@ int process_vcode(int command_code) {
       SERIAL_PAIR(" x:", current_position[X_AXIS]);
       SERIAL_PAIR(" y:", current_position[Y_AXIS]);
       SERIAL_PAIR(" z:", measurement);
-      SERIAL_PAIR(" displacement:", getProbeDisplacement());
+      SERIAL_PAIR(" displacement:", probe::getProbeDisplacement());
+      SERIAL_PAIR(" samplesTaken:", samplesTaken);
+      SERIAL_PAIR(" touchesUsed:", touchesUsed);
       SERIAL_EOL;
       return 0;
     }
@@ -129,7 +141,7 @@ int process_vcode(int command_code) {
     case 110:
       return (
         prepareToolToMove(tool) ||
-        setRotationSpeed(tool, code_seen('R') ? code_value() : 0.0f)
+        setRotationSpeed(tool, code_seen('R') ? code_value() : 1.0f)
       );
 
     //-------------------------------------------
@@ -164,7 +176,7 @@ int process_vcode(int command_code) {
       SERIAL_ECHOLNPGM("    V4 - Probe at current position (retract by probe displacement + R) -- V4 R1");
       SERIAL_ECHOLNPGM("  Router");
       SERIAL_ECHOLNPGM("    V101 R - attach router");
-      SERIAL_ECHOLNPGM("    V110 - set router rotation speed -- V110 R100, no value or 0 means stop");
+      SERIAL_ECHOLNPGM("    V110 - set router rotation speed -- V110 R100, no value or 1 means stop, 0 resets router");
       return 0;
   }
 }

@@ -1,12 +1,14 @@
 #include "../../../Marlin.h"
 #include "../../../stepper.h"
+#include "../../../temperature.h"
 #include "../api.h"
+#include "../measurement/measurement.h"
+#include "../switches/PTopScopedUsageLock.h"
 #include "internal.h"
 
-extern float axis_steps_per_unit[4];
 static float s_probeDisplacement = 0.0f;
 
-int partiallyPrepareProbe(const char* context, Tool tool) {
+int probe::partiallyPrepareProbe(const char* context, Tool tool) {
   enable_p_top(true);
   return (
     raise() ||
@@ -18,7 +20,7 @@ int partiallyPrepareProbe(const char* context, Tool tool) {
 int prepareProbe(Tool tool) {
   const char* context = "prepare probe";
   return (
-    partiallyPrepareProbe(context, tool) ||
+    probe::partiallyPrepareProbe(context, tool) ||
     homeZ(tool) || // home Z so we can enter the xy pos with decent precision
     centerTool(tool) ||
     measureProbeDisplacement(tool, s_probeDisplacement) || // do this now, saves a trip back to the xy-pos after re-homing
@@ -27,49 +29,67 @@ int prepareProbe(Tool tool) {
   );
 }
 
-float getProbeDisplacement() {
+float probe::getProbeDisplacement() {
   return s_probeDisplacement;
 }
 
-int s_recordMeasurement(float& measurement) {
-  // the point of contact is 1 step above the current height
-  // This is becuase the stepper needs 2 steps to detect a hit
-  const float height = current_position[Z_AXIS] + 1 / axis_steps_per_unit[Z_AXIS];
-  measurement = height + s_probeDisplacement;
-  if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("probe height: ", height );
-    SERIAL_ECHOPAIR(", displacement: ", s_probeDisplacement);
-    SERIAL_ECHOPAIR(", measurement: ", measurement);
-    SERIAL_EOL;
+int probe::probe(
+  Tool tool,
+  float& measurement,
+  float speed,
+  float additionalRetractDistance,
+  unsigned maxSamples,
+  unsigned maxTouchesPerSample,
+  unsigned* o_samplesTaken,
+  unsigned* o_touchesUsed
+) {
+
+  if (confirmMountedAndNotTriggered("probe", tool, TOOLS_PROBE)) {
+    return -1;
   }
-  return 0;
-}
 
-int probe(Tool tool, float& measurement, float speed, float additionalRetractDistance) {
-  float fastMeasurement;
-  float retractDistance = .5;
+  // Disable analog reads to prevent false tool change detection
+  // (due to the unusualy amount to time the probe will be intermittently triggered)
+  PTopScopedUsageLock scopedUse;
+
+  float rawMeasurement;
+  auto samplesTaken = 0u;
+  auto totalTouches = 0u;
   if (
-    confirmMountedAndNotTriggered("probe", tool, TOOLS_PROBE) ||
+    // Get close to surface using a fast-touch
+    // Note: could make this conditional on probe speed,
+    // but I'd rather not have the extra code path
+    fastTouch() ||
 
-    moveToLimit(Z_AXIS, -1) ||
-    s_recordMeasurement(fastMeasurement) ||
-    retractFromSwitch(Z_AXIS, -1, retractDistance) ||
+    // Measure
+    multiMultiTouch(
+      "probe",
+      rawMeasurement,
+      speed,
+      maxSamples, maxTouchesPerSample,
+      &samplesTaken, &totalTouches
+    ) ||
 
-    moveToLimit(Z_AXIS, -1, speed, retractDistance + 0.030) ||
-    s_recordMeasurement(measurement) ||
+    // Return to a safe travel height
+    // TODO: should return to height we were at when we started OR ???
     retractToolConditionally(s_probeDisplacement, additionalRetractDistance)
   ) {
     return -1;
   }
 
+  // Success
+  // TODO: should round to nearest step
+  measurement = rawMeasurement + s_probeDisplacement;
+  if (o_samplesTaken) { *o_samplesTaken = samplesTaken; }
+  if (o_touchesUsed) { *o_touchesUsed = totalTouches; }
   if (logging_enabled) {
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("fastMeasurement: ", fastMeasurement);
-    SERIAL_ECHOPAIR(", slowMeasurement: ", measurement);
-    SERIAL_ECHOPAIR(", delta: ", fastMeasurement - measurement);
+    SERIAL_ECHOPAIR("probe height: ", rawMeasurement);
+    SERIAL_ECHOPAIR(", displacement: ", s_probeDisplacement);
+    SERIAL_ECHOPAIR(", measurement: ", measurement);
+    SERIAL_ECHOPAIR(", samplesTaken: ", samplesTaken);
+    SERIAL_ECHOPAIR(", totalTouches: ", totalTouches);
     SERIAL_EOL;
   }
-
   return 0;
 }
