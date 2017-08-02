@@ -27,6 +27,10 @@ int prepareProbe(Tool tool) {
   );
 }
 
+float getProbeDisplacement() {
+  return s_probeDisplacement;
+}
+
 int s_recordMeasurement(float& measurement) {
   // the point of contact is 1 step above the current height
   // This is becuase the stepper needs 2 steps to detect a hit

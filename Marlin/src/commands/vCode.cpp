@@ -89,10 +89,11 @@ int process_vcode(int command_code) {
 
       // Output position
       SERIAL_PROTOCOLPGM("probeMeasurement");
-      SERIAL_PROTOCOLPGM(" x:"); SERIAL_PROTOCOL_F(current_position[X_AXIS], 3);
-      SERIAL_PROTOCOLPGM(" y:"); SERIAL_PROTOCOL_F(current_position[Y_AXIS], 3);
-      SERIAL_PROTOCOLPGM(" z:"); SERIAL_PROTOCOL_F(measurement, 3);
-      SERIAL_PROTOCOLPGM("\n");
+      SERIAL_PAIR(" x:", current_position[X_AXIS]);
+      SERIAL_PAIR(" y:", current_position[Y_AXIS]);
+      SERIAL_PAIR(" z:", measurement);
+      SERIAL_PAIR(" displacement:", getProbeDisplacement());
+      SERIAL_EOL;
       return 0;
     }
 

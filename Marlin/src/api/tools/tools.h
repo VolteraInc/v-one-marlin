@@ -40,6 +40,7 @@ int confirmMountedAndNotTriggered(const char* context, Tool tool, Tool requiredT
 // Probe
 int probe(Tool tool, float& measurement, float speed = DefaultProbeSpeed, float additionalRetractDistance = DefaultRetract);
 int partiallyPrepareProbe(const char* context, Tool tool);
+float getProbeDisplacement();
 
 
 // Dispenser
