@@ -1,10 +1,12 @@
-#include "api.h"
+#include "../api.h"
 
-#include "../../Marlin.h"
-#include "../../planner.h"
-#include "../../stepper.h"
+#include "../../../Marlin.h"
+#include "../../../planner.h"
+#include "../../../stepper.h"
+#include "../../../temperature.h"
+#include "../switches/PTopScopedUsageLock.h"
 
-#include "internal.h"
+#include "../internal.h"
 
 static const float s_defaultRetractDistance[] = {
   X_HOME_RETRACT_MM,
@@ -271,6 +273,7 @@ int raise() {
   return moveToLimit(Z_AXIS, 1);
 }
 
+//TODO: move to dispenser ?
 int meshGears() {
   // Move E backward, then move forward.
   if (s_relativeRawMoveE(-0.02)) {
@@ -307,6 +310,7 @@ int retractFromSwitch(int axis, int direction, float retractDistance) {
   }
 
   // Confirm that the switch was released
+  // READ_PIN ?
   if (endstop_triggered(axis)) {
     SERIAL_ERROR_START;
     SERIAL_ERRORPGM("Unable to retract from "); SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
@@ -318,6 +322,8 @@ int retractFromSwitch(int axis, int direction, float retractDistance) {
 }
 
 int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement) {
+  int returnValue = -1;
+
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Measure at switch: "); SERIAL_ECHO(direction < 0 ? '-' : '+'); SERIAL_ECHOLN(axis_codes[axis]);
@@ -326,28 +332,37 @@ int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
+  // Disable analog reads
+  auto mustRestoreADC = false;
+  if (axis == Z_AXIS && direction == -1 && periodicAnalogReadsEnabled()) {
+    mustRestoreADC = true;
+    set_p_top_mode(P_TOP_COMMS_READ_MODE);
+  }
+
   // Move to limit
   if (moveToLimit(axis, direction, useDefaultFeedrate, maxTravel) != 0) {
     SERIAL_ERROR_START;
     SERIAL_ERRORPGM("Unable to measure at "); SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
     SERIAL_ERRORPGM(" switch, switch did not trigger during initial approach\n");
-    return -1;
+    goto DONE;
   }
 
   // Retract slightly
   if (retractFromSwitch(axis, direction)) {
-    return -1;
+    goto DONE;
   }
 
   // Approach again, slowly
-  // NOTE: this should give us a more accurate reading
-  const auto slow = homing_feedrate[axis] / 6;
-  const float retractDistance = s_defaultRetractDistance[axis];
-  if (moveToLimit(axis, direction, slow, 2 * retractDistance)) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to measure at "); SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
-    SERIAL_ERRORPGM(" switch, switch did not trigger during second approach\n");
-    return -1;
+  // NOTE: this gives us a more accurate reading
+  {
+    const auto slow = homing_feedrate[axis] / 6;
+    const float retractDistance = s_defaultRetractDistance[axis];
+    if (moveToLimit(axis, direction, slow, 2 * retractDistance)) {
+      SERIAL_ERROR_START;
+      SERIAL_ERRORPGM("Unable to measure at "); SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
+      SERIAL_ERRORPGM(" switch, switch did not trigger during second approach\n");
+      goto DONE;
+    }
   }
 
   // Record the measurement
@@ -357,5 +372,136 @@ int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement
     SERIAL_ECHOPGM("Measurement: "); SERIAL_ECHOLN(measurement);
   }
 
-  return 0;
+  returnValue = 0;
+
+DONE:
+  // restore ADC read state
+  if (mustRestoreADC) {
+    set_p_top_mode(P_TOP_NORMAL_MODE);
+  }
+
+  return returnValue;
+}
+
+bool ProbeIsTriggered(float voltage) {
+  return voltage <= 0.08;
+}
+
+// DEFER: could pass this as a template param (if we need to in order to generalize beyond p_top)
+unsigned countTriggers(unsigned pin, unsigned maxSamples) {
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHO("countTriggers ");
+  }
+
+  auto count = 0u;
+  for (auto i = 0u; i < maxSamples; ++i) {
+    auto voltage = rawToVoltage(analogRead(pin));
+
+    if (logging_enabled) {
+      if (i==0) {
+        SERIAL_PAIR("voltages: [", voltage);
+      } else {
+        SERIAL_PAIR(", ", voltage);
+      }
+    }
+
+    if (ProbeIsTriggered(voltage)) {
+      ++count;
+    }
+  }
+
+  if (logging_enabled) {
+    SERIAL_PAIR("], count: ", count);
+    SERIAL_PAIR(", position: ", current_position[Z_AXIS]);
+    SERIAL_EOL;
+  }
+
+  return count;
+}
+
+// TODO int analogMeasureAtSwitch(int axis, int direction, unsigned pin, float initialApporachSpeed, float& digitallyTriggeredAt, float& fullyTriggeredAt, float& releaseStartedAt, float& releaseCompletedAt) {
+//   // Might based this on measureAtSwitchRelease, but allow back off too
+// 
+//   // Disable digital trigger detection
+//
+//   return -1;
+// }
+
+int measureAtSwitchRelease(int axis, int direction, unsigned pin, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPGM("Measure at switch retract: ");
+    SERIAL_ECHO(direction < 0 ? '-' : '+'); SERIAL_ECHOLN(axis_codes[axis]);
+  }
+
+  // Finish any pending moves (prevents crashes)
+  st_synchronize();
+
+  // Disable analog reads (prevent false tool change detection)
+  PTopScopedUsageLock scopedUse;
+
+  // Note: 1mm should be more than enough for a release
+  const auto maxTravel = 1u;
+  const auto maxSteps = maxTravel * axis_steps_per_unit[axis];
+  const auto numSamples = 20u;
+  bool releaseStarted = false;
+  const float distance = 1 / axis_steps_per_unit[axis];
+  for (auto i = 0u; i < maxSteps; ++i) {
+    // Examine triggered status
+    const auto count = countTriggers(pin, numSamples);
+    if (count < numSamples) {
+      // Set release start position, if we haven't already
+      if (!releaseStarted) {
+        // Completely released, record position and exit
+        // if (count == 0) {
+          // const float distance = 10 / axis_steps_per_unit[axis];
+          // if (s_relativeRawMoveXYZ(
+          //     axis == X_AXIS ? distance * -direction : 0,
+          //     axis == Y_AXIS ? distance * -direction : 0,
+          //     axis == Z_AXIS ? distance * -direction : 0
+          // )) {
+          //   goto DONE;
+          // }
+          // continue;
+        // } else {
+          releaseStarted = true;
+          releaseStartedAt = current_position[axis];
+        // }
+      }
+
+      // Completely released, record position and exit
+      if (count == 0) {
+        releaseCompletedAt = current_position[axis];
+        return 0;
+      }
+    }
+
+    // Retract by one step
+    if(logging_enabled) {
+      SERIAL_ECHO_START;
+      SERIAL_ECHOPGM("Retract by: "); SERIAL_ECHOLN(distance);
+    }
+    if (s_relativeRawMoveXYZ(
+        axis == X_AXIS ? distance * -direction : 0,
+        axis == Y_AXIS ? distance * -direction : 0,
+        axis == Z_AXIS ? distance * -direction : 0
+    )) {
+      return -1;
+    }
+
+    // Delay, to allow voltage to stabilize
+    if (delay_ms > 0) {
+      delay(delay_ms);
+    }
+  }
+
+  SERIAL_ERROR_START;
+  SERIAL_ERRORPGM("Unable to measure at release of ");
+  SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
+  SERIAL_PAIR(" switch, switch did not release after ", maxTravel);
+  SERIAL_ERROR("mm of travel");
+  SERIAL_EOL;
+
+  return -1;
 }
