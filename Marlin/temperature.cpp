@@ -329,7 +329,7 @@ ISR(TIMER0_COMPB_vect) {
 
     case TemporarilyDisabled:
       // We can't wait forever, temperature readings are needed for safe operation
-      if (millis() >= no_adc_reads_until) {
+      if (millis() >= no_adc_reads_until || !p_top_in_comms_mode) {
         no_adc_reads_until = 0;
         adc_read_state = PrepareTemp_BED;
 
