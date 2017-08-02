@@ -8,7 +8,7 @@ enum ToolStates classifyVoltage(Tool, float voltage) {
   //   SERIAL_ECHO_START;
   //   SERIAL_ECHOPGM("Classifying voltage "); SERIAL_ECHOLN(voltage);
   // }
-  if (voltage < 1.0) { // expected 0.7 (once stable)
+  if (voltage < 0.08) { // expected 0.07 (once stable)
     return TOOL_STATE_TRIGGERED;
   } else if (voltage <= 3.2) {
     // Note: ROUTER gives 2.06 when mounted and not powered

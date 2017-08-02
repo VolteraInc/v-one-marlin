@@ -383,10 +383,6 @@ DONE:
   return returnValue;
 }
 
-bool ProbeIsTriggered(float voltage) {
-  return voltage <= 0.08;
-}
-
 // DEFER: could pass this as a template param (if we need to in order to generalize beyond p_top)
 unsigned countTriggers(unsigned pin, unsigned maxSamples) {
   if (logging_enabled) {
@@ -406,7 +402,9 @@ unsigned countTriggers(unsigned pin, unsigned maxSamples) {
       }
     }
 
-    if (ProbeIsTriggered(voltage)) {
+    // HACK: use probe function since we only use this function for probing right now.
+    // if we ever use it for other axes we ca figure out a solution then
+    if (probe::isTriggered(voltage)) {
       ++count;
     }
   }
@@ -422,7 +420,7 @@ unsigned countTriggers(unsigned pin, unsigned maxSamples) {
 
 // TODO int analogMeasureAtSwitch(int axis, int direction, unsigned pin, float initialApporachSpeed, float& digitallyTriggeredAt, float& fullyTriggeredAt, float& releaseStartedAt, float& releaseCompletedAt) {
 //   // Might based this on measureAtSwitchRelease, but allow back off too
-// 
+//
 //   // Disable digital trigger detection
 //
 //   return -1;

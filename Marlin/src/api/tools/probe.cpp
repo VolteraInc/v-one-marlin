@@ -29,6 +29,10 @@ int prepareProbe(Tool tool) {
   );
 }
 
+bool probe::isTriggered(float voltage) {
+  return classifyVoltage(TOOLS_PROBE, voltage) == TOOL_STATE_TRIGGERED;
+}
+
 float probe::getProbeDisplacement() {
   return s_probeDisplacement;
 }

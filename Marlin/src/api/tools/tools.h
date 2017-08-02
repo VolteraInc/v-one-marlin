@@ -54,6 +54,7 @@ namespace probe {
   );
   int partiallyPrepareProbe(const char* context, Tool tool);
   float getProbeDisplacement();
+  bool isTriggered(float voltage);
 }
 
 // Dispenser
