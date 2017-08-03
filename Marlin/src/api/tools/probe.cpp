@@ -8,7 +8,7 @@
 
 static float s_probeDisplacement = 0.0f;
 
-int probe::partiallyPrepareProbe(const char* context, Tool tool) {
+int Probe::partiallyPrepare(const char* context, Tool tool) {
   enable_p_top(true);
   return (
     raise() ||
@@ -17,10 +17,10 @@ int probe::partiallyPrepareProbe(const char* context, Tool tool) {
   );
 }
 
-int prepareProbe(Tool tool) {
+int Probe::prepare(Tool tool) {
   const char* context = "prepare probe";
   return (
-    probe::partiallyPrepareProbe(context, tool) ||
+    Probe::partiallyPrepare(context, tool) ||
     homeZ(tool) || // home Z so we can enter the xy pos with decent precision
     centerTool(tool) ||
     measureProbeDisplacement(tool, s_probeDisplacement) || // do this now, saves a trip back to the xy-pos after re-homing
@@ -29,15 +29,21 @@ int prepareProbe(Tool tool) {
   );
 }
 
-bool probe::isTriggered(float voltage) {
+int Probe::unprepare(Tool) {
+  setHomedState(Z_AXIS, 0);
+  enable_p_top(false);
+  return 0;
+}
+
+bool Probe::isTriggered(float voltage) {
   return classifyVoltage(TOOLS_PROBE, voltage) == TOOL_STATE_TRIGGERED;
 }
 
-float probe::getProbeDisplacement() {
+float Probe::getProbeDisplacement() {
   return s_probeDisplacement;
 }
 
-int probe::probe(
+int Probe::probe(
   Tool tool,
   float& measurement,
   float speed,

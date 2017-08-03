@@ -32,7 +32,7 @@
 #include "temperature.h"
 #include "watchdog.h"
 #include "macros.h"
-#include "src/api/api.h" // RouterRampUpDuration
+#include "src/api/api.h" // Router::RampUpDuration
 
 //===========================================================================
 //=============================public variables============================
@@ -47,7 +47,7 @@ unsigned char soft_pwm_bed;
 //===========================================================================
 //=============================private variables============================
 //===========================================================================
-static unsigned long COMMS_MODE_TIMEOUT = RouterRampUpDuration + 7500u; //ms
+static unsigned long COMMS_MODE_TIMEOUT = Router::RampUpDuration + 7500u; //ms
 static volatile bool adc_samples_ready = false;
 static int current_temperature_bed_raw = 0;
 static int current_p_top_raw = 0;

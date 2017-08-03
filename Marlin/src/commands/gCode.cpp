@@ -294,7 +294,7 @@ int process_gcode(int command_code) {
     // G30 - Single Z Probe, probes bed at current XY location.
     case 30: {
       float measurement;
-      if (probe::probe(TOOLS_PROBE, measurement, useDefaultFeedrate, NoRetract, 1, 1)) {
+      if (Probe::probe(TOOLS_PROBE, measurement, useDefaultFeedrate, NoRetract, 1, 1)) {
         return -1;
       }
 

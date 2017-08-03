@@ -3,7 +3,7 @@
 #include "../../../ConfigurationStore.h"
 
 int calibrateSwitchPositions(Tool tool, unsigned cycles, bool storeResults) {
-  if (probe::partiallyPrepareProbe("calibrate positions", tool)) {
+  if (Probe::partiallyPrepare("calibrate positions", tool)) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLN("Unable to calibrate positions, could not prepare probe");
     return -1;

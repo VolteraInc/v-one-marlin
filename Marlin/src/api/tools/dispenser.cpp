@@ -5,7 +5,7 @@
 
 static float s_dispenseHeight = 0.0f;
 
-int prepareDispenser(Tool tool) {
+int Dispenser::prepare(Tool tool) {
   const char* context = "prepare dispenser";
   return (
     raise() ||
@@ -21,7 +21,14 @@ int prepareDispenser(Tool tool) {
   );
 }
 
-float getDispenseHeight(Tool tool) {
+int Dispenser::unprepare(Tool tool) {
+  setHomedState(Z_AXIS, 0);
+  return (
+    setDispenseHeight(tool, 0.0f)
+  );
+}
+
+float Dispenser::getDispenseHeight(Tool tool) {
   // Confirm we have a dispenser
   if (tool != TOOLS_DISPENSER) {
     SERIAL_ECHO_START;
@@ -31,7 +38,7 @@ float getDispenseHeight(Tool tool) {
   return s_dispenseHeight;
 }
 
-int setDispenseHeight(Tool tool, float height) {
+int Dispenser::setDispenseHeight(Tool tool, float height) {
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Dispense height set to "); SERIAL_ECHO(height);

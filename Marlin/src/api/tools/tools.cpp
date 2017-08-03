@@ -7,7 +7,6 @@
 #include "internal.h"
 
 static Tool s_tool = TOOLS_NONE;
-
 static bool s_toolPrepared = false;
 
 void sendToolStatusUpdate() {
@@ -20,9 +19,9 @@ static int s_prepareTool(Tool tool) {
   SERIAL_ECHO_START;
   SERIAL_ECHOLNPGM("Preparing tool");
   switch (tool) {
-    case TOOLS_PROBE: return prepareProbe(tool);
-    case TOOLS_DISPENSER: return prepareDispenser(tool);
-    case TOOLS_ROUTER: return prepareRouter(tool);
+    case TOOLS_PROBE: return Probe::prepare(tool);
+    case TOOLS_DISPENSER: return Dispenser::prepare(tool);
+    case TOOLS_ROUTER: return Router::prepare(tool);
     default: return ensureHomedInXY();
   }
 }
@@ -33,6 +32,29 @@ int prepareToolToMove(Tool tool) {
       return -1;
     }
     s_toolPrepared = true;
+  }
+  return 0;
+}
+
+static int s_unprepareTool(Tool tool) {
+  SERIAL_ECHO_START;
+  SERIAL_ECHOLNPGM("Reset tool preparations");
+  switch (tool) {
+    case TOOLS_PROBE: return Probe::unprepare(tool);
+    case TOOLS_DISPENSER: return Dispenser::unprepare(tool);
+    case TOOLS_ROUTER: return Router::unprepare(tool);
+    case TOOLS_NONE: return NoTool::unprepare(tool);
+    default: return 0;
+  }
+}
+
+int resetToolPreparations() {
+  if (s_toolPrepared) {
+    auto tool = getTool();
+    if (s_unprepareTool(tool)) {
+      return -1;
+    }
+    s_toolPrepared = false;
   }
   return 0;
 }
@@ -51,19 +73,6 @@ void setTool(Tool tool) {
 
 Tool getTool() {
   return s_tool;
-}
-
-int resetToolPreparations() {
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Reset tool preparations");
-  s_toolPrepared = false;
-  enable_p_top(false);
-  setDispenseHeight(TOOLS_DISPENSER, 0.0f);
-  if (getTool() == TOOLS_ROUTER) {
-    setRotationSpeed(TOOLS_ROUTER, 0);
-  }
-  setHomedState(Z_AXIS, 0);
-  return 0;
 }
 
 const char* toolTypeAsString(Tool tool) {
@@ -87,13 +96,13 @@ int outputToolStatus() {
   );
 
   SERIAL_ECHOPGM("Dispenser\n");
-  SERIAL_ECHOPGM("  dispense height: "); SERIAL_ECHOLN(getDispenseHeight(TOOLS_DISPENSER));
+  SERIAL_ECHOPGM("  dispense height: "); SERIAL_ECHOLN(Dispenser::getDispenseHeight(TOOLS_DISPENSER));
 
   SERIAL_ECHOPGM("Router\n");
   SERIAL_ECHOPGM("  status: "); SERIAL_ECHOLN(
     toolStateAsString(s_tool == TOOLS_ROUTER ? toolState : TOOL_STATE_NOT_MOUNTED)
   );
-  SERIAL_ECHOPGM("  Speed: "); SERIAL_ECHOLN(getRotationSpeed(TOOLS_ROUTER));
+  SERIAL_ECHOPGM("  Speed: "); SERIAL_ECHOLN(Router::getRotationSpeed(TOOLS_ROUTER));
 
   SERIAL_ECHOPGM("Homing\n");
   SERIAL_ECHOPGM("  x: "); SERIAL_ECHOLN(getHomedState(X_AXIS));
@@ -108,7 +117,7 @@ int outputToolStatus() {
 
 int asyncMove(Tool tool, float x, float y, float z, float e, float f, bool applyDispenseHeight) {
   if (applyDispenseHeight) {
-    z += getDispenseHeight(tool);
+    z += Dispenser::getDispenseHeight(tool);
   }
 
   return asyncRawMove(x, y, z, e, f);

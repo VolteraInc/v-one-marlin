@@ -69,7 +69,7 @@ static int s_write(char* msg) {
       return_value = 0;
       SERIAL_ECHOPGM("Confirmed on attempt "); SERIAL_ECHO(attempt);
       SERIAL_ECHOPGM(" with sample count "); SERIAL_ECHOLN(sample_count);
-      delay(RouterRampUpDuration); // give router time to ramp up to speed
+      delay(Router::RampUpDuration); // give router time to ramp up to speed
       goto DONE;
     }
   } while(++attempt <= 2);
@@ -81,7 +81,7 @@ DONE:
 
 static int s_sendRouterRotationSpeed(int percent) {
   SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Set rotation speed percentage to "); SERIAL_ECHOLN(percent);
+  SERIAL_ECHOPGM("Set router rotation speed to "); SERIAL_ECHOLN(percent);
   char message[11];
   const int crc = CRC8(percent);
   sprintf(message, "R%u %u\r\n", percent, crc);
@@ -93,12 +93,12 @@ static int s_sendRouterRotationSpeed(int percent) {
 // Router - tool
 static int s_rotationSpeed = 0;
 
-int prepareRouter(Tool tool) {
+int Router::prepare(Tool tool) {
   const char* context = "prepare router";
   return (
     raise() ||
     confirmMountedAndNotTriggered(context, tool, TOOLS_ROUTER) ||
-    setRotationSpeed(tool, 0) ||
+    stopRotation(tool) ||
 
     ensureHomedInXY() ||
     homeZ(tool) || // home Z so we can enter the xy pos with decent precision
@@ -109,7 +109,14 @@ int prepareRouter(Tool tool) {
   );
 }
 
-float getRotationSpeed(Tool tool) {
+int Router::unprepare(Tool tool) {
+  setHomedState(Z_AXIS, 0);
+  return (
+    stopRotationIfMounted(tool)
+  );
+}
+
+float Router::getRotationSpeed(Tool tool) {
   if (tool != TOOLS_ROUTER) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Warning: rotation speed requested for "); SERIAL_ERROR(toolTypeAsString(tool));
@@ -118,13 +125,39 @@ float getRotationSpeed(Tool tool) {
   return s_rotationSpeed;
 }
 
-int setRotationSpeed(Tool tool, int speed) {
-  if (logging_enabled) {
+// i.e. don't return an error if the tool is not mounted
+int Router::stopRotationIfMounted(Tool tool) {
+  bool isMounted = determineToolState(tool) == TOOL_STATE_ROUTER_MOUNTED;
+
+  if (!isMounted){
     SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Setting rotation speed to "); SERIAL_ECHO(speed);
-    SERIAL_ECHOLNPGM(" percent");
+    SERIAL_ERRORLNPGM("Router could not be explicitly stopped because it is not mounted");
+    return 0;
   }
 
+  if (s_sendRouterRotationSpeed(1)) {
+    bool stillMounted = determineToolState(tool) == TOOL_STATE_ROUTER_MOUNTED;
+    if (stillMounted) {
+      SERIAL_ERROR_START;
+      SERIAL_ERRORLNPGM("Unable to stop router, confirm router is attached and powered");
+      return -1;
+    }
+
+    SERIAL_ECHO_START;
+    SERIAL_ERRORLNPGM("Router could not be explicitly stopped because it is not mounted");
+    return 0;
+  }
+
+  SERIAL_ECHO_START;
+  SERIAL_ERRORLNPGM("Router stopped");
+  return 0;
+}
+
+int Router::stopRotation(Tool tool) {
+  return setRotationSpeed(tool, 1);
+}
+
+int Router::setRotationSpeed(Tool tool, unsigned speed) {
   // Finish pending moves before setting router speed.
   // Note: Whether we are starting, stopping or just changing speeds
   // having the change sync'd with movements makes it predictable.
@@ -136,7 +169,7 @@ int setRotationSpeed(Tool tool, int speed) {
     return -1;
   }
 
-  if (speed > 100 || speed < 0) {
+  if (speed > 100) {
     SERIAL_ERROR_START;
     SERIAL_ERRORPGM("Unable to set rotation speed to "); SERIAL_ERROR(speed);
     SERIAL_ERRORLNPGM(" percent, value is outside expected range");
@@ -146,13 +179,11 @@ int setRotationSpeed(Tool tool, int speed) {
   // Send the speed to the router
   if (s_sendRouterRotationSpeed(speed)) {
     SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to set the router's speed, confirm router is attached and powered");
+    SERIAL_PAIR("Unable to set the router rotation speed to ", speed);
+    SERIAL_ERRORLNPGM(", confirm router is attached and powered");
 
     // Attempt to stop the router (just in case)
-    if (speed != 0 && s_sendRouterRotationSpeed(0)) {
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM("Unable to confirm that router's speed was set to 0");
-    }
+    stopRotationIfMounted(tool);
     return -1;
   }
 

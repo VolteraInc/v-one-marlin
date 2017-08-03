@@ -404,7 +404,7 @@ unsigned countTriggers(unsigned pin, unsigned maxSamples) {
 
     // HACK: use probe function since we only use this function for probing right now.
     // if we ever use it for other axes we ca figure out a solution then
-    if (probe::isTriggered(voltage)) {
+    if (Probe::isTriggered(voltage)) {
       ++count;
     }
   }

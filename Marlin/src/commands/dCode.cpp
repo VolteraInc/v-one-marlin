@@ -203,7 +203,7 @@ int process_dcode(int command_code) {
 
     // Set rotation speed (without tool prep)
     case 110:
-      return setRotationSpeed(tool, code_seen('R') ? code_value() : 1.0f);
+      return Router::setRotationSpeed(tool, code_seen('R') ? code_value() : 1.0f);
 
     //-------------------------------------------
     // List Commands

@@ -35,9 +35,14 @@ const float DefaultRetract = 0.2f;
 // Tool functions
 int confirmMountedAndNotTriggered(const char* context, Tool tool, Tool requiredTool);
 
+// No tool
+namespace NoTool {
+  int prepare(Tool tool);
+  int unprepare(Tool tool);
+}
 
 // Probe
-namespace probe {
+namespace Probe {
   const float DefaultSpeed = 30;
   const float DefaultMaxSamples = 30u;
   const float DefaultMaxTouchesPerSample = 10u;
@@ -52,17 +57,30 @@ namespace probe {
     unsigned* o_samplesTaken = nullptr,
     unsigned* o_touchesUsed = nullptr
   );
-  int partiallyPrepareProbe(const char* context, Tool tool);
+  int prepare(Tool tool);
+  int unprepare(Tool tool);
+  int partiallyPrepare(const char* context, Tool tool);
   float getProbeDisplacement();
   bool isTriggered(float voltage);
 }
 
 // Dispenser
-int setDispenseHeight(Tool tool, float height);
-float getDispenseHeight(Tool tool);
-
+namespace Dispenser {
+  int prepare(Tool tool);
+  int unprepare(Tool tool);
+  int setDispenseHeight(Tool tool, float height);
+  float getDispenseHeight(Tool tool);
+}
 
 // Router
-const unsigned long RouterRampUpDuration = 3000u + 500u; //Take 3s to ramp from 0 to max and we want some buffer too
-int setRotationSpeed(Tool tool, int speed);
-float getRotationSpeed(Tool tool);
+namespace Router {
+  // Take 3s to ramp from 0 to max and we want some buffer too
+  const unsigned long RampUpDuration = 3000u + 500u;
+
+  int prepare(Tool tool);
+  int unprepare(Tool tool);
+  int stopRotationIfMounted(Tool tool);
+  int stopRotation(Tool tool);
+  int setRotationSpeed(Tool tool, unsigned speed);
+  float getRotationSpeed(Tool tool);
+}

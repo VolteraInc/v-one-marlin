@@ -78,15 +78,15 @@ int process_vcode(int command_code) {
       }
 
       const auto additionalRetractDistance = code_seen('R') ? code_value() : DefaultRetract;
-      const auto speed = code_seen('F') ? code_value() : probe::DefaultSpeed;
-      const auto maxSamples = code_seen('S') ? code_value() : probe::DefaultMaxSamples;
-      const auto maxTouchesPerSample = code_seen('T') ? code_value() : probe::DefaultMaxTouchesPerSample;
+      const auto speed = code_seen('F') ? code_value() : Probe::DefaultSpeed;
+      const auto maxSamples = code_seen('S') ? code_value() : Probe::DefaultMaxSamples;
+      const auto maxTouchesPerSample = code_seen('T') ? code_value() : Probe::DefaultMaxTouchesPerSample;
       auto samplesTaken = 0u;
       auto touchesUsed = 0u;
       auto measurement = -9999.9f;
       if (
         prepareToolToMove(tool) ||
-        probe::probe(
+        Probe::probe(
           tool,
           measurement,
           speed, additionalRetractDistance,
@@ -102,7 +102,7 @@ int process_vcode(int command_code) {
       SERIAL_PAIR(" x:", current_position[X_AXIS]);
       SERIAL_PAIR(" y:", current_position[Y_AXIS]);
       SERIAL_PAIR(" z:", measurement);
-      SERIAL_PAIR(" displacement:", probe::getProbeDisplacement());
+      SERIAL_PAIR(" displacement:", Probe::getProbeDisplacement());
       SERIAL_PAIR(" samplesTaken:", samplesTaken);
       SERIAL_PAIR(" touchesUsed:", touchesUsed);
       SERIAL_EOL;
@@ -135,13 +135,13 @@ int process_vcode(int command_code) {
     // Set dispense height
     // Note: Change will be applied to next movement
     case 102:
-      return setDispenseHeight(tool, code_seen('Z') ? code_value() : 0.0f);
+      return Dispenser::setDispenseHeight(tool, code_seen('Z') ? code_value() : 0.0f);
 
     // Set rotation speed
     case 110:
       return (
         prepareToolToMove(tool) ||
-        setRotationSpeed(tool, code_seen('R') ? code_value() : 1.0f)
+        Router::setRotationSpeed(tool, code_seen('R') ? code_value() : 1.0f)
       );
 
     //-------------------------------------------
