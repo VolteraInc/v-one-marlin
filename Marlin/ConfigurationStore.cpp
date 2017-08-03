@@ -179,6 +179,10 @@ void Config_RetrieveCalibration() {
     const bool isV10 = strncmp(stored_ver, EEPROM_VERSION_V10, 3) == 0;
     const bool isCurrent = strncmp(stored_ver, EEPROM_VERSION, 3) == 0;
 
+    SERIAL_ECHO_START;
+    SERIAL_ECHO("Reading calibration settings, version "); SERIAL_ECHO(stored_ver);
+    SERIAL_EOL;
+
     if (isCurrent || isV10) {
         if (isV10) {
           EEPROM_READ_VAR_SIZE(i, product_serial_number, 11);
@@ -238,7 +242,7 @@ void Config_RetrieveSettings() {
     EEPROM_READ_VAR(i, stored_ver);
 
     // check version
-    if (strncmp(ver, stored_ver,3) == 0) {
+    if (strncmp(ver, stored_ver, 3) == 0) {
       EEPROM_READ_VAR(i, axis_steps_per_unit);
       EEPROM_READ_VAR(i, max_feedrate);
       EEPROM_READ_VAR(i, max_acceleration_units_per_sq_second);
