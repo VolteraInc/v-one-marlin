@@ -67,8 +67,10 @@ static int s_write(char* msg) {
 
     if (sample_count >= 3) {
       return_value = 0;
-      SERIAL_ECHOPGM("Confirmed on attempt "); SERIAL_ECHO(attempt);
-      SERIAL_ECHOPGM(" with sample count "); SERIAL_ECHOLN(sample_count);
+      SERIAL_ECHO_START;
+      SERIAL_PAIR("Confirmed on attempt ", attempt);
+      SERIAL_PAIR(" with sample count ", sample_count);
+      SERIAL_EOL;
       delay(Router::RampUpDuration); // give router time to ramp up to speed
       goto DONE;
     }
