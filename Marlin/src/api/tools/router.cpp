@@ -51,7 +51,7 @@ static int s_write(char* msg) {
     SERIAL_ECHO_START;
     SERIAL_ECHO(attempt == 1 ? "Writing " : "Resending "); SERIAL_ECHOLN(msg);
     writeMode();
-    s_router_write.print(msg);
+    s_router_write.println(msg);
     readMode();
 
 
@@ -86,7 +86,7 @@ static int s_sendRouterRotationSpeed(int percent) {
   SERIAL_ECHOPGM("Set router rotation speed to "); SERIAL_ECHOLN(percent);
   char message[11];
   const int crc = CRC8(percent);
-  sprintf(message, "R%u %u\r\n", percent, crc);
+  sprintf(message, "R%u %u", percent, crc);
   return s_write(message);
 }
 
