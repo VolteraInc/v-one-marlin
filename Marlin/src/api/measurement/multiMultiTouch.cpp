@@ -58,12 +58,13 @@ int multiMultiTouch(
 
   // Use average if measurements never meet the criteria of the given function
   result = average(samples, samplesTaken);
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Notice: ("); SERIAL_ECHO(context);
-  SERIAL_ECHO(") multi-touch measurements did not meet stability target, using average ");
-  SERIAL_PAIR("result: ", result);
-  SERIAL_ECHOPGM(", samples: "); serialArray(samples, samplesTaken);
-  SERIAL_EOL;
+  // TODO: restore multi-touch for beta
+  // SERIAL_ECHO_START;
+  // SERIAL_ECHOPGM("Notice: ("); SERIAL_ECHO(context);
+  // SERIAL_ECHO(") multi-touch measurements did not meet stability target, using average ");
+  // SERIAL_PAIR("result: ", result);
+  // SERIAL_ECHOPGM(", samples: "); serialArray(samples, samplesTaken);
+  // SERIAL_EOL;
 
 SUCCESS:
   if (o_samplesTaken) { *o_samplesTaken = samplesTaken; }

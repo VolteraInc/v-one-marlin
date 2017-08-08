@@ -44,8 +44,9 @@ namespace NoTool {
 // Probe
 namespace Probe {
   const float DefaultSpeed = 30;
-  const float DefaultMaxSamples = 30u;
-  const float DefaultMaxTouchesPerSample = 10u;
+  const float DefaultMaxSamples = 1u; // 30u;
+  const float DefaultMaxTouchesPerSample = 1u; // 10u;
+  // TODO: restore multi-touch for beta ^
 
   int probe(
     Tool tool,

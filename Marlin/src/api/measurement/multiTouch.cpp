@@ -75,21 +75,23 @@ int multiTouch(
   // right now without good data. Once i have good data i can start
   // returning an error, if warranted.
   result = average(releaseStarts, touchesUsed);
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Notice: ("); SERIAL_ECHO(context);
-  SERIAL_ECHOPGM(") multi-touch measurements did not meet stability target, using average. ");
-  SERIAL_EOL;
+  // TODO: restore multi-touch for beta
+  // SERIAL_ECHO_START;
+  // SERIAL_ECHOPGM("Notice: ("); SERIAL_ECHO(context);
+  // SERIAL_ECHOPGM(") multi-touch measurements did not meet stability target, using average. ");
+  // SERIAL_EOL;
 
 SUCCESS:
   if (o_touchesUsed) {
     *o_touchesUsed = touchesUsed;
   }
-  SERIAL_ECHO_START;
-  SERIAL_ECHO(context);
-  SERIAL_ECHOPGM(" - touches ");
-  SERIAL_PAIR("result: ", result);
-  SERIAL_PAIR(", touchesUsed: ", touchesUsed);
-  SERIAL_ECHOPGM(", "); s_echoMeasurements(approaches, releaseStarts, releaseEnds, touchesUsed);
-  SERIAL_EOL;
+  // TODO: restore multi-touch for beta
+  // SERIAL_ECHO_START;
+  // SERIAL_ECHO(context);
+  // SERIAL_ECHOPGM(" - touches ");
+  // SERIAL_PAIR("result: ", result);
+  // SERIAL_PAIR(", touchesUsed: ", touchesUsed);
+  // SERIAL_ECHOPGM(", "); s_echoMeasurements(approaches, releaseStarts, releaseEnds, touchesUsed);
+  // SERIAL_EOL;
   return 0;
 }
