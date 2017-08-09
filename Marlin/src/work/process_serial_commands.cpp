@@ -91,6 +91,7 @@ void processSerialCommands() {
 
     // Refresh the timeout after processing so that the user/sw
     // has then entire timeout duration to issue another command
+    refresh_serial_rx_timeout();
     refresh_cmd_timeout();
   }
 }
