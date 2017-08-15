@@ -141,7 +141,7 @@ int process_vcode(int command_code) {
     case 110:
       return (
         prepareToolToMove(tool) ||
-        Router::setRotationSpeed(tool, code_seen('R') ? code_value() : 1.0f)
+        Router::setRotationSpeed(tool, code_seen('R') ? code_value() : 0.0f)
       );
 
     //-------------------------------------------
@@ -176,7 +176,7 @@ int process_vcode(int command_code) {
       SERIAL_ECHOLNPGM("    V4 - Probe at current position (retract by probe displacement + R) -- V4 R1");
       SERIAL_ECHOLNPGM("  Router");
       SERIAL_ECHOLNPGM("    V101 R - attach router");
-      SERIAL_ECHOLNPGM("    V110 - set router rotation speed -- V110 R100, no value or 1 means stop, 0 resets router");
+      SERIAL_ECHOLNPGM("    V110 - set router rotation speed -- V110 R100, no value or 0 means stop");
       return 0;
   }
 }

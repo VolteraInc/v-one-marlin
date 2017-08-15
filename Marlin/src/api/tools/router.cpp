@@ -156,7 +156,7 @@ int Router::stopRotationIfMounted(Tool tool) {
 }
 
 int Router::stopRotation(Tool tool) {
-  return setRotationSpeed(tool, 1);
+  return setRotationSpeed(tool, 0);
 }
 
 int Router::setRotationSpeed(Tool tool, unsigned speed) {
