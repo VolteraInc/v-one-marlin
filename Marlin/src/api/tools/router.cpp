@@ -134,7 +134,7 @@ int Router::stopRotationIfMounted(Tool tool) {
   if (!isMounted){
     SERIAL_ECHO_START;
     SERIAL_ERRORLNPGM("Router could not be explicitly stopped because it is not mounted");
-    return 0;
+    goto DONE;
   }
 
   if (s_sendRouterRotationSpeed(1)) {
@@ -147,11 +147,15 @@ int Router::stopRotationIfMounted(Tool tool) {
 
     SERIAL_ECHO_START;
     SERIAL_ERRORLNPGM("Router could not be explicitly stopped because it is not mounted");
-    return 0;
+    goto DONE;
   }
 
+  // success
   SERIAL_ECHO_START;
   SERIAL_ERRORLNPGM("Router stopped");
+
+DONE:
+  s_rotationSpeed = 0;
   return 0;
 }
 
