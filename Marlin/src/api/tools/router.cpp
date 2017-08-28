@@ -137,7 +137,7 @@ int Router::stopRotationIfMounted(Tool tool) {
     goto DONE;
   }
 
-  if (s_sendRouterRotationSpeed(1)) {
+  if (s_sendRouterRotationSpeed(0)) {
     bool stillMounted = determineToolState(tool) == TOOL_STATE_ROUTER_MOUNTED;
     if (stillMounted) {
       SERIAL_ERROR_START;
