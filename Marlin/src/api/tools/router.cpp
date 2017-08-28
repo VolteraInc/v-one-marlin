@@ -129,6 +129,11 @@ float Router::getRotationSpeed(Tool tool) {
 
 // i.e. don't return an error if the tool is not mounted
 int Router::stopRotationIfMounted(Tool tool) {
+  // Finish pending moves before setting router speed.
+  // Note: Whether we are starting, stopping or just changing speeds
+  // having the change sync'd with movements makes it predictable.
+  st_synchronize();
+
   bool isMounted = determineToolState(tool) == TOOL_STATE_ROUTER_MOUNTED;
 
   if (!isMounted){
