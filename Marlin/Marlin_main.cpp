@@ -143,7 +143,7 @@ void setup() {
   Config_RetrieveCalibration();
 
   tp_init();    // Initialize temperature loop
-  plan_init();  // Initialize planner;
+  plan_init();  // Initialize planner
   watchdog_init();
   st_init();    // Initialize stepper, this enables interrupts!
   manufacturing_init();
