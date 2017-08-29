@@ -545,7 +545,15 @@ void st_init() {
   SET_INPUT(Y_MIN_PIN);
   SET_INPUT(Z_MIN_PIN);
 
+  // Explicitly hold p-top low for a few milliseconds
+  // so that attached tools will see a disconnect
+  SERIAL_ECHO_START;
+  SERIAL_ECHOLN("Resetting tool detection");
+  SET_OUTPUT(P_TOP_PIN);
+  WRITE(P_TOP_PIN, LOW);
+  delay(500);
   SET_INPUT(P_TOP_PIN);
+
   SET_INPUT(P_BOT_PIN);
 
   SET_INPUT(Z_MAX_PIN);
