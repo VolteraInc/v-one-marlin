@@ -147,6 +147,8 @@ void setup() {
   watchdog_init();
   st_init();    // Initialize stepper, this enables interrupts!
   manufacturing_init();
+
+  SERIAL_PROTOCOLLNPGM("ready");
 }
 
 void periodic_work() {
