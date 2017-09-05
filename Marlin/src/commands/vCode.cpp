@@ -13,35 +13,53 @@ int process_vcode(int command_code) {
       return outputMovementStatus();
 
     // Move
-    case 1:
+    case 1: {
       if (code_seen('D') && !code_seen('Z')) {
         SERIAL_ERROR_START;
         SERIAL_ERRORLNPGM("Unable to perform movement, D option can not be applied unless Z is given");
         return -1;
       }
 
-      return prepareToolToMove(tool) ||
-        asyncMove(
-          tool,
-          code_seen('X') ? code_value() : current_position[ X_AXIS ],
-          code_seen('Y') ? code_value() : current_position[ Y_AXIS ],
-          code_seen('Z') ? code_value() : current_position[ Z_AXIS ],
-          current_position[ E_AXIS ] + (code_seen('E') ?  code_value() : 0.0f), // E values are always relative
-          code_seen('F') ? code_value() : getDefaultFeedrate(),
-          code_seen('D') // apply/ignore dispense height
-        );
+      // Perpare, if necessary
+      // Note: preparing for an E-only move would be unexpected
+      auto xyzMoves = code_seen('X') || code_seen('Y') || code_seen('Z');
+      if (xyzMoves) {
+        if (prepareToolToMove(tool)) {
+          return -1;
+        }
+      }
+
+      return asyncMove(
+        tool,
+        code_seen('X') ? code_value() : current_position[ X_AXIS ],
+        code_seen('Y') ? code_value() : current_position[ Y_AXIS ],
+        code_seen('Z') ? code_value() : current_position[ Z_AXIS ],
+        current_position[ E_AXIS ] + (code_seen('E') ?  code_value() : 0.0f), // E values are always relative
+        code_seen('F') ? code_value() : getDefaultFeedrate(),
+        code_seen('D') // apply/ignore dispense height
+      );
+    }
 
     // Relative move
-    case 2:
-      return prepareToolToMove(tool) ||
-        asyncRelativeMove(
-          tool,
-          code_seen('X') ? code_value() : 0,
-          code_seen('Y') ? code_value() : 0,
-          code_seen('Z') ? code_value() : 0,
-          code_seen('E') ? code_value() : 0,
-          code_seen('F') ? code_value() : getDefaultFeedrate()
-        );
+    case 2: {
+      // Perpare, if necessary
+      // Note: preparing for an E-only move would be unexpected
+      auto xyzMoves = code_seen('X') || code_seen('Y') || code_seen('Z');
+      if (xyzMoves) {
+        if (prepareToolToMove(tool)) {
+          return -1;
+        }
+      }
+
+      return asyncRelativeMove(
+        tool,
+        code_seen('X') ? code_value() : 0,
+        code_seen('Y') ? code_value() : 0,
+        code_seen('Z') ? code_value() : 0,
+        code_seen('E') ? code_value() : 0,
+        code_seen('F') ? code_value() : getDefaultFeedrate()
+      );
+    }
 
     // Move until limit switch triggers
     // Notes:
