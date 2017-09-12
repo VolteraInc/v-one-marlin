@@ -2,6 +2,11 @@
 #include "../../temperature.h"
 #include "../api/api.h"
 
+static bool s_enabled = true;
+
+bool getToolDetectionEnabled() { return s_enabled; }
+void enableToolDetection(bool enable) { s_enabled = enable; }
+
 static Tool s_toTool(Tool tool, enum ToolStates state) {
   switch (state) {
     case TOOL_STATE_PROBE_MOUNTED:
@@ -35,6 +40,14 @@ void toolChanges() {
     return;
   }
   nextCheckAt = now + 1000;
+
+  // Note: we check this after the run-periodically code so that
+  // enabling/disabling does not impact the timing of tool change
+  // checks relative other tasks -- not critical, but it makes for
+  // a more consistent/predictable system
+  if (!getToolDetectionEnabled()) {
+    return;
+  }
 
   // Update the tool if necessary
   const auto tool = getTool();

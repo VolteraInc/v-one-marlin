@@ -1,5 +1,6 @@
 #include "../api/api.h"
 #include "../../Marlin.h"
+#include "../work/work.h"
 
 #include "processing.h"
 
@@ -143,12 +144,18 @@ int process_vcode(int command_code) {
       return outputToolStatus();
 
     // Attach/Detach tool
-    case 101:
+    case 101: {
+      // Disable tool detection if Force option included
+      enableToolDetection(!code_seen('F'));
+
+      // Set Tool
       if (code_seen('P')) setTool(TOOLS_PROBE);
       else if (code_seen('D')) setTool(TOOLS_DISPENSER);
       else if (code_seen('R')) setTool(TOOLS_ROUTER);
       else setTool(TOOLS_NONE);
+
       return 0;
+    }
 
     // Set dispense height
     // Note: Change will be applied to next movement
@@ -185,15 +192,15 @@ int process_vcode(int command_code) {
       SERIAL_ECHOLNPGM("Tool Commands");
       SERIAL_ECHOLNPGM("  General");
       SERIAL_ECHOLNPGM("    V100 - Tool status");
-      SERIAL_ECHOLNPGM("    V101 - detach tool (i.e. set tool to none), attach options listed below");
+      SERIAL_ECHOLNPGM("    V101 - detach tool (i.e. set tool to none), attach options listed below, include 'F' to force change");
       SERIAL_ECHOLNPGM("  Dispenser");
-      SERIAL_ECHOLNPGM("    V101 D - attach dispenser");
+      SERIAL_ECHOLNPGM("    V101 D - attach dispenser, include 'F' to force change");
       SERIAL_ECHOLNPGM("    V102 - set dispense height (must have dispenser attached) -- V102 Z0.140");
       SERIAL_ECHOLNPGM("  Probe");
-      SERIAL_ECHOLNPGM("    V101 P - attach probe");
+      SERIAL_ECHOLNPGM("    V101 P - attach probe, include 'F' to force change");
       SERIAL_ECHOLNPGM("    V4 - Probe at current position (retract by probe displacement + R) -- V4 R1");
       SERIAL_ECHOLNPGM("  Router");
-      SERIAL_ECHOLNPGM("    V101 R - attach router");
+      SERIAL_ECHOLNPGM("    V101 R - attach router, include 'F' to force change");
       SERIAL_ECHOLNPGM("    V110 - set router rotation speed -- V110 R100, no value or 0 means stop");
       return 0;
   }

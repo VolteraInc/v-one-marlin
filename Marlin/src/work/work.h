@@ -12,6 +12,8 @@ extern bool pending_temp_change;
 void glow_leds();
 
 // Tool changes
+bool getToolDetectionEnabled();
+void enableToolDetection(bool enable);
 void toolChanges();
 
 // Manufacturing procedures
