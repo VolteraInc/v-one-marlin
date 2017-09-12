@@ -2,7 +2,7 @@
 #include "../../temperature.h"
 #include "../api/api.h"
 
-Tool s_toTool(Tool tool, enum ToolStates state) {
+static Tool s_toTool(Tool tool, enum ToolStates state) {
   switch (state) {
     case TOOL_STATE_PROBE_MOUNTED:
     case TOOL_STATE_TRIGGERED:
@@ -19,7 +19,7 @@ Tool s_toTool(Tool tool, enum ToolStates state) {
   }
 }
 
-bool possibleToolChange(Tool tool, float voltage) {
+static bool s_possibleToolChange(Tool tool, float voltage) {
   return tool != s_toTool(tool, classifyVoltage(tool, voltage));
 }
 
@@ -39,7 +39,7 @@ void toolChanges() {
   // Update the tool if necessary
   const auto tool = getTool();
   const auto voltage = get_p_top_voltage();
-  if (possibleToolChange(tool, voltage)) {
+  if (s_possibleToolChange(tool, voltage)) {
     const auto newTool = determineTool(tool);
     setTool(newTool);
   }
