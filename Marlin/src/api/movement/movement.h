@@ -27,3 +27,6 @@ int raise();
 // Set planner position
 int setPositionEOnly(float e);
 int setPosition(float x, float y, float z, float e);
+
+
+int retractFromSwitch(int axis, int direction, float retractDistance = useDefaultRetractDistance);

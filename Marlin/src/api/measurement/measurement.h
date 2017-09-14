@@ -34,3 +34,7 @@ bool trailingStabilityCheck(
   float maxDelta,
   float& result
 );
+
+const auto DefaultMeasureAtSwitchReleaseDelay = 0u;
+int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement);
+int measureAtSwitchRelease(int axis, int direction, unsigned pin, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms = DefaultMeasureAtSwitchReleaseDelay);
