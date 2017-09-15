@@ -245,6 +245,15 @@ void tp_init() {
   delay(250);
 }
 
+
+// HACK to allow disabling of voltage sampling
+static bool s_voltageSamplingEnabled = true;
+void enableVoltageSampling(bool enable) {
+  CRITICAL_SECTION_START;
+  s_voltageSamplingEnabled = enable;
+  CRITICAL_SECTION_END;
+}
+
 // Timer 0 is shared with millis
 ISR(TIMER0_COMPB_vect) {
 
@@ -303,6 +312,11 @@ ISR(TIMER0_COMPB_vect) {
     raw_bed_temp = 0;
     raw_p_top = 0;
   }
+  static bool allowVoltageSampling = true;
+  if (!s_voltageSamplingEnabled) {
+    allowVoltageSampling = false;
+    raw_p_top = 0;
+  };
 
   #define START_ADC(pin) ADCSRB = 0; ADMUX = _BV(REFS0) | (pin & 0x07); SBI(ADCSRA, ADSC)
   switch(adc_read_state) {
@@ -317,11 +331,15 @@ ISR(TIMER0_COMPB_vect) {
       break;
 
     case Prepare_P_TOP:
-      START_ADC(P_TOP_STATE_PIN); // same pin as P_TOP_PIN / ROUTER_COMMS_PIN
+      if (allowVoltageSampling) {
+        START_ADC(P_TOP_STATE_PIN); // same pin as P_TOP_PIN / ROUTER_COMMS_PIN
+      }
       adc_read_state = Measure_P_TOP;
       break;
     case Measure_P_TOP:
-      raw_p_top += ADC;
+      if (allowVoltageSampling) {
+        raw_p_top += ADC;
+      }
       adc_read_state = PrepareTemp_BED;
 
       ++sample_count;
@@ -361,5 +379,6 @@ ISR(TIMER0_COMPB_vect) {
     sample_count = 0;
     raw_bed_temp = 0;
     raw_p_top = 0;
+    allowVoltageSampling = true;
   }
 }

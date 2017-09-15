@@ -29,7 +29,6 @@
 
 #include "version.h"
 #include "Marlin.h"
-#include "macros.h"
 #include "planner.h"
 #include "stepper.h"
 #include "temperature.h"

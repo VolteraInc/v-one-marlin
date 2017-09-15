@@ -1,5 +1,7 @@
 #include "../../../Marlin.h"
 #include "../../../stepper.h"
+#include "../../../temperature.h"
+#include "../../work/work.h"
 
 #include "../api.h"
 #include "../internal.h"
@@ -68,6 +70,25 @@ void setTool(Tool tool) {
   SERIAL_ECHOPGM(" for "); SERIAL_ECHOLN(toolTypeAsString(tool));
   resetToolPreparations();
   s_tool = tool;
+
+  // HACK to configure ptop for router
+  if (tool == TOOLS_ROUTER) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Disable tool detection and voltage sampling, set p-top to output 1");
+    enableToolDetection(false);
+    enableVoltageSampling(false);
+
+    SET_OUTPUT(P_TOP_PIN);
+    WRITE(P_TOP_PIN, 1);
+  } else {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Enable tool detection and voltage sampling, set p-top to input");
+    enableToolDetection(true);
+    enableVoltageSampling(true);
+
+    SET_INPUT(P_TOP_PIN);
+  }
+
   sendToolStatusUpdate();
 }
 
