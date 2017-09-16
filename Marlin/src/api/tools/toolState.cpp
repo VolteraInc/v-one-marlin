@@ -6,10 +6,14 @@
 enum ToolStates classifyVoltage(Tool, float voltage) {
   // if (logging_enabled) {
   //   SERIAL_ECHO_START;
-  //   SERIAL_ECHOPGM("Classifying voltage "); SERIAL_ECHOLN(voltage);
+  //   SERIAL_PAIR("Classifying voltage ", voltage);
+  //   SERIAL_PAIR(", ", millis());
+  //   SERIAL_EOL;
   // }
   if (voltage < 0.08) { // expected 0.07 (once stable)
     return TOOL_STATE_TRIGGERED;
+  } else if (voltage <= 1.6) { // expected 1.38 (once stable)
+    return TOOL_STATE_ROUTER_MOUNTED;
   } else if (voltage <= 3.2) {
     // Note: ROUTER gives 2.06 when mounted and not powered
     // we don't treat this as a unique state right now, but
@@ -17,8 +21,6 @@ enum ToolStates classifyVoltage(Tool, float voltage) {
     return TOOL_STATE_NOT_MOUNTED;
   } else if (voltage <= 3.8) { // expecting 3.55 (once stable)
     return TOOL_STATE_PROBE_MOUNTED;
-  } else if (voltage <= 4.5) { // expecting 4.22 (once stable)
-    return TOOL_STATE_ROUTER_MOUNTED;
   } else {
     return TOOL_STATE_NOT_MOUNTED;
   }
