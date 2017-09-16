@@ -76,7 +76,7 @@ namespace Dispenser {
 // Router
 namespace Router {
   // Take 3s to ramp from 0 to max and we want some buffer too
-  const unsigned long RampUpDuration = 3000u + 500u;
+  const unsigned long RampUpDuration = 12000u + 500u;
 
   int prepare(Tool tool);
   int unprepare(Tool tool);
