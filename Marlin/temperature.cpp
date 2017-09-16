@@ -161,17 +161,14 @@ float get_p_top_voltage() {
 }
 
 float next_p_top_voltage() {
-  // If there are samples waiting, process them
-  // Note: we don't know how stale they are, so we should not use them
-  updateAdcValuesFromRaw();
-
-  // Wait for a new set of samples
-  while (!adc_samples_ready) {
-    delay(10);
+  const auto NumSamples = 16u;
+  set_p_top_mode(P_TOP_COMMS_READ_MODE);
+  float sum = 0;
+  for (auto i = 0u; i < NumSamples; ++i) {
+    sum += rawToVoltage(analogRead(P_TOP_PIN));
   }
-
-  // return new voltage sample
-  return get_p_top_voltage();
+  set_p_top_mode(P_TOP_NORMAL_MODE);
+  return sum / NumSamples;
 }
 
 void manage_adc() {
