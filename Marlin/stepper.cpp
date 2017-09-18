@@ -268,7 +268,7 @@ FORCE_INLINE unsigned short calc_timer(unsigned short step_rate) {
   // 20kHz this should never happen
   if (timer < 100) {
     timer = 100;
-    MYSERIAL.print(MSG_STEPPER_TOO_HIGH);
+    MYSERIAL.print("Steprate too high: ");
     MYSERIAL.println(step_rate);
   }
 

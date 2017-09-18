@@ -116,7 +116,7 @@ int process_mcode(int command_code) {
       SERIAL_PROTOCOLPGM(" E:");
       SERIAL_PROTOCOL_F(current_position[E_AXIS], 6);
 
-      SERIAL_PROTOCOLPGM(MSG_COUNT_X);
+      SERIAL_PROTOCOLPGM(" Count X: ");
       SERIAL_PROTOCOL_F(st_get_position_mm(X_AXIS), 6);
       SERIAL_PROTOCOLPGM(" Y:");
       SERIAL_PROTOCOL_F(st_get_position_mm(Y_AXIS), 6);
@@ -146,7 +146,7 @@ int process_mcode(int command_code) {
 
     // M115 - Capabilities string
     case 115:
-      SERIAL_PROTOCOLPGM(MSG_M115_REPORT);
+      SERIAL_PROTOCOLPGM("V-One by Voltera (www.voltera.io). Firmware: " VERSION_STRING"\n");
       return 0;
 
     // M119 - Output Endstop status to serial port
@@ -265,7 +265,7 @@ int process_mcode(int command_code) {
         tmp_extruder = code_value();
         if(tmp_extruder >= EXTRUDERS) {
           SERIAL_ECHO_START;
-          SERIAL_ECHO(MSG_M200_INVALID_EXTRUDER);
+          SERIAL_ECHO("M200 Invalid extruder ");
         }
         SERIAL_ECHOLN(tmp_extruder);
         return 0;
@@ -324,7 +324,7 @@ int process_mcode(int command_code) {
           tmp_extruder = code_value();
           if(tmp_extruder >= EXTRUDERS) {
             SERIAL_ERROR_START;
-            SERIAL_ERROR(MSG_M221_INVALID_EXTRUDER);
+            SERIAL_ERROR("M221 Invalid extruder ");
             SERIAL_ERRORLN(tmp_extruder);
             return -1;
           }

@@ -1,7 +1,5 @@
 #pragma once
 
-#
-
 const int useDefaultFeedrate = -1;
 const float useDefaultMaxTravel = 9999.9f;
 const bool ignoreDispenseHeight = false;

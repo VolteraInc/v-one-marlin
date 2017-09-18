@@ -65,9 +65,9 @@ static void process_command() {
     process_dcode();
   } else {
     SERIAL_ECHO_START;
-    SERIAL_ECHOPGM(MSG_UNKNOWN_COMMAND);
-    SERIAL_ECHO(command_queue.front());
-    SERIAL_ECHOLNPGM("\"");
+    SERIAL_PAIR("Unknown command: \"", command_queue.front());
+    SERIAL_ECHOPGM("\"");
+    SERIAL_EOL;
   }
 }
 
@@ -87,7 +87,7 @@ void processSerialCommands() {
     command_queue.pop();
 
     // Send Acknowledgement
-    SERIAL_PROTOCOLLNPGM(MSG_OK);
+    SERIAL_PROTOCOLLNPGM("ok");
 
     // Refresh the timeout after processing so that the user/sw
     // has then entire timeout duration to issue another command

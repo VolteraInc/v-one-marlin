@@ -117,19 +117,18 @@ void setup() {
   byte mcu = MCUSR;
   if (mcu) {
     SERIAL_ECHO_START;
-    if(mcu & 1) SERIAL_ECHOLNPGM(MSG_POWERUP);
-    if(mcu & 2) SERIAL_ECHOLNPGM(MSG_EXTERNAL_RESET);
-    if(mcu & 4) SERIAL_ECHOLNPGM(MSG_BROWNOUT_RESET);
-    if(mcu & 8) SERIAL_ECHOLNPGM(MSG_WATCHDOG_RESET);
-    if(mcu & 32) SERIAL_ECHOLNPGM(MSG_SOFTWARE_RESET);
+    if(mcu & 1) SERIAL_ECHOLNPGM("PowerUp");
+    if(mcu & 2) SERIAL_ECHOLNPGM(" External Reset");
+    if(mcu & 4) SERIAL_ECHOLNPGM(" Brown out Reset");
+    if(mcu & 8) SERIAL_ECHOLNPGM(" Watchdog Reset");
+    if(mcu & 32) SERIAL_ECHOLNPGM(" Software Reset");
   }
   MCUSR = 0;
 
   SERIAL_ECHO_START;
-  SERIAL_ECHOPGM(MSG_FREE_MEMORY);
-  SERIAL_ECHO(freeMemory());
-  SERIAL_ECHOPGM(MSG_PLANNER_BUFFER_BYTES);
-  SERIAL_ECHOLN((int)sizeof(block_t)*BLOCK_BUFFER_SIZE);
+  SERIAL_PAIR(" Free Memory: ", freeMemory());
+  SERIAL_PAIR("  PlannerBufferBytes: ", (int)sizeof(block_t)*BLOCK_BUFFER_SIZE);
+  SERIAL_EOL;
 
   SERIAL_PROTOCOLPGM("firmwareVersionReport: ");
   SERIAL_PROTOCOLPGM(VERSION_STRING);
@@ -190,6 +189,6 @@ void kill() {
   disable_e0();
 
   SERIAL_ERROR_START;
-  SERIAL_ERRORLNPGM(MSG_ERR_KILLED);
+  SERIAL_ERRORLNPGM("Printer halted. kill() called!");
   while(1) { /* Intentionally left empty */ } // Wait for reset
 }
