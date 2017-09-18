@@ -136,6 +136,7 @@ void setup() {
   SERIAL_PROTOCOLPGM("\n");
 
   sendHomedStatusUpdate();
+  outputPinStatus();
   sendToolStatusUpdate();
 
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "./tools/tools.h"
-#include "./movement/movement.h"
+#include "tools/tools.h"
+#include "movement/movement.h"
+#include "pins/pins.h"
 
 // Measurement
 const auto DefaultMeasureAtSwitchReleaseDelay = 0u;
