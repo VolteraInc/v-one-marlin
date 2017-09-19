@@ -7,10 +7,8 @@ static const float MinDisplacement = 0.050f;
 static const float MaxDisplacement = 0.500f;
 
 static int s_measureCalibrationPlateZ(float& plateZ, float maxTravel) {
-  if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Measuring calibration plate");
-  }
+  SERIAL_ECHO_START;
+  SERIAL_ECHOLNPGM("Measuring calibration plate");
 
   enable_calibration_plate(true);
   int returnValue = measureAtSwitch(Z_AXIS, -1, maxTravel, plateZ);
@@ -46,17 +44,15 @@ int measureProbeDisplacement(Tool tool, float& o_displacement) {
   }
 
   // Retract
-  if (retractFromSwitch(Z_AXIS, -1)) {
+  if (retractFromSwitch(Z_AXIS, -1)) {  ///TODO: not needed ?
     return -1;
   }
 
   // Probe the calibration plate
   // Note: we do not use the standard probe function here because
   // it would subtract the previously measured displacement (if one exists)
-  if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Measuring the triggering positon of the probe");
-  }
+  SERIAL_ECHO_START;
+  SERIAL_ECHOLNPGM("Measuring the triggering positon of the probe");
   float probeContactZ;
   if(measureAtSwitch(Z_AXIS, -1, MaxDisplacement + Z_HOME_RETRACT_MM, probeContactZ)) {
     SERIAL_ERROR_START;
@@ -66,13 +62,11 @@ int measureProbeDisplacement(Tool tool, float& o_displacement) {
 
   float displacement = max(0, plateZ - probeContactZ);
 
-  if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Measuring probe displacement of "); SERIAL_ECHO(displacement);
-    SERIAL_ECHOPGM(" (plateZ="); SERIAL_ECHO(plateZ);
-    SERIAL_ECHOPGM(" probeContactZ="); SERIAL_ECHO(probeContactZ);
-    SERIAL_ECHOPGM(")\n");
-  }
+  SERIAL_ECHO_START;
+  SERIAL_ECHOPGM("Measuring probe displacement of "); SERIAL_ECHO(displacement);
+  SERIAL_ECHOPGM(" (plateZ="); SERIAL_ECHO(plateZ);
+  SERIAL_ECHOPGM(" probeContactZ="); SERIAL_ECHO(probeContactZ);
+  SERIAL_ECHOPGM(")\n");
 
   if (displacement < MinDisplacement || displacement > MaxDisplacement) {
     SERIAL_ERROR_START;
