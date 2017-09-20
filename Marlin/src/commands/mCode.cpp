@@ -5,7 +5,6 @@
 #include "../../temperature.h"
 #include "../../temperature_profile.h"
 #include "../../ConfigurationStore.h"
-#include "../../language.h"
 #include "../work/work.h" // pending_temp_change HACK
 #include "../../macros.h"
 

@@ -25,7 +25,6 @@ and Philipp Tiefenbacher. */
 #include "stepper.h"
 #include "planner.h"
 #include "temperature.h"
-#include "language.h"
 #include "speed_lookuptable.h"
 #include <SPI.h>
 #include "macros.h"

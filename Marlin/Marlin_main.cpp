@@ -36,7 +36,6 @@
 #include "temperature_profile.h"
 #include "watchdog.h"
 #include "ConfigurationStore.h"
-#include "language.h"
 
 #include "src/api/api.h"
 #include "src/work/work.h"
