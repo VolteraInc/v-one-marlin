@@ -1,7 +1,6 @@
 #include "processing.h"
 
 #include "../api/api.h"
-#include "../../language.h"
 #include "../../Marlin.h"
 #include "../../stepper.h"
 #include "../../planner.h"

@@ -1,14 +1,4 @@
-// #include "version.h"
-// #include "Marlin.h"
-// #include "planner.h"
-// #include "temperature.h"
-// #include "temperature_profile.h"
-// #include "watchdog.h"
-// #include "ConfigurationStore.h"
-// #include "language.h"
-//
 #include "../../Marlin.h"
-#include "../../language.h"
 #include "../commands/processing.h"
 #include "work.h"
 
