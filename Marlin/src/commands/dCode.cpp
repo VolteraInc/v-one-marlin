@@ -1,6 +1,7 @@
 #include "../api/api.h"
 #include "../../Marlin.h"
 #include "../../temperature.h"
+#include "../utils/rawToVoltage.h"
 
 #include "processing.h"
 

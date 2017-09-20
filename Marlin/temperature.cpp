@@ -33,6 +33,7 @@
 #include "watchdog.h"
 #include "macros.h"
 #include "src/api/api.h" // Router::RampUpDuration
+#include "src/utils/rawToVoltage.h"
 
 //===========================================================================
 //=============================public variables============================
@@ -134,10 +135,6 @@ static float analog2tempBed(int raw) {
   }
 
   return celsius;
-}
-
-float rawToVoltage(int value) {
-  return 5.0f * value / 1024.0f;
 }
 
 // Transfers the sampled, adc'd values from interrupt context into

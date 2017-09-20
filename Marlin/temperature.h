@@ -76,9 +76,6 @@ enum PTopModes {
 void set_p_top_mode(enum PTopModes mode);
 bool periodicAnalogReadsEnabled();
 
-// convert an analog value read from a pin to a voltage
-float rawToVoltage(int value);
-
 // Returns most recent sample of p_top's voltage,
 float get_p_top_voltage();
 
