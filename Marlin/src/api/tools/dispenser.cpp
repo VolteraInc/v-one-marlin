@@ -5,6 +5,14 @@
 
 static float s_dispenseHeight = 0.0f;
 
+int meshGears() {
+  // Move E backward, then move forward.
+  return (
+    relativeRawMoveE(-0.02) ||
+    relativeRawMoveE(0.02)
+  );
+}
+
 int Dispenser::prepare(Tool tool) {
   const char* context = "prepare dispenser";
   return (

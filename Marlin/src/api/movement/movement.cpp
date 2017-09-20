@@ -270,19 +270,6 @@ int raise() {
   return moveToLimit(Z_AXIS, 1);
 }
 
-//TODO: move to dispenser ?
-int meshGears() {
-  // Move E backward, then move forward.
-  if (relativeRawMoveE(-0.02)) {
-    return -1;
-  }
-  st_synchronize();
-  if (relativeRawMoveE(0.02)) {
-    return -1;
-  }
-  return 0;
-}
-
 int retractFromSwitch(int axis, int direction, float retractDistance) {
   if (logging_enabled) {
     SERIAL_ECHO_START;
