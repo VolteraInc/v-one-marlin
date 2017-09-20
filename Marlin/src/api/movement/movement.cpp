@@ -5,8 +5,6 @@
 #include "../../../stepper.h"
 #include "../../../temperature.h"
 
-#include "../internal.h"
-
 static const float s_defaultRetractDistance[] = {
   X_HOME_RETRACT_MM,
   Y_HOME_RETRACT_MM,
@@ -197,7 +195,7 @@ int asyncRawMove(float x, float y, float z, float e, float f, bool confirmMoveIs
   return 0;
 }
 
-static int s_relativeRawMoveE(float e, float speed_in_mm_per_min = useDefaultFeedrate) {
+int relativeRawMoveE(float e, float speed_in_mm_per_min) {
 
   if(asyncRawMove(
     current_position[ X_AXIS ],
@@ -215,7 +213,7 @@ static int s_relativeRawMoveE(float e, float speed_in_mm_per_min = useDefaultFee
   return 0;
 }
 
-static int s_relativeRawMoveXYZ(float x, float y, float z, float speed_in_mm_per_min = useDefaultFeedrate, bool confirmMoveIsSafe = true) {
+int relativeRawMoveXYZ(float x, float y, float z, float speed_in_mm_per_min, bool confirmMoveIsSafe) {
   if (asyncRawMove(
     current_position[ X_AXIS ] + x,
     current_position[ Y_AXIS ] + y,
@@ -245,7 +243,7 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
   const auto clampedMaxTravel = min(maxTravel, s_maxTravelInAxis(axis, direction));
   const auto travel = direction < 0 ? -clampedMaxTravel : clampedMaxTravel;
   const float clampedSpeed = f < 0 ? homing_feedrate[axis] : min(f, homing_feedrate[axis]);
-  if (s_relativeRawMoveXYZ(
+  if (relativeRawMoveXYZ(
       axis == X_AXIS ? travel : 0.0f,
       axis == Y_AXIS ? travel : 0.0f,
       axis == Z_AXIS ? travel : 0.0f,
@@ -275,11 +273,11 @@ int raise() {
 //TODO: move to dispenser ?
 int meshGears() {
   // Move E backward, then move forward.
-  if (s_relativeRawMoveE(-0.02)) {
+  if (relativeRawMoveE(-0.02)) {
     return -1;
   }
   st_synchronize();
-  if (s_relativeRawMoveE(0.02)) {
+  if (relativeRawMoveE(0.02)) {
     return -1;
   }
   return 0;
@@ -300,7 +298,7 @@ int retractFromSwitch(int axis, int direction, float retractDistance) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Retract by: "); SERIAL_ECHOLN(distance);
   }
-  if (s_relativeRawMoveXYZ(
+  if (relativeRawMoveXYZ(
       axis == X_AXIS ? distance * -direction : 0,
       axis == Y_AXIS ? distance * -direction : 0,
       axis == Z_AXIS ? distance * -direction : 0

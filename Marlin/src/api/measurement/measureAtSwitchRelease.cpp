@@ -1,4 +1,12 @@
-// DEFER: could pass this as a template param (if we need to in order to generalize beyond p_top)
+#include "measurement.h"
+
+#include "../../../Marlin.h"
+#include "../../../stepper.h"
+#include "../../utils/rawToVoltage.h"
+#include "../tools/tools.h"
+#include "../movement/movement.h"
+#include "../switches/PTopScopedUsageLock.h"
+
 unsigned countTriggers(unsigned pin, unsigned maxSamples) {
   if (logging_enabled) {
     SERIAL_ECHO_START;
@@ -67,20 +75,8 @@ int measureAtSwitchRelease(int axis, int direction, unsigned pin, float& release
       // Set release start position, if we haven't already
       if (!releaseStarted) {
         // Completely released, record position and exit
-        // if (count == 0) {
-          // const float distance = 10 / axis_steps_per_unit[axis];
-          // if (s_relativeRawMoveXYZ(
-          //     axis == X_AXIS ? distance * -direction : 0,
-          //     axis == Y_AXIS ? distance * -direction : 0,
-          //     axis == Z_AXIS ? distance * -direction : 0
-          // )) {
-          //   goto DONE;
-          // }
-          // continue;
-        // } else {
-          releaseStarted = true;
-          releaseStartedAt = current_position[axis];
-        // }
+        releaseStarted = true;
+        releaseStartedAt = current_position[axis];
       }
 
       // Completely released, record position and exit
@@ -95,7 +91,7 @@ int measureAtSwitchRelease(int axis, int direction, unsigned pin, float& release
       SERIAL_ECHO_START;
       SERIAL_ECHOPGM("Retract by: "); SERIAL_ECHOLN(distance);
     }
-    if (s_relativeRawMoveXYZ(
+    if (relativeRawMoveXYZ(
         axis == X_AXIS ? distance * -direction : 0,
         axis == Y_AXIS ? distance * -direction : 0,
         axis == Z_AXIS ? distance * -direction : 0

@@ -2,7 +2,6 @@
 #include "../../../stepper.h"
 
 #include "../api.h"
-#include "../internal.h"
 
 #include "internal.h"
 
