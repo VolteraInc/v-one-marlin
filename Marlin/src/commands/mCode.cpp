@@ -7,6 +7,7 @@
 #include "../../ConfigurationStore.h"
 #include "../work/work.h" // pending_temp_change HACK
 #include "../../macros.h"
+#include "../../version.h"
 
 static uint8_t tmp_extruder;
 bool CooldownNoWait = true;
@@ -145,7 +146,9 @@ int process_mcode(int command_code) {
 
     // M115 - Capabilities string
     case 115:
-      SERIAL_PROTOCOLPGM("V-One by Voltera (www.voltera.io). Firmware: " VERSION_STRING"\n");
+      SERIAL_PROTOCOLPGM("V-One by Voltera (www.voltera.io). Firmware: ");
+      SERIAL_PROTOCOLPGM(VERSION_STRING);
+      SERIAL_EOL;
       return 0;
 
     // M119 - Output Endstop status to serial port
