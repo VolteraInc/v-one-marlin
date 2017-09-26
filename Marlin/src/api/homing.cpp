@@ -9,7 +9,7 @@ const float homing_feedrate[] = HOMING_FEEDRATE;
 
 
 #define DEFINE_PGM_READ_ANY(type, reader)       \
-    static inline type pgm_read_any(const type *p)  \
+    static FORCE_INLINE type pgm_read_any(const type *p)  \
     { return pgm_read_##reader##_near(p); }
 
 DEFINE_PGM_READ_ANY(float,       float);
@@ -18,7 +18,7 @@ DEFINE_PGM_READ_ANY(signed char, byte);
 #define XYZ_CONSTS_FROM_CONFIG(type, array, CONFIG) \
 static const PROGMEM type array##_P[3] =        \
     { X_##CONFIG, Y_##CONFIG, Z_##CONFIG };     \
-static inline type array(int axis)          \
+static FORCE_INLINE type array(int axis)          \
     { return pgm_read_any(&array##_P[axis]); }
 
 XYZ_CONSTS_FROM_CONFIG(float, base_min_pos,    MIN_POS);
