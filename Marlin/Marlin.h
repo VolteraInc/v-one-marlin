@@ -3,7 +3,6 @@
 
 #pragma once
 
-#define  FORCE_INLINE __attribute__((always_inline)) inline
 
 #include <math.h>
 #include <stdio.h>
@@ -31,13 +30,7 @@
 #endif
 
 #include "MarlinSerial.h"
-
-#ifndef cbi
-#define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
-#endif
-#ifndef sbi
-#define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
-#endif
+#include "macros.h"
 
 #include "WString.h"
 
