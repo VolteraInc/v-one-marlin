@@ -11,7 +11,7 @@
 // baudrate of 300 is based on the rise and fall times of the capacitor on ptop (600-800 us)
 static const int baud = 300;
 static const int dummy_pin = A3;
-static SoftwareSerial s_router_write(dummy_pin, ROUTER_COMMS_PIN);
+static SoftwareSerial s_router_write(dummy_pin, P_TOP_PIN);
 
 static void readMode() {
   s_router_write.end();
@@ -61,7 +61,7 @@ static int s_write(char* msg) {
     const unsigned long tryUntil = now + 300; //ms
     int sample_count = 0;
     while (millis() <= tryUntil) {
-      sample_count += !digitalRead(ROUTER_COMMS_PIN);
+      sample_count += !digitalRead(P_TOP_PIN);
       delay(10);
     }
 

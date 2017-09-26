@@ -42,7 +42,7 @@ int multiTouch(
   for (auto i = 0u; i < maxTouches; ++i) {
     // Measure
     if (touch(
-      Z_AXIS, -1, P_TOP_STATE_PIN,
+      Z_AXIS, -1, P_TOP_ANALOG_PIN,
       speed, maxDownwardTravel,
       approaches[i], releaseStarts[i], releaseEnds[i]
     )) {

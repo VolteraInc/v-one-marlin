@@ -26,7 +26,7 @@ int touch(
 int fastTouch() {
   float approach, releaseStart, releaseEnd;
   if (touch(
-    Z_AXIS, -1, P_TOP_STATE_PIN,
+    Z_AXIS, -1, P_TOP_ANALOG_PIN,
     useDefaultFeedrate, useDefaultMaxTravel,
     approach, releaseStart, releaseEnd
   )) {

@@ -64,15 +64,15 @@ void set_p_top_mode(enum PTopModes mode) {
   bool comms_mode = false;
   switch(mode) {
     case P_TOP_COMMS_WRITE_MODE:
-      SET_OUTPUT(ROUTER_COMMS_PIN);
+      SET_OUTPUT(P_TOP_PIN);
       comms_mode = true;
       break;
     case P_TOP_COMMS_READ_MODE:
-      SET_INPUT(ROUTER_COMMS_PIN);
+      SET_INPUT(P_TOP_PIN);
       comms_mode = true;
       break;
     default:
-      SET_INPUT(ROUTER_COMMS_PIN);
+      SET_INPUT(P_TOP_PIN);
       comms_mode = false;
       break;
   }
@@ -314,7 +314,7 @@ ISR(TIMER0_COMPB_vect) {
       break;
 
     case Prepare_P_TOP:
-      START_ADC(P_TOP_STATE_PIN); // same pin as P_TOP_PIN / ROUTER_COMMS_PIN
+      START_ADC(P_TOP_ANALOG_PIN);
       adc_read_state = Measure_P_TOP;
       break;
     case Measure_P_TOP:
