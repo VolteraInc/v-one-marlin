@@ -35,6 +35,13 @@
   #define CRITICAL_SECTION_END    SREG = _sreg;
 #endif
 
+struct ScopedInterruptDisable {
+  FORCE_INLINE ScopedInterruptDisable() : sreg(SREG) { cli(); }
+  FORCE_INLINE ~ScopedInterruptDisable() { SREG = sreg; }
+private:
+  unsigned char sreg;
+};
+
 // Clock speed factor
 #define CYCLES_PER_MICROSECOND (F_CPU / 1000000UL) // 16 or 20
 
