@@ -1,20 +1,29 @@
 #pragma once
 
 #include "pins/PTopPin/PTopPin.h"
+#include "pins/BedTemperaturePin/BedTemperaturePin.h"
+#include "pins/adc/AnalogDigitalConverter.h"
 
 class VOne {
   public:
     VOne(
-      int ptopPin
+      int ptopDigialPin,
+      int ptopAnalogPin,
+      int bedTemperatureAnalogPin
     );
 
-  private:
     struct Pins {
       PTopPin ptop;
+      BedTemperaturePin bedTemperature;
+
+      adc::AnalogDigitalConverter adc;
 
       Pins(
-        int ptopPin
+        int ptopDigialPin,
+        int ptopAnalogPin,
+        int bedTemperatureAnalogPin
       );
-    } pins;
 
+      int outputEndStopStatus();
+    } pins;
 };
