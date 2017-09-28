@@ -1,4 +1,5 @@
 #include "../api/api.h"
+#include "../vone/VOne.h"
 #include "../../Marlin.h"
 #include "../../temperature.h"
 #include "../utils/rawToVoltage.h"
@@ -119,35 +120,34 @@ int process_dcode(int command_code) {
     // Algorithms - Read voltage of left pogo pin (aka p_top)
     case 106: {
       const int maxCycles = 250;
-      float rawVoltages[maxCycles];
+      PTopPin::Sample samples[maxCycles];
       const int cycles = code_seen('C') ? code_value() : maxCycles;
-      const int ms = code_seen('M') ? code_value() : 1;
+      const int delayMs = code_seen('M') ? code_value() : 1;
 
       if (cycles > maxCycles) {
-        SERIAL_ECHO_START;
-        SERIAL_ECHOPGM("Warning: The requested number of cycles ("); SERIAL_ECHO(cycles);
-        SERIAL_ECHOPGM(") exceeds the maximum ("); SERIAL_ECHO(maxCycles);
-        SERIAL_ECHOLNPGM(")");
-        return 0;
+        SERIAL_ERROR_START;
+        SERIAL_PAIR("Warning: The requested number of cycles (", cycles);
+        SERIAL_PAIR(") exceeds the maximum (", maxCycles);
+        SERIAL_ERRORLNPGM(")");
+        return -1;
       }
 
-      // Collect the voltage readings
-      // Note: set p_top mode to disable ADC reads for a little while
-      // (2 seconds). This is hacky but ADC reads use the same interrupt timer
-      // as millis() so this is the only way to disable reads without disabling
-      // millis()
-      set_p_top_mode(P_TOP_COMMS_READ_MODE);
+      // Collect voltage readings
       for (int i = 0; i < cycles; ++i) {
-        rawVoltages[i] = analogRead(P_TOP_STATE_PIN);
-        delay(ms);
+        samples[i] = vone->pins.ptop.readVoltage();
+        if (delayMs) {
+          delay(delayMs);
+        }
       }
-      set_p_top_mode(P_TOP_NORMAL_MODE);
 
       // Output the voltage readings
       SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM("Voltages");
+      SERIAL_ECHOLNPGM("Voltages (voltage, startTime, endTime)");
       for (int i = 0; i < cycles; ++i) {
-        SERIAL_ECHOLN(rawToVoltage(rawVoltages[i]));
+        SERIAL_PAIR("  ", samples[i].voltage);
+        SERIAL_PAIR(",  ", samples[i].startTime);
+        SERIAL_PAIR(",  ", samples[i].endTime);
+        SERIAL_EOL;
       }
 
       return 0;
@@ -179,7 +179,7 @@ int process_dcode(int command_code) {
         )
       );
       const int direction = code_prefix() == '-' ? -1 : 1;
-      auto pin = code_seen('P') ? code_value() : P_TOP_STATE_PIN;
+      auto pin = code_seen('P') ? code_value() : P_TOP_ANALOG_PIN;
       auto delay = code_seen('M') ? code_value() : DefaultMeasureAtSwitchReleaseDelay;
       auto startPosition = current_position[axis];
       auto releaseStartedAt = startPosition;

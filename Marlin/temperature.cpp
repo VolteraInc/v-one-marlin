@@ -227,12 +227,6 @@ void manage_heater() {
 void tp_init() {
   SET_OUTPUT(HEATER_BED_PIN);
 
-  // Set analog inputs
-  ADCSRA = 1<<ADEN | 1<<ADSC | 1<<ADIF | 0x07;
-  DIDR0 = 0;
-  DIDR2 = 0;
-  DIDR0 |= 1<<TEMP_BED_PIN;
-
   // Use timer0 for temperature measurement
   // Interleave temperature interrupt with millis interrupt
   OCR0B = 128;
@@ -243,7 +237,7 @@ void tp_init() {
 }
 
 // Timer 0 is shared with millis
-ISR(TIMER0_COMPB_vect) {
+void TIMER0_COMPB_vect_break() {
 
   //---------------------------------------------
   // soft PWM

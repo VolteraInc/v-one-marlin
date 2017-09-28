@@ -3,8 +3,6 @@
 #include "tools/tools.h"
 #include "movement/movement.h"
 #include "measurement/measurement.h"
-#include "pins/pins.h"
-
 
 // Move before homing
 int meshGears();

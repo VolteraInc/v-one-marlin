@@ -39,11 +39,16 @@
 
 #include "src/api/api.h"
 #include "src/work/work.h"
+#include "src/vone/VOne.h"
 
+// Define missing function: placement-new
+void * operator new (size_t, void * ptr) { return ptr; }
 
 //===========================================================================
 //=============================public variables=============================
 //===========================================================================
+VOne* vone;
+
 bool axis_relative_modes[] = AXIS_RELATIVE_MODES;
 int feedmultiply=100; //100->1 200->2
 int saved_feedmultiply;
@@ -74,6 +79,8 @@ void serial_echopair_P(const char *s_P, float v, unsigned int precision)
 void serial_echopair_P(const char *s_P, double v, unsigned int precision)
     { serialprintPGM(s_P); SERIAL_ECHO_F(v, precision); }
 void serial_echopair_P(const char *s_P, unsigned long v)
+    { serialprintPGM(s_P); SERIAL_ECHO(v); }
+void serial_echopair_P(const char *s_P, long v)
     { serialprintPGM(s_P); SERIAL_ECHO(v); }
 void serial_echopair_P(const char *s_P, unsigned v)
     { serialprintPGM(s_P); SERIAL_ECHO(v); }
@@ -129,15 +136,26 @@ void setup() {
   SERIAL_PROTOCOLPGM(VERSION_STRING);
   SERIAL_PROTOCOLPGM("\n");
 
-  sendHomedStatusUpdate();
-  outputPinStatus();
-  sendToolStatusUpdate();
-
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
   Config_RetrieveCalibration();
 
-  tp_init();    // Initialize temperature loop
+  // Preallocate space of the VOne then use
+  // placement new to contruct the object
+  static byte voneBuffer[sizeof(VOne)];
+  vone = new (voneBuffer) VOne(
+    P_TOP_PIN,
+    P_TOP_ANALOG_PIN,
+    TEMP_BED_PIN
+  );
+
+  sendHomedStatusUpdate();
+  vone->pins.outputEndStopStatus();
+  sendToolStatusUpdate();
+
+  // tp_init();    // Initialize temperature loop
+  SET_OUTPUT(HEATER_BED_PIN);
+
   plan_init();  // Initialize planner
   watchdog_init();
   st_init();    // Initialize stepper, this enables interrupts!
@@ -147,9 +165,10 @@ void setup() {
 }
 
 void periodic_work() {
-  manage_adc();
-  manage_heating_profile();
-  manage_heater();
+  // manage_adc();
+  // manage_adc();
+  // manage_heating_profile();
+  // manage_heater();
   manage_inactivity();
   glow_leds();
   manufacturing_procedures();
@@ -169,7 +188,7 @@ void loop() {
   checkForEndstopHits(); // will detect expected hits as errors
   reportBufferEmpty();   // not important enough to monitor
   periodic_output();     // will generate excessive output
-  toolChanges();         // handling a tool change mid command is needlessly complicated
+  // toolChanges();         // handling a tool change mid command is needlessly complicated
 
   watchdog_reset();
 }
@@ -186,4 +205,14 @@ void kill() {
   SERIAL_ERROR_START;
   SERIAL_ERRORLNPGM("Printer halted. kill() called!");
   while(1) { /* Intentionally left empty */ } // Wait for reset
+}
+
+ISR(TIMER0_COMPB_vect) {
+  // static unsigned long X = 0;
+  // if (millis() < X) {
+  //   return;
+  // }
+  // X = millis() + 100;
+
+  // vone->pins.adc.isr();
 }

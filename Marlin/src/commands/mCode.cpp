@@ -8,6 +8,7 @@
 #include "../work/work.h" // pending_temp_change HACK
 #include "../../macros.h"
 #include "../../version.h"
+#include "../vone/VOne.h"
 
 static uint8_t tmp_extruder;
 bool CooldownNoWait = true;
@@ -153,7 +154,7 @@ int process_mcode(int command_code) {
 
     // M119 - Output Endstop status to serial port
     case 119:
-      return outputPinStatus();
+      return vone->pins.outputEndStopStatus();
 
     // M122 - We let the planner know where we are. -  Added by VOLTERA
     case 122: {

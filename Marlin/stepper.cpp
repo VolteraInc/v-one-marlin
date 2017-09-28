@@ -28,6 +28,7 @@ and Philipp Tiefenbacher. */
 #include "speed_lookuptable.h"
 #include <SPI.h>
 #include "macros.h"
+#include "src/vone/VOne.h"
 
 //===========================================================================
 //=============================public variables  ============================
@@ -383,8 +384,18 @@ ISR(TIMER1_COMPA_vect) {
       REV_Z_DIR();
       count_direction[Z_AXIS] = -1;
 
+      bool p_top = false;
+      if (p_top_enabled) {
+        if (vone->pins.ptop.readDigitalValue(p_top)) {
+          // Treat read failures as TRIGGERED, so that motion stops
+          // Note: not sure if this is the right thing to do, but it's
+          // safer than allowing motion to continue. Also, if reads are
+          // failing there is a bug
+          p_top = true;
+        }
+      }
+
       bool z_min = READ_PIN(Z_MIN);
-      bool p_top = p_top_enabled ? READ_PIN(P_TOP) : false;
       bool p_bot = calibration_plate_enabled ? READ_PIN(P_BOT) : false;
 
       bool z_min_endstop = z_min || p_top || p_bot;
@@ -543,15 +554,6 @@ void st_init() {
   SET_INPUT(X_MIN_PIN);
   SET_INPUT(Y_MIN_PIN);
   SET_INPUT(Z_MIN_PIN);
-
-  // Explicitly hold p-top low for a few milliseconds
-  // so that attached tools will see a disconnect
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLN("Resetting tool detection");
-  SET_OUTPUT(P_TOP_PIN);
-  WRITE(P_TOP_PIN, LOW);
-  delay(500);
-  SET_INPUT(P_TOP_PIN);
 
   SET_INPUT(P_BOT_PIN);
 

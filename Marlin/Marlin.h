@@ -74,6 +74,7 @@ const char echomagic[] PROGMEM = "echo:";
 void serial_echopair_P(const char *s_P, float v, unsigned int precision = 6);
 void serial_echopair_P(const char *s_P, double v, unsigned int precision = 6);
 void serial_echopair_P(const char *s_P, unsigned long v);
+void serial_echopair_P(const char *s_P, long v);
 void serial_echopair_P(const char *s_P, unsigned v);
 void serial_echopair_P(const char *s_P, int v);
 void serial_echopair_P(const char *s_P, bool v);
@@ -154,3 +155,6 @@ extern void digipot_i2c_init();
 #endif
 
 void setStepperInactiveDuration(unsigned long duration);
+
+class VOne;
+extern VOne* vone;
