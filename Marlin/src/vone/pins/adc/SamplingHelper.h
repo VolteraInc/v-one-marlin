@@ -9,7 +9,7 @@ namespace adc {
 
 class SamplingHelper {
   private:
-    inline void updateValue() {
+    FORCE_INLINE void updateValue() {
       // swap pointers
       if (writePtr == &bufferA) {
         writePtr = &bufferB;
@@ -24,14 +24,14 @@ class SamplingHelper {
     }
 
   public:
-    inline SamplingHelper(int numSamples)
+    FORCE_INLINE SamplingHelper(int numSamples)
       : bufferA(numSamples)
       , bufferB(numSamples)
     {
     }
 
-    inline bool add(long value) {
-      ScopedCriticalSection scs;
+    FORCE_INLINE bool add(long value) {
+      ScopedInterruptDisable sid;
       const auto ready = writePtr->add(value);
       if (ready) {
         updateValue();
@@ -39,17 +39,17 @@ class SamplingHelper {
       return ready;
     }
 
-    inline void reset() {
-      ScopedCriticalSection scs;
+    FORCE_INLINE void reset() {
+      ScopedInterruptDisable sid;
       writePtr->reset();
     }
 
-    inline long value() {
-      ScopedCriticalSection scs;
-      return readPtr->value();
+    FORCE_INLINE SampledValue value() {
+      ScopedInterruptDisable sid;
+      return *readPtr;
     }
 
-    inline long readValue() {
+    FORCE_INLINE SampledValue readValue() {
       const auto* tmp = readPtr;
       while (tmp == readPtr) {
       }

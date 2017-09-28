@@ -1,136 +1,186 @@
 #pragma once
-// #include "../../../macros.h" // CRITICAL_SECTION
+#include <Arduino.h>
+#include "../../../../Marlin.h"
+#include "../../../../macros.h"
+#include "../../../utils/rawToVoltage.h"
+#include "../adc/SamplingHelper.h"
 
 class PTopPin {
   public:
-    PTopPin(int pin);
+    struct Sample {
+      float voltage = 0;
+      unsigned long startTime = 0;
+      unsigned long endTime = 0;
 
-//     const AdcSampledValue& voltage();
-//
-//     // Direct reading
-//     int readVoltages(float voltages[], size_t size, unsigned delayMs = 0);
-//
-//     // ADC sampling
-//     bool allowAdcReads();
-//     void addRawSample(long sample);
-//
-  private:
-    enum class Mode {
-      Idle,
-      Communication,
-      SoftDetachTool,
-      AdcSamplng,
-      DirectRead
+      Sample() {}
+      Sample(const adc::SampledValue& adcSample)
+        : voltage(rawToVoltage(adcSample.value()))
+        , startTime(adcSample.startTime)
+        , endTime(adcSample.endTime)
+      {
+      }
     };
 
-    int _pin;
-//
-//     // State management
-//     volatile Mode mode = Mode::Idle;
-//     void _setMode(enum Mode);
-//
-//     // ADC sampling
-//     // TODO: Thermistor tables use 16, we should figure out a
-//     //       good value to use here.
-//     const unsigned AdcSamplesCount = 4;   use 1 ?
-//     volatile long preventAdcSamplingUntil = 0;
-//     volatile AdcSampledValue adcSamples;
-//     volatile AdcSampledValue nextVoltage;
-//     AdcSampledValue currentVoltage;
-//
-//     // Communication
-//     SoftwareSerial serial;
-//     long commandSentTime = 0;
-//     int send(char* msg);
+    PTopPin(int digitalPin, int analogPin);
+
+    FORCE_INLINE int analogPin() { return _analogPin; }
+
+    FORCE_INLINE Sample voltage();
+    FORCE_INLINE Sample readVoltage();
+
+    FORCE_INLINE int readDigitalValue(bool& value);
+
+    int resetTool();
+
+    int send(char* msg);
+
+    // ADC sampling
+    FORCE_INLINE bool tryStartAdcSampling();
+    FORCE_INLINE void addAdcSample(unsigned long value);
+
+  private:
+    int _digitalPin;
+    int _analogPin;
+
+    // Modes
+    enum class Mode: int {
+      Idle,
+      AdcSamplng,
+      Communication,
+      DirectRead,
+      ResetTool
+    };
+    volatile Mode mode = Mode::Idle;
+
+    static const char* modeToString(Mode mode);
+
+    FORCE_INLINE void setMode_Idle();
+    FORCE_INLINE bool tryToSetMode_AdcSampling();
+    FORCE_INLINE bool trytoSetMode_DirectRead();
+    bool trytoSetMode_Communication();
+    bool trytoSetMode_ResetTool();
+
+    // ADC sampling
+    volatile unsigned long preventAdcSamplingUntil = 0;
+    const unsigned numSamples = 4; //  TODO: use 1, 2, 16 ????
+    adc::SamplingHelper adcSamples;
+
+    // Direct read
+    FORCE_INLINE bool _readDigitalValue();
+
+    // Communication
+//     CustomSerial serial;
+    long commandSentTime = 0;
 };
 
-// // ----------------------------------------------
-// // Inline implemtations for use by AdcSampler
-// // The AdcSampler uses an interupt, which makes performance important.
-// // That is if it runs too slowly we could end up delaying the stepper
-// // So we implement the functions used my the AdcSampler in this header,
-// // which allows the compiler to inline them. I have not measured performance
-// // to comfirm the need for this, I just wanted to get rid of some macros
-// // and improve the design of this code.
-// // Note: the order of the functions also matters becuase the compiler needs
-// // to see the implementation before the function is used (e.g. _setMode)
-//
-// bool PTopPin::allowAdcReads() {
-//   return mode == Mode::AdcSamplng;
-// }
-//
-// // note: should be called from within a critical section
-// // unless setting to Idle
-// int PTopPin::_setMode(PTopPin::Mode newMode) {
-//   if (mode == newMode) {
-//     return 0;
-//   }
-//
-//   if (newMode == Mode::Idle ) {
-//     SET_OUTPUT(_pin);
-//     WRITE(pin, 1);
-//   } else {
-//     if (mode != Mode::Idle) {
-//       SERIAL_ERROR_START;
-//       ...
-//       return -1;
-//     }
-//
-//     switch (newMode) {
-//       case Mode::SoftDetachTool:
-//         SET_OUTPUT(_pin);
-//         WRITE(_pin, 0);
-//         break;
-//
-//       case Mode::AdcSamplng:
-//         SET_INPUT(_pin);
-//         adcSamples.reset();
-//         break;
-//
-//       case Mode::DirectRead:
-//         SET_INPUT(_pin);
-//         break;
-//
-//       case Mode::Communication:
-//         break;
-//     }
-//   }
-//
-//   mode = newMode;
-// }
-//
-// void PTopPin::setModeIfIdle(PTopPin::Mode mode) {
-//   CRITICAL_SECTION_START;
-//   if (mode == Mode::Idle) {
-//     _setMode(mode);
-//   }
-//   CRITICAL_SECTION_END;
-// }
-//
-// int PTopPin::tryStartAdcSampling(long time) {
-//   if (time < preventAdcSamplingUntil) {
-//     return false;
-//   }
-//   return setModeIfIdle(Mode::AdcSamplng);
-// }
-//
-// void PTopPin::addAdcSample(long time, long value) {
-//   // adc sampling can be interrupted by other states
-//   // if that happens we stop accepting samples.
-//   // Note: the accumulated values will be reset
-//   // the next time we enter Mode::AdcSamplng.
-//   if (mode != Mode::AdcSamplng) {
-//     return;
-//   }
-//
-//   adcSamples.add(time, value);
-//
-//   if (adcSamples.isReady()) {
-//     CRITICAL_SECTION_START;
-//       nextVoltage = adcSamples;
-//       adcSamples.reset();
-//       preventAdcSamplingUntil = time + 10;
-//       _setMode(Mode::Idle);
-//     CRITICAL_SECTION_END;
-//   }
-// }
+// ----------------------------------------------
+// Idle
+// Note: Inlined for use below
+
+void PTopPin::setMode_Idle() {
+  ScopedInterruptDisable sid;
+  if (mode != Mode::Idle) {
+    digitalWrite(_digitalPin, 1);
+    mode = Mode::Idle;
+  }
+}
+
+// ----------------------------------------------
+// ADC sampling
+// Note: Inline implemtations for use by AnalogDigitalConverter
+
+bool PTopPin::tryToSetMode_AdcSampling() {
+  ScopedInterruptDisable sid;
+  if (mode == Mode::AdcSamplng) {
+    return true;
+  }
+
+  if (
+    mode != Mode::Idle ||
+    millis() < preventAdcSamplingUntil
+  ) {
+    return false;
+  }
+
+  mode = Mode::AdcSamplng;
+  pinMode(_digitalPin, INPUT);
+  adcSamples.reset();
+  return true;
+}
+
+bool PTopPin::tryStartAdcSampling() {
+  return tryToSetMode_AdcSampling();
+}
+
+void PTopPin::addAdcSample(unsigned long value) {
+  ScopedInterruptDisable sid;
+  if (mode != Mode::AdcSamplng) {
+    return;
+  }
+
+  // TODO: still need to detect detaches. Perhaps separate from
+  // voltage sampling or maybe not.
+
+  auto ready = adcSamples.add(value);
+  if (ready) {
+    // Delay collection of next value so that we don't
+    // stay in INPUT mode too long and reset the router
+    // Note: don't wait too long though, or it will slow
+    // down tool type classification
+    preventAdcSamplingUntil = millis() + 50;
+
+    setMode_Idle();
+  }
+}
+
+// ----------------------------------------------
+// Direct Read
+// Note: Inlined for use my stepper. The stepper only needs digital reads, but
+//       I'd rather keep all the reads together.
+
+bool PTopPin::trytoSetMode_DirectRead() {
+  ScopedInterruptDisable sid;
+  if (mode == Mode::Idle) {
+    mode = Mode::DirectRead;
+    pinMode(_digitalPin, INPUT);
+    return true;
+  }
+  return false;
+}
+
+bool PTopPin::_readDigitalValue() {
+  // p-top needs to be inverted
+  // Note: p-top goes LOW when it triggers and is HIGH when not triggered
+  return digitalRead(_digitalPin) ^ 1;
+}
+
+int PTopPin::readDigitalValue(bool& value) {
+  ScopedInterruptDisable sid;
+  if (mode == Mode::AdcSamplng) {
+    // AdcSampling mode implies that the pin is already configured for INPUT
+    // so we can read and return. It's important not to change the pin mode
+    // (to OUTPUT), which would happen if we set the state to IDLE
+    value = _readDigitalValue();
+    return 0;
+
+  } else if (trytoSetMode_DirectRead()) {
+    // Mode was Idle, not it's DirectRead, which sets the pin mode to INPUT.
+    // Return the mode to Idle before returning
+    value = _readDigitalValue();
+    setMode_Idle();
+    return 0;
+
+  } else {
+    // Digital reads while in other modes would break things (e.g. Communication).
+    // Preventing this is outside the scope of this class.
+    SERIAL_ERROR_START;
+    SERIAL_ERRORPGM("Unable to read digital value of p-top pin, ");
+    SERIAL_ERROR(modeToString(mode));
+    SERIAL_ERRORPGM(" mode does not support digital reads");
+    SERIAL_EOL;
+    return -1;
+  }
+}
+
+PTopPin::Sample PTopPin::voltage()     { return Sample( adcSamples.value()     ); }
+PTopPin::Sample PTopPin::readVoltage() { return Sample( adcSamples.readValue() ); }

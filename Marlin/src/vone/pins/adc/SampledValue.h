@@ -11,23 +11,23 @@ struct SampledValue {
   unsigned long startTime = 0;
   unsigned long endTime = 0;
 
-  inline SampledValue(unsigned numSamples)
+  FORCE_INLINE SampledValue(unsigned numSamples)
     : _numSamples(numSamples)
   {
   }
 
-  inline float value() const volatile {
+  FORCE_INLINE float value() const volatile {
     return sum / count;
   };
 
-  inline void reset() {
+  FORCE_INLINE void reset() {
     count = 0;
     sum = 0;
     startTime = 0;
     endTime = 0;
   }
 
-  inline bool add(unsigned long value) {
+  FORCE_INLINE bool add(unsigned long value) {
     if (count == 0) {
       startTime = millis();
     }

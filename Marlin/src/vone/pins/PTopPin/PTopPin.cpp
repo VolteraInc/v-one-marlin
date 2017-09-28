@@ -1,93 +1,82 @@
 
 #include "PTopPin.h"
-#include "../../../utils/rawToVoltage.h"
 
-
-PTopPin::PTopPin(int pin)
-  : _pin(pin)
-  // , customSerial(pin)
+PTopPin::PTopPin(int digitalPin, int analogPin)
+  : _digitalPin(digitalPin)
+  , _analogPin(analogPin)
+  , adcSamples(numSamples)
+  // , customSerial(digitalPin)
 {
-//   // Start with p-top low for a few milliseconds so that
-//   // if there is an attached tool, it will see a disconnect
-//   SERIAL_ECHO_START;
-//   SERIAL_ECHOLNPGM("Soft detaching tool (i.e. output 0)");
-//   _setMode(Mode::SoftDetachTool);
-//   delay(500);
-//   _setMode(Mode::Idle);
+  // Reset attached tool, if there is one
+  resetTool();
 }
 
-// // float PTopPin::awaitNextVoltage() {
-// //   voltage();
-// //   SERIAL_ECHO_START;
-// //   SERIAL_ECHOLN("Waiting for next voltage...");
-// //   auto start = millis();
-// //   while (!nextVoltage.isReady()) {
-// //     delay(1);
-// //   }
-// //   auto duration = millis() - start;
-// //   SERIAL_ECHO_START;
-// //   SERIAL_PAIR("Waited ", duration); SERIAL_ECHOLNPGM("ms for next voltage reading");
-// //   return voltage();
-// // }
-//
-// We want to sample volatages to detect tool detachs.
-// for tool classifiction we could just read directly.
-// - if we are alrady reading, why not use it
-// - direct read would get a bad value for the first read
-// - it is going to take 60ms to classify regardless of the approach, because the cap has to charge
-//
-// Still need to detect detaches.
-//  - need to remeber them (during sampling)
-//  - need to handle them in ToolDetector
-//
-// float PTopPin::voltage() {
-//   if (nextVoltage.isReady()) {
-//     CRITICAL_SECTION_START;
-//       currentVoltage = nextVoltage;
-//       nextVoltage.reset();
-//     CRITICAL_SECTION_END;
-//   }
-//   return currentVoltage.value();
-// }
-//
-// int PTopPin::readVoltages(float voltages[], size_t size, unsigned delayMs) {
-//   waitForIdleThenSetMode(Mode::DirectRead);
-//
-//   ADC.readMultiple(P_TOP_STATE_PIN, size, [&voltages, delayMs](int raw, unsigned idx) {
-//     voltages[idx] = rawToVoltage(raw);
-//     if (delayMs) {
-//       delay(delayMs);
-//     }
-//     return 0;
-//   });
-//
-//   _setMode(Mode::Idle);
-// }
-//
-// // ----------------------------------------------
-// // Communication Mode
-//
-// void PTopPin::waitForIdleThenSetMode(PTopPin::Mode mode) {
-//   while (setModeIfIdle(mode)) {
+const char* PTopPin::modeToString(PTopPin::Mode mode) {
+  switch(mode) {
+    case Mode::Idle: return "Idle";
+    case Mode::Communication: return "Communication";
+    case Mode::ResetTool: return "Reset Tool";
+    case Mode::AdcSamplng: return "Analog Sampling";
+    case Mode::DirectRead: return "Direct Read";
+  }
+  return "Unknown";
+};
+
+
+// ----------------------------------------------
+// Reset tool
+
+bool PTopPin::trytoSetMode_ResetTool() {
+  ScopedInterruptDisable sid;
+  if (mode == Mode::Idle) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Resetting tool");
+    digitalWrite(_digitalPin, 0);
+    mode = Mode::ResetTool;
+    return true;
+  }
+  return false;
+}
+
+int PTopPin::resetTool() {
+  while (trytoSetMode_ResetTool()) {
+    delay(1);
+  }
+  delay(500);
+  setMode_Idle();
+  return 0;
+}
+
+
+// ----------------------------------------------
+// Communication
+
+bool PTopPin::trytoSetMode_Communication() {
+  ScopedInterruptDisable sid;
+  if (mode == Mode::Idle) {
+    mode = Mode::Communication;
+    return true;
+  }
+  return false;
+}
+
+// int PTopPin::send(char* msg) {
+//   while (!trytoSetMode_Communication()) {
 //     delay(1);
 //   }
-// }
 //
-// int PTopPin::send(char* msg) {
-//   waitForIdleThenSetMode(Mode::Communication);
+//  const unsigned maxAttempts = 3;
+//  unsigned numAttempts = 0;
+//  if (customSerial.send(msg, maxAttempts, numAttempts)) {
+//    return -1;
+//  }
 //
-//   const unsigned maxAttempts = 3;
-//   unsigned numAttempts;
-//   if (customSerial.send(msg, maxAttempts, numAttempts)) {
-//     return -1;
-//   }
+//  if (numAttempts > 2) {
+//    SERIAL_ECHO_START;
+//    SERIAL_PAIR("NOTICE: p-top message sent on attempt ", numAttempts);
+//    SERIAL_PAIR(" of ", maxAttempts);
+//    SERIAL_EOL;
+//  }
 //
-//   if (numAttempts > 2) {
-//     SERIAL_ECHO_START;
-//     SERIAL_PAIR("NOTICE: p-top message sent on attempt ", numAttempts);
-//     SERIAL_PAIR(" of ", maxAttempts);
-//     SERIAL_EOL;
-//   }
-//
-//   return return_value;
+//   return 0;
 // }

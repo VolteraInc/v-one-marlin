@@ -3,15 +3,29 @@
 
 class BedTemperaturePin {
   public:
+    struct Sample {
+      float temperature = 0;
+      unsigned long startTime = 0;
+      unsigned long endTime = 0;
+
+      Sample() {}
+      Sample(const adc::SampledValue& adcSample)
+        : temperature(rawToTemperature(adcSample.value()))
+        , startTime(adcSample.startTime)
+        , endTime(adcSample.endTime)
+      {
+      }
+    };
+
     BedTemperaturePin(int analogPin);
 
     int analogPin() const { return _analogPin; }
 
-    inline float temperature();     // same as value(), but converts to voltage
-    inline float readTemperature(); // same as readValue(), but converts to voltage
+    FORCE_INLINE Sample temperature();     // same as value(), but converts to voltage
+    FORCE_INLINE Sample readTemperature(); // same as readValue(), but converts to voltage
 
     // ADC sampling
-    inline void addAdcSample(unsigned long value) __attribute__((always_inline));
+    FORCE_INLINE void addAdcSample(unsigned long value);
 
   private:
     int _analogPin;
@@ -30,5 +44,5 @@ class BedTemperaturePin {
 
 void BedTemperaturePin::addAdcSample(unsigned long value) { adcSamples.add(value); }
 
-float BedTemperaturePin::temperature()     { return rawToTemperature( adcSamples.value()     ); }
-float BedTemperaturePin::readTemperature() { return rawToTemperature( adcSamples.readValue() ); }
+BedTemperaturePin::Sample BedTemperaturePin::temperature()     { return Sample(adcSamples.value()     ); }
+BedTemperaturePin::Sample BedTemperaturePin::readTemperature() { return Sample(adcSamples.readValue() ); }
