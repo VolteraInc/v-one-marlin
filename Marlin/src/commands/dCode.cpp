@@ -1,10 +1,90 @@
 #include "../api/api.h"
 #include "../vone/VOne.h"
 #include "../../Marlin.h"
-#include "../../temperature.h"
 #include "../utils/rawToVoltage.h"
 
 #include "processing.h"
+
+
+static int s_samplePTop(unsigned cycles, unsigned intraSampleDelayMs) {
+    const auto maxCycles = 250u;
+    PTopPin::Sample samples[maxCycles];
+
+    if (cycles > maxCycles) {
+      SERIAL_ECHO_START;
+      SERIAL_PAIR("Warning: The requested number of cycles (", cycles);
+      SERIAL_PAIR(") exceeds the maximum (", maxCycles);
+      SERIAL_ECHOLNPGM(") using maximum");
+      cycles = maxCycles;
+    }
+
+    // Collect voltage readings
+    for (auto i = 0u; i < cycles; ++i) {
+      samples[i] = vone->pins.ptop.readValue();
+      if (intraSampleDelayMs) {
+        delay(intraSampleDelayMs);
+      }
+    }
+
+    // Output the voltage readings
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Values -- voltage, startTime, endTime");
+    for (auto i = 0u; i < cycles; ++i) {
+      SERIAL_PAIR("  ", samples[i].voltage);
+      SERIAL_PAIR(",  ", samples[i].startTime);
+      SERIAL_PAIR(",  ", samples[i].endTime);
+      SERIAL_EOL;
+    }
+
+  return 0;
+}
+
+int s_sampleBedTemperature(unsigned cycles, unsigned intraSampleDelayMs) {
+    const auto maxCycles = 250u;
+    BedTemperaturePin::Sample samples[maxCycles];
+
+    if (cycles > maxCycles) {
+      SERIAL_ECHO_START;
+      SERIAL_PAIR("Warning: The requested number of cycles (", cycles);
+      SERIAL_PAIR(") exceeds the maximum (", maxCycles);
+      SERIAL_ECHOLNPGM(") using maximum");
+      cycles = maxCycles;
+    }
+
+    // Collect voltage readings
+    for (auto i = 0u; i < cycles; ++i) {
+      samples[i] = vone->pins.bedTemperature.readValue();
+      if (intraSampleDelayMs) {
+        delay(intraSampleDelayMs);
+      }
+    }
+
+    // Output the voltage readings
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Values -- temperature(C), startTime, endTime");
+    for (auto i = 0u; i < cycles; ++i) {
+      SERIAL_PAIR("  ", samples[i].temperature);
+      SERIAL_PAIR(",  ", samples[i].startTime);
+      SERIAL_PAIR(",  ", samples[i].endTime);
+      SERIAL_EOL;
+    }
+
+  return 0;
+}
+
+int d106_samplePinValues(int pin, unsigned samples, unsigned intraSampleDelayMs) {
+  switch (pin) {
+    case P_TOP_ANALOG_PIN: return s_samplePTop(samples, intraSampleDelayMs);
+    case TEMP_BED_PIN:     return s_sampleBedTemperature(samples, intraSampleDelayMs);
+    default:
+      SERIAL_ECHO_START;
+      SERIAL_PAIR("WARNING: Ignoring unrecognized pin ", pin);
+      SERIAL_ECHOPGM(", valid pins are: "); SERIAL_EOL;
+      SERIAL_PAIR("    ", P_TOP_ANALOG_PIN ); SERIAL_ECHOPGM(" p-top"         ); SERIAL_EOL;
+      SERIAL_PAIR("    ", TEMP_BED_PIN     ); SERIAL_ECHOPGM(" bedTemperature"); SERIAL_EOL;
+      return 0;
+  }
+}
 
 //-------------------------------------------
 // Utils/Debugging
@@ -117,40 +197,12 @@ int process_dcode(int command_code) {
       return 0;
     }
 
-    // Algorithms - Read voltage of left pogo pin (aka p_top)
+    // Sample pin values
     case 106: {
-      const int maxCycles = 250;
-      PTopPin::Sample samples[maxCycles];
-      const int cycles = code_seen('C') ? code_value() : maxCycles;
-      const int delayMs = code_seen('M') ? code_value() : 1;
-
-      if (cycles > maxCycles) {
-        SERIAL_ERROR_START;
-        SERIAL_PAIR("Warning: The requested number of cycles (", cycles);
-        SERIAL_PAIR(") exceeds the maximum (", maxCycles);
-        SERIAL_ERRORLNPGM(")");
-        return -1;
-      }
-
-      // Collect voltage readings
-      for (int i = 0; i < cycles; ++i) {
-        samples[i] = vone->pins.ptop.readVoltage();
-        if (delayMs) {
-          delay(delayMs);
-        }
-      }
-
-      // Output the voltage readings
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM("Voltages (voltage, startTime, endTime)");
-      for (int i = 0; i < cycles; ++i) {
-        SERIAL_PAIR("  ", samples[i].voltage);
-        SERIAL_PAIR(",  ", samples[i].startTime);
-        SERIAL_PAIR(",  ", samples[i].endTime);
-        SERIAL_EOL;
-      }
-
-      return 0;
+      const unsigned pin = code_seen('P') ? code_value() : P_TOP_ANALOG_PIN;
+      const unsigned cycles = code_seen('C') ? code_value() : -1;
+      const unsigned intraSampleDelayMs = code_seen('M') ? code_value() : 1;
+      return d106_samplePinValues(pin, cycles, intraSampleDelayMs);
     }
 
     // Algorithms - Bed height
@@ -179,19 +231,17 @@ int process_dcode(int command_code) {
         )
       );
       const int direction = code_prefix() == '-' ? -1 : 1;
-      auto pin = code_seen('P') ? code_value() : P_TOP_ANALOG_PIN;
       auto delay = code_seen('M') ? code_value() : DefaultMeasureAtSwitchReleaseDelay;
       auto startPosition = current_position[axis];
       auto releaseStartedAt = startPosition;
       auto releaseCompletedAt = startPosition;
-      auto returnValue = measureAtSwitchRelease(axis, direction, pin, releaseStartedAt, releaseCompletedAt, delay);
+      auto returnValue = measureAtSwitchRelease(axis, direction, releaseStartedAt, releaseCompletedAt, delay);
 
       // Output
       SERIAL_ECHO_START;
       SERIAL_ECHOPGM("measureAtSwitchRelease");
       SERIAL_PAIR(", axis:", axis_codes[axis]);
       SERIAL_PAIR(", direction:", direction);
-      SERIAL_PAIR(", pin:", pin);
       SERIAL_PAIR(", delay:", delay);
       SERIAL_PAIR(", returnValue:", returnValue);
       SERIAL_PAIR(", releaseStartedAt:", releaseStartedAt);
@@ -199,7 +249,7 @@ int process_dcode(int command_code) {
       SERIAL_PAIR(", startPosition:", startPosition);
       SERIAL_EOL;
 
-      return 0; // alway succeed
+      return 0; // always succeed
     }
 
     // Set rotation speed (without tool prep)
@@ -221,7 +271,7 @@ int process_dcode(int command_code) {
       SERIAL_ECHOLNPGM("  D103 - xy positioner -- D103 or D103 M (move-only)");
       SERIAL_ECHOLNPGM("  D104 - measure probe displacement");
       SERIAL_ECHOLNPGM("  D105 - measure at switch -- D105 -X");
-      SERIAL_ECHOLNPGM("  D106 - read left pogo pin's voltage (C=cycles M=milliseconds between readings) -- D106 C10 M5 ");
+      SERIAL_ECHOLNPGM("  D106 - sample pin values (P=pin C=cycles M=milliseconds between readings) -- D106 P2 C10 M5 ");
       SERIAL_ECHOLNPGM("  D108 - measure at switch release -- D108 -Z");
       SERIAL_ECHOLNPGM("  D110 - set router rotation speed -- D110 R100, no value or 1 means stop, 0 resets router");
       SERIAL_ECHOLNPGM("");
