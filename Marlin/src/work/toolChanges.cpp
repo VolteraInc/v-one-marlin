@@ -1,6 +1,6 @@
 #include "../../Marlin.h"
-#include "../../temperature.h"
 #include "../api/api.h"
+#include "../vone/VOne.h"
 
 static bool s_enabled = true;
 
@@ -51,7 +51,7 @@ void toolChanges() {
 
   // Update the tool if necessary
   const auto tool = getTool();
-  const auto voltage = get_p_top_voltage();
+  const auto voltage = vone->pins.ptop.value().voltage;
   if (s_possibleToolChange(tool, voltage)) {
     const auto newTool = determineTool(tool);
     setTool(newTool);

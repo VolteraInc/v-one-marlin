@@ -3,7 +3,7 @@
 #include "Arduino.h"
 
 int touch(
-  int axis, int direction, int pin,
+  int axis, int direction,
   float speed, float maxTravel,
   float& approach, float& releaseStart, float& releaseEnd
 );
@@ -37,4 +37,4 @@ bool trailingStabilityCheck(
 
 const auto DefaultMeasureAtSwitchReleaseDelay = 0u;
 int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement);
-int measureAtSwitchRelease(int axis, int direction, unsigned pin, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms = DefaultMeasureAtSwitchReleaseDelay);
+int measureAtSwitchRelease(int axis, int direction, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms = DefaultMeasureAtSwitchReleaseDelay);

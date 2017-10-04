@@ -4,7 +4,6 @@
 int touch(
   int axis,
   int direction,
-  int pin,
   float speed,
   float maxTravel,
   float& approach,
@@ -17,7 +16,7 @@ int touch(
 
   approach = current_position[axis];
 
-  if (measureAtSwitchRelease(axis, direction, pin, releaseStart, releaseEnd)) {
+  if (measureAtSwitchRelease(axis, direction, releaseStart, releaseEnd)) {
     return -1;
   }
   return 0;
@@ -26,7 +25,7 @@ int touch(
 int fastTouch() {
   float approach, releaseStart, releaseEnd;
   if (touch(
-    Z_AXIS, -1, P_TOP_ANALOG_PIN,
+    Z_AXIS, -1,
     useDefaultFeedrate, useDefaultMaxTravel,
     approach, releaseStart, releaseEnd
   )) {

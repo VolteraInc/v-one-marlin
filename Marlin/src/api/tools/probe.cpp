@@ -2,7 +2,7 @@
 #include "../../../stepper.h"
 #include "../api.h"
 #include "../measurement/measurement.h"
-#include "../switches/PTopScopedUsageLock.h"
+#include "../../vone/VOne.h"
 #include "internal.h"
 
 static float s_probeDisplacement = 0.0f;
@@ -38,6 +38,14 @@ bool Probe::isTriggered(float voltage) {
   return classifyVoltage(TOOLS_PROBE, voltage) == TOOL_STATE_TRIGGERED;
 }
 
+bool Probe::readAnalogTriggered(float* o_voltageReading) {
+  const auto voltage = vone->pins.ptop.readValue().voltage;
+  if (o_voltageReading) {
+    *o_voltageReading = voltage;
+  }
+  return Probe::isTriggered(voltage);
+}
+
 float Probe::getProbeDisplacement() {
   return s_probeDisplacement;
 }
@@ -57,9 +65,10 @@ int Probe::probe(
     return -1;
   }
 
-  // Disable analog reads to prevent false tool change detection
-  // (due to the unusualy amount to time the probe will be intermittently triggered)
-  PTopScopedUsageLock scopedUse;
+    // Test this case:
+    // Disable analog reads to prevent false tool change detection
+    // (due to the unusualy amount to time the probe will be intermittently triggered)
+    // PTopScopedUsageLock scopedUse;
 
   float rawMeasurement;
   auto samplesTaken = 0u;

@@ -1,6 +1,7 @@
 #include "../../../Marlin.h"
 #include "../../../stepper.h"
 #include "../api.h"
+#include "../../vone/VOne.h"
 
 enum ToolStates classifyVoltage(Tool, float voltage) {
   // if (logging_enabled) {
@@ -36,14 +37,14 @@ enum ToolStates determineToolState(Tool tool) {
   static enum ToolStates previousState = TOOL_STATE_UNKNOWN;
   const auto start = millis();
   for (int i = 0; i < maxIterations; ++i) {
-    enum ToolStates state = classifyVoltage(tool, next_p_top_voltage());
+    enum ToolStates state = classifyVoltage(tool, vone->pins.ptop.readValue().voltage);
 
     if (previousState == state) {
       ++count;
 
       // Return state if it has not changed since this function was last called
       // or if we've collect enough consistent consecutive readings
-      if (i == 0 || count >= 2) {
+      if (i == 0 || count >= 2) { // TODO: need to retest this...will likely need to increase or add a delay
         if (i + 1 >= warningThreshold) {
           SERIAL_ECHO_START;
           SERIAL_ECHOPGM("Warning: determination of tool state took "); SERIAL_ECHO(i+1);
@@ -51,14 +52,12 @@ enum ToolStates determineToolState(Tool tool) {
           SERIAL_ECHOLNPGM(" iterations to resolve.");
         }
 
-        if (logging_enabled) {
-          const auto stop = millis();
-          SERIAL_ECHO_START;
-          SERIAL_ECHOPGM("Determined tool state '"); SERIAL_ECHO(toolStateAsString(state));
-          SERIAL_ECHOPGM("' after "); SERIAL_ECHO(i+1);
-          SERIAL_ECHOPGM(" iterations ("); SERIAL_ECHO(stop-start);
-          SERIAL_ECHOLNPGM(" ms)");
-        }
+        const auto stop = millis();
+        SERIAL_ECHO_START;
+        SERIAL_ECHOPGM("Determined tool state '"); SERIAL_ECHO(toolStateAsString(state));
+        SERIAL_ECHOPGM("' after "); SERIAL_ECHO(i+1);
+        SERIAL_ECHOPGM(" iterations ("); SERIAL_ECHO(stop - start);
+        SERIAL_ECHOLNPGM(" ms)");
 
         return state;
       }

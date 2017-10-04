@@ -2,37 +2,29 @@
 
 #include "../../../Marlin.h"
 #include "../../../stepper.h"
+#include "../../../planner.h"
 #include "../../utils/rawToVoltage.h"
 #include "../tools/tools.h"
 #include "../movement/movement.h"
-#include "../switches/PTopScopedUsageLock.h"
 
-unsigned countTriggers(unsigned pin, unsigned maxSamples) {
+static unsigned s_countTriggers(unsigned maxSamples) {
   if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHO("countTriggers ");
   }
 
   auto count = 0u;
+  float voltages[maxSamples];
   for (auto i = 0u; i < maxSamples; ++i) {
-    auto voltage = rawToVoltage(analogRead(pin));
-
-    if (logging_enabled) {
-      if (i==0) {
-        SERIAL_PAIR("voltages: [", voltage);
-      } else {
-        SERIAL_PAIR(", ", voltage);
-      }
-    }
-
     // HACK: use probe function since we only use this function for probing right now.
-    // if we ever use it for other axes we ca figure out a solution then
-    if (Probe::isTriggered(voltage)) {
+    // if we ever use it for other axes we can figure out a solution then
+    // e.g. pass function, use templates, or look into SmallFun
+    if (Probe::readAnalogTriggered(&voltages[i])) {
       ++count;
     }
   }
 
   if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPGM("countTriggers voltages: ["); serialArray(voltages, maxSamples);
     SERIAL_PAIR("], count: ", count);
     SERIAL_PAIR(", position: ", current_position[Z_AXIS]);
     SERIAL_EOL;
@@ -49,7 +41,7 @@ unsigned countTriggers(unsigned pin, unsigned maxSamples) {
 //   return -1;
 // }
 
-int measureAtSwitchRelease(int axis, int direction, unsigned pin, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
+int measureAtSwitchRelease(int axis, int direction, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Measure at switch retract: ");
@@ -59,9 +51,6 @@ int measureAtSwitchRelease(int axis, int direction, unsigned pin, float& release
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
-  // Disable analog reads (prevent false tool change detection)
-  PTopScopedUsageLock scopedUse;
-
   // Note: 1mm should be more than enough for a release
   const auto maxTravel = 1u;
   const auto maxSteps = maxTravel * axis_steps_per_unit[axis];
@@ -70,7 +59,7 @@ int measureAtSwitchRelease(int axis, int direction, unsigned pin, float& release
   const float distance = 1 / axis_steps_per_unit[axis];
   for (auto i = 0u; i < maxSteps; ++i) {
     // Examine triggered status
-    const auto count = countTriggers(pin, numSamples);
+    const auto count = s_countTriggers(numSamples);
     if (count < numSamples) {
       // Set release start position, if we haven't already
       if (!releaseStarted) {

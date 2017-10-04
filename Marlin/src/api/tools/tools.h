@@ -63,6 +63,7 @@ namespace Probe {
   int partiallyPrepare(const char* context, Tool tool);
   float getProbeDisplacement();
   bool isTriggered(float voltage);
+  bool readAnalogTriggered(float* o_voltageReading = nullptr);
 }
 
 // Dispenser
