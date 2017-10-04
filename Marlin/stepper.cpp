@@ -24,7 +24,6 @@ and Philipp Tiefenbacher. */
 #include "Marlin.h"
 #include "stepper.h"
 #include "planner.h"
-#include "temperature.h"
 #include "speed_lookuptable.h"
 #include <SPI.h>
 #include "macros.h"
@@ -611,8 +610,6 @@ void st_init() {
   OCR1A = 0x4000;
   TCNT1 = 0;
   ENABLE_STEPPER_DRIVER_INTERRUPT();
-
-  sei();
 }
 
 // Block until all buffered steps are executed

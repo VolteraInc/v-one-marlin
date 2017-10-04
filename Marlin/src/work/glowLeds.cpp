@@ -1,5 +1,5 @@
 #include "../../Configuration.h"
-#include "../../temperature.h"
+#include "../vone/Vone.h" // temperatures
 #include "work.h" // previous_millis_serial_rx HACK
 
 bool pending_temp_change = false;
@@ -49,8 +49,8 @@ void glow_leds() {
 
   unsigned long now = millis();
 
-  float bedTemp = degBed();
-  float targetTemp = degTargetBed();
+  float bedTemp = vone->heater.currentTemperature();
+  float targetTemp = vone->heater.targetTemperature();
 
   if (overridingLeds()) {
     glow_led_states[0] = s_overrideLeds.r;
@@ -63,7 +63,7 @@ void glow_leds() {
     glow_led_states[2] = 0;
     glow_led_pace = TEMP_PACE_CURVE;
   } else if (pending_temp_change || targetTemp > 0 || bedTemp > 40) {
-    if (isCoolingBed()) {
+    if (vone->heater.isCooling()) {
       glow_led_states[0] = 0;
       glow_led_states[1] = 0;
       glow_led_states[2] = 255;

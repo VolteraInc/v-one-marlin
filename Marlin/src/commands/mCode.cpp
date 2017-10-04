@@ -2,7 +2,7 @@
 #include "../api/api.h"
 #include "../../Marlin.h"
 #include "../../stepper.h"
-#include "../../temperature.h"
+#include "../../planner.h"
 #include "../../temperature_profile.h"
 #include "../../ConfigurationStore.h"
 #include "../work/work.h" // pending_temp_change HACK
@@ -86,13 +86,15 @@ int process_mcode(int command_code) {
       return 0;
 
     // M105 - Read current temp
+    // TODO: not sure if this output is used in manufacturing scripts.
+    // I'd like to trim it down
     case 105 :
       SERIAL_PROTOCOLPGM("T:"); SERIAL_PROTOCOL_F(0.0, 1);
       SERIAL_PROTOCOLPGM(" /"); SERIAL_PROTOCOL_F(0.0, 1 );
-      SERIAL_PROTOCOLPGM(" B:"); SERIAL_PROTOCOL_F(degBed(), 1);
-      SERIAL_PROTOCOLPGM(" /"); SERIAL_PROTOCOL_F(degTargetBed(), 1);
+      SERIAL_PROTOCOLPGM(" B:"); SERIAL_PROTOCOL_F(vone->heater.currentTemperature(), 1);
+      SERIAL_PROTOCOLPGM(" /"); SERIAL_PROTOCOL_F(vone->heater.targetTemperature(), 1);
       SERIAL_PROTOCOLPGM(" @:"); SERIAL_PROTOCOL(0);
-      SERIAL_PROTOCOLPGM(" B@:"); SERIAL_PROTOCOL(getSoftPwmBed());
+      SERIAL_PROTOCOLPGM(" B@:"); SERIAL_PROTOCOL(vone->heater.isHeating() ? 127 : 0);
       SERIAL_PROTOCOLLN("");
       return 0;
 
@@ -156,7 +158,7 @@ int process_mcode(int command_code) {
     case 119:
       return vone->pins.outputEndStopStatus();
 
-    // M122 - We let the planner know where we are. -  Added by VOLTERA
+    // M122 - We let the planner know where we are
     case 122: {
       st_synchronize();
       // If no axes are specified, we reset the Z axis (for compat with the old software)
@@ -184,7 +186,9 @@ int process_mcode(int command_code) {
 
     // M140 - Set bed target temp
     case 140:
-      if (code_seen('S')) setTargetBed(code_value());
+      if (code_seen('S')) {
+        vone->heater.setTargetTemperature(code_value());
+      }
       return 0;
 
     // M141 - Append to profile
@@ -217,26 +221,26 @@ int process_mcode(int command_code) {
     //        Rxxx Wait for bed current temp to reach target temp. Waits when heating and cooling
     case 190: {
       if (code_seen('S')) {
-        setTargetBed(code_value());
+        vone->heater.setTargetTemperature(code_value());
         CooldownNoWait = true;
       } else if (code_seen('R')) {
-        setTargetBed(code_value());
+        vone->heater.setTargetTemperature(code_value());
         CooldownNoWait = false;
       }
       auto codenum = millis();
 
-      target_direction = isHeatingBed(); // true if heating, false if cooling
+      target_direction = vone->heater.isHeating(); // true if heating, false if cooling
       pending_temp_change = true;
 
-      while ( target_direction ? (isHeatingBed()) : (isCoolingBed() && (CooldownNoWait==false)) ) {
+      while ( target_direction ? (vone->heater.isHeating()) : (vone->heater.isCooling() && (CooldownNoWait==false)) ) {
         // Print Temp Reading every 1 second while heating up.
-        if((millis() - codenum) > 1000) {
+        if ((millis() - codenum) > 1000) {
           SERIAL_PROTOCOLPGM("T:");
           SERIAL_PROTOCOL(0);
           SERIAL_PROTOCOLPGM(" E:");
           SERIAL_PROTOCOL((int)active_extruder);
           SERIAL_PROTOCOLPGM(" B:");
-          SERIAL_PROTOCOL_F(degBed(),1);
+          SERIAL_PROTOCOL_F(vone->heater.currentTemperature(),1);
           SERIAL_PROTOCOLLN("");
           codenum = millis();
         }
@@ -320,24 +324,11 @@ int process_mcode(int command_code) {
       return 0;
 
     // M221 - S<factor in percent>- set extrude factor override percentage
-    case 221: {
-      if(code_seen('S')) {
-        int tmp_code = code_value();
-        if (code_seen('T')) {
-          tmp_extruder = code_value();
-          if(tmp_extruder >= EXTRUDERS) {
-            SERIAL_ERROR_START;
-            SERIAL_ERROR("M221 Invalid extruder ");
-            SERIAL_ERRORLN(tmp_extruder);
-            return -1;
-          }
-          extruder_multiply[tmp_extruder] = tmp_code;
-        } else {
-          extrudemultiply = tmp_code;
-        }
+    case 221:
+      if (code_seen('S')) {
+        extrudemultiply = code_value();
       }
-    }
-    return 0;
+      return 0;
 
     // M400 - Finish all moves
     case 400:

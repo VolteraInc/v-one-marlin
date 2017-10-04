@@ -1,5 +1,4 @@
 #include "../../../Marlin.h"
-#include "../../../temperature.h" // next_p_top_voltage()
 #include "../../../stepper.h"
 #include "../api.h"
 

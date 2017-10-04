@@ -3,11 +3,12 @@
 VOne::Pins::Pins(
   int ptopDigialPin,
   int ptopAnalogPin,
-  int bedTemperatureAnalogPin
+  int bedTemperatureAnalogPin,
+  int heaterDigitalPin
 )
   : ptop(ptopDigialPin, ptopAnalogPin)
   , bedTemperature(bedTemperatureAnalogPin)
-  , adc(ptop, bedTemperature)
+  , heater(heaterDigitalPin)
 {
 }
 
@@ -48,8 +49,11 @@ int VOne::Pins::outputEndStopStatus() {
 VOne::VOne(
   int ptopDigialPin,
   int ptopAnalogPin,
-  int bedTemperaturePin
+  int bedTemperaturePin,
+  int heaterDigitalPin
 )
-  : pins(ptopDigialPin, ptopAnalogPin, bedTemperaturePin)
+  : pins(ptopDigialPin, ptopAnalogPin, bedTemperaturePin, heaterDigitalPin)
+  , adc(pins.ptop, pins.bedTemperature)
+  , heater(pins.heater, pins.bedTemperature)
 {
 }

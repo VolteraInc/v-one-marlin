@@ -32,7 +32,6 @@
 #include "macros.h"
 #include "planner.h"
 #include "stepper.h"
-#include "temperature.h"
 #include "temperature_profile.h"
 #include "ConfigurationStore.h"
 
@@ -144,31 +143,34 @@ void setup() {
   vone = new (voneBuffer) VOne(
     P_TOP_PIN,
     P_TOP_ANALOG_PIN,
-    TEMP_BED_PIN
+    TEMP_BED_PIN,
+    HEATER_BED_PIN
   );
 
   sendHomedStatusUpdate();
   vone->pins.outputEndStopStatus();
   sendToolStatusUpdate();
 
-  // tp_init();    // Initialize temperature loop
-  SET_OUTPUT(HEATER_BED_PIN);
+
 
   plan_init();  // Initialize planner
-  st_init();    // Initialize stepper, this enables interrupts!
+  st_init();    // Initialize stepper
   manufacturing_init();
+
+  // Configure calling frequency of TIMER0_COMPB_vect
+  OCR0B = 128;
+  SBI(TIMSK0, OCIE0B);
+
+  sei();
 
   SERIAL_PROTOCOLLNPGM("ready");
 }
 
 void periodic_work() {
-  // manage_adc();
-  // manage_adc();
-  // manage_heating_profile();
-  // manage_heater();
+  manage_heating_profile();
   manage_inactivity();
   glow_leds();
-  manufacturing_procedures();
+  manufacturing_procedures(); /// <--TODO: should not be here
 }
 
 void loop() {
@@ -181,14 +183,9 @@ void loop() {
   checkForEndstopHits(); // will detect expected hits as errors
   reportBufferEmpty();   // not important enough to monitor
   periodic_output();     // will generate excessive output
+  toolChanges();         // handling a tool change mid command would be needlessly complicated
 }
 
 ISR(TIMER0_COMPB_vect) {
-  // static unsigned long X = 0;
-  // if (millis() < X) {
-  //   return;
-  // }
-  // X = millis() + 100;
-
-  // vone->pins.adc.isr();
+  vone->periodicInterruptibleWork();
 }

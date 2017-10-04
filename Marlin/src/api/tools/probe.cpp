@@ -1,6 +1,5 @@
 #include "../../../Marlin.h"
 #include "../../../stepper.h"
-#include "../../../temperature.h"
 #include "../api.h"
 #include "../measurement/measurement.h"
 #include "../switches/PTopScopedUsageLock.h"

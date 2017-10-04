@@ -1,6 +1,6 @@
 #include "../../Marlin.h"
-#include "../../temperature.h"
 #include "../../temperature_profile.h"
+#include "../vone/VOne.h"
 
 static void outputBedTemperatureUpdate(float current, float target, float timeRemaining) {
   SERIAL_PROTOCOLPGM("bedTemperatureUpdate");
@@ -37,8 +37,8 @@ void periodic_output() {
 
   // Output temperature if temp or target changes or we are running a heating profile
   // NOTE: The temp sensor is noisy so filter small changes.
-  const auto current = degBed();
-  const auto target = degTargetBed();
+  const auto current = vone->heater.currentTemperature();
+  const auto target = vone->heater.targetTemperature();
   const auto timeRemaining = profile_remaining_time();
   bool tempChanged = abs(prev.temperature.current - current) >= 0.5;
   bool targetChanged = prev.temperature.target != target;

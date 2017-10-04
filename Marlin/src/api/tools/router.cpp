@@ -1,5 +1,4 @@
 #include "../../../Marlin.h"
-#include "../../../temperature.h"
 #include "../../../stepper.h"
 #include "../api.h"
 #include "internal.h"

@@ -1,9 +1,8 @@
-#include "../../Configuration_adv.h"
 #include "../../Marlin.h"
-#include "../../temperature.h"
 #include "../../planner.h"
 #include "../api/api.h"
 #include "../../macros.h"
+#include "../../temperature_profile.h"
 
 unsigned long previous_millis_serial_rx = 0;
 static unsigned long previous_millis_active_cmd = 0;
@@ -53,6 +52,6 @@ void manage_inactivity() {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("No communication for more than "); SERIAL_ECHO(heater_inactive_time);
     SERIAL_ECHOPGM("ms, deactivating heater\n");
-    disable_heater();
+    profile_reset();
   }
 }

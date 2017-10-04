@@ -4,7 +4,6 @@
 #include "../../Marlin.h"
 #include "../../stepper.h"
 #include "../../planner.h"
-#include "../../temperature.h"
 
 #include "../../motion_control.h"
 

@@ -1,6 +1,5 @@
 #include "Marlin.h"
 #include "planner.h"
-#include "temperature.h"
 #include "ConfigurationStore.h"
 
 void _EEPROM_writeData(int &pos, uint8_t* value, uint8_t size) {

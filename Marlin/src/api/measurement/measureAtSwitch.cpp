@@ -2,7 +2,6 @@
 
 #include "../../../Marlin.h"
 #include "../../../stepper.h"
-#include "../../../temperature.h"
 #include "../movement/movement.h"
 
 int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement) {
