@@ -72,12 +72,6 @@
 #define MOTHERBOARD 33
 #endif
 
-// VOLTERA_PIN_VERSION 0 -> version 3 (the one we came back from HAX with)
-// VOLTERA_PIN_VERSION 1 -> What B1 Shipped with
-// VOLTERA_PIN_VERSION 2 -> B2 and B3
-#define VOLTERA  1
-#define VOLTERA_PIN_VERSION 2
-
 //Default Calibration offsets for the Voltera -V-One
 #define XYPOS_X_POS       (32.098)  // average computed from 77 calibrations in July 2017
 #define XYPOS_Y_POS       ( 3.202)  // average computed from 77 calibrations in July 2017
@@ -92,112 +86,13 @@
 #define CALIB_X_BACKLASH  (0.0) // Default assumed backlash.
 #define CALIB_Y_BACKLASH  (0.0)
 
-#if VOLTERA_PIN_VERSION == 1
-#define XYPOS_Z_POS       (-6.0)
-#else
 #define XYPOS_Z_POS       (-4.0)
-#endif
 
 //Default Serial number for the Voltera V-One
 #define PRODUCT_SERIAL    ("V1-00-0000-120")
 
-
-// Define this to set a custom name for your generic Mendel,
-#define CUSTOM_MENDEL_NAME "V-ONE"
-
-// Define this to set a unique identifier for this printer, (Used by some programs to differentiate between machines)
-// You can use an online service to generate a random UUID. (eg http://www.uuidgenerator.net/version4)
-// #define MACHINE_UUID "00000000-0000-0000-0000-000000000000"
-
 // This defines the number of extruders
 #define EXTRUDERS 1
-
-//===========================================================================
-//=============================Thermal Settings  ============================
-//===========================================================================
-//
-//--NORMAL IS 4.7kohm PULLUP!-- 1kohm pullup can be used on hotend sensor, using correct resistor and table
-//
-//// Temperature sensor settings:
-// -2 is thermocouple with MAX6675 (only for sensor 0)
-// -1 is thermocouple with AD595
-// 0 is not used
-// 1 is 100k thermistor - best choice for EPCOS 100k (4.7k pullup)
-// 2 is 200k thermistor - ATC Semitec 204GT-2 (4.7k pullup)
-// 3 is Mendel-parts thermistor (4.7k pullup)
-// 4 is 10k thermistor !! do not use it for a hotend. It gives bad resolution at high temp. !!
-// 5 is 100K thermistor - ATC Semitec 104GT-2 (Used in ParCan & J-Head) (4.7k pullup)
-// 6 is 100k EPCOS - Not as accurate as table 1 (created using a fluke thermocouple) (4.7k pullup)
-// 7 is 100k Honeywell thermistor 135-104LAG-J01 (4.7k pullup)
-// 71 is 100k Honeywell thermistor 135-104LAF-J01 (4.7k pullup)
-// 8 is 100k 0603 SMD Vishay NTCS0603E3104FXT (4.7k pullup)
-// 9 is 100k GE Sensing AL03006-58.2K-97-G1 (4.7k pullup)
-// 10 is 100k RS thermistor 198-961 (4.7k pullup)
-// 20 is the PT100 circuit found in the Ultimainboard V2.x
-// 60 is 100k Maker's Tool Works Kapton Bed Thermistor
-//
-//    1k ohm pullup tables - This is not normal, you would have to have changed out your 4.7k for 1k
-//                          (but gives greater accuracy and more stable PID)
-// 51 is 100k thermistor - EPCOS (1k pullup)
-// 52 is 200k thermistor - ATC Semitec 204GT-2 (1k pullup)
-// 55 is 100k thermistor - ATC Semitec 104GT-2 (Used in ParCan & J-Head) (1k pullup)
-//
-// 1047 is Pt1000 with 4k7 pullup
-// 1010 is Pt1000 with 1k pullup (non standard)
-// 147 is Pt100 with 4k7 pullup
-// 110 is Pt100 with 1k pullup (non standard)
-
-#define TEMP_SENSOR_0 0
-#define TEMP_SENSOR_1 0
-#define TEMP_SENSOR_2 0
-#define TEMP_SENSOR_BED 71
-
-// Actual temperature must be close to target for this long before M109 returns success
-#define TEMP_RESIDENCY_TIME 10  // (seconds)
-#define TEMP_HYSTERESIS 3       // (degC) range of +/- temperatures considered "close" to the target one
-#define TEMP_WINDOW     1       // (degC) Window around target to start the residency timer x degC early.
-
-// The minimal temperature defines the temperature below which the heater will not be enabled It is used
-// to check that the wiring to the thermistor is not broken.
-// Otherwise this would lead to the heater being powered on all the time.
-#define HEATER_0_MINTEMP 5
-#define HEATER_1_MINTEMP 5
-#define HEATER_2_MINTEMP 5
-#define BED_MINTEMP 5
-
-// When temperature exceeds max temp, your heater will be switched off.
-// This feature exists to protect your hotend from overheating accidentally, but *NOT* from thermistor short/failure!
-// You should use MINTEMP for thermistor short/failure protection.
-#define HEATER_0_MAXTEMP 275
-#define HEATER_1_MAXTEMP 275
-#define HEATER_2_MAXTEMP 275
-#define BED_MAXTEMP 350
-
-// If your bed has low resistance e.g. .6 ohm and throws the fuse you can duty cycle it to reduce the
-// average current. The value should be an integer and the heat bed will be turned on for 1 interval of
-// HEATER_BED_DUTY_CYCLE_DIVIDER intervals.
-//#define HEATER_BED_DUTY_CYCLE_DIVIDER 4
-
-// PID settings:
-// Comment the following line to disable PID and enable bang-bang.
-#define PIDTEMP
-#define BANG_MAX 255 // limits current to nozzle while in bang-bang mode; 255=full current
-#define PID_MAX 255 // limits current to nozzle while PID is active (see PID_FUNCTIONAL_RANGE below); 255=full current
-#ifdef PIDTEMP
-  //#define PID_DEBUG // Sends debug data to the serial port.
-  //#define PID_OPENLOOP 1 // Puts PID in open loop. M104/M140 sets the output power from 0 to PID_MAX
-  #define PID_FUNCTIONAL_RANGE 10 // If the temperature difference between the target temperature and the actual temperature
-                                  // is more then PID_FUNCTIONAL_RANGE then the PID will be shut off and the heater will be set to min/max.
-  #define PID_INTEGRAL_DRIVE_MAX 255  //limit for the integral term
-  #define K1 0.95 //smoothing factor within the PID
-  #define PID_dT ((OVERSAMPLENR * 8.0)/(F_CPU / 64.0 / 256.0)) //sampling period of the temperature routine
-#endif // PIDTEMP
-
-// This sets the max power delivered to the bed, and replaces the HEATER_BED_DUTY_CYCLE_DIVIDER option.
-// all forms of bed control obey this (PID, bang-bang, bang-bang with hysteresis)
-// setting this to anything other than 255 enables a form of PWM to the bed just like HEATER_BED_DUTY_CYCLE_DIVIDER did,
-// so you shouldn't use it unless you are OK with PWM on your bed.  (see the comment on enabling PIDTEMPBED)
-#define MAX_BED_POWER 255 // limits duty cycle to bed; 255=full current
 
 //===========================================================================
 //=============================Mechanical Settings===========================
@@ -207,14 +102,9 @@
 //#define COREXY
 
 // The pullups are needed if you directly connect a mechanical endswitch between the signal and ground pins.
-#if VOLTERA_PIN_VERSION == 1
-const bool X_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-#elif VOLTERA_PIN_VERSION == 2
 const bool X_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool P_BOT_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-#endif
 
 const bool Y_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
@@ -226,13 +116,6 @@ const bool XY_MAX_X_ENDSTOP_INVERTING = true;
 const bool XY_MIN_Y_ENDSTOP_INVERTING = true;
 const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #define READ_PIN(PIN) (READ(PIN ## _PIN) ^ (PIN ## _ENDSTOP_INVERTING))
-//#define DISABLE_MAX_ENDSTOPS
-//#define DISABLE_MIN_ENDSTOPS
-
-// Disable max endstops for compatibility with endstop checking routine
-#if defined(COREXY) && !defined(DISABLE_MAX_ENDSTOPS)
-  #define DISABLE_MAX_ENDSTOPS
-#endif
 
 // For Inverting Stepper Enable Pins (Active Low) use 0, Non Inverting (Active High) use 1
 #define X_ENABLE_ON 0
@@ -240,18 +123,12 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #define Z_ENABLE_ON 0
 #define E_ENABLE_ON 0 // For all extruders
 
-#define INVERT_X_DIR true    // for Mendel set to false, for Orca set to true
-#define INVERT_Y_DIR true   // for Mendel set to true, for Orca set to false
-#define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
-#define INVERT_E0_DIR true   // for direct drive extruder v9 set to true, for geared extruder set to false
-#define INVERT_E1_DIR false    // for direct drive extruder v9 set to true, for geared extruder set to false
-#define INVERT_E2_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
+#define INVERT_X_DIR true
+#define INVERT_Y_DIR true
+#define INVERT_Z_DIR true
+#define INVERT_E0_DIR true
 
 // ENDSTOP SETTINGS:
-// Sets direction of endstops when homing; 1=MAX, -1=MIN
-#define X_HOME_DIR -1
-#define Y_HOME_DIR -1
-#define Z_HOME_DIR -1
 
 #define min_software_endstops false // If true, axis won't move to coordinates less than HOME_POS.
 #define max_software_endstops true  // If true, axis won't move to coordinates greater than the defined lengths below.
@@ -260,16 +137,10 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 // Note: to measure this value move the head head to the max forward-left corner (with the motors off)
 // enable logging, then home the printer. The distance traveled should be logged when the planner's
 // position is re-synchronized with the stepper after hitting the limit switch.
-#if VOLTERA_PIN_VERSION == 1
-  #define X_MAX_LENGTH_BEFORE_HOMING 131
-  #define Y_MAX_LENGTH_BEFORE_HOMING 180
-  #define Z_MAX_LENGTH_BEFORE_HOMING 33
-#else
-  #define X_MAX_LENGTH_BEFORE_HOMING 134
-  #define Y_MAX_LENGTH_BEFORE_HOMING 160
-  #define Z_MAX_TRAVEL_DOWN_BEFORE_HOMING 22 // so we don't hit the bottom of the carriage
-  #define Z_MAX_TRAVEL_UP_BEFORE_HOMING 28 // so we can climb out of the xy-positioner
-#endif
+#define X_MAX_LENGTH_BEFORE_HOMING 134
+#define Y_MAX_LENGTH_BEFORE_HOMING 160
+#define Z_MAX_TRAVEL_DOWN_BEFORE_HOMING 22 // so we don't hit the bottom of the carriage
+#define Z_MAX_TRAVEL_UP_BEFORE_HOMING 28 // so we can climb out of the xy-positioner
 
 // Distance to retract from X,Y switches when homing
 #define HOMING_XY_OFFSET 1
@@ -286,27 +157,12 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 // (if we did, we'd hit the bottom limit switch, since with the tool attached the axis length is reduced significantly)
 #define Z_MAX_POS 22
 
-#if VOLTERA_PIN_VERSION == 1
-#define Z_MIN_POS -11
-#else
 #define Z_MIN_POS -6
-#endif
 
 #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
 #define Y_MAX_LENGTH (Y_MAX_POS - Y_MIN_POS)
 #define Z_MAX_LENGTH (Z_MAX_POS - Z_MIN_POS)
 //============================= Bed Auto Leveling ===========================
-
-// The position of the homing switches
-//#define MANUAL_HOME_POSITIONS  // If defined, MANUAL_*_HOME_POS below will be used
-//#define BED_CENTER_AT_0_0  // If defined, the center of the bed is at (X=0, Y=0)
-
-//Manual homing switch locations:
-// For deltabots this means top and center of the Cartesian print volume.
-#define MANUAL_X_HOME_POS 0
-#define MANUAL_Y_HOME_POS 0
-#define MANUAL_Z_HOME_POS 0
-//#define MANUAL_Z_HOME_POS 402 // For delta: Distance between nozzle and print surface after homing.
 
 //// MOVEMENT SETTINGS
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
@@ -330,11 +186,7 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 1/16 6857.142857142858
 */
 
-#if VOLTERA_PIN_VERSION == 1
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {80,80,1600,1714.2857142857144}
-#elif VOLTERA_PIN_VERSION == 2
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,1600,1714.2857142857144}
-#endif
 #define DEFAULT_MAX_FEEDRATE          {12000/60.0, 7500.0/60.0, 200.0/60.0, 140.0/60.0}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {1500,700,100,50}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
 
@@ -352,112 +204,80 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 #define DEFAULT_ZJERK                 0.1//0.4  // (mm/sec)
 #define DEFAULT_EJERK                 0.1  //100   // (microns/sec)
 
+
+//===========================================================================
+//=============================Thermal Settings  ============================
+//===========================================================================
+
+// The minimal temperature defines the temperature below which the heater will not be enabled It is used
+// to check that the wiring to the thermistor is not broken.
+// Otherwise this would lead to the heater being powered on all the time.
+#define BED_MINTEMP 5
+
+// When temperature exceeds max temp, your heater will be switched off.
+// This feature exists to protect your hotend from overheating accidentally, but *NOT* from thermistor short/failure!
+// You should use MINTEMP for thermistor short/failure protection.
+#define BED_MAXTEMP 350
+
+
+//===========================================================================
+//=============================Mechanical Settings===========================
+//===========================================================================
+
+// homing hits the endstop, then retracts by this distance, before it tries to slowly bump again
+#define X_HOME_RETRACT_MM 3
+#define Y_HOME_RETRACT_MM 3
+#define Z_HOME_RETRACT_MM 0.5
+
+#define AXIS_RELATIVE_MODES {false, false, false, false}
+
+#define MAX_STEP_FREQUENCY 40000 // Max step frequency for Ultimaker (5000 pps / half step)
+
+//By default pololu step drivers require an active high signal. However, some high power drivers require an active low signal as step.
+#define INVERT_X_STEP_PIN false
+#define INVERT_Y_STEP_PIN false
+#define INVERT_Z_STEP_PIN false
+#define INVERT_E_STEP_PIN false
+
+//default stepper release if idle, default heater timeout if idle
+#define DEFAULT_STEPPER_DEACTIVE_TIME (5*60) // 5 mins
+#define DEFAULT_HEATER_DEACTIVE_TIME (60*60) // 60 mins
+
+#define DEFAULT_MINIMUMFEEDRATE       0.0     // minimum feedrate
+#define DEFAULT_MINTRAVELFEEDRATE     0.0
+
+// minimum time in microseconds that a movement needs to take if the buffer is emptied.
+#define DEFAULT_MINSEGMENTTIME        20000
+
+// Minimum planner junction speed. Sets the default minimum speed the planner plans for at the end
+// of the buffer and all stops. This should not be much greater than zero and should only be changed
+// if unwanted behavior is observed on a user's machine when running at very slow speeds.
+#define MINIMUM_PLANNER_SPEED 0.05// (mm/sec)
+
+// Motor Current setting (Only functional when motor driver current ref pins are connected to a digital trimpot on supported boards)
+#define DIGIPOT_MOTOR_CURRENT {50,180,60,60} // Values 0-255 (x, y, z, e)
+
+
 //===========================================================================
 //=============================Additional Features===========================
 //===========================================================================
 
-//automatic expansion
-#if defined (MAKRPANEL)
- #define ULTIPANEL
- #define NEWPANEL
-#endif
+// Arc interpretation settings:
+#define MM_PER_ARC_SEGMENT 0.050 // 50um, based on cutting a .5mm hole with a .4mm bit, which requires traversal of a 100um circle
+#define N_ARC_CORRECTION 25
 
-#if defined(REPRAPWORLD_KEYPAD)
-  #define NEWPANEL
-  #define ULTIPANEL
-#endif
-#if defined(RA_CONTROL_PANEL)
- #define ULTIPANEL
- #define NEWPANEL
- #define LCD_I2C_TYPE_PCA8574
- #define LCD_I2C_ADDRESS 0x27   // I2C Address of the port expander
-#endif
-
-//I2C PANELS
-
-//#define LCD_I2C_SAINSMART_YWROBOT
-#ifdef LCD_I2C_SAINSMART_YWROBOT
-  // This uses the LiquidCrystal_I2C library ( https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/Home )
-  // Make sure it is placed in the Arduino libraries directory.
-  #define LCD_I2C_TYPE_PCF8575
-  #define LCD_I2C_ADDRESS 0x27   // I2C Address of the port expander
-  #define NEWPANEL
-  #define ULTIPANEL
-#endif
-
-// PANELOLU2 LCD with status LEDs, separate encoder and click inputs
-//#define LCD_I2C_PANELOLU2
-#ifdef LCD_I2C_PANELOLU2
-  // This uses the LiquidTWI2 library v1.2.3 or later ( https://github.com/lincomatic/LiquidTWI2 )
-  // Make sure the LiquidTWI2 directory is placed in the Arduino or Sketchbook libraries subdirectory.
-  // (v1.2.3 no longer requires you to define PANELOLU in the LiquidTWI2.h library header file)
-  // Note: The PANELOLU2 encoder click input can either be directly connected to a pin
-  //       (if BTN_ENC defined to != -1) or read through I2C (when BTN_ENC == -1).
-  #define LCD_I2C_TYPE_MCP23017
-  #define LCD_I2C_ADDRESS 0x20 // I2C Address of the port expander
-  #define LCD_USE_I2C_BUZZER //comment out to disable buzzer on LCD
-  #define NEWPANEL
-  #define ULTIPANEL
-
-  #ifndef ENCODER_PULSES_PER_STEP
-	#define ENCODER_PULSES_PER_STEP 4
-  #endif
-
-  #ifndef ENCODER_STEPS_PER_MENU_ITEM
-	#define ENCODER_STEPS_PER_MENU_ITEM 1
-  #endif
+const unsigned int dropsegments=1; //everything with less than this number of steps will be ignored as move and joined with the next movement
 
 
-  #ifdef LCD_USE_I2C_BUZZER
-	#define LCD_FEEDBACK_FREQUENCY_HZ 1000
-	#define LCD_FEEDBACK_FREQUENCY_DURATION_MS 100
-  #endif
+//===========================================================================
+//=============================Buffers           ============================
+//===========================================================================
 
-#endif
-
-// Panucatt VIKI LCD with status LEDs, integrated click & L/R/U/P buttons, separate encoder inputs
-//#define LCD_I2C_VIKI
-#ifdef LCD_I2C_VIKI
-  // This uses the LiquidTWI2 library v1.2.3 or later ( https://github.com/lincomatic/LiquidTWI2 )
-  // Make sure the LiquidTWI2 directory is placed in the Arduino or Sketchbook libraries subdirectory.
-  // Note: The pause/stop/resume LCD button pin should be connected to the Arduino
-  //       BTN_ENC pin (or set BTN_ENC to -1 if not used)
-  #define LCD_I2C_TYPE_MCP23017
-  #define LCD_I2C_ADDRESS 0x20 // I2C Address of the port expander
-  #define LCD_USE_I2C_BUZZER //comment out to disable buzzer on LCD (requires LiquidTWI2 v1.2.3 or later)
-  #define NEWPANEL
-  #define ULTIPANEL
-#endif
-
-// Shift register panels
-// ---------------------
-// 2 wire Non-latching LCD SR from:
-// https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/schematics#!shiftregister-connection
-//#define SR_LCD
-#ifdef SR_LCD
-   #define SR_LCD_2W_NL    // Non latching 2 wire shift register
-   //#define NEWPANEL
-#endif
+// The number of linear motions that can be in the plan at any give time.
+// THE BLOCK_BUFFER_SIZE NEEDS TO BE A POWER OF 2, i.g. 8,16,32 because shifts and ors are used to do the ring-buffering.
+#define BLOCK_BUFFER_SIZE 16 // maximize block buffer
 
 
-#ifdef ULTIPANEL
-//  #define NEWPANEL  //enable this if you have a click-encoder panel
-  #define ULTRA_LCD
-    #define LCD_WIDTH 20
-    #define LCD_HEIGHT 4
-#endif
-
-// Incrementing this by 1 will double the software PWM frequency,
-// affecting heaters, and the fan if FAN_SOFT_PWM is enabled.
-// However, control resolution will be halved for each increment;
-// at zero value, there are 128 effective control positions.
-#define SOFT_PWM_SCALE 0
-
-// SF send wrong arc g-codes when using Arc Point as fillet procedure
-//#define SF_ARC_FIX
-
-// Support for the BariCUDA Paste Extruder.
-//#define BARICUDA
-
-#include "Configuration_adv.h"
-#include "thermistortables.h"
+//The ASCII buffer for receiving from the serial:
+#define MAX_CMD_SIZE 96
+#define BUFSIZE 4

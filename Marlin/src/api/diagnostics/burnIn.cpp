@@ -1,6 +1,7 @@
 #include "../../api/api.h"
 #include "../../../Marlin.h"
 #include "../../../stepper.h"
+#include "../../work/work.h"
 
 struct Point3d {
   float x, y, z;

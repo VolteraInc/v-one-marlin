@@ -4,27 +4,11 @@
 #include "../../planner.h"
 #include "../../stepper.h"
 
+// Sets direction of endstops when homing; 1=MAX, -1=MIN
+static const signed char home_dir[] = { -1, -1, -1 };
+
 static signed char axis_homed_state[3] = {0, 0, 0};
 const float homing_feedrate[] = HOMING_FEEDRATE;
-
-
-#define DEFINE_PGM_READ_ANY(type, reader)       \
-    static FORCE_INLINE type pgm_read_any(const type *p)  \
-    { return pgm_read_##reader##_near(p); }
-
-DEFINE_PGM_READ_ANY(float,       float);
-DEFINE_PGM_READ_ANY(signed char, byte);
-
-#define XYZ_CONSTS_FROM_CONFIG(type, array, CONFIG) \
-static const PROGMEM type array##_P[3] =        \
-    { X_##CONFIG, Y_##CONFIG, Z_##CONFIG };     \
-static FORCE_INLINE type array(int axis)          \
-    { return pgm_read_any(&array##_P[axis]); }
-
-XYZ_CONSTS_FROM_CONFIG(float, base_min_pos,    MIN_POS);
-XYZ_CONSTS_FROM_CONFIG(float, base_max_pos,    MAX_POS);
-XYZ_CONSTS_FROM_CONFIG(float, base_home_pos,   HOME_POS);
-XYZ_CONSTS_FROM_CONFIG(signed char, home_dir,  HOME_DIR);
 
 
 bool homedXY() {
@@ -41,6 +25,10 @@ int getHomedState(int axis) {
 
 void setHomedState(int axis, int value) {
   if (axis_homed_state[axis] != value) {
+    SERIAL_ECHO_START;
+    SERIAL_PAIR("Homed ", axis_codes[axis]); SERIAL_ECHOPGM("-axis");
+    SERIAL_EOL;
+
     axis_homed_state[axis] = value;
     sendHomedStatusUpdate();
 
@@ -69,18 +57,7 @@ static void axisIsAtHome(int axis) {
     current_position[ E_AXIS ]
   );
 
-  setHomedState(axis, home_dir(axis));
-
-  if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Homed "); SERIAL_ECHO(axis_codes[axis]); SERIAL_ERRORPGM("-axis");
-    SERIAL_ECHOPGM(" base_home_pos:"); SERIAL_ECHO(base_home_pos(axis));
-    SERIAL_ECHOPGM(" base_min_pos:"); SERIAL_ECHO(base_min_pos(axis));
-    SERIAL_ECHOPGM(" current_position:"); SERIAL_ECHO(current_position[axis]);
-    SERIAL_ECHOPGM(" base_min_pos:"); SERIAL_ECHO(base_min_pos(axis));
-    SERIAL_ECHOPGM(" base_max_pos:"); SERIAL_ECHO(base_max_pos(axis));
-    SERIAL_ECHOPGM("\n");
-  }
+  setHomedState(axis, home_dir[axis]);
 }
 
 static int s_homeAxis(int axis) {
@@ -111,7 +88,7 @@ static int s_homeAxis(int axis) {
   // Move to the switch
   // Note: we use measureAtSwitch so that we contact the switch accurately
   float measurement;
-  if (measureAtSwitch(axis, home_dir(axis), useDefaultMaxTravel, measurement)) {
+  if (measureAtSwitch(axis, home_dir[axis], useDefaultMaxTravel, measurement)) {
     goto DONE;
   }
 
@@ -123,7 +100,7 @@ static int s_homeAxis(int axis) {
       SERIAL_ECHO_START;
       SERIAL_ECHOLNPGM("Retracting from home switch");
     }
-    if (retractFromSwitch(axis, home_dir(axis), HOMING_XY_OFFSET)) {
+    if (retractFromSwitch(axis, home_dir[axis], HOMING_XY_OFFSET)) {
       goto DONE;
     }
   }

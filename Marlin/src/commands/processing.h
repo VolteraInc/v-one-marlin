@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../../Configuration_adv.h"
-
 #include "CommandQueue.h"
 
 extern CommandQueue command_queue;

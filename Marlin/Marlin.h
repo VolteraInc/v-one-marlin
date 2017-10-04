@@ -34,15 +34,7 @@
 
 #include "WString.h"
 
-#ifdef AT90USB
-   #ifdef BTENABLED
-         #define MYSERIAL bt
-   #else
-         #define MYSERIAL Serial
-   #endif // BTENABLED
-#else
-  #define MYSERIAL MSerial
-#endif
+#define MYSERIAL MSerial
 
 #define SERIAL_EOL MYSERIAL.print("\n")
 #define SERIAL_PAIR(name,value) (serial_echopair_P(PSTR(name),(value)))
@@ -115,21 +107,10 @@ void setHomedState(int axis, int value);
 
 enum AxisEnum {X_AXIS=0, Y_AXIS=1, Z_AXIS=2, E_AXIS=3};
 
-
-void FlushSerialRequestResend();
-void ClearToSend();
-
-void kill();
-
-void handle_glow_leds();
-
-void refresh_cmd_timeout(void);
-
 extern const float homing_feedrate[];
 extern bool axis_relative_modes[];
 extern int feedmultiply;
 extern int extrudemultiply; // Sets extrude multiply factor (in percent) for all extruders
-extern int extruder_multiply[EXTRUDERS]; // sets extrude multiply factor (in percent) for each extruder individually
 extern float volumetric_multiplier[EXTRUDERS]; // reciprocal of cross-sectional area of filament (in square millimeters), stored this way to reduce computational burden in planner
 extern float current_position[NUM_AXIS] ;
 
@@ -148,11 +129,6 @@ extern bool logging_enabled;
 
 // Handling multiple extruders pins
 extern uint8_t active_extruder;
-
-#ifdef DIGIPOT_I2C
-extern void digipot_i2c_set_current( int channel, float current );
-extern void digipot_i2c_init();
-#endif
 
 void setStepperInactiveDuration(unsigned long duration);
 

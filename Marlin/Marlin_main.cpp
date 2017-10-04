@@ -34,7 +34,6 @@
 #include "stepper.h"
 #include "temperature.h"
 #include "temperature_profile.h"
-#include "watchdog.h"
 #include "ConfigurationStore.h"
 
 #include "src/api/api.h"
@@ -53,7 +52,6 @@ bool axis_relative_modes[] = AXIS_RELATIVE_MODES;
 int feedmultiply=100; //100->1 200->2
 int saved_feedmultiply;
 int extrudemultiply=100; //100->1 200->2
-int extruder_multiply[EXTRUDERS] = {100};
 float volumetric_multiplier[EXTRUDERS] = {1.0};
 float current_position[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
 float min_pos[3] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS };
@@ -157,7 +155,6 @@ void setup() {
   SET_OUTPUT(HEATER_BED_PIN);
 
   plan_init();  // Initialize planner
-  watchdog_init();
   st_init();    // Initialize stepper, this enables interrupts!
   manufacturing_init();
 
@@ -175,36 +172,15 @@ void periodic_work() {
 }
 
 void loop() {
-  watchdog_reset();
   processSerialCommands();
 
-  watchdog_reset();
   periodic_work();
-
-  watchdog_reset();
 
   // This work is excluded from periodic_work() becuase we
   // don't want to do these in the middle of processing a command
   checkForEndstopHits(); // will detect expected hits as errors
   reportBufferEmpty();   // not important enough to monitor
   periodic_output();     // will generate excessive output
-  // toolChanges();         // handling a tool change mid command is needlessly complicated
-
-  watchdog_reset();
-}
-
-void kill() {
-  cli(); // Stop interrupts
-  disable_heater();
-
-  disable_x();
-  disable_y();
-  disable_z();
-  disable_e0();
-
-  SERIAL_ERROR_START;
-  SERIAL_ERRORLNPGM("Printer halted. kill() called!");
-  while(1) { /* Intentionally left empty */ } // Wait for reset
 }
 
 ISR(TIMER0_COMPB_vect) {

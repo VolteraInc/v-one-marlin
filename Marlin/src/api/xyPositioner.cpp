@@ -1,6 +1,7 @@
 #include "api.h"
 
 #include "../../Marlin.h"
+#include "../work/work.h"
 
 static int s_moveToXyPositionerZ(Tool tool, enum HowToMoveToZ howToMoveToZ) {
   switch (howToMoveToZ) {

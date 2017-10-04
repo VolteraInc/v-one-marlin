@@ -22,11 +22,6 @@
 
 #pragma once
 
-#define NUM_AXIS 4
-#define XYZE 4
-#define ABC  3
-#define XYZ  3
-
 #define FORCE_INLINE __attribute__((always_inline)) inline
 
 // Bracket code that shouldn't be interrupted

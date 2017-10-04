@@ -89,16 +89,4 @@
 #error Unknown MOTHERBOARD value in configuration.h
 #endif
 
-#ifdef DISABLE_MAX_ENDSTOPS
-#define X_MAX_PIN          -1
-#define Y_MAX_PIN          -1
-#define Z_MAX_PIN          -1
-#endif
-
-#ifdef DISABLE_MIN_ENDSTOPS
-#define X_MIN_PIN          -1
-#define Y_MIN_PIN          -1
-#define Z_MIN_PIN          -1
-#endif
-
 #endif
