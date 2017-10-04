@@ -1,32 +1,14 @@
 #include "../../../Marlin.h"
 #include "../../../stepper.h"
 #include "../api.h"
+#include "../../vone/pins/PTopPin/PTopPin.h"
 #include "internal.h"
-#include <SoftwareSerial.h>
 
-// ----------------------------------------------
-// Router - serial comms
+// TODO: refactor Router into a class, and give it
+//       a PTopPin& to eliminate dependency on VOne
+#include "../../vone/VOne.h"
 
-// baudrate of 300 is based on the rise and fall times of the capacitor on ptop (600-800 us)
-static const int baud = 300;
-static const int dummy_pin = A3;
-static SoftwareSerial s_router_write(dummy_pin, P_TOP_PIN);
-
-static void readMode() {
-  s_router_write.end();
-  set_p_top_mode(P_TOP_COMMS_READ_MODE);
-}
-
-static void writeMode() {
-  set_p_top_mode(P_TOP_COMMS_WRITE_MODE);
-  s_router_write.begin(baud);
-  s_router_write.listen();
-}
-
-static void normalMode() {
-  s_router_write.end();
-  set_p_top_mode(P_TOP_NORMAL_MODE);
-}
+static int s_rotationSpeed = 0;
 
 static uint8_t CRC8(uint8_t data) {
   uint8_t crc = 0x00;
@@ -42,57 +24,25 @@ static uint8_t CRC8(uint8_t data) {
   return crc;
 }
 
-static int s_write(char* msg) {
-  int return_value = -1;
-  int attempt = 1;
-
-  do {
-    SERIAL_ECHO_START;
-    SERIAL_ECHO(attempt == 1 ? "Writing " : "Resending "); SERIAL_ECHOLN(msg);
-    writeMode();
-    s_router_write.println(msg);
-    readMode();
-
-
-    // We must wait the full duration, otherwise the router will still be signalling
-    // on this pin when we return to normalMode.
-    const auto now = millis();
-    const unsigned long tryUntil = now + 300; //ms
-    int sample_count = 0;
-    while (millis() <= tryUntil) {
-      sample_count += !digitalRead(P_TOP_PIN);
-      delay(10);
-    }
-
-    if (sample_count >= 3) {
-      return_value = 0;
-      SERIAL_ECHO_START;
-      SERIAL_PAIR("Confirmed on attempt ", attempt);
-      SERIAL_PAIR(" with sample count ", sample_count);
-      SERIAL_EOL;
-      delay(Router::RampUpDuration); // give router time to ramp up to speed
-      goto DONE;
-    }
-  } while(++attempt <= 2);
-
-DONE:
-  normalMode();
-  return return_value;
-}
-
-static int s_sendRouterRotationSpeed(int percent) {
+static int s_sendAndRampTo(int percent) {
   SERIAL_ECHO_START;
   SERIAL_ECHOPGM("Set router rotation speed to "); SERIAL_ECHOLN(percent);
+
+  // Format message
   char message[11];
   const int crc = CRC8(percent);
   sprintf(message, "R%u %u", percent, crc);
-  return s_write(message);
+
+  // Send
+  if (vone->pins.ptop.send(message)) {
+    return -1;
+  }
+
+  // Give router time to ramp up (or down) to speed
+  delay(Router::RampUpDuration);
+
+  return 0;
 }
-
-
-// ----------------------------------------------
-// Router - tool
-static int s_rotationSpeed = 0;
 
 int Router::prepare(Tool tool) {
   const char* context = "prepare router";
@@ -141,7 +91,7 @@ int Router::stopRotationIfMounted(Tool tool) {
     goto DONE;
   }
 
-  if (s_sendRouterRotationSpeed(0)) {
+  if (s_sendAndRampTo(0)) {
     bool stillMounted = determineToolState(tool) == TOOL_STATE_ROUTER_MOUNTED;
     if (stillMounted) {
       SERIAL_ERROR_START;
@@ -187,7 +137,7 @@ int Router::setRotationSpeed(Tool tool, unsigned speed) {
   }
 
   // Send the speed to the router
-  if (s_sendRouterRotationSpeed(speed)) {
+  if (s_sendAndRampTo(speed)) {
     SERIAL_ERROR_START;
     SERIAL_PAIR("Unable to set the router rotation speed to ", speed);
     SERIAL_ERRORLNPGM(", confirm router is attached and powered");
