@@ -10,6 +10,8 @@ enum ToolStates classifyVoltage(Tool, float voltage) {
   // }
   if (voltage < 0.08) { // expected 0.07 (once stable)
     return TOOL_STATE_TRIGGERED;
+  } else if (voltage <= 1.6) { // expected 1.38 (once stable)
+    return TOOL_STATE_ROUTER_MOUNTED; // router beta 3 version
   } else if (voltage <= 3.2) {
     // Note: ROUTER gives 2.06 when mounted and not powered
     // we don't treat this as a unique state right now, but
@@ -18,7 +20,7 @@ enum ToolStates classifyVoltage(Tool, float voltage) {
   } else if (voltage <= 3.8) { // expecting 3.55 (once stable)
     return TOOL_STATE_PROBE_MOUNTED;
   } else if (voltage <= 4.5) { // expecting 4.22 (once stable)
-    return TOOL_STATE_ROUTER_MOUNTED;
+    return TOOL_STATE_ROUTER_MOUNTED; // router beta 1,2 version
   } else {
     return TOOL_STATE_NOT_MOUNTED;
   }
