@@ -262,9 +262,9 @@ int PTopPin::readDigitalValue(bool& value) {
     // Digital reads while in other modes would break things (e.g. Communication).
     // Preventing this is outside the scope of this class.
     SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to read digital value of p-top pin, ");
-    SERIAL_ERROR(modeToString(mode));
-    SERIAL_ERRORPGM(" mode does not support digital reads");
+    SERIAL_PAIR("Unable to read digital value of p-top pin, ", modeToString(mode));
+    SERIAL_PAIR(" mode (", (int)mode);
+    SERIAL_ERRORPGM(") does not support digital reads");
     SERIAL_EOL;
     return -1;
   }
