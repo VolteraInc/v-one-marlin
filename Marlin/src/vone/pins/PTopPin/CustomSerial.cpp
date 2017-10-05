@@ -38,7 +38,8 @@ void CustomSerial::_recvAcknowmedgement(bool& acknowledged) {
 
   // Must place pin back in output mode otherwise
   // tool will see it as a dismount
-  // TODO: weird to have this hear
+  // TODO: more the retry logic to ptopPin and return the count
+  // then we can handle the pinMode stuff out there too
   pinMode(_pin, OUTPUT);
   digitalWrite(_pin, HIGH);
 
@@ -49,10 +50,7 @@ void CustomSerial::_recvAcknowmedgement(bool& acknowledged) {
   SERIAL_PAIR(", value = ", count);
   SERIAL_EOL;
 
-  auto waitMore = timeSent + 300 - millis() ;
-  if (waitMore > 0) {
-    delay(waitMore);
-  }
+  //delayUntil(timeSent + 300);
 }
 
 int CustomSerial::send(char* msg, unsigned maxAttempts, unsigned* o_numAttempts) {
