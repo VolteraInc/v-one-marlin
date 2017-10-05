@@ -146,6 +146,8 @@ bool PTopPin::trytoSetMode_Communication() {
 }
 
 int PTopPin::send(char* msg) {
+  int returnValue = -1;
+
   while (!trytoSetMode_Communication()) {
     delay(1);
   }
@@ -153,19 +155,22 @@ int PTopPin::send(char* msg) {
   const unsigned maxAttempts = 3;
   unsigned numAttempts = 0;
   if (customSerial.send(msg, maxAttempts, &numAttempts)) {
-    return -1;
+    goto DONE;
   }
 
+  returnValue = 0;
+
+DONE:
   setMode_Idle();
 
-  if (numAttempts > 2) {
+  if (returnValue == 0 && numAttempts > 2) {
     SERIAL_ECHO_START;
     SERIAL_PAIR("NOTICE: p-top message sent on attempt ", numAttempts);
     SERIAL_PAIR(" of ", maxAttempts);
     SERIAL_EOL;
   }
 
-  return 0;
+  return returnValue;
 }
 
 // ----------------------------------------------
