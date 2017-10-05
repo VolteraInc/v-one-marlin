@@ -203,6 +203,11 @@ void MarlinSerial::print(double n, int digits)
   printFloat(n, digits);
 }
 
+void MarlinSerial::print(bool b)
+{
+  print(b ? '1' : '0');
+}
+
 void MarlinSerial::println(void)
 {
   print('\r');
@@ -260,6 +265,12 @@ void MarlinSerial::println(unsigned long n, int base)
 void MarlinSerial::println(double n, int digits)
 {
   print(n, digits);
+  println();
+}
+
+void MarlinSerial::println(bool b)
+{
+  print(b);
   println();
 }
 

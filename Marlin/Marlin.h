@@ -37,7 +37,7 @@
 #define MYSERIAL MSerial
 
 #define SERIAL_EOL MYSERIAL.print("\n")
-#define SERIAL_PAIR(name,value) (serial_echopair_P(PSTR(name),(value)))
+#define SERIAL_PAIR(name,value) do{ serialprintPGM(PSTR(name)); MYSERIAL.print(value); } while(0)
 
 #define SERIAL_PROTOCOL(x) (MYSERIAL.print(x))
 #define SERIAL_PROTOCOL_F(x,y) (MYSERIAL.print((x),(y)))
@@ -61,16 +61,8 @@ const char echomagic[] PROGMEM = "echo:";
 #define SERIAL_ECHOLNPGM(x) SERIAL_PROTOCOLLNPGM(x)
 #define SERIAL_ECHO_F(x,y) SERIAL_PROTOCOL_F((x),(y))
 
-#define SERIAL_ECHOPAIR(name,value) (serial_echopair_P(PSTR(name),(value)))
-
-void serial_echopair_P(const char *s_P, float v, unsigned int precision = 6);
-void serial_echopair_P(const char *s_P, double v, unsigned int precision = 6);
-void serial_echopair_P(const char *s_P, unsigned long v);
-void serial_echopair_P(const char *s_P, long v);
-void serial_echopair_P(const char *s_P, unsigned v);
-void serial_echopair_P(const char *s_P, int v);
-void serial_echopair_P(const char *s_P, bool v);
-void serial_echopair_P(const char *s_P, char v);
+#define SERIAL_ECHOPAIR SERIAL_PAIR
+//TODO: replace all SERIAL_ECHOPAIR with SERIAL_PAIR
 
 // For serial printing from PROGMEM. (Saves loads of SRAM.)
 FORCE_INLINE void serialprintPGM(const char* str) {

@@ -164,7 +164,8 @@ class MarlinSerial //: public Stream
     void print(unsigned int, int = DEC);
     void print(long, int = DEC);
     void print(unsigned long, int = DEC);
-    void print(double, int = 6);
+		void print(double, int = 6);
+    void print(bool);
 
     void println(const String &s);
     void println(const char[]);
@@ -175,7 +176,8 @@ class MarlinSerial //: public Stream
     void println(long, int = DEC);
     void println(unsigned long, int = DEC);
     void println(double, int = 6);
-    void println(void);
+		void println(void);
+    void println(bool);
 };
 
 extern MarlinSerial MSerial;
