@@ -39,7 +39,7 @@ static int s_samplePTop(unsigned cycles, unsigned intraSampleDelayMs) {
   return 0;
 }
 
-int s_sampleBedTemperature(unsigned cycles, unsigned intraSampleDelayMs) {
+static int s_sampleBedTemperature(unsigned cycles, unsigned intraSampleDelayMs) {
     const auto maxCycles = 250u;
     BedTemperaturePin::Sample samples[maxCycles];
 
@@ -72,15 +72,56 @@ int s_sampleBedTemperature(unsigned cycles, unsigned intraSampleDelayMs) {
   return 0;
 }
 
+static int s_sampleDigitalPin(int pin, unsigned cycles, unsigned intraSampleDelayMs) {
+  const auto maxCycles = 250u;
+  bool samples[maxCycles];
+
+  if (cycles > maxCycles) {
+    SERIAL_ECHO_START;
+    SERIAL_PAIR("Warning: The requested number of cycles (", cycles);
+    SERIAL_PAIR(") exceeds the maximum (", maxCycles);
+    SERIAL_ECHOLNPGM(") using maximum");
+    cycles = maxCycles;
+  }
+
+  // Collect digital readings
+  for (auto i = 0u; i < cycles; ++i) {
+    if (pin == P_TOP_PIN) {
+      if (vone->pins.ptop.readDigitalValue(samples[i])) {
+        SERIAL_ERROR_START;
+        SERIAL_ERRORLN("Unable to complete digital read of p-top pin");
+        return -1;
+      }
+    } else {
+      samples[i] = digitalRead(pin);
+    }
+    if (intraSampleDelayMs) {
+      delay(intraSampleDelayMs);
+    }
+  }
+
+  // Output the voltage readings
+  SERIAL_ECHO_START;
+  SERIAL_ECHOLNPGM("Values -- triggered");
+  for (auto i = 0u; i < cycles; ++i) {
+    SERIAL_PAIR("  ", samples[i]); SERIAL_EOL;
+  }
+
+  return 0;
+}
+
 int d106_samplePinValues(int pin, unsigned samples, unsigned intraSampleDelayMs) {
   switch (pin) {
     case P_TOP_ANALOG_PIN: return s_samplePTop(samples, intraSampleDelayMs);
     case TEMP_BED_PIN:     return s_sampleBedTemperature(samples, intraSampleDelayMs);
+    case P_TOP_PIN:        return s_sampleDigitalPin(pin, samples, intraSampleDelayMs);
     default:
+
       SERIAL_ECHO_START;
       SERIAL_PAIR("WARNING: Ignoring unrecognized pin ", pin);
       SERIAL_ECHOPGM(", valid pins are: "); SERIAL_EOL;
-      SERIAL_PAIR("    ", P_TOP_ANALOG_PIN ); SERIAL_ECHOPGM(" p-top"         ); SERIAL_EOL;
+      SERIAL_PAIR("    ", P_TOP_ANALOG_PIN ); SERIAL_ECHOPGM(" p-top analog"  ); SERIAL_EOL;
+      SERIAL_PAIR("    ", P_TOP_PIN        ); SERIAL_ECHOPGM(" p-top digital" ); SERIAL_EOL;
       SERIAL_PAIR("    ", TEMP_BED_PIN     ); SERIAL_ECHOPGM(" bedTemperature"); SERIAL_EOL;
       return 0;
   }
