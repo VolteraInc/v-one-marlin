@@ -76,7 +76,7 @@ class PTopPin {
 
     // ADC sampling
     volatile unsigned long preventAdcSamplingUntil = 0;
-    const unsigned numSamples = 4; //  TODO: use 1, 2, 16 ????
+    const unsigned numSamples = 4; //  TODO: why 4?
     adc::SamplingHelper adcSamples;
 
     // Direct read

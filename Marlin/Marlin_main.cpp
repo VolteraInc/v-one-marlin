@@ -141,6 +141,7 @@ void setup() {
   manufacturing_init();
 
   // Configure calling frequency of TIMER0_COMPB_vect
+  // NOTE: Timer 0 is used by millis() so don't change the prescaler
   OCR0B = 128;
   SBI(TIMSK0, OCIE0B);
 
