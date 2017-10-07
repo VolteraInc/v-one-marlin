@@ -35,9 +35,15 @@
 #include "temperature_profile.h"
 #include "ConfigurationStore.h"
 
+// DEFER: someday the Arduino IDE will support local libraries, until then the
+// options are a Makefile or relative includes. I've choosen the latter since
+// it make it trivial to setup a development environment (especially on Windows)
+
 #include "src/api/api.h"
 #include "src/work/work.h"
 #include "src/vone/VOne.h"
+
+#include "src/libraries/MemoryFree/MemoryFree.h"
 
 // Define missing function: placement-new
 void * operator new (size_t, void * ptr) { return ptr; }
@@ -68,25 +74,6 @@ const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
 bool logging_enabled = false;
 
 //===========================================================================
-//=============================Routines======================================
-//===========================================================================
-
-extern "C" {
-  extern unsigned int __bss_end;
-  extern unsigned int __heap_start;
-  extern void *__brkval;
-
-  int freeMemory() {
-    int free_memory;
-
-    if((int)__brkval == 0)
-      free_memory = ((int)&free_memory) - ((int)&__bss_end);
-    else
-      free_memory = ((int)&free_memory) - ((int)__brkval);
-
-    return free_memory;
-  }
-}
 
 void setup() {
   MYSERIAL.begin(BAUDRATE);
