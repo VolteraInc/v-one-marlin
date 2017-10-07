@@ -39,7 +39,10 @@ static int s_sendAndRampTo(int percent) {
   }
 
   // Give router time to ramp up (or down) to speed
-  delay(Router::RampUpDuration);
+  // NOTE: It takes 3s to ramp from 0 to max speed and
+  //       we want some buffer too (hence the 500ul)
+  const auto RampUpDuration = 3000ul;
+  delay(RampUpDuration + 500ul);
 
   return 0;
 }
