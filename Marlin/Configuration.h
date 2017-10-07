@@ -136,20 +136,6 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 #define DEFAULT_EJERK                 0.1  //100   // (microns/sec)
 
 //===========================================================================
-//=============================Thermal Settings  ============================
-//===========================================================================
-
-// The minimal temperature defines the temperature below which the heater will not be enabled It is used
-// to check that the wiring to the thermistor is not broken.
-// Otherwise this would lead to the heater being powered on all the time.
-#define BED_MINTEMP 5
-
-// When temperature exceeds max temp, your heater will be switched off.
-// This feature exists to protect your hotend from overheating accidentally, but *NOT* from thermistor short/failure!
-// You should use MINTEMP for thermistor short/failure protection.
-#define BED_MAXTEMP 350
-
-//===========================================================================
 //=============================Mechanical Settings===========================
 //===========================================================================
 
