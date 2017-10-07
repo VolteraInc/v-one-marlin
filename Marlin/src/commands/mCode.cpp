@@ -10,7 +10,6 @@
 #include "../../version.h"
 #include "../vone/VOne.h"
 
-static uint8_t tmp_extruder;
 bool CooldownNoWait = true;
 bool target_direction;
 
@@ -267,17 +266,7 @@ int process_mcode(int command_code) {
         //reserved for setting filament diameter via UFID or filament measuring device
         return -1;
       }
-      tmp_extruder = active_extruder;
-      if(code_seen('T')) {
-        tmp_extruder = code_value();
-        if(tmp_extruder >= EXTRUDERS) {
-          SERIAL_ECHO_START;
-          SERIAL_ECHO("M200 Invalid extruder ");
-        }
-        SERIAL_ECHOLN(tmp_extruder);
-        return 0;
-      }
-      volumetric_multiplier[tmp_extruder] = 1 / area;
+      volumetric_multiplier = 1 / area;
       return 0;
     }
 

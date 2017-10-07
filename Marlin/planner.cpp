@@ -465,7 +465,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
   block->steps_z = labs(steps_z_signed);
 
   block->steps_e = labs(steps_e_signed);
-  block->steps_e *= volumetric_multiplier[active_extruder];
+  block->steps_e *= volumetric_multiplier;
   block->steps_e *= extrudemultiply;
   block->steps_e /= 100;
 
@@ -514,7 +514,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
   delta_mm[X_AXIS] = steps_x_signed / axis_steps_per_unit[X_AXIS];
   delta_mm[Y_AXIS] = steps_y_signed / axis_steps_per_unit[Y_AXIS];
   delta_mm[Z_AXIS] = steps_z_signed / axis_steps_per_unit[Z_AXIS];
-  delta_mm[E_AXIS] = (steps_e_signed / axis_steps_per_unit[E_AXIS]) * volumetric_multiplier[active_extruder] * extrudemultiply / 100.0;
+  delta_mm[E_AXIS] = (steps_e_signed / axis_steps_per_unit[E_AXIS]) * volumetric_multiplier * extrudemultiply / 100.0;
 
   if ( block->steps_x <=dropsegments && block->steps_y <=dropsegments && block->steps_z <=dropsegments )
   {
