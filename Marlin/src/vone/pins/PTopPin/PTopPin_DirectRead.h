@@ -49,6 +49,3 @@ int PTopPin::readDigitalValue(bool& value) {
     return -1;
   }
 }
-
-PTopPin::Sample PTopPin::value()     { return Sample( adcSamples.value()     ); }
-PTopPin::Sample PTopPin::readValue() { return Sample( adcSamples.readValue() ); }

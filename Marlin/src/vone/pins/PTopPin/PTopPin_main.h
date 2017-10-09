@@ -5,7 +5,7 @@
 #include "../../../utils/rawToVoltage.h"
 #include "../adc/SamplingHelper.h"
 
-#include "CustomSerial.h"
+#include <SoftwareSerial.h>
 
 class PTopPin {
   public:
@@ -84,19 +84,33 @@ class PTopPin {
     // Direct read
     FORCE_INLINE bool _readDigitalValue();
 
+
     // Communication
-    CustomSerial customSerial;
+
+    // baudrate of 300 is based on the rise and fall times of the capacitor on ptop (600-800 us)
+    const int baud = 300;
+    const int dummy_pin = A3;
+
+    SoftwareSerial serial;
+    long timeSent = 0;
+
+    void _sendMessage(char* msg);
+    int _recvAcknowmedgement();
 };
+
 
 PTopPin::PTopPin(int digitalPin, int analogPin)
   : _digitalPin(digitalPin)
   , _analogPin(analogPin)
   , adcSamples(numSamples)
-  , customSerial(digitalPin)
+  , serial(dummy_pin, _digitalPin)
 {
   // Reset attached tool, if there is one
   resetTool();
 }
+
+PTopPin::Sample PTopPin::value()     { return Sample( adcSamples.value()     ); }
+PTopPin::Sample PTopPin::readValue() { return Sample( adcSamples.readValue() ); }
 
 // ----------------------------------------------
 // Idle

@@ -40,11 +40,8 @@ void PTopPin::addAdcSample(unsigned long value) {
 
   auto ready = adcSamples.add(value);
   if (ready) {
-    // Delay collection of next value so that we don't
-    // stay in INPUT mode too long and reset the router
-    // Note: don't wait too long though, or it will slow
-    // down tool type classification
-    preventAdcSamplingUntil = millis() + 50;
+    // Fast enough to detect transitions in Acknowledment signal from drill
+    preventAdcSamplingUntil = millis() + 10;
 
     setMode_Idle();
   }
