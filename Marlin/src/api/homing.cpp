@@ -87,6 +87,7 @@ static int s_homeAxis(int axis) {
 
   // Move to the switch
   // Note: we use measureAtSwitch so that we contact the switch accurately
+  // TODO: use measureAtSwitchRelease for homing?
   float measurement;
   if (measureAtSwitch(axis, home_dir[axis], useDefaultMaxTravel, measurement)) {
     goto DONE;
@@ -140,21 +141,31 @@ int rawHome(Tool tool, bool homingX, bool homingY, bool homingZ) {
   return 0;
 }
 
+// TODO: move to some other file
 int moveToZSwitchXY(Tool tool) {
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Move to z-switch's x,y position");
   }
+
   if (!homedXY()) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM("Unable to move to Z-Switch, either the x-axis or the y-axis has not been homed");
     return -1;
   }
+
   if (min_z_x_pos != current_position[X_AXIS] || min_z_y_pos != current_position[Y_AXIS]) {
     if (raise()) {
       return -1;
     }
   }
+
+  // TODO: confirm z-switch is not already triggered
+  // if z-max is not triggered and z-min is, then // maybe make raise unconditional (add note to prevent reverting)
+  //   raise()
+  // if z-min is triggered
+  //   error
+
   return moveXY(tool, min_z_x_pos, min_z_y_pos);
 }
 

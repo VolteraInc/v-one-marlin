@@ -44,9 +44,7 @@
 #include "src/vone/VOne.h"
 
 #include "src/libraries/MemoryFree/MemoryFree.h"
-
-// Define missing function: placement-new
-void * operator new (size_t, void * ptr) { return ptr; }
+#include "src/libraries/PlacementNew/PlacementNew.h"
 
 //===========================================================================
 //=============================public variables=============================
