@@ -94,8 +94,8 @@ class PTopPin {
     SoftwareSerial serial;
     long timeSent = 0;
 
-    void _sendMessage(char* msg);
-    int _recvAcknowmedgement();
+    inline void _sendMessage(char* msg);
+    inline int _recvAcknowmedgement();
 };
 
 
