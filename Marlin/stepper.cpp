@@ -64,8 +64,8 @@ static bool old_y_max_endstop=false;
 static bool old_z_min_endstop=false;
 static bool old_z_max_endstop=false;
 
-static bool p_top_enabled = false;
-static bool calibration_plate_enabled = false;
+static volatile bool p_top_enabled = false;
+static volatile bool calibration_plate_enabled = false;
 
 volatile long count_position[NUM_AXIS] = { 0, 0, 0, 0};
 volatile signed char count_direction[NUM_AXIS] = { 1, 1, 1, 1};
