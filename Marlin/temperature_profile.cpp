@@ -150,7 +150,7 @@ void manage_heating_profile() {
       profile_reset();
     }
 
-    // Check if the temperature has moved at all during heating. Could indicate a loose/fallen thermistor
+    // Check if the temperature has not moved at all during heating. Could indicate a loose/fallen thermistor
     if (now >= profile.changeTimeout && (target_temperature_bed > current_temperature_bed) && abs(current_temperature_bed - profile.changeTemperature) < 2) {
       SERIAL_ERROR_START;
       SERIAL_ERRORPGM("Temperature change not detected. Current: "); SERIAL_ERROR(current_temperature_bed);
@@ -188,7 +188,7 @@ void manage_heating_profile() {
   }
 
   // If not ramping or holding, set temperature and ramping timeout. Different timeout if we are heating or cooling
-  unsigned long timeout = profile.temperature[profile.head] > current_temperature_bed ? (unsigned long)3*60*1000 : (unsigned long)25*60*1000;
+  unsigned long timeout = profile.temperature[profile.head] > current_temperature_bed ? (unsigned long)4*60*1000 : (unsigned long)25*60*1000;
   profile.safetyTimeout = now + timeout;
   profile.changeTimeout = now + (unsigned long)10*1000; // 10 seconds to register a change in temperature.
   profile.changeTemperature = current_temperature_bed; // Take snapshot of current temperature.
