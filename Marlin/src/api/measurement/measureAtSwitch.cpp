@@ -28,6 +28,8 @@ int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement
   }
   const float retractDistance = abs(current_position[axis] - triggerPos);
 
+  // TODO: Confirm switch released
+
   // Approach again, slowly
   // NOTE: this gives us a more accurate reading
   const auto slow = homing_feedrate[axis] / 6;

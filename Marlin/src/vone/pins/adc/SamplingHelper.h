@@ -52,6 +52,7 @@ class SamplingHelper {
     FORCE_INLINE SampledValue readValue() {
       const auto* tmp = readPtr;
       while (tmp == readPtr) {
+        //TODO: make a niceDelay function that logs if it blocks for more than 1s
       }
       return value();
     }
