@@ -58,7 +58,7 @@ int PTopPin::send(char* msg) {
   for (attempt = 1; attempt <= maxAttempts; ++attempt) {
 
     if (attempt > 1) {
-    SERIAL_ECHO_START;
+      SERIAL_ECHO_START;
       SERIAL_ECHOLNPGM("Retrying");
     }
 
@@ -73,9 +73,9 @@ int PTopPin::send(char* msg) {
     if (attempt > 2) {
       SERIAL_ECHO_START;
       SERIAL_PAIR("NOTICE: p-top message sent on attempt ", attempt);
-    SERIAL_PAIR(" of ", maxAttempts);
-    SERIAL_EOL;
-  }
+      SERIAL_PAIR(" of ", maxAttempts);
+      SERIAL_EOL;
+    }
 
     // Success
     return 0;
