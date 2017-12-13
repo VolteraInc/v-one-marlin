@@ -38,18 +38,16 @@ class VOne {
     Heater heater;
     //ToolCarriage toolCarriage;
 
-    // Perform work that needs to happen periodicially but
-    // can be interrupted by serial and stepper work
-    inline void periodicInterruptibleWork() {
+    // Perform work that must happen frequently but can be
+    // interrupted (briefly) by time critical work like
+    // serial character reads and stepper work
+    inline void frequentInterruptibleWork() {
       // Allow other interrupts
       CBI(TIMSK0, OCIE0B);
       sei();
 
-      adc.periodicInterruptibleWork();
-
-      heater.periodicInterruptibleWork();
-
-      //toolCarriage.periodicInterruptibleWork();
+      adc.frequentInterruptibleWork();
+      heater.frequentInterruptibleWork();
 
       SBI(TIMSK0, OCIE0B);
     }

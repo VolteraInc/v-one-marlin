@@ -52,7 +52,7 @@ class AnalogDigitalConverter {
       BedTemperaturePin& bedTemperaturePin
     );
 
-    inline void periodicInterruptibleWork();
+    inline void frequentInterruptibleWork();
 
   private:
     enum class State : int {
@@ -105,7 +105,7 @@ int AnalogDigitalConverter::getAdcPin() {
 
 // Rather than waiting for reads to complete we start the conversion
 // then pick up the result the next time this isr() is called.
-void AnalogDigitalConverter::periodicInterruptibleWork() {
+void AnalogDigitalConverter::frequentInterruptibleWork() {
   long adcValue = ADC;
   auto targetPin = 0;
 

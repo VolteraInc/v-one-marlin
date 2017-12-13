@@ -15,7 +15,7 @@ class Heater {
     bool isHeating() { ScopedInterruptDisable sid; return currentTemp < targetTemp; };
     bool isCooling() { return !isHeating(); };
 
-    inline void periodicInterruptibleWork();
+    inline void frequentInterruptibleWork();
 
   private:
     HeaterPin& heaterPin;
@@ -75,7 +75,7 @@ void Heater::_updateHeating() {
   }
 }
 
-void Heater::periodicInterruptibleWork() {
+void Heater::frequentInterruptibleWork() {
   // Run every 0.5s starting after 3s
   // Note: We wait 5s so we have time to collect a valid sample
   //       otherwise we'd need to check endTime != 0

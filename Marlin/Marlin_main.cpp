@@ -156,5 +156,5 @@ void loop() {
 }
 
 ISR(TIMER0_COMPB_vect) {
-  vone->periodicInterruptibleWork();
+  vone->frequentInterruptibleWork();
 }
