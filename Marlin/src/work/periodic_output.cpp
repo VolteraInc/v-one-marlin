@@ -10,6 +10,11 @@ static void outputBedTemperatureUpdate(float current, float target, float timeRe
   SERIAL_PROTOCOLPGM("\n");
 }
 
+static void outputToolUpdate(const char* type) {
+  SERIAL_PAIR("toolUpdate type:", type);
+  SERIAL_EOL;
+}
+
 void periodic_output() {
   // Run periodically
   static unsigned long nextCheckAt = 0;
@@ -22,6 +27,7 @@ void periodic_output() {
   static struct {
     float position[NUM_AXIS];
     struct { float current; float target; } temperature;
+    Tool* tool = nullptr;
   } prev; // Previously reported values
 
   // Output position on change
@@ -56,5 +62,18 @@ void periodic_output() {
 
       prev.temperature.current = current;
       prev.temperature.target = target;
+  }
+
+  // Tool changes
+  const auto* tool = vone->currentTool();
+  if (prev.tool != tool) {
+    if (prev.tool) {
+      SERIAL_ECHO_START;
+      SERIAL_PAIR("Swapping ", prev.tool->typeName());
+      SERIAL_PAIR(" for ", tool->typeName()));
+      SERIAL_EOL;
+    }
+    outputToolUpdate(tool->typeName());
+    prev.tool = tool;
   }
 }

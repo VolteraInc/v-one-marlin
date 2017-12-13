@@ -115,7 +115,6 @@ void setup() {
 
   sendHomedStatusUpdate();
   vone->pins.outputEndStopStatus();
-  sendToolStatusUpdate();
 
   manufacturing_init();
 
@@ -141,13 +140,18 @@ void loop() {
 
   periodic_work();
 
+
   // This work is excluded from periodic_work() becuase we
   // don't want to do these in the middle of processing a command
   checkForEndstopHits(); // will detect expected hits as errors
   reportBufferEmpty();   // not important enough to monitor
   periodic_output();     // will generate excessive output
-  toolChanges();         // handling a tool change mid command would be needlessly complicated
+  vone->toolDetector.updateTool();  // handling a tool change mid-command would be needlessly complicated
+  // TODO: find a cleaner way to call updateTool
 }
+
+// Stepper uses ISR(TIMER1_COMPA_vect)
+// see stepper.cpp for details
 
 ISR(TIMER0_COMPB_vect) {
   vone->frequentInterruptibleWork();

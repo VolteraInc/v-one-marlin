@@ -5,116 +5,7 @@
 
 #include "internal.h"
 
-static Tool s_tool = TOOLS_NONE;
-static bool s_toolPrepared = false;
-
-void sendToolStatusUpdate() {
-  SERIAL_PROTOCOLPGM("toolUpdate");
-  SERIAL_PROTOCOLPGM(" type:"); SERIAL_PROTOCOL(toolTypeAsString(s_tool));
-  SERIAL_PROTOCOLPGM("\n");
-}
-
-static int s_prepareTool(Tool tool) {
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Preparing tool");
-  switch (tool) {
-    case TOOLS_PROBE: return Probe::prepare(tool);
-    case TOOLS_DISPENSER: return Dispenser::prepare(tool);
-    case TOOLS_ROUTER: return Router::prepare(tool);
-    default: return ensureHomedInXY();
-  }
-}
-
-int prepareToolToMove(Tool tool) {
-  if (!s_toolPrepared) {
-    if (s_prepareTool(tool)) {
-      return -1;
-    }
-    s_toolPrepared = true;
-  }
-  return 0;
-}
-
-static int s_unprepareTool(Tool tool) {
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Reset tool preparations");
-  switch (tool) {
-    case TOOLS_PROBE: return Probe::unprepare(tool);
-    case TOOLS_DISPENSER: return Dispenser::unprepare(tool);
-    case TOOLS_ROUTER: return Router::unprepare(tool);
-    case TOOLS_NONE: return NoTool::unprepare(tool);
-    default: return 0;
-  }
-}
-
-int resetToolPreparations() {
-  if (s_toolPrepared) {
-    auto tool = getTool();
-    if (s_unprepareTool(tool)) {
-      return -1;
-    }
-    s_toolPrepared = false;
-  }
-  return 0;
-}
-
-void setTool(Tool tool) {
-  if (s_tool == tool) {
-    return;
-  }
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Swapping "); SERIAL_ECHO(toolTypeAsString(s_tool));
-  SERIAL_ECHOPGM(" for "); SERIAL_ECHOLN(toolTypeAsString(tool));
-  resetToolPreparations();
-  s_tool = tool;
-  sendToolStatusUpdate();
-}
-
-Tool getTool() {
-  return s_tool;
-}
-
-const char* toolTypeAsString(Tool tool) {
-  switch(tool) {
-    case TOOLS_NONE: return "None";
-    case TOOLS_PROBE: return "Probe";
-    case TOOLS_DISPENSER: return "Dispenser";
-    case TOOLS_ROUTER: return "Router";
-    default: return "unknown";
-  }
-}
-
-int outputToolStatus() {
-  const auto toolState = determineToolState(s_tool);
-  SERIAL_ECHOPGM("Tool\n");
-  SERIAL_ECHOPGM("  type: "); SERIAL_ECHOLN(toolTypeAsString(s_tool));
-
-  SERIAL_ECHOPGM("Probe\n");
-  SERIAL_ECHOPGM("  status: "); SERIAL_ECHOLN(
-    toolStateAsString(s_tool == TOOLS_PROBE ? toolState : TOOL_STATE_NOT_MOUNTED)
-  );
-
-  SERIAL_ECHOPGM("Dispenser\n");
-  SERIAL_ECHOPGM("  dispense height: "); SERIAL_ECHOLN(Dispenser::getDispenseHeight(TOOLS_DISPENSER));
-
-  SERIAL_ECHOPGM("Router\n");
-  SERIAL_ECHOPGM("  status: "); SERIAL_ECHOLN(
-    toolStateAsString(s_tool == TOOLS_ROUTER ? toolState : TOOL_STATE_NOT_MOUNTED)
-  );
-  SERIAL_ECHOPGM("  Speed: "); SERIAL_ECHOLN(Router::getRotationSpeed(TOOLS_ROUTER));
-
-  SERIAL_ECHOPGM("Homing\n");
-  SERIAL_ECHOPGM("  x: "); SERIAL_ECHOLN(getHomedState(X_AXIS));
-  SERIAL_ECHOPGM("  y: "); SERIAL_ECHOLN(getHomedState(Y_AXIS));
-  SERIAL_ECHOPGM("  z: "); SERIAL_ECHOLN(getHomedState(Z_AXIS));
-
-  SERIAL_ECHOPGM("Status\n");
-  SERIAL_ECHOPGM("  Prepared: "); SERIAL_ECHOLN(s_toolPrepared);
-
-  return 0;
-}
-
-int asyncMove(Tool tool, float x, float y, float z, float e, float f, bool applyDispenseHeight) {
+int asyncMove(Tool& tool, float x, float y, float z, float e, float f, bool applyDispenseHeight) {
   if (applyDispenseHeight) {
     z += Dispenser::getDispenseHeight(tool);
   }
@@ -122,7 +13,7 @@ int asyncMove(Tool tool, float x, float y, float z, float e, float f, bool apply
   return asyncRawMove(x, y, z, e, f);
 }
 
-int asyncRelativeMove(Tool tool, float x, float y, float z, float e, float speed_in_mm_per_min) {
+int asyncRelativeMove(Tool& tool, float x, float y, float z, float e, float speed_in_mm_per_min) {
   return asyncMove(
     tool,
     current_position[ X_AXIS ] + x,
@@ -133,7 +24,7 @@ int asyncRelativeMove(Tool tool, float x, float y, float z, float e, float speed
   );
 }
 
-int relativeMove(Tool tool, float x, float y, float z, float e, float speed_in_mm_per_min) {
+int relativeMove(Tool& tool, float x, float y, float z, float e, float speed_in_mm_per_min) {
   if (asyncRelativeMove(tool, x, y, z, e, speed_in_mm_per_min)) {
     return -1;
   }
@@ -154,7 +45,7 @@ int relativeMove(Tool tool, float x, float y, float z, float e, float speed_in_m
 }
 
 
-int moveXY(Tool tool, float x, float y, float f) {
+int moveXY(Tool& tool, float x, float y, float f) {
   if (asyncMove(tool, x, y, current_position[Z_AXIS], current_position[E_AXIS], f)) {
     return -1;
   }
@@ -170,7 +61,7 @@ int moveXY(Tool tool, float x, float y, float f) {
   return 0;
 }
 
-int moveZ(Tool tool, float z, float f, bool applyDispenseHeight) {
+int moveZ(Tool& tool, float z, float f, bool applyDispenseHeight) {
   if (asyncMove(tool, current_position[X_AXIS], current_position[Y_AXIS], z, current_position[E_AXIS], f, applyDispenseHeight)) {
     return -1;
   }
@@ -186,7 +77,7 @@ int moveZ(Tool tool, float z, float f, bool applyDispenseHeight) {
   return 0;
 }
 
-int confirmMountedAndNotTriggered(const char* context, Tool tool, Tool requiredTool) {
+int confirmMountedAndNotTriggered(const char* context, Tool& tool, Tool requiredTool) {
   if (tool != requiredTool) {
     SERIAL_ERROR_START;
     SERIAL_ERRORPGM("Unable to "); SERIAL_ERROR(context); SERIAL_ERRORPGM(", ");
@@ -247,7 +138,7 @@ int ensureHomedInXY() {
   return homeXY();
 }
 
-int centerTool(Tool tool) {
+int centerTool(Tool& tool) {
   float toolX, toolY;
   if (xyPositionerFindCenter(tool, defaultXyPositionerCycles, toolX, toolY)) {
     return -1;
