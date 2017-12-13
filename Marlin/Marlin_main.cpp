@@ -117,10 +117,6 @@ void setup() {
   vone->pins.outputEndStopStatus();
   sendToolStatusUpdate();
 
-
-
-  plan_init();  // Initialize planner
-  st_init();    // Initialize stepper
   manufacturing_init();
 
   // Configure calling frequency of TIMER0_COMPB_vect
