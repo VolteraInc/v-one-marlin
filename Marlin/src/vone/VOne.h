@@ -1,9 +1,6 @@
 #pragma once
 
-#include "pins/PTopPin/PTopPin.h"
-#include "pins/BedTemperaturePin/BedTemperaturePin.h"
-#include "pins/HeaterPin.h"
-
+#include "pins/PinSet.h"
 #include "pins/adc/AnalogDigitalConverter.h"
 #include "bed/heater/Heater.h"
 
@@ -18,22 +15,7 @@ class VOne {
       int heaterDigitalPin
     );
 
-    struct Pins {
-      PTopPin ptop;
-      BedTemperaturePin bedTemperature;
-      HeaterPin heater;
-
-      Pins(
-        int ptopDigialPin,
-        int ptopAnalogPin,
-        int bedTemperatureAnalogPin,
-        int heaterDigitalPin
-      );
-
-
-      int outputEndStopStatus();
-    } pins;
-
+    PinSet pins;
     adc::AnalogDigitalConverter adc;
     Heater heater;
     //ToolCarriage toolCarriage;
