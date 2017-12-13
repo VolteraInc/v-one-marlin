@@ -4,7 +4,6 @@
 #include "pins/adc/AnalogDigitalConverter.h"
 #include "bed/heater/Heater.h"
 
-// #include "tools/tools.h"
 
 class VOne {
   public:
@@ -18,7 +17,6 @@ class VOne {
     PinSet pins;
     adc::AnalogDigitalConverter adc;
     Heater heater;
-    //ToolCarriage toolCarriage;
 
     // Perform work that must happen frequently but can be
     // interrupted (briefly) by time critical work like
@@ -34,13 +32,3 @@ class VOne {
       SBI(TIMSK0, OCIE0B);
     }
 };
-
-// To test
-//   - analog probing
-//   - router comms
-//   - temp profiles
-// TODO
-//   - tool detection
-//      - convert toolChanges to OO
-//            -- decide on tool-based vs. ToolDetector
-//      - confirm no need for super fast change detection (i.e. ~250ms is enough)
