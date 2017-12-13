@@ -44,10 +44,10 @@ static void s_prepare_move() {
 
   // Do not use feedmultiply for E or Z only moves
   if( (current_position[X_AXIS] == destination [X_AXIS]) && (current_position[Y_AXIS] == destination [Y_AXIS])) {
-    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
+    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60);
   }
   else {
-    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate*feedmultiply/60/100.0, active_extruder);
+    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate*feedmultiply/60/100.0);
   }
   for(int8_t i=0; i < NUM_AXIS; i++) {
     current_position[i] = destination[i];
@@ -83,7 +83,7 @@ static void s_prepare_arc_move(char isclockwise) {
   float r = hypot(offset[X_AXIS], offset[Y_AXIS]); // Compute arc radius for mc_arc
 
   // Trace the arc
-  mc_arc(current_position, destination, offset, X_AXIS, Y_AXIS, Z_AXIS, feedrate*feedmultiply/60/100.0, r, isclockwise, active_extruder);
+  mc_arc(current_position, destination, offset, X_AXIS, Y_AXIS, Z_AXIS, feedrate*feedmultiply/60/100.0, r, isclockwise);
 
   // As far as the parser is concerned, the position is now == target. In reality the
   // motion control system might still be processing the action and the real tool position
@@ -185,7 +185,7 @@ int process_gcode(int command_code) {
       feedrate = homing_feedrate[Z_AXIS]/(6);
       // move down until you find the bed
       float zPosition = -10;
-      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
+      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60);
       st_synchronize();
 
       // we have to let the planner know where we are right now as it is not where we said to go.
@@ -203,7 +203,7 @@ int process_gcode(int command_code) {
       // move down until you find the bed
       feedrate = homing_feedrate[X_AXIS]/(6);
       float xPosition = -10;
-      plan_buffer_line(xPosition, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
+      plan_buffer_line(xPosition, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60);
       st_synchronize();
 
       // we have to let the planner know where we are right now as it is not where we said to go.
@@ -221,7 +221,7 @@ int process_gcode(int command_code) {
       // move down until you find the bed
       feedrate = homing_feedrate[Y_AXIS]/(6);
       float yPosition = -10;
-      plan_buffer_line(current_position[X_AXIS], yPosition, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60, active_extruder);
+      plan_buffer_line(current_position[X_AXIS], yPosition, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60);
       st_synchronize();
 
       // we have to let the planner know where we are right now as it is not where we said to go.
@@ -239,7 +239,7 @@ int process_gcode(int command_code) {
       // move down until you find the bed
       feedrate = homing_feedrate[Z_AXIS]/(6);
       float zPosition = 30;
-      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
+      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60);
       st_synchronize();
 
       // we have to let the planner know where we are right now as it is not where we said to go.

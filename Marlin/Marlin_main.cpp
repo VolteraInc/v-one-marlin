@@ -60,8 +60,6 @@ float current_position[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
 float min_pos[3] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS };
 float max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
 
-uint8_t active_extruder = 0;
-
 float min_z_x_pos;
 float min_z_y_pos;
 float xypos_x_pos;

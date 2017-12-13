@@ -234,13 +234,9 @@ int process_mcode(int command_code) {
       while ( target_direction ? (vone->heater.isHeating()) : (vone->heater.isCooling() && (CooldownNoWait==false)) ) {
         // Print Temp Reading every 1 second while heating up.
         if ((millis() - codenum) > 1000) {
-          SERIAL_PROTOCOLPGM("T:");
-          SERIAL_PROTOCOL(0);
-          SERIAL_PROTOCOLPGM(" E:");
-          SERIAL_PROTOCOL((int)active_extruder);
-          SERIAL_PROTOCOLPGM(" B:");
-          SERIAL_PROTOCOL_F(vone->heater.currentTemperature(),1);
-          SERIAL_PROTOCOLLN("");
+          SERIAL_PROTOCOLPGM("T:0 E:0 B:");
+          SERIAL_PROTOCOL_F(vone->heater.currentTemperature(), 1);
+          SERIAL_EOL;
           codenum = millis();
         }
         periodic_work();

@@ -188,8 +188,7 @@ int asyncRawMove(float x, float y, float z, float e, float f, bool confirmMoveIs
     current_position[ Y_AXIS ],
     current_position[ Z_AXIS ],
     current_position[ E_AXIS ],
-    speed_in_mm_per_min/60,
-    active_extruder
+    speed_in_mm_per_min/60
   );
   return 0;
 }

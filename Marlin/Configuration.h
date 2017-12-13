@@ -28,9 +28,6 @@
 //Default Serial number for the Voltera V-One
 #define PRODUCT_SERIAL    ("V1-00-0000-120")
 
-// This defines the number of extruders
-#define EXTRUDERS 1
-
 //===========================================================================
 //=============================Mechanical Settings===========================
 //===========================================================================
@@ -58,7 +55,7 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #define X_ENABLE_ON 0
 #define Y_ENABLE_ON 0
 #define Z_ENABLE_ON 0
-#define E_ENABLE_ON 0 // For all extruders
+#define E_ENABLE_ON 0
 
 #define INVERT_X_DIR true
 #define INVERT_Y_DIR true

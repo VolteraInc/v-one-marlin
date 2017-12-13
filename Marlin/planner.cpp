@@ -427,7 +427,7 @@ static void s_applyBacklashCompensation(long& xSteps, long& ySteps) {
 // Add a new linear movement to the buffer. steps_x, _y and _z is the absolute position in
 // mm. Microseconds specify how many microseconds the move should take to perform. To aid acceleration
 // calculation the caller must also provide the physical length of the line in millimeters.
-void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8_t extruder)
+void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
 {
   // Calculate the buffer head after we push this byte
   int next_buffer_head = next_block_index(block_buffer_head);
@@ -494,8 +494,6 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate, uint8
   if (steps_e_signed < 0) {
     block->direction_bits |= (1<<E_AXIS);
   }
-
-  block->active_extruder = extruder;
 
   // enable active axes
   if (block->steps_x != 0) { enable_x(); }

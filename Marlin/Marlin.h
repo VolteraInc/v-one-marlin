@@ -113,9 +113,6 @@ extern const char axis_codes[NUM_AXIS];
 
 extern bool logging_enabled;
 
-// Handling multiple extruders pins
-extern uint8_t active_extruder;
-
 void setStepperInactiveDuration(unsigned long duration);
 
 class VOne;
