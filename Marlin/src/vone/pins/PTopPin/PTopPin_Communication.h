@@ -32,20 +32,30 @@ void PTopPin::_sendMessage(char* msg) {
   setMode_Idle();
 }
 
-int PTopPin::_recvAcknowmedgement() {
+int PTopPin::_recvAcknowledgement() {
   const unsigned long tryUntil = timeSent + 300; // ms
   auto count = 0u;
-  auto countHighs = 0u;
+  auto ackCount = 0u;
   while (millis() <= tryUntil) {
     ++count;
-    countHighs += !readValue().voltage > .6; // TODO: determine the proper voltage threshold
+    auto voltage = readValue().voltage;
+
+    // Count low voltages (which signal an acknowledgement)
+    // Note: actual value is 0.39
+    if (voltage >= 0.29 && voltage <= 0.49) {
+      ++ackCount;
+    }
   }
 
-  const bool acknowledged = countHighs > 3;
+  // Note: if the tool resets it will be seen as an acknowledgement
+  // this ensures that we don't retry, which could result in us
+  // missing the reset. Handling this case more explicitly would
+  // complicate this code for little gain.
+  const bool acknowledged = ackCount > 3;
 
   SERIAL_ECHO_START;
   SERIAL_PAIR("Received ", acknowledged ? "ack" : "noAck");
-  SERIAL_PAIR(", count = ", countHighs);
+  SERIAL_PAIR(", count = ", ackCount);
   SERIAL_PAIR(" of ", count);
   SERIAL_EOL;
 
@@ -63,7 +73,7 @@ int PTopPin::send(char* msg) {
     }
 
     _sendMessage(msg);
-    if (_recvAcknowmedgement()) {
+    if (_recvAcknowledgement()) {
       continue;
     }
 

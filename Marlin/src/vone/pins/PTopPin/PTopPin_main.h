@@ -95,7 +95,7 @@ class PTopPin {
     long timeSent = 0;
 
     inline void _sendMessage(char* msg);
-    inline int _recvAcknowmedgement();
+    inline int _recvAcknowledgement();
 };
 
 
