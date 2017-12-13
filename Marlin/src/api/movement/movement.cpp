@@ -183,14 +183,13 @@ int asyncRawMove(float x, float y, float z, float e, float f, bool confirmMoveIs
     SERIAL_EOL;
   }
 
-  plan_buffer_line(
+  return vone->stepper.add(
     current_position[ X_AXIS ],
     current_position[ Y_AXIS ],
     current_position[ Z_AXIS ],
     current_position[ E_AXIS ],
-    speed_in_mm_per_min/60
+    speed_in_mm_per_min
   );
-  return 0;
 }
 
 int relativeRawMoveE(float e, float speed_in_mm_per_min) {

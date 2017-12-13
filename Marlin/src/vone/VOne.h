@@ -3,6 +3,7 @@
 #include "pins/PinSet.h"
 #include "pins/adc/AnalogDigitalConverter.h"
 #include "bed/heater/Heater.h"
+#include "stepper/Stepper.h"
 
 
 class VOne {
@@ -17,6 +18,7 @@ class VOne {
     PinSet pins;
     adc::AnalogDigitalConverter adc;
     Heater heater;
+    Stepper stepper;
 
     // Perform work that must happen frequently but can be
     // interrupted (briefly) by time critical work like
