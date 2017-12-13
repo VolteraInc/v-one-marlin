@@ -1,7 +1,7 @@
 #include "Stepper.h"
 
-#include "../../planner.h"
-#include "../../stepper.h"
+#include "../../../planner.h"
+#include "../../../stepper.h"
 
 Stepper::Stepper() {
   plan_init();  // Initialize planner
@@ -29,4 +29,7 @@ int Stepper::add(float x, float y, float z, float e, float f) {
     stop(); // remove the point we just added
     return -1;
   }
+
+  // Success
+  return 0;
 }
