@@ -35,12 +35,14 @@ void PTopPin::addAdcSample(unsigned long value) {
     return;
   }
 
-  // TODO: still need to detect detaches. Perhaps separate from
-  // voltage sampling or maybe not.
-
   auto ready = adcSamples.add(value);
   if (ready) {
-    // Fast enough to detect transitions in Acknowledment signal from drill
+    // Note: Why 10ms?
+    // Making this value too low leaves less time for other tasks
+    // Making it too high an we may not have enough resolution to 
+    // detect signals.
+    // 10ms seems comfortable given that the router's
+    // acknowledgement is 100ms and its reset signal is 500ms.
     preventAdcSamplingUntil = millis() + 10;
 
     setMode_Idle();
