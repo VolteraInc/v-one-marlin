@@ -102,7 +102,7 @@ class PTopPin {
 PTopPin::PTopPin(int digitalPin, int analogPin)
   : _digitalPin(digitalPin)
   , _analogPin(analogPin)
-  , adcSamples(numSamples)
+  , adcSamples(numSamples, 5.0) // 5.0 means no tool mounted
   , serial(dummy_pin, _digitalPin)
 {
   // Reset attached tool, if there is one

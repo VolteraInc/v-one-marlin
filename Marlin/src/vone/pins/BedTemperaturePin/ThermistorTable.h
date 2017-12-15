@@ -162,3 +162,5 @@ const short temperatureTable[][2] PROGMEM = {
    {1006, 5},
    {1010, 0}
 };
+
+#define DEFAULT_VOLTAGE 1006

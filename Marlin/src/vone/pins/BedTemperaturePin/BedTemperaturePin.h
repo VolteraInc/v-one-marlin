@@ -56,7 +56,7 @@ BedTemperaturePin::Sample BedTemperaturePin::readValue() { return Sample(adcSamp
 
 BedTemperaturePin::BedTemperaturePin(int analogPin)
   : _analogPin(analogPin)
-  , adcSamples(numSamples)
+  , adcSamples(numSamples, DEFAULT_VOLTAGE)
 {
   // Disable the digital read buffer on this pin
   // Note: We only do analog reads on TEMP_BED_PIN, so we can disable its

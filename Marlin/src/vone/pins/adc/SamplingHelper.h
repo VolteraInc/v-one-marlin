@@ -24,9 +24,9 @@ class SamplingHelper {
     }
 
   public:
-    FORCE_INLINE SamplingHelper(int numSamples)
-      : bufferA(numSamples)
-      , bufferB(numSamples)
+    FORCE_INLINE SamplingHelper(int numSamples, float defaultValue)
+      : bufferA(numSamples, defaultValue)
+      , bufferB(numSamples, defaultValue)
     {
     }
 
