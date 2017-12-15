@@ -138,7 +138,12 @@ int process_dcode(int command_code) {
       // Toggle logging
       logging_enabled = !logging_enabled;
       SERIAL_ECHO_START;
-      SERIAL_ECHO(logging_enabled ? F("Logging ON\n") : F("Logging OFF\n"));
+      if (logging_enabled) {
+        SERIAL_ECHOPGM("Logging ON");
+      } else {
+        SERIAL_ECHOPGM("Logging OFF");
+      }
+      SERIAL_EOL;
       return 0;
 
     // Algorithms - prepare to move
