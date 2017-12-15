@@ -25,7 +25,8 @@ static Tool s_toTool(Tool tool, enum ToolStates state) {
 }
 
 static bool s_possibleToolChange(Tool tool, float voltage) {
-  return tool != s_toTool(tool, classifyVoltage(tool, voltage));
+  const auto type = classifyVoltage(tool, voltage);
+  return tool != s_toTool(tool, type);
 }
 
 Tool determineTool(Tool tool) {
@@ -54,6 +55,22 @@ void toolChanges() {
   const auto voltage = vone->pins.ptop.value().voltage;
   if (s_possibleToolChange(tool, voltage)) {
     const auto newTool = determineTool(tool);
+
+    // Log a notice if we falsely detect a possible tool change
+    // If we see this, it's may imply overlapping use of PTop
+    // (and perhaps a subtle bug).
+    // Note: Voltage will start around 0 because we hold
+    //       voltage low on boot, to reset the attached tool
+    //       hence the "now > 500"
+    if (newTool == getTool() && now > 500) {
+      const auto type = classifyVoltage(tool, voltage);
+      SERIAL_ECHO_START;
+      SERIAL_PAIR("NOTICE: Voltage variation detected, value:", voltage);
+      SERIAL_PAIR(" type:", toolStateAsString(type));
+      SERIAL_PAIR(" time:", now);
+      SERIAL_EOL;
+    }
+
     setTool(newTool);
   }
 }
