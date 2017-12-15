@@ -15,12 +15,6 @@ int process_vcode(int command_code) {
 
     // Move
     case 1: {
-      if (code_seen('D') && !code_seen('Z')) {
-        SERIAL_ERROR_START;
-        SERIAL_ERRORLNPGM("Unable to perform movement, D option can not be applied unless Z is given");
-        return -1;
-      }
-
       // Perpare, if necessary
       // Note: preparing for an E-only move would be unexpected
       auto xyzMoves = code_seen('X') || code_seen('Y') || code_seen('Z');
