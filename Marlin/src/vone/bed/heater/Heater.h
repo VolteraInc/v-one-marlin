@@ -55,7 +55,7 @@ void Heater::_updateTemperature() {
 
   // Shut off the heater if the temperature is out of range
   // Notes: A temp below the minimum suggests the thermometer is broken
-  if ( temperature <= BED_MINTEMP || temperature >= BED_MAXTEMP) {
+  if ( temperature < BED_MINTEMP || temperature > BED_MAXTEMP) {
     SERIAL_ERROR_START;
     SERIAL_PAIR("Unable to complete heating, current temperature is ", temperature);
     SERIAL_PAIR(" degrees, which is outside of the expected range, ", BED_MINTEMP);
