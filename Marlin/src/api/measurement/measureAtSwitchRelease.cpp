@@ -8,9 +8,7 @@
 #include "../movement/movement.h"
 
 static unsigned s_countTriggers(unsigned maxSamples) {
-  if (logging_enabled) {
-  }
-
+  const auto startTime = millis();
   auto count = 0u;
   float voltages[maxSamples];
   for (auto i = 0u; i < maxSamples; ++i) {
@@ -23,9 +21,11 @@ static unsigned s_countTriggers(unsigned maxSamples) {
   }
 
   if (logging_enabled) {
+    const auto duration = millis() - startTime;
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("countTriggers voltages: ["); serialArray(voltages, maxSamples);
-    SERIAL_PAIR("], count: ", count);
+    SERIAL_PAIR("], duration: ", duration);
+    SERIAL_PAIR(", count: ", count);
     SERIAL_PAIR(", position: ", current_position[Z_AXIS]);
     SERIAL_EOL;
   }

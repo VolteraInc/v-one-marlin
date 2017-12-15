@@ -60,15 +60,11 @@ int Probe::probe(
   unsigned* o_samplesTaken,
   unsigned* o_touchesUsed
 ) {
+  const auto startTime = millis();
 
   if (confirmMountedAndNotTriggered("probe", tool, TOOLS_PROBE)) {
     return -1;
   }
-
-    // Test this case:
-    // Disable analog reads to prevent false tool change detection
-    // (due to the unusualy amount to time the probe will be intermittently triggered)
-    // PTopScopedUsageLock scopedUse;
 
   float rawMeasurement;
   auto samplesTaken = 0u;
@@ -101,12 +97,14 @@ int Probe::probe(
   if (o_samplesTaken) { *o_samplesTaken = samplesTaken; }
   if (o_touchesUsed) { *o_touchesUsed = totalTouches; }
   if (logging_enabled) {
+    const auto duration = millis() - startTime;
     SERIAL_ECHO_START;
     SERIAL_ECHOPAIR("probe height: ", rawMeasurement);
     SERIAL_ECHOPAIR(", displacement: ", s_probeDisplacement);
     SERIAL_ECHOPAIR(", measurement: ", measurement);
     SERIAL_ECHOPAIR(", samplesTaken: ", samplesTaken);
     SERIAL_ECHOPAIR(", totalTouches: ", totalTouches);
+    SERIAL_ECHOPAIR(", duration: ", duration);
     SERIAL_EOL;
   }
   return 0;
