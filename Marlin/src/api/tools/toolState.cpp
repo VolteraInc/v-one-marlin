@@ -68,6 +68,8 @@ enum ToolStates determineToolState(Tool tool) {
       count = 1;
       previousState = state;
     }
+
+    delay(40);
   }
 
   SERIAL_ECHO_START;

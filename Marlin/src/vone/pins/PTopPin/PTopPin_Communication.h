@@ -12,6 +12,7 @@ bool PTopPin::trytoSetMode_Communication() {
     pinMode(_digitalPin, OUTPUT);
     return true;
   }
+  preventAdcSampling = true;
   return false;
 }
 
@@ -45,6 +46,7 @@ int PTopPin::_recvAcknowledgement() {
     if (voltage >= 0.29 && voltage <= 0.49) {
       ++ackCount;
     }
+    delay(10);
   }
 
   // Note: if the tool resets it will be seen as an acknowledgement

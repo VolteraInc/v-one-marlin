@@ -75,10 +75,16 @@ class PTopPin {
     inline bool trytoSetMode_ResetTool();
 
     // ADC sampling
-    volatile unsigned long preventAdcSamplingUntil = 0;
+    // Note: our adc readings seem stable, plus averaging
+    // is a horrible way to stabilize. Also, it's best to
+    // address instability at a higher level of the code
+    // where there is more context (e.g. analog probing,
+    // heater control, etc).
+    const unsigned numSamples = 1; // see note^
+    volatile bool preventAdcSampling = false;
+    volatile unsigned long delayAdcSamplingUntil = 0;
     unsigned long lastAdcSampleStartedAt = 0;
     unsigned long nextWarningAt = 0;
-    const unsigned numSamples = 4; //  TODO: why 4?
     adc::SamplingHelper adcSamples;
 
     // Direct read
@@ -120,6 +126,9 @@ void PTopPin::setMode_Idle() {
   ScopedInterruptDisable sid;
   if (mode != Mode::Idle) {
     digitalWrite(_digitalPin, HIGH);
+    if (mode != Mode::AdcSamplng) {
+      preventAdcSampling = false;
+    }
     mode = Mode::Idle;
   }
 }

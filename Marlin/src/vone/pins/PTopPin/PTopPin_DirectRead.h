@@ -13,6 +13,7 @@ bool PTopPin::trytoSetMode_DirectRead() {
     pinMode(_digitalPin, INPUT);
     return true;
   }
+  preventAdcSampling = true;
   return false;
 }
 

@@ -14,7 +14,8 @@ bool PTopPin::tryToSetMode_AdcSampling() {
 
   if (
     mode != Mode::Idle ||
-    millis() < preventAdcSamplingUntil
+    millis() < delayAdcSamplingUntil ||
+    preventAdcSampling
   ) {
     return false;
   }
@@ -37,14 +38,12 @@ void PTopPin::addAdcSample(unsigned long value) {
 
   auto ready = adcSamples.add(value);
   if (ready) {
-    // Note: Why 10ms?
-    // Making this value too low leaves less time for other tasks
-    // Making it too high an we may not have enough resolution to 
-    // detect signals.
-    // 10ms seems comfortable given that the router's
-    // acknowledgement is 100ms and its reset signal is 500ms.
-    preventAdcSamplingUntil = millis() + 10;
-
+    // adcSamplingDelayMillis impacts how long it takes to read analog values
+    // so smaller is better. Too small and it will be constantly toggling the
+    // pin mode from input to output, which 'feels' like a bad ideas
+    // (toggling every 1ms feels less bad)
+    const unsigned int adcSamplingDelay = 1;
+    delayAdcSamplingUntil = millis() + adcSamplingDelay;
     setMode_Idle();
   }
 }
