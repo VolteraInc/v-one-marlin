@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "Arduino.h" // millis()
+#include "../../MarlinConfig.h" // millis()
 
 CommandQueue command_queue;
 static const char* code_pointer = nullptr; // a pointer to find chars in the command string like X, Y, Z, E, etc

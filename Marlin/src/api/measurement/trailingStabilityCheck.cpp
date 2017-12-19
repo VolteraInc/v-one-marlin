@@ -1,5 +1,7 @@
 #include "../../utils/deltaBasedAveraging.h"
 
+#include <Arduino.h> // min
+
 // Return early if stable
 bool trailingStabilityCheck(const float data[], size_t size, unsigned maxWindowSize, unsigned minMatches, float maxDelta, float& result) {
   const auto windowSize = min(maxWindowSize, size);

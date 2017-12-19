@@ -1,5 +1,7 @@
 #include "deltaBasedAveraging.h"
 
+#include <Arduino.h>
+
 // Computing the average by averaging the deltas is less
 // susceptable to loss of precision. i.e. Sum will likely
 // exceed 100, maybe 1000, leaving little room for decimals.

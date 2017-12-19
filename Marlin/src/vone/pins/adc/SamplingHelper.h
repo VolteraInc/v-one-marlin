@@ -1,8 +1,6 @@
 #pragma once
 
-#include <Arduino.h>
-#include "../../../../macros.h"
-#include "../../../../Marlin.h"
+#include "../../../../MarlinConfig.h"
 #include "../../../utils/ScopedInterruptDisable.h"
 #include "SampledValue.h"
 

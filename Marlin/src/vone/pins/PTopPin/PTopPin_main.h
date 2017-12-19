@@ -1,7 +1,6 @@
 #pragma once
-#include <Arduino.h>
-#include "../../../../Marlin.h"
-#include "../../../../macros.h"
+#include "../../../../MarlinConfig.h"
+#include "../../../../serial.h"
 #include "../../../utils/rawToVoltage.h"
 #include "../adc/SamplingHelper.h"
 

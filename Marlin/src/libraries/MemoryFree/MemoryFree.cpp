@@ -1,10 +1,7 @@
 // From https://github.com/McNeight/MemoryFree/blob/master/MemoryFree.cpp
 
-#if (ARDUINO >= 100)
+#include <stddef.h>
 #include <Arduino.h>
-#else
-#include <WProgram.h>
-#endif
 
 extern unsigned int __heap_start;
 extern void *__brkval;
