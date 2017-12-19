@@ -17,7 +17,7 @@ static uint8_t CRC8(uint8_t data) {
     uint8_t sum = (crc ^ extract) & 0x01;
     crc >>= 1;
     if (sum) {
-        crc ^= 0x8C;
+      crc ^= 0x8C;
     }
     extract>>=1;
   }
