@@ -13,7 +13,7 @@ bool PTopPin::trytoSetMode_ResetTool() {
     mode = Mode::ResetTool;
     return true;
   }
-  preventAdcSampling = true; 
+  preventAdcSampling = true;
   return false;
 }
 
