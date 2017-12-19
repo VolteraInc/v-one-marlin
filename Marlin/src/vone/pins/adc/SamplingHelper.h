@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include "../../../../macros.h"
 #include "../../../../Marlin.h"
+#include "../../../utils/ScopedInterruptDisable.h"
 #include "SampledValue.h"
 
 namespace adc {
