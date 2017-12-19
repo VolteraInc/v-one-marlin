@@ -27,8 +27,9 @@
     http://reprap.org/pipermail/reprap-dev/2011-May/003323.html
  */
 
-#include "version.h"
 #include "Marlin.h"
+
+#include "version.h"
 #include "macros.h"
 #include "planner.h"
 #include "stepper.h"
@@ -66,8 +67,6 @@ float xypos_x_pos;
 float xypos_y_pos;
 char product_serial_number[15];
 const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
-
-bool logging_enabled = false;
 
 //===========================================================================
 

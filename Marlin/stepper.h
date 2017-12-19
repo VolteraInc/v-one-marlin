@@ -21,6 +21,8 @@
 #ifndef stepper_h
 #define stepper_h
 
+#include <inttypes.h>
+
 // Mod by VOLTERA
 #define WRITE_Z_STEP(v) WRITE(Z_STEP_PIN, v)
 #define NORM_Z_DIR() WRITE(Z_DIR_PIN, !INVERT_Z_DIR)

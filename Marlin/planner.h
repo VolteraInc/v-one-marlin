@@ -24,7 +24,11 @@
 #ifndef planner_h
 #define planner_h
 
-#include "Marlin.h"
+#include <inttypes.h>
+
+#include "macros.h"
+#include "Configuration.h"
+
 
 // This struct is used when buffering the setup for each linear movement "nominal" values are as specified in
 // the source g-code and may never actually be reached if acceleration management is active.
@@ -108,10 +112,10 @@ FORCE_INLINE void plan_discard_current_block()
 }
 
 // Gets the current block. Returns NULL if buffer empty
-FORCE_INLINE block_t *plan_get_current_block()
+FORCE_INLINE block_t* plan_get_current_block()
 {
   if (block_buffer_head == block_buffer_tail) {
-    return(NULL);
+    return nullptr;
   }
   block_t *block = &block_buffer[block_buffer_tail];
   block->busy = true;

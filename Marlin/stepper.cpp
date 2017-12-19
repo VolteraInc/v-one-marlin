@@ -21,12 +21,14 @@ along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 /* The timer calculations of this module informed by the 'RepRap cartesian firmware' by Zack Smith
 and Philipp Tiefenbacher. */
 
-#include "Marlin.h"
 #include "stepper.h"
+
+#include "macros.h"
+#include "Configuration.h"
 #include "planner.h"
 #include "speed_lookuptable.h"
 #include <SPI.h>
-#include "macros.h"
+
 #include "src/vone/VOne.h"
 
 //===========================================================================
@@ -438,10 +440,6 @@ ISR(TIMER1_COMPA_vect) {
     }
 
     for (int8_t i = 0; i < step_loops; i++) { // Take multiple steps per interrupt (For high speed moves)
-
-      // Check for serial chars
-      MSerial.checkRx();
-
       counter_x += current_block->steps_x;
       if (counter_x > 0) {
         WRITE(X_STEP_PIN, !INVERT_X_STEP_PIN);

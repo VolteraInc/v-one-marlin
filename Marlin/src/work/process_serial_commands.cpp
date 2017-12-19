@@ -1,4 +1,4 @@
-#include "../../Marlin.h"
+#include "../../serial.h"
 #include "../commands/processing.h"
 #include "work.h"
 

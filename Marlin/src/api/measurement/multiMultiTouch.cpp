@@ -1,6 +1,6 @@
 #include "measurement.h"
 
-#include "../../../Marlin.h"
+#include "../../../serial.h"
 #include "../../utils/deltaBasedAveraging.h"
 
 

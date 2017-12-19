@@ -1,4 +1,5 @@
 #include "../../planner.h"
+#include "../../serial.h"
 
 void reportBufferEmpty() {
   static uint8_t buffer_fill = 0;

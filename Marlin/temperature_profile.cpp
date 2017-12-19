@@ -1,4 +1,5 @@
-#include "Marlin.h"
+#include "Configuration.h"
+#include "serial.h"
 #include "src/vone/VOne.h"
 #include "src/vone/bed/heater/Heater.h"
 

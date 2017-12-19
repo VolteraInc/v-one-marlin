@@ -1,4 +1,6 @@
-#include "Marlin.h"
+#include "serial.h"
+#include "Marlin.h" // e.g. product_serial_number
+
 #include "planner.h"
 #include "ConfigurationStore.h"
 
