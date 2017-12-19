@@ -61,8 +61,8 @@ void toolChanges() {
     // (and perhaps a subtle bug).
     // Note: Voltage will start around 0 because we hold
     //       voltage low on boot, to reset the attached tool
-    //       hence the "now > 500"
-    if (newTool == getTool() && now > 500) {
+    //       hence the "now > 600"
+    if (newTool == getTool() && now > 600) {
       const auto type = classifyVoltage(tool, voltage);
       SERIAL_ECHO_START;
       SERIAL_PAIR("NOTICE: Voltage variation detected, value:", voltage);
