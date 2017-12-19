@@ -2,40 +2,141 @@
 #include "../commands/processing.h"
 #include "work.h"
 
-static void read_commands() {
-  static char command[MAX_CMD_SIZE];
-  static int index = 0;
+inline byte checksum(const char* start, const char* end) {
+  byte checksum = 0;
+  while (start != end) {
+    checksum ^= *(start++);
+  }
+  return checksum;
+}
 
-  while (MYSERIAL.available() > 0 && !command_queue.full()) {
+inline void skipWhitespace(const char** ptr) {
+  while (**ptr == ' ') {
+    ++(*ptr);
+  }
+}
+
+inline void requestResend(
+  unsigned long expectedLineNumber,
+  const char* pgmReason,
+  const char* msg
+) {
+  SERIAL_PAIR("Resend lineNumber:", expectedLineNumber);
+  SERIAL_PROTOCOLPGM(", reason:\""); serialprintPGM(pgmReason);
+  SERIAL_PAIR("\", message:\"", msg);
+  SERIAL_PROTOCOLPGM("\"");
+  SERIAL_EOL;
+}
+
+inline const char* parse(
+  const char* msg,
+  unsigned int len,
+  unsigned int expectedLineNumber
+) {
+  // skip empty lines
+  if (len == 0) {
+    // We output a message, because this is a symptom that something is wrong
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("NOTICE: Received a blank command, ignoring");
+    return nullptr;
+  }
+
+  // skip any leading spaces
+  const char* commandStart = msg;
+  skipWhitespace(&commandStart);
+
+  // Return if no line number included
+  if (*commandStart != 'N') {
+    return commandStart;
+  }
+
+  // Confirm checksum present
+  const char* star = strchr(commandStart, '*');
+  if (!star) {
+    requestResend(
+      expectedLineNumber,
+      PSTR("Missing checksum"),
+      msg
+    );
+    return nullptr;
+  }
+
+  // Validate the checksum
+  const auto msgChecksum = strtol(star + 1, nullptr, 10);
+  const auto computedChecksum = checksum(commandStart, star);
+  if (msgChecksum != computedChecksum) {
+    requestResend(
+      expectedLineNumber,
+      PSTR("Bad checksum"),
+      msg
+    );
+    return nullptr;
+  }
+
+  // Check line number
+  const char* newCommandStart = nullptr;
+  const auto lineNumber = strtol(commandStart + 1, const_cast<char**>(&newCommandStart), 10);
+  if (lineNumber != expectedLineNumber) {
+    requestResend(
+      expectedLineNumber,
+      PSTR("Line number does not match expected value"),
+      msg
+    );
+    return nullptr;
+  }
+
+  // Command is valid
+  skipWhitespace(&newCommandStart);
+  return newCommandStart;
+}
+
+static void read_commands() {
+  static uint16_t expectedLineNumber = 0;
+  static char buffer[MAX_CMD_SIZE];
+  static int index = 0;
+  auto tooLong = false;
+
+  while (!command_queue.full()) {
     char ch = MYSERIAL.read();
 
+    // No characters available
+    if (ch == -1) {
+      break;
+
     // End of command
-    if (ch == '\n' || ch == '\r') {
-      // Handle empty lines
-      if(index == 0 || index >= (MAX_CMD_SIZE - 1)) {
-        // We output a message, because this is a symptom that something is wrong
+    } else if (ch == '\n' || ch == '\r') {
+      // Handle long lines
+      if (tooLong) {
         SERIAL_ECHO_START;
-        SERIAL_ECHOLNPGM("Received a blank command, ignoring");
+        SERIAL_ECHOLNPGM("Finished receiving long command");
       } else {
         // Add to command queue
-        command[index] = 0; // terminate string
-        command_queue.push(command);
+        buffer[index] = 0; // terminate string
+        const char* command = parse(buffer, index, expectedLineNumber);
+        if (command) {
+          ++expectedLineNumber;
+          command_queue.push(command);
+        }
       }
 
       // Reset the write position for the next command
       index = 0;
 
-    // Command too long
+    // Command too long, report
+    // Note: Report long commands when they happen, as opposed to
+    //       waiting for the end of the command (which may never come)
     } else if (index >= (MAX_CMD_SIZE - 1)) {
-      command[index] = 0; // terminate string (so we can include it in the error)
-      index = 0; // reset write index
-      SERIAL_ERROR_START;
-      SERIAL_ERRORPGM("Unable to process command, command is too long, will ignore until end of command found --");
-      SERIAL_ERRORLN(command);
+      if (!tooLong) {
+        tooLong = true;
+        buffer[index] = 0; // terminate string (so we can include it in the error)
+        SERIAL_ERROR_START;
+        SERIAL_ERRORPGM("Unable to process command, command is too long, will ignore until end of command found --");
+        SERIAL_ERRORLN(buffer);
+      }
 
     // Add character to command
     } else {
-      command[index++] = ch;
+      buffer[index++] = ch;
     }
   }
 }
