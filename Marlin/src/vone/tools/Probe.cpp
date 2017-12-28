@@ -1,41 +1,42 @@
 #include "../../../Marlin.h"
 #include "../../../stepper.h"
-#include "../api.h"
-#include "../measurement/measurement.h"
-#include "../../vone/VOne.h"
-#include "internal.h"
+#include "../../api/api.h"
+#include "../../api/measurement/measurement.h"
 
-static float s_probeDisplacement = 0.0f;
+Probe::Probe(PTopPin& pin) 
+  : m_pin(pin) 
+{
+}
 
-int Probe::partiallyPrepare(const char* context, Tool tool) {
+int Probe::partiallyPrepare(const char* context) {
   enable_p_top(true);
   return (
     raise() ||
-    confirmMountedAndNotTriggered(context, tool, TOOLS_PROBE) ||
+    confirmMountedAndNotTriggered(context) ||
     ensureHomedInXY()
   );
 }
 
-int Probe::prepare(Tool tool) {
+int Probe::prepare() {
   const char* context = "prepare probe";
   return (
-    Probe::partiallyPrepare(context, tool) ||
+    Probe::partiallyPrepare(context) ||
     homeZ(tool) || // home Z so we can enter the xy pos with decent precision
-    centerTool(tool) ||
-    measureProbeDisplacement(tool, s_probeDisplacement) || // do this now, saves a trip back to the xy-pos after re-homing
+    centerTool() ||
+    measureProbeDisplacement(s_probeDisplacement) || // do this now, saves a trip back to the xy-pos after re-homing
     homeZ(tool) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
     raise()
   );
 }
 
-int Probe::unprepare(Tool) {
+int Probe::unprepare() {
   setHomedState(Z_AXIS, 0);
   enable_p_top(false);
   return 0;
 }
 
 bool Probe::isTriggered(float voltage) {
-  return classifyVoltage(TOOLS_PROBE, voltage) == TOOL_STATE_TRIGGERED;
+  return classifyVoltage(voltage) == TOOL_STATE_TRIGGERED;
 }
 
 bool Probe::readAnalogTriggered(float* o_voltageReading) {
@@ -51,7 +52,6 @@ float Probe::getProbeDisplacement() {
 }
 
 int Probe::probe(
-  Tool tool,
   float& measurement,
   float speed,
   float additionalRetractDistance,
@@ -62,7 +62,7 @@ int Probe::probe(
 ) {
   const auto startTime = millis();
 
-  if (confirmMountedAndNotTriggered("probe", tool, TOOLS_PROBE)) {
+  if (confirmMountedAndNotTriggered("probe")) {
     return -1;
   }
 
