@@ -34,8 +34,8 @@ float bedHeightAt(float x, float y) {
 // idea: record height at integer coords, will make it trivial to look up nearest point
 // e.g. For 3.45,4.60 grab
 // fail? if bed is not flat?
-// TODO int calibrateBedHeight(Tool tool, bool saveResult = false) {
-//   if (confirmRequiredToolAttached("calibrate bed height", tool, TOOLS_PROBE)) {
+// TODO int calibrateBedHeight(Probe& tool, bool saveResult = false) {
+//   if (confirmAttachedAndNotTriggered("calibrate bed height", probe)) {
 //     return -1;
 //   }
 //

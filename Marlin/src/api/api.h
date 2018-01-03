@@ -1,33 +1,46 @@
 #pragma once
 
-#include "tools/tools.h"
+namespace tools {
+  class Tool;
+  class Probe;
+}
+
 #include "movement/movement.h"
 #include "measurement/measurement.h"
 
-// Move before homing
-int meshGears();
+// Tool States
+enum ToolStates {
+  TOOL_STATE_UNKNOWN = 0,
+  TOOL_STATE_NOT_MOUNTED = 1,
+  TOOL_STATE_TRIGGERED = 2,
+  TOOL_STATE_PROBE_MOUNTED = 3,
+  TOOL_STATE_ROUTER_MOUNTED = 4
+};
+enum ToolStates classifyVoltage(float voltage);
+enum ToolStates determineToolState();
+const char* toolStateAsString(enum ToolStates state);
 
 // Homing
 bool homedXY();
-int homeXY();
-int homeZ(Tool tool);
+int homeXY(tools::Tool& tool);
+int homeZ(tools::Tool& tool);
 bool homedZ();
-int rawHome(Tool tool, bool homeX = true, bool homeY = true, bool homeZ = true);
+int rawHome(tools::Tool& tool, bool homeX = true, bool homeY = true, bool homeZ = true);
 int getHomedState(int axis);
 void setHomedState(int axis, int value);
 void sendHomedStatusUpdate();
-int moveToZSwitchXY(Tool tool);
+int moveToZSwitchXY(tools::Tool& tool);
 
 // XY positioner
 const float defaultXyPositionerCycles = 2;
 enum HowToMoveToZ { useConfiguredZ, usePlateBackOffForZ };
-int xyPositionerTouch(Tool tool, int axis, int direction, float& measurement);
-int xyPositionerFindCenter(Tool tool, long cycles, float& centerX, float& centerY, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
+int xyPositionerTouch(tools::Tool& tool, int axis, int direction, float& measurement);
+int xyPositionerFindCenter(tools::Tool& tool, long cycles, float& centerX, float& centerY, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
 const bool skipMoveInZ = true;
-int moveToXyPositioner(Tool tool, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
+int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
 
 // Calibration plate
-int measureProbeDisplacement(Tool tool, float& displacement);
+int measureProbeDisplacement(tools::Probe& probe, float& displacement);
 
 // Bed
 const float bedBoundsMinY = 40.0f;

@@ -3,6 +3,7 @@
 #include "../api/api.h"
 #include "../../macros.h"
 #include "../../temperature_profile.h"
+#include "../vone/vone.h"
 
 unsigned long previous_millis_serial_rx = 0;
 static unsigned long previous_millis_active_cmd = 0;
@@ -42,7 +43,7 @@ void manage_inactivity() {
       disable_y();
       disable_z();
       disable_e0();
-      resetToolPreparations();
+      vone->toolBox.currentTool().resetPreparations();
     }
   }
 

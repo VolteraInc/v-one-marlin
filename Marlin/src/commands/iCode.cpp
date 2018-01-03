@@ -5,11 +5,11 @@
 #include "processing.h"
 
 #include "../../ConfigurationStore.h"
+#include "../vone/vone.h"
 
 //-------------------------------------------
 // Special commands for iNternal use
 int process_icode(int command_code) {
-  const auto tool = getTool();
   switch(command_code) {
 
     // Reset positions to defaults
@@ -31,7 +31,7 @@ int process_icode(int command_code) {
     // Calibrate the locations of the z-switch and xy-positioner
     case 2: {
       const unsigned cycles = code_seen('C') ? code_value() : defaultSwitchPositionCalibrationCycles;
-      if (runCalibrateSwitchPositions(tool, cycles)) {
+      if (runCalibrateSwitchPositions(vone->toolBox.probe, cycles)) {
         return -1;
       }
 
@@ -51,7 +51,7 @@ int process_icode(int command_code) {
 
     // Run burn-in sequence
     case 3:
-      return runBurnInSequence(tool);
+      return runBurnInSequence(vone->toolBox.nullTool);
 
     //-------------------------------------------
     // Error if command unknown

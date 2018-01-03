@@ -1,13 +1,17 @@
+#include "diagnostics.h"
+
 #include "../../api/api.h"
 #include "../../../Marlin.h"
 #include "../../../stepper.h"
 #include "../../work/work.h"
 
+#include "../../vone/tools/NullTool.h"
+
 struct Point3d {
   float x, y, z;
 };
 
-static int rectangle(Tool tool, const Point3d& a, const Point3d& b, float xySpeed, float zSpeed) {
+static int rectangle(tools::Tool& tool, const Point3d& a, const Point3d& b, float xySpeed, float zSpeed) {
   return (
     // Ensure we are at the point 1
     moveZ(tool, a.z, zSpeed) || moveXY(tool, a.x, a.y, xySpeed) ||
@@ -20,7 +24,7 @@ static int rectangle(Tool tool, const Point3d& a, const Point3d& b, float xySpee
   );
 }
 
-static int crossPlanes(Tool tool, const Point3d& a, const Point3d& b, float xySpeed, float zSpeed) {
+static int crossPlanes(tools::Tool& tool, const Point3d& a, const Point3d& b, float xySpeed, float zSpeed) {
   const Point3d a2 = { b.x, a.y, a.z };
   const Point3d b2 = { a.x, b.y, b.z };
   if (
@@ -42,7 +46,7 @@ static int crossPlanes(Tool tool, const Point3d& a, const Point3d& b, float xySp
   return 0;
 }
 
-static int runCrossPlaneSequence(Tool tool, int steps, const Point3d& a, const Point3d& b, float xySpeed, float zSpeed) {
+static int runCrossPlaneSequence(tools::Tool& tool, int steps, const Point3d& a, const Point3d& b, float xySpeed, float zSpeed) {
   const float xStepSize = (b.x - a.x) / (2 * steps);
   const float yStepSize = (b.y - a.y) / (2 * steps);
   for (int i = 0; i < steps; ++i) {
@@ -71,23 +75,23 @@ static int runCrossPlaneSequence(Tool tool, int steps, const Point3d& a, const P
   return 0;
 }
 
-int burnInSequence(Tool tool, int steps) {
+int burnInSequence(tools::NullTool& noTool, int steps) {
   const float bedCenterX = min_pos[X_AXIS] + (max_pos[X_AXIS] - min_pos[X_AXIS]) / 2;
   const float bedCenterY = bedBoundsMinY + (max_pos[Y_AXIS] - bedBoundsMinY) / 2;
 
   if (
     raise() ||
-    confirmMountedAndNotTriggered("perform burn-in sequence", tool, TOOLS_NONE) ||
-    prepareToolToMove(tool) ||
+    confirmAttached("perform burn-in sequence", noTool) ||
+    noTool.prepareToMove() ||
 
     // Move to a known location to start
-    moveXY(tool, 0, 0) ||
+    moveXY(noTool, 0, 0) ||
     setPosition(0, 0, Z_MAX_POS, 0) ||
 
     // Entire volume, default (fast) speeds
     // Note: takes about 5min to complete 5 steps
     runCrossPlaneSequence(
-      tool,
+      noTool,
       steps,
       { min_pos[X_AXIS], min_pos[Y_AXIS], 1.0f },
       { max_pos[X_AXIS], max_pos[Y_AXIS], Z_MAX_POS - 2 },
@@ -97,7 +101,7 @@ int burnInSequence(Tool tool, int steps) {
     // Typical speeds over bed
     // Note: takes about 14min to complete 5 steps
     runCrossPlaneSequence(
-      tool, steps,
+      noTool, steps,
       { min_pos[X_AXIS], bedBoundsMinY, 10.0f },
       { max_pos[X_AXIS], max_pos[Y_AXIS], 15.0f },
       500, 100
@@ -106,7 +110,7 @@ int burnInSequence(Tool tool, int steps) {
     // A 2x3" (~50.8x76.2mm) board centered in bed (a typical board) traversed slowly
     // Note: takes about 30min to complete 5 steps
     runCrossPlaneSequence(
-      tool, steps,
+      noTool, steps,
       { bedCenterX - 38.1f, bedCenterY - 25.4f, 10.0f },
       { bedCenterX + 38.1f, bedCenterY + 25.4f, 12.0f },
       100, 10

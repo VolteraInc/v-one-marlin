@@ -1,21 +1,23 @@
 #pragma once
 
-#include "../tools/tools.h"
-
+namespace tools {
+  class NullTool;
+  class Probe;
+}
 
 // Burn-in
-int burnInSequence(Tool tool, int steps = 5);
-int runBurnInSequence(Tool tool);
+int burnInSequence(tools::NullTool& noTool, int steps = 5);
+int runBurnInSequence(tools::NullTool& noTool);
 
 
 // Switch position calibration
 const auto defaultSwitchPositionCalibrationCycles = 2u;
 int calibrateSwitchPositions(
-  Tool tool,
+  tools::Probe& probe,
   unsigned cycles = defaultSwitchPositionCalibrationCycles,
   bool storeResults = true
 );
 int runCalibrateSwitchPositions(
-  Tool tool,
+  tools::Probe& probe,
   unsigned cycles = defaultSwitchPositionCalibrationCycles
 );

@@ -2,6 +2,7 @@
 #include "../../stepper.h"
 #include "../../planner.h"
 #include "../api/api.h"
+#include "../vone/vone.h"
 
 void checkForEndstopHits() {
   bool triggered[3];
@@ -12,7 +13,7 @@ void checkForEndstopHits() {
     setHomedState(X_AXIS, 0);
     setHomedState(Y_AXIS, 0);
     setHomedState(Z_AXIS, 0);
-    resetToolPreparations();
+    vone->toolBox.currentTool().resetPreparations();
 
     // Output an error
     SERIAL_ERROR_START;
@@ -26,6 +27,6 @@ void checkForEndstopHits() {
     if (triggered[ Z_AXIS ]) {
       SERIAL_ERRORPGM(" z:"); SERIAL_ERROR((float)stepsWhenTriggered[Z_AXIS] / axis_steps_per_unit[Z_AXIS]);
     }
-    SERIAL_ECHOPGM("\n");
+    SERIAL_EOL;
   }
 }

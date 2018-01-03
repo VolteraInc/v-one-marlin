@@ -2,13 +2,16 @@
 #include "../../api/api.h"
 #include "../../api/diagnostics/diagnostics.h"
 
+#include "../../vone/tools/NullTool.h"
+#include "../../vone/tools/Probe.h"
+
 static void s_start() {
   overrideLeds(0, 255, 0, 0); // blink green
   SERIAL_ECHO_START;
   SERIAL_ECHOLNPGM("Starting manufacturing procedure");
 }
 
-static int s_end(Tool tool, int result) {
+static int s_end(tools::Tool& tool, int result) {
   if (result == 0) {
     const float bedCenterX = min_pos[X_AXIS] + (max_pos[X_AXIS] - min_pos[X_AXIS]) / 2;
 
@@ -28,12 +31,12 @@ static int s_end(Tool tool, int result) {
   return result;
 }
 
-int runBurnInSequence(Tool tool) {
+int runBurnInSequence(tools::NullTool& noTool) {
   s_start();
-  return s_end(tool, burnInSequence(tool));
+  return s_end(noTool, burnInSequence(noTool));
 }
 
-int runCalibrateSwitchPositions(Tool tool, unsigned cycles) {
+int runCalibrateSwitchPositions(tools::Probe& probe, unsigned cycles) {
   s_start();
-  return s_end(tool, calibrateSwitchPositions(tool, cycles));
+  return s_end(probe, calibrateSwitchPositions(probe, cycles));
 }

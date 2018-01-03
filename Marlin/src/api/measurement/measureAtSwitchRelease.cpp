@@ -4,8 +4,9 @@
 #include "../../../stepper.h"
 #include "../../../planner.h"
 #include "../../utils/rawToVoltage.h"
-#include "../tools/tools.h"
 #include "../movement/movement.h"
+
+#include "../../vone/vone.h"
 
 static unsigned s_countTriggers(unsigned maxSamples) {
   const auto startTime = millis();
@@ -15,7 +16,7 @@ static unsigned s_countTriggers(unsigned maxSamples) {
     // HACK: use probe function since we only use this function for probing right now.
     // if we ever use it for other axes we can figure out a solution then
     // e.g. pass function, use templates, or look into SmallFun
-    if (Probe::readAnalogTriggered(&voltages[i])) {
+    if (vone->toolBox.probe.readAnalogTriggered(&voltages[i])) {
       ++count;
     }
   }

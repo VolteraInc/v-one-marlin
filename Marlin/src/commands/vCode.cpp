@@ -1,11 +1,13 @@
+#include "processing.h"
+
 #include "../api/api.h"
 #include "../../Marlin.h"
 #include "../work/work.h"
 
-#include "processing.h"
+#include "../vone/VOne.h"
 
 int process_vcode(int command_code) {
-  const auto& currentTool = vone->toolDetector.currentTool();
+  auto& currentTool = vone->toolBox.currentTool();
   switch(command_code) {
 
     //-------------------------------------------
@@ -15,37 +17,52 @@ int process_vcode(int command_code) {
 
     // Move
     case 1: {
-      // Perpare, if necessary
+      // Prepare, if necessary
       // Note: preparing for an E-only move would be unexpected
       auto xyzMoves = code_seen('X') || code_seen('Y') || code_seen('Z');
       if (xyzMoves) {
-        if (currentTool.prepareToolToMove()) {
+        if (currentTool.prepareToMove()) {
           return -1;
         }
       }
 
-      return currentTool.asyncMove(
-        code_seen('X') ? code_value() : current_position[ X_AXIS ],
-        code_seen('Y') ? code_value() : current_position[ Y_AXIS ],
-        code_seen('Z') ? code_value() : current_position[ Z_AXIS ],
-        current_position[ E_AXIS ] + (code_seen('E') ?  code_value() : 0.0f), // E values are always relative
-        code_seen('F') ? code_value() : getDefaultFeedrate(),
-        code_seen('D') // apply/ignore dispense height
-      );
+      const float x = code_seen('X') ? code_value() : current_position[ X_AXIS ];
+      const float y = code_seen('Y') ? code_value() : current_position[ Y_AXIS ];
+      const float z = code_seen('Z') ? code_value() : current_position[ Z_AXIS ];
+      const float e = current_position[ E_AXIS ] + (code_seen('E') ?  code_value() : 0.0f); // E values are always relative
+      const float f = code_seen('F') ? code_value() : getDefaultFeedrate();
+
+      if (code_seen('D')) {
+        if (!code_seen('Z')) {
+          SERIAL_ERROR_START;
+          SERIAL_ERRORLNPGM("Unable to perform movement, D option can not be applied unless Z is given");
+          return -1;
+        }
+
+        auto& dispenser = vone->toolBox.dispenser;
+        if (confirmAttached("apply D option to movement command", dispenser)) {
+          return -1;
+        }
+
+        return dispenser.enqueueDispense(x, y, z, e, f);
+      } else {
+        return currentTool.enqueueMove(x, y, z, e, f);
+      }
     }
 
     // Relative move
     case 2: {
-      // Perpare, if necessary
+      // Prepare, if necessary
       // Note: preparing for an E-only move would be unexpected
       auto xyzMoves = code_seen('X') || code_seen('Y') || code_seen('Z');
       if (xyzMoves) {
-        if (currentTool.prepareToolToMove()) {
+        if (currentTool.prepareToMove()) {
           return -1;
         }
       }
 
-      return currentTool.asyncRelativeMove(
+      return asyncRelativeMove(
+        currentTool,
         code_seen('X') ? code_value() : 0,
         code_seen('Y') ? code_value() : 0,
         code_seen('Z') ? code_value() : 0,
@@ -59,7 +76,7 @@ int process_vcode(int command_code) {
     //    - movement is performed one axis at a time.
     //    - to avoid crashes we always raise first (if needed) and lower last (if needed).
     case 3: {
-      if (currentTool.prepareToolToMove()) {
+      if (currentTool.prepareToMove()) {
         return -1;
       }
       const auto feedrate = code_seen('F') ? code_value() : getDefaultFeedrate();
@@ -82,23 +99,23 @@ int process_vcode(int command_code) {
 
     // Probe at current x,y position
     case 4: {
-      const auto& probe = vone->tools.probe;
-      if (probe.detached() {
+      auto& probe = vone->toolBox.probe;
+      if (probe.detached()) {
         SERIAL_ERROR_START;
-        SERIAL_PAIR("Unable to probe, current tool is ", currentTool.typeName());
+        SERIAL_PAIR("Unable to probe, current tool is ", currentTool.name());
         SERIAL_EOL;
         return -1;
       }
 
-      const auto additionalRetractDistance = code_seen('R') ? code_value() : DefaultRetract;
-      const auto speed = code_seen('F') ? code_value() : Probe::DefaultSpeed;
-      const auto maxSamples = code_seen('S') ? code_value() : Probe::DefaultMaxSamples;
-      const auto maxTouchesPerSample = code_seen('T') ? code_value() : Probe::DefaultMaxTouchesPerSample;
+      const auto additionalRetractDistance = code_seen('R') ? code_value() : tools::Probe::DefaultRetract;
+      const auto speed = code_seen('F') ? code_value() : tools::Probe::DefaultSpeed;
+      const auto maxSamples = code_seen('S') ? code_value() : tools::Probe::DefaultMaxSamples;
+      const auto maxTouchesPerSample = code_seen('T') ? code_value() : tools::Probe::DefaultMaxTouchesPerSample;
       auto samplesTaken = 0u;
       auto touchesUsed = 0u;
       auto measurement = -9999.9f;
       if (
-        probe.prepareToolToMove() ||
+        probe.prepareToMove() ||
         probe.probe(
           measurement,
           speed, additionalRetractDistance,
@@ -114,7 +131,7 @@ int process_vcode(int command_code) {
       SERIAL_PAIR(" x:", current_position[X_AXIS]);
       SERIAL_PAIR(" y:", current_position[Y_AXIS]);
       SERIAL_PAIR(" z:", measurement);
-      SERIAL_PAIR(" displacement:", Probe::getProbeDisplacement());
+      SERIAL_PAIR(" displacement:", probe.displacement());
       SERIAL_PAIR(" samplesTaken:", samplesTaken);
       SERIAL_PAIR(" touchesUsed:", touchesUsed);
       SERIAL_EOL;
@@ -127,15 +144,37 @@ int process_vcode(int command_code) {
       setHomedState(Y_AXIS, 0);
       setHomedState(Z_AXIS, 0);
       return (
-        resetToolPreparations() ||
-        homeXY()
+        currentTool.resetPreparations() ||
+        homeXY(currentTool)
       );
 
     //-------------------------------------------
     // Tool status
-    case 100:
-      vone->toolDetector.outputToolStatus();
+    case 100: {
+      const auto& tb = vone->toolBox;
+      SERIAL_ECHOPGM("Tool"); SERIAL_EOL;
+      SERIAL_PAIR("  type: ", currentTool.name()); SERIAL_EOL;
+      SERIAL_PAIR("  prepared: ", currentTool.prepared()); ; SERIAL_EOL;
+
+      SERIAL_ECHOPGM("Probe"); SERIAL_EOL;
+      SERIAL_PAIR("  displacement: ", tb.probe.displacement());
+      SERIAL_EOL;
+
+      SERIAL_ECHOPGM("Dispenser"); SERIAL_EOL;
+      SERIAL_PAIR("  dispense height: ", tb.dispenser.dispenseHeight());
+      SERIAL_EOL;
+
+      SERIAL_ECHOPGM("Router"); SERIAL_EOL;
+      SERIAL_PAIR("  Speed: ", tb.router.rotationSpeed());
+      SERIAL_EOL;
+
+      SERIAL_ECHOPGM("Homing"); SERIAL_EOL;
+      SERIAL_PAIR("  x: ", getHomedState(X_AXIS)); SERIAL_EOL;
+      SERIAL_PAIR("  y: ", getHomedState(Y_AXIS)); SERIAL_EOL;
+      SERIAL_PAIR("  z: ", getHomedState(Z_AXIS)); SERIAL_EOL;
+
       return 0;
+    }
 
     // Attach/Detach tool
     case 101: {
@@ -143,10 +182,10 @@ int process_vcode(int command_code) {
       enableToolDetection(!code_seen('F'));
 
       // Set Tool
-      if      (code_seen('P')) vone->setTool(vone->tools.probe);
-      else if (code_seen('D')) vone->setTool(vone->tools.dispenser);
-      else if (code_seen('R')) vone->setTool(vone->tools.router);
-      else                     vone->setTool(vone->tools.nullTool);
+      if      (code_seen('P')) vone->toolBox.setTool(&vone->toolBox.probe);
+      else if (code_seen('D')) vone->toolBox.setTool(&vone->toolBox.dispenser);
+      else if (code_seen('R')) vone->toolBox.setTool(&vone->toolBox.router);
+      else                     vone->toolBox.setTool(&vone->toolBox.nullTool);
 
       return 0;
     }
@@ -155,11 +194,11 @@ int process_vcode(int command_code) {
     // Note: Change will be applied to next movement
     case 102: {
       // Confirm we have a dispenser
-      const auto& dispenser = vone->tools.dispenser;
+      auto& dispenser = vone->toolBox.dispenser;
       if (dispenser.detached()) {
         SERIAL_ERROR_START;
-        SERIAL_PAIR("Unable to set dispensing height, current tool is ", currentTool.typeName());
-        SERIAL_EOL
+        SERIAL_PAIR("Unable to set dispensing height, current tool is ", currentTool.name());
+        SERIAL_EOL;
         return -1;
       }
       return dispenser.setDispenseHeight(code_seen('Z') ? code_value() : 0.0f);
@@ -167,16 +206,16 @@ int process_vcode(int command_code) {
 
     // Set rotation speed
     case 110: {
-      const auto& router = vone->tools.router;
+      auto& router = vone->toolBox.router;
       if (router.detached()) {
         SERIAL_ERROR_START;
-        SERIAL_PAIR("Unable to set rotation speed, current tool is ", currentTool.typeName());
-        SERIAL_EOL
+        SERIAL_PAIR("Unable to set rotation speed, current tool is ", currentTool.name());
+        SERIAL_EOL;
         return -1;
       }
       return (
-        router.prepareToolToMove() ||
-        router.setRotationSpeed(tool, code_seen('R') ? code_value() : 0.0f)
+        router.prepareToMove() ||
+        router.setRotationSpeed(code_seen('R') ? code_value() : 0.0f)
       );
     }
 

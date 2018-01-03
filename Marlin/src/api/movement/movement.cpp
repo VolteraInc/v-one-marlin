@@ -185,7 +185,7 @@ int asyncRawMove(float x, float y, float z, float e, float f, bool confirmMoveIs
   }
 
   // HACK: should not have to pull in stepper link this
-  // take Tool or Stepper as arg.
+  // take Stepper as arg.
   return vone->stepper.add(
     current_position[ X_AXIS ],
     current_position[ Y_AXIS ],

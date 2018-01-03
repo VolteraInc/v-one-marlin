@@ -7,6 +7,8 @@
 
 #include "../../motion_control.h"
 
+#include "../vone/vone.h"
+
 static float destination[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
 static float offset[3] = {0.0, 0.0, 0.0};
 static float feedrate = 1500.0;
@@ -134,8 +136,8 @@ int process_gcode(int command_code) {
     // G18: XYPositioner Y1 - Move in +Y until a switch is triggered
     case 18: {
       float measurement;
-      if ( xyPositionerTouch(TOOLS_PROBE, Y_AXIS, 1, measurement)
-        || moveXY(TOOLS_PROBE, xypos_x_pos, xypos_y_pos)) {
+      if ( xyPositionerTouch(vone->toolBox.probe, Y_AXIS, 1, measurement)
+        || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
         return -1;
       }
       SERIAL_PROTOCOLPGM("xyPositionerMeasurement +Y:"); SERIAL_PROTOCOL_F(measurement, 3);
@@ -146,8 +148,8 @@ int process_gcode(int command_code) {
     // G19: XYPositioner Y2 - Move in -Y until a switch is triggered
     case 19: {
       float measurement;
-      if ( xyPositionerTouch(TOOLS_PROBE, Y_AXIS, -1, measurement)
-        || moveXY(TOOLS_PROBE, xypos_x_pos, xypos_y_pos)) {
+      if ( xyPositionerTouch(vone->toolBox.probe, Y_AXIS, -1, measurement)
+        || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
         return -1;
       }
       SERIAL_PROTOCOLPGM("xyPositionerMeasurement -Y:"); SERIAL_PROTOCOL_F(measurement, 3);
@@ -158,8 +160,8 @@ int process_gcode(int command_code) {
     // G20: XYPositioner X1 - Move in +X until a switch is triggered
     case 20: {
       float measurement;
-      if ( xyPositionerTouch(TOOLS_PROBE, X_AXIS, 1, measurement)
-        || moveXY(TOOLS_PROBE, xypos_x_pos, xypos_y_pos)) {
+      if ( xyPositionerTouch(vone->toolBox.probe, X_AXIS, 1, measurement)
+        || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
         return -1;
       }
       SERIAL_PROTOCOLPGM("xyPositionerMeasurement +X:"); SERIAL_PROTOCOL_F(measurement, 3);
@@ -170,8 +172,8 @@ int process_gcode(int command_code) {
     // G21: XYPositioner X2 - Move in -X until switch triggered
     case 21: {
       float measurement;
-      if ( xyPositionerTouch(TOOLS_PROBE, X_AXIS, -1, measurement)
-        || moveXY(TOOLS_PROBE, xypos_x_pos, xypos_y_pos)) {
+      if ( xyPositionerTouch(vone->toolBox.probe, X_AXIS, -1, measurement)
+        || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
           return -1;
       }
       SERIAL_PROTOCOLPGM("xyPositionerMeasurement -X:"); SERIAL_PROTOCOL_F(measurement, 3);
@@ -255,7 +257,7 @@ int process_gcode(int command_code) {
     case 28: {
       bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
 
-      resetToolPreparations();
+      vone->toolBox.currentTool().resetPreparations();
 
       if (home_all || code_seen('Z')) {
         setHomedState(Z_AXIS, 0);
@@ -280,7 +282,7 @@ int process_gcode(int command_code) {
       }
 
       rawHome(
-        TOOLS_NONE,
+        vone->toolBox.nullTool,
         home_all || code_seen('X'),
         home_all || code_seen('Y'),
         false
@@ -292,7 +294,7 @@ int process_gcode(int command_code) {
     // G30 - Single Z Probe, probes bed at current XY location.
     case 30: {
       float measurement;
-      if (Probe::probe(TOOLS_PROBE, measurement, useDefaultFeedrate, NoRetract, 1, 1)) {
+      if (vone->toolBox.probe.probe(measurement, useDefaultFeedrate, NoRetract, 1, 1)) {
         return -1;
       }
 
@@ -308,7 +310,7 @@ int process_gcode(int command_code) {
     // G31 - Reports the Probe Offset
     case 31: {
       float z_probe_offset;
-      if (measureProbeDisplacement(TOOLS_PROBE, z_probe_offset)) {
+      if (measureProbeDisplacement(vone->toolBox.probe, z_probe_offset)) {
         return -1;
       }
       SERIAL_PROTOCOLPGM("Probe Offset: "); SERIAL_PROTOCOL(z_probe_offset * 1000); // TODO: should use SERIAL_PROTOCOL_F instead of *1000
@@ -319,7 +321,7 @@ int process_gcode(int command_code) {
     // G33 - Homes the Z axis to the Z-switch.
     case 33:
       // Note: it is safer to assume a dispenser is attached than it is to assume a probe is.
-      return homeZ(TOOLS_DISPENSER);
+      return homeZ(vone->toolBox.dispenser);
 
     // G90 - Use Absolute Coordinates
     case 90:

@@ -3,7 +3,7 @@
 #include "../api.h"
 #include "../../vone/VOne.h"
 
-enum ToolStates classifyVoltage(Tool, float voltage) {
+enum ToolStates classifyVoltage(float voltage) {
   // if (logging_enabled) {
   //   SERIAL_ECHO_START;
   //   SERIAL_ECHOPGM("Classifying voltage "); SERIAL_ECHOLN(voltage);
@@ -26,7 +26,7 @@ enum ToolStates classifyVoltage(Tool, float voltage) {
   }
 }
 
-enum ToolStates determineToolState(Tool tool) {
+enum ToolStates determineToolState() {
   // Stabilize the reading
   // Notes:
   //    - There is a capacitor on the p_top line, this means the voltage
@@ -39,7 +39,7 @@ enum ToolStates determineToolState(Tool tool) {
   static enum ToolStates previousState = TOOL_STATE_UNKNOWN;
   const auto start = millis();
   for (int i = 0; i < maxIterations; ++i) {
-    enum ToolStates state = classifyVoltage(tool, vone->pins.ptop.readValue().voltage);
+    enum ToolStates state = classifyVoltage(vone->pins.ptop.readValue().voltage);
 
     if (previousState == state) {
       ++count;

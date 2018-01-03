@@ -31,7 +31,7 @@ int process_mcode(int command_code) {
         setStepperInactiveDuration(code_value() * 1000);
       } else {
         st_synchronize();
-        resetToolPreparations();
+        vone->toolBox.currentTool().resetPreparations();
         bool disableAll = !(code_seen('X') || code_seen('Y') || code_seen('Z') || code_seen('E'));
         if (disableAll || code_seen('X')) disable_x();
         if (disableAll || code_seen('Y')) disable_y();
@@ -180,7 +180,7 @@ int process_mcode(int command_code) {
 
     // M125 - Output current Probe status to serial port
     case 125:
-      SERIAL_PROTOCOLPGM("Probe: "); SERIAL_PROTOCOLLN(toolStateAsString(determineToolState(getTool())));
+      SERIAL_PROTOCOLPGM("Probe: "); SERIAL_PROTOCOLLN(toolStateAsString(determineToolState()));
       return 0;
 
     // M140 - Set bed target temp

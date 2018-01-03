@@ -7,30 +7,36 @@ static bool s_enabled = true;
 bool getToolDetectionEnabled() { return s_enabled; }
 void enableToolDetection(bool enable) { s_enabled = enable; }
 
-static Tool s_toTool(Tool tool, enum ToolStates state) {
+static tools::Tool* s_toTool(enum ToolStates state) {
+  auto& tb = vone->toolBox;
   switch (state) {
     case TOOL_STATE_PROBE_MOUNTED:
     case TOOL_STATE_TRIGGERED:
-      return TOOLS_PROBE;
+      return &tb.probe;
 
     case TOOL_STATE_ROUTER_MOUNTED:
-      return TOOLS_ROUTER;
+      return &tb.router;
 
-    case TOOL_STATE_NOT_MOUNTED:
-      return tool == TOOLS_DISPENSER ? TOOLS_DISPENSER : TOOLS_NONE;
+    case TOOL_STATE_NOT_MOUNTED: {
+      if (tb.dispenser.attached()) {
+        return &tb.dispenser;
+      } else {
+        return &tb.nullTool;
+      }
+    }
 
     default:
-      return TOOLS_NONE;
+      return &tb.nullTool;
   }
 }
 
-static bool s_possibleToolChange(Tool tool, float voltage) {
-  const auto type = classifyVoltage(tool, voltage);
-  return tool != s_toTool(tool, type);
+static bool s_possibleToolChange(float voltage) {
+  const auto type = classifyVoltage(voltage);
+  return s_toTool(type)->detached();
 }
 
-Tool determineTool(Tool tool) {
-  return s_toTool(tool, determineToolState(tool));
+tools::Tool* determineTool() {
+  return s_toTool(determineToolState());
 }
 
 void toolChanges() {
@@ -51,10 +57,9 @@ void toolChanges() {
   }
 
   // Update the tool if necessary
-  const auto tool = getTool();
   const auto voltage = vone->pins.ptop.value().voltage;
-  if (s_possibleToolChange(tool, voltage)) {
-    const auto newTool = determineTool(tool);
+  if (s_possibleToolChange(voltage)) {
+    const auto newTool = determineTool();
 
     // Log a notice if we falsely detect a possible tool change
     // If we see this, it's may imply overlapping use of PTop
@@ -62,8 +67,8 @@ void toolChanges() {
     // Note: Voltage will start around 0 because we hold
     //       voltage low on boot, to reset the attached tool
     //       hence the "now > 600"
-    if (newTool == getTool() && now > 600) {
-      const auto type = classifyVoltage(tool, voltage);
+    if (newTool->attached() && now > 600) {
+      const auto type = classifyVoltage(voltage);
       SERIAL_ECHO_START;
       SERIAL_PAIR("NOTICE: Voltage variation detected, value:", voltage);
       SERIAL_PAIR(" type:", toolStateAsString(type));
@@ -71,6 +76,6 @@ void toolChanges() {
       SERIAL_EOL;
     }
 
-    setTool(newTool);
+    vone->toolBox.setTool(newTool);
   }
 }

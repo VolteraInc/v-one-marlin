@@ -1,6 +1,7 @@
 #include "../../Marlin.h"
 #include "../api/api.h"
 #include "../api/diagnostics/diagnostics.h"
+#include "../vone/vone.h"
 
 static auto s_runAt = 0ul;
 
@@ -9,15 +10,14 @@ void manufacturing_init() {
 }
 
 static int s_run() {
-  const auto tool = getTool();
-  switch (tool) {
-    case TOOLS_PROBE: return runCalibrateSwitchPositions(tool);
-    case TOOLS_NONE:  return runBurnInSequence(tool);
-
-    default:
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM("Notice: No manufacturing procedures executed, resume normal operation");
-      return 0;
+  if (vone->toolBox.probe.attached()) {
+    return runCalibrateSwitchPositions(vone->toolBox.probe);
+  } else if (vone->toolBox.nullTool.attached()) {
+    return runBurnInSequence(vone->toolBox.nullTool);
+  } else {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Notice: No manufacturing procedures executed, resume normal operation");
+    return 0;
   }
 }
 

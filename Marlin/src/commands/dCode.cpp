@@ -130,7 +130,7 @@ int d106_samplePinValues(int pin, unsigned samples, unsigned intraSampleDelayMs)
 //-------------------------------------------
 // Utils/Debugging
 int process_dcode(int command_code) {
-  const auto tool = getTool();
+  auto& tool = vone->toolBox.currentTool();
   switch(command_code) {
 
     // Enable/disable logging
@@ -148,7 +148,7 @@ int process_dcode(int command_code) {
 
     // Algorithms - prepare to move
     case 101:
-      return prepareToolToMove(tool);
+      return tool.prepareToMove();
 
     // Algorithms - Homing
     case 102: {
@@ -168,7 +168,7 @@ int process_dcode(int command_code) {
 
     // Algorithms - XY Positioner
     case 103:
-      if (prepareToolToMove(tool)) {
+      if (tool.prepareToMove()) {
         return -1;
       }
 
@@ -196,25 +196,29 @@ int process_dcode(int command_code) {
 
     // Algorithms - Measure probe displacement
     case 104: {
-      if (prepareToolToMove(tool)) {
+      auto& probe = vone->toolBox.probe;
+      if (
+        confirmAttached("measure probe displacement", probe) ||
+        probe.prepareToMove()
+      ) {
         return -1;
       }
 
       float displacement = 0.0f;
-      const int returnValue = measureProbeDisplacement(tool, displacement);
+      const int returnValue = measureProbeDisplacement(probe, displacement);
 
       // Output
       SERIAL_ECHO_START;
       SERIAL_ECHOPGM("measureProbeDisplacement");
       SERIAL_ECHOPGM(" returnValue:"); SERIAL_ECHO(returnValue);
       SERIAL_ECHOPGM(" displacement:"); SERIAL_ECHO(displacement);
-      SERIAL_ECHOPGM("\n");
+      SERIAL_EOL;
       return 0;
     }
 
     // Algorithms - Measure at switch
     case 105: {
-      if (prepareToolToMove(tool)) {
+      if (tool.prepareToMove()) {
         return -1;
       }
 
@@ -265,7 +269,7 @@ int process_dcode(int command_code) {
 
     // Algorithms - measure at switch release
     case 108: {
-      if (prepareToolToMove(tool)) {
+      if (tool.prepareToMove()) {
         return -1;
       }
 
@@ -299,8 +303,10 @@ int process_dcode(int command_code) {
     }
 
     // Set rotation speed (without tool prep)
-    case 110:
-      return Router::setRotationSpeed(tool, code_seen('R') ? code_value() : 1.0f);
+    case 110: {
+      auto& router = vone->toolBox.router;
+      return router.setRotationSpeed(code_seen('R') ? code_value() : 0.0f);
+    }
 
     //-------------------------------------------
     // List Commands

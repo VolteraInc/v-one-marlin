@@ -3,7 +3,7 @@
 #include "../../Marlin.h"
 #include "../work/work.h"
 
-static int s_moveToXyPositionerZ(Tool tool, enum HowToMoveToZ howToMoveToZ) {
+static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
   switch (howToMoveToZ) {
     case useConfiguredZ:
       return moveZ(tool, XYPOS_Z_POS);
@@ -21,16 +21,10 @@ static int s_moveToXyPositionerZ(Tool tool, enum HowToMoveToZ howToMoveToZ) {
   }
 }
 
-int moveToXyPositioner(Tool tool, enum HowToMoveToZ howToMoveToZ) {
+int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
   if(logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Move to xy positioner");
-  }
-
-  if (tool == TOOLS_NONE) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to move to xy-positioner, no tool attached");
-    return -1;
   }
 
   // Raise, unless we are really close to the target x,y position
@@ -49,13 +43,7 @@ int moveToXyPositioner(Tool tool, enum HowToMoveToZ howToMoveToZ) {
   );
 }
 
-int xyPositionerTouch(Tool tool, int axis, int direction, float& measurement) {
-  if (tool == TOOLS_NONE) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to touch xy-positioner switches, no tool attached");
-    return -1;
-  }
-
+int xyPositionerTouch(tools::Tool&, int axis, int direction, float& measurement) {
   // Move according to the given axis and direction until a switch is triggered
   const auto slow = homing_feedrate[axis] / 6;
   if (moveToLimit(axis, direction, slow, 6.0f)) {
@@ -65,7 +53,7 @@ int xyPositionerTouch(Tool tool, int axis, int direction, float& measurement) {
   return 0;
 }
 
-static int s_findCenter(Tool tool, long cycles, float& o_centerX, float& o_centerY) {
+static int s_findCenter(tools::Tool& tool, long cycles, float& o_centerX, float& o_centerY) {
   if(logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Find center of xy positioner");
@@ -128,7 +116,7 @@ static int s_findCenter(Tool tool, long cycles, float& o_centerX, float& o_cente
   return 0;
 }
 
-int xyPositionerFindCenter(Tool tool, long cycles, float& centerX, float& centerY, enum HowToMoveToZ howToMoveToZ) {
+int xyPositionerFindCenter(tools::Tool& tool, long cycles, float& centerX, float& centerY, enum HowToMoveToZ howToMoveToZ) {
   return (
     moveToXyPositioner(tool, howToMoveToZ) ||
     s_findCenter(tool, cycles, centerX, centerY)

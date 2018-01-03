@@ -1,9 +1,10 @@
 #include "../../api/api.h"
 #include "../../../Marlin.h"
 #include "../../../ConfigurationStore.h"
+#include "../../vone/tools/Probe.h"
 
-int calibrateSwitchPositions(Tool tool, unsigned cycles, bool storeResults) {
-  if (Probe::partiallyPrepare("calibrate positions", tool)) {
+int calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeResults) {
+  if (probe.partiallyPrepare("calibrate positions")) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLN("Unable to calibrate positions, could not prepare probe");
     return -1;
@@ -16,7 +17,7 @@ int calibrateSwitchPositions(Tool tool, unsigned cycles, bool storeResults) {
   // more tolerant of inaccuracies in the hardcoded values.
   float centerX;
   float centerY;
-  if (xyPositionerFindCenter(tool, cycles, centerX, centerY, usePlateBackOffForZ)) {
+  if (xyPositionerFindCenter(probe, cycles, centerX, centerY, usePlateBackOffForZ)) {
     return -1;
   }
 
@@ -25,12 +26,12 @@ int calibrateSwitchPositions(Tool tool, unsigned cycles, bool storeResults) {
   min_z_y_pos = centerY + OFFSET_FROM_XYPOS_TO_MINZ_Y;
 
   // Home Z (uses the new z-switch location)
-  if (homeZ(tool)) {
+  if (homeZ(probe)) {
     return -1;
   }
 
   // Find the center, using the standard algorithm
-  if (xyPositionerFindCenter(tool, cycles, centerX, centerY, useConfiguredZ)) {
+  if (xyPositionerFindCenter(probe, cycles, centerX, centerY, useConfiguredZ)) {
     return -1;
   }
 

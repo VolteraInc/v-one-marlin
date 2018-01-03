@@ -1,7 +1,8 @@
 #include "api.h"
 
-#include "../../Marlin.h"
-#include "../../stepper.h"
+#include "../../Marlin.h" // Z_AXIS
+#include "../../stepper.h" // enable_calibration_plate()
+#include "../vone/tools/Probe.h"
 
 static const float MinDisplacement = 0.050f;
 static const float MaxDisplacement = 0.500f;
@@ -17,20 +18,20 @@ static int s_measureCalibrationPlateZ(float& plateZ, float maxTravel) {
   return returnValue;
 }
 
-int measureProbeDisplacement(Tool tool, float& o_displacement) {
+int measureProbeDisplacement(tools::Probe& probe, float& o_displacement) {
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Measuring probe displacement");
   }
 
-  if(tool != TOOLS_PROBE) {
+  if (probe.detached()) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM("Unable to measure probe displacement, probe not attached");
     return -1;
   }
 
   // Ensure we are at the correct location
-  if (moveToXyPositioner(tool)) {
+  if (moveToXyPositioner(probe)) {
     return -1;
   }
 

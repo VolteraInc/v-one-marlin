@@ -20,8 +20,7 @@ class VOne {
     adc::AnalogDigitalConverter adc;
     Heater heater;
     Stepper stepper;
-    ToolBox toolBox;
-    ToolDetector toolDetector;
+    tools::ToolBox toolBox;
 
     // Perform work that must happen frequently but can be
     // interrupted (briefly) by time critical work like
@@ -33,7 +32,6 @@ class VOne {
 
       adc.frequentInterruptibleWork();
       heater.frequentInterruptibleWork();
-      toolDetector.frequentInterruptibleWork();
 
       SBI(TIMSK0, OCIE0B);
     }

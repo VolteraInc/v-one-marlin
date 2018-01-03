@@ -116,7 +116,7 @@ DONE:
   return returnValue;
 }
 
-int rawHome(Tool tool, bool homingX, bool homingY, bool homingZ) {
+int rawHome(tools::Tool& tool, bool homingX, bool homingY, bool homingZ) {
   // Homing Y first moves the print head out of the way, which
   // which allows the user to access the board/bed sooner
   if (homingY) {
@@ -142,7 +142,7 @@ int rawHome(Tool tool, bool homingX, bool homingY, bool homingZ) {
 }
 
 // TODO: move to some other file
-int moveToZSwitchXY(Tool tool) {
+int moveToZSwitchXY(tools::Tool& tool) {
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Move to z-switch's x,y position");
@@ -169,13 +169,7 @@ int moveToZSwitchXY(Tool tool) {
   return moveXY(tool, min_z_x_pos, min_z_y_pos);
 }
 
-int homeZ(Tool tool) {
-
-  if (tool == TOOLS_NONE) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to home Z-axis, no tool attached");
-    return -1;
-  }
+int homeZ(tools::Tool& tool) {
 
   // Home Z to the z-switch
   if (
@@ -185,7 +179,7 @@ int homeZ(Tool tool) {
     return -1;
   }
 
-  if (determineToolState(tool) == TOOL_STATE_TRIGGERED) {
+  if (determineToolState() == TOOL_STATE_TRIGGERED) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM("Unable to home Z-axis, tool triggered before contacting z-switch");
     return -1;
@@ -207,9 +201,9 @@ int homeZ(Tool tool) {
   return 0;
 }
 
-int homeXY() {
+int homeXY(tools::Tool& tool) {
   return (
     raise() ||
-    rawHome(TOOLS_NONE, true, true, false)
+    rawHome(tool, true, true, false)
   );
 }
