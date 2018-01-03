@@ -147,6 +147,9 @@ void loop() {
   toolChanges();         // handling a tool change mid command would be needlessly complicated
 }
 
+// Stepper uses ISR(TIMER1_COMPA_vect)
+// see stepper.cpp for details
+
 ISR(TIMER0_COMPB_vect) {
   vone->frequentInterruptibleWork();
 }
