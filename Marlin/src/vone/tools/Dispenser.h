@@ -4,24 +4,24 @@
 namespace tools {
 
 class Dispenser : public Tool {
-    public:
-        virtual const char* typeName() override { return "Dispenser"; } 
-        
-        virtual int prepare() override;
-        virtual int unprepare() override;
+  public:
+    Dispenser(Stepper& stepper);
 
-        int setDispenseHeight(float height);
-        float dispenseHeight();
+    int setDispenseHeight(float height);
+    float dispenseHeight() const;
 
-        // Additional method, used to apply dispense height
-        int asyncMove(
-            float x, float y, float z, 
-            float e, float f, 
-            bool applyDispenseHeight = false
-        );
+    // Additional movement method, used to apply dispense height
+    int enqueueDispense(float x, float y, float z, float e, float f);
 
-    private: 
-        float m_dispenseHeight = 0.0f;
+  private:
+    float m_dispenseHeight = 0.0f;
+
+    int meshGears();
+
+    virtual const char* name() const override { return "Dispenser"; }
+    virtual int prepareToMoveImpl() override;
+    virtual int resetPreparationsImpl() override;
+    virtual int enqueueMove(float x, float y, float z, float e, float f) override;
 };
 
 }

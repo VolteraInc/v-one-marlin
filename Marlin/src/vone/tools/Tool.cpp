@@ -1,60 +1,42 @@
-#include "../../../Marlin.h"
-#include "../../../stepper.h"
+#include "Tool.h"
 
-#include "../../api/api.h"
+#include "../../../serial.h"
+#include "../stepper/Stepper.h"
 
-
-void Tool::activate() {
-  m_active = true;
+tools::Tool::Tool(Stepper& stepper)
+  : m_stepper(stepper)
+{
 }
 
-void Tool::deactivate() {
-  m_active = false;
-  _unprepare();
+void tools::Tool::attach() {
+  m_attached = true;
 }
 
-static bool s_toolPrepared = false;
-
-static int s_prepareTool(Tool tool) {
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Preparing tool");
-  switch (tool) {
-    case TOOLS_PROBE: return Probe::prepare(tool);
-    case TOOLS_DISPENSER: return Dispenser::prepare(tool);
-    case TOOLS_ROUTER: return Router::prepare(tool);
-    default: return ensureHomedInXY();
-  }
+void tools::Tool::detach() {
+  m_attached = false;
+  m_stepper.stop();
 }
 
-int prepareToolToMove(Tool tool) {
-  if (!s_toolPrepared) {
-    if (s_prepareTool(tool)) {
+int tools::Tool::prepareToMove() {
+  if (!m_prepared) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Preparing tool");
+    m_stepper.resume();
+    if (prepareToMoveImpl()) {
       return -1;
     }
-    s_toolPrepared = true;
+    m_prepared = true;
   }
   return 0;
 }
 
-static int s_unprepareTool(Tool tool) {
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Reset tool preparations");
-  switch (tool) {
-    case TOOLS_PROBE: return Probe::unprepare(tool);
-    case TOOLS_DISPENSER: return Dispenser::unprepare(tool);
-    case TOOLS_ROUTER: return Router::unprepare(tool);
-    case TOOLS_NONE: return NoTool::unprepare(tool);
-    default: return 0;
-  }
-}
+int tools::Tool::resetPreparations() {
+  if (m_prepared) {
+    m_prepared = false;
 
-int resetToolPreparations() {
-  if (s_toolPrepared) {
-    auto tool = getTool();
-    if (s_unprepareTool(tool)) {
-      return -1;
-    }
-    s_toolPrepared = false;
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Reset tool preparations");
+    return resetPreparationsImpl();
   }
   return 0;
 }

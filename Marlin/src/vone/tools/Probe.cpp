@@ -1,57 +1,79 @@
+#include "Probe.h"
+
 #include "../../../Marlin.h"
-#include "../../../stepper.h"
+#include "../../../stepper.h" // enable_p_top TODO: go through Stepper
 #include "../../api/api.h"
 #include "../../api/measurement/measurement.h"
+#include "../../api/movement/movement.h"
+#include "../pins/PTopPin/PTopPin.h"
 
-Probe::Probe(PTopPin& pin) 
-  : m_pin(pin) 
+int confirmAttachedAndNotTriggered(const char* context, tools::Probe& probe) {
+  if (confirmAttached(context, probe)) {
+    return -1;
+  }
+  if (probe.readAnalogTriggered()) {
+    SERIAL_ERROR_START;
+    SERIAL_PAIR("Unable to ", context); SERIAL_ERRORPGM(", probe reported contact before movement started");
+    SERIAL_EOL;
+    return -1;
+  }
+  return 0;
+}
+
+tools::Probe::Probe(Stepper& stepper, PTopPin& pin)
+  : Tool(stepper)
+  , m_pin(pin)
 {
 }
 
-int Probe::partiallyPrepare(const char* context) {
+int tools::Probe::partiallyPrepare(const char* context) {
   enable_p_top(true);
   return (
     raise() ||
-    confirmMountedAndNotTriggered(context) ||
-    ensureHomedInXY()
+    confirmAttachedAndNotTriggered(context, *this) ||
+    ensureHomedInXY(*this)
   );
 }
 
-int Probe::prepare() {
+int tools::Probe::prepareToMoveImpl() {
   const char* context = "prepare probe";
   return (
-    Probe::partiallyPrepare(context) ||
-    homeZ(tool) || // home Z so we can enter the xy pos with decent precision
-    centerTool() ||
-    measureProbeDisplacement(s_probeDisplacement) || // do this now, saves a trip back to the xy-pos after re-homing
-    homeZ(tool) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
+    tools::Probe::partiallyPrepare(context) ||
+    homeZ(*this) || // home Z so we can enter the xy pos with decent precision
+    centerTool(*this) ||
+    measureProbeDisplacement(*this, m_probeDisplacement) || // do this now, saves a trip back to the xy-pos after re-homing
+    homeZ(*this) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
     raise()
   );
 }
 
-int Probe::unprepare() {
+int tools::Probe::resetPreparationsImpl() {
   setHomedState(Z_AXIS, 0);
   enable_p_top(false);
   return 0;
 }
 
-bool Probe::isTriggered(float voltage) {
+int tools::Probe::enqueueMove(float x, float y, float z, float e, float f) {
+  return asyncRawMove(x, y, z, e, f);
+}
+
+bool tools::Probe::isTriggered(float voltage) {
   return classifyVoltage(voltage) == TOOL_STATE_TRIGGERED;
 }
 
-bool Probe::readAnalogTriggered(float* o_voltageReading) {
-  const auto voltage = vone->pins.ptop.readValue().voltage;
+bool tools::Probe::readAnalogTriggered(float* o_voltageReading) {
+  const auto voltage = m_pin.readValue().voltage;
   if (o_voltageReading) {
     *o_voltageReading = voltage;
   }
-  return Probe::isTriggered(voltage);
+  return tools::Probe::isTriggered(voltage);
 }
 
-float Probe::getProbeDisplacement() {
-  return s_probeDisplacement;
+float tools::Probe::displacement() const {
+  return m_probeDisplacement;
 }
 
-int Probe::probe(
+int tools::Probe::probe(
   float& measurement,
   float speed,
   float additionalRetractDistance,
@@ -62,7 +84,7 @@ int Probe::probe(
 ) {
   const auto startTime = millis();
 
-  if (confirmMountedAndNotTriggered("probe")) {
+  if (confirmAttachedAndNotTriggered("probe", *this)) {
     return -1;
   }
 
@@ -86,21 +108,21 @@ int Probe::probe(
 
     // Return to a safe travel height
     // TODO: should return to height we were at when we started OR ???
-    retractToolConditionally(s_probeDisplacement, additionalRetractDistance)
+    retractToolConditionally(m_probeDisplacement, additionalRetractDistance)
   ) {
     return -1;
   }
 
   // Success
   // TODO: should round to nearest step
-  measurement = rawMeasurement + s_probeDisplacement;
+  measurement = rawMeasurement + m_probeDisplacement;
   if (o_samplesTaken) { *o_samplesTaken = samplesTaken; }
   if (o_touchesUsed) { *o_touchesUsed = totalTouches; }
   if (logging_enabled) {
     const auto duration = millis() - startTime;
     SERIAL_ECHO_START;
     SERIAL_ECHOPAIR("probe height: ", rawMeasurement);
-    SERIAL_ECHOPAIR(", displacement: ", s_probeDisplacement);
+    SERIAL_ECHOPAIR(", displacement: ", m_probeDisplacement);
     SERIAL_ECHOPAIR(", measurement: ", measurement);
     SERIAL_ECHOPAIR(", samplesTaken: ", samplesTaken);
     SERIAL_ECHOPAIR(", totalTouches: ", totalTouches);

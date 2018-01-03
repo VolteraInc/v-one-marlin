@@ -1,3 +1,6 @@
+#include "Router.h"
+
+#include "../../../serial.h"
 #include "../../../Marlin.h"
 #include "../../../stepper.h"
 #include "../../api/api.h"
@@ -40,44 +43,37 @@ static int s_sendAndRampTo(PTopPin& pin, int percent) {
   return 0;
 }
 
-Router::Router(PTopPin& pin) 
-  : m_pin(pin) 
+tools::Router::Router(Stepper& stepper, PTopPin& pin)
+  : Tool(stepper)
+  , m_pin(pin)
 {
 }
 
-int Router::move() {
-  if (!attached()) {
-    // error/message?
-    // return;
-    // initialize self?
-  }
-}
-
-int Router::prepareToMove() {
+int tools::Router::prepareToMoveImpl() {
   const char* context = "prepare router";
   return (
     raise() ||
-    confirmMountedAndNotTriggered(context, tool, TOOLS_ROUTER) ||
-    stopRotation(tool) ||
+    confirmAttached(context, *this) ||
+    stopRotation() ||
 
-    ensureHomedInXY() ||
-    homeZ(tool) || // home Z so we can enter the xy pos with decent precision
-    centerTool(tool) ||
-    homeZ(tool) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
+    ensureHomedInXY(*this) ||
+    homeZ(*this) || // home Z so we can enter the xy pos with decent precision
+    centerTool(*this) ||
+    homeZ(*this) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
 
     raise()
   );
 }
 
-int Router::unprepare(Tool tool) {
+int tools::Router::resetPreparationsImpl() {
   setHomedState(Z_AXIS, 0);
   return (
-    _stopRotationIfMounted(tool)
+    stopRotationIfMounted()
   );
 }
 
 // i.e. don't return an error if the tool is not mounted
-int Router::_stopRotationIfMounted() {
+int tools::Router::stopRotationIfMounted() {
   // Finish pending moves before setting router speed.
   // Note: Whether we are starting, stopping or just changing speeds
   // having the change sync'd with movements makes it predictable.
@@ -85,7 +81,7 @@ int Router::_stopRotationIfMounted() {
 
   // TODO: better handling of resetting router
   // perhaps we should test pin directly?
-  bool isMounted = determineToolState(tool) == TOOL_STATE_ROUTER_MOUNTED;
+  bool isMounted = determineToolState() == TOOL_STATE_ROUTER_MOUNTED;
 
   if (!isMounted) {
     SERIAL_ECHO_START;
@@ -93,8 +89,8 @@ int Router::_stopRotationIfMounted() {
     goto DONE;
   }
 
-  if (_sendAndRampTo(0)) {
-    bool stillMounted = determineToolState(tool) == TOOL_STATE_ROUTER_MOUNTED;
+  if (s_sendAndRampTo(m_pin, 0)) {
+    bool stillMounted = determineToolState() == TOOL_STATE_ROUTER_MOUNTED;
     if (stillMounted) {
       SERIAL_ERROR_START;
       SERIAL_ERRORLNPGM("Unable to stop router, confirm router is attached and powered");
@@ -115,19 +111,21 @@ DONE:
   return 0;
 }
 
-int Router::stopRotation() {
+int tools::Router::enqueueMove(float x, float y, float z, float e, float f) {
+  return asyncRawMove(x, y, z, e, f);
+}
+
+int tools::Router::stopRotation() {
   return setRotationSpeed(0);
 }
 
-int Router::setRotationSpeed(unsigned speed) {
+int tools::Router::setRotationSpeed(unsigned speed) {
   // Finish pending moves before setting router speed.
   // Note: Whether we are starting, stopping or just changing speeds
   // having the change sync'd with movements makes it predictable.
   st_synchronize();
 
-  if (tool != TOOLS_ROUTER) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to set router rotation speed, tool is "); SERIAL_ERRORLN(toolTypeAsString(tool));
+  if (confirmAttached("set router rotation speed", *this)) {
     return -1;
   }
 
@@ -139,13 +137,13 @@ int Router::setRotationSpeed(unsigned speed) {
   }
 
   // Send the speed to the router
-if (_sendAndRampTo(speed)) {
+  if (s_sendAndRampTo(m_pin, speed)) {
     SERIAL_ERROR_START;
     SERIAL_PAIR("Unable to set the router rotation speed to ", speed);
     SERIAL_ERRORLNPGM(", confirm router is attached and powered");
 
     // Attempt to stop the router (just in case)
-    stopRotationIfMounted(tool);
+    stopRotationIfMounted();
     return -1;
   }
 

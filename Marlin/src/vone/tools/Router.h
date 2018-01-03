@@ -6,23 +6,24 @@ class PTopPin;
 namespace tools {
 
 class Router : public Tool {
-    public:
-        Router(PTopPin& pin);
+  public:
+    Router(Stepper& stepper, PTopPin& pin);
 
-        virtual const char* typeName() override { return "Router"; } 
-        virtual int prepare() override;
-        virtual int unprepare() override;
+    int setRotationSpeed(unsigned speed);
+    float rotationSpeed() const { return m_rotationSpeed; }
 
-        int setRotationSpeed(unsigned speed);
-        float rotationSpeed() { return m_rotationSpeed; }
+  private:
+    PTopPin& m_pin;
+    int m_rotationSpeed = 0;
 
-    private:
-        PTopPin& m_pin;
-        int m_rotationSpeed = 0;
-        
-        int _sendAndRampTo(int percent);
-        int _stopRotation();
-        int _stopRotationIfMounted();
+    int stopRotation();
+    int stopRotationIfMounted();
+
+    virtual const char* name() const override { return "Router"; }
+    virtual int prepareToMoveImpl() override;
+    virtual int resetPreparationsImpl() override;
+    virtual int enqueueMove(float x, float y, float z, float e, float f) override;
+
 };
 
 }
