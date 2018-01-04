@@ -43,7 +43,7 @@ class SamplingHelper {
       writePtr->reset();
     }
 
-    FORCE_INLINE SampledValue value() {
+    FORCE_INLINE SampledValue value() const {
       ScopedInterruptDisable sid;
       return *readPtr;
     }

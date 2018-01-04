@@ -27,7 +27,7 @@ class PTopPin {
     FORCE_INLINE int analogPin() const { return _analogPin; }
 
     // Returns the most recently sampled value
-    FORCE_INLINE Sample value();
+    FORCE_INLINE Sample value() const;
 
     // Blocks until a new sample is available, then returns it
     FORCE_INLINE Sample readValue();
@@ -114,8 +114,8 @@ PTopPin::PTopPin(int digitalPin, int analogPin)
   resetTool();
 }
 
-PTopPin::Sample PTopPin::value()     { return Sample( adcSamples.value()     ); }
-PTopPin::Sample PTopPin::readValue() { return Sample( adcSamples.readValue() ); }
+PTopPin::Sample PTopPin::value() const { return Sample( adcSamples.value()     ); }
+PTopPin::Sample PTopPin::readValue()   { return Sample( adcSamples.readValue() ); }
 
 // ----------------------------------------------
 // Idle
