@@ -210,6 +210,21 @@ int process_vcode(int command_code) {
       );
     }
 
+    // Probe feature
+    case 120: {
+      auto& probe = vone->toolBox.probe;
+      FeatureMeasurements featureMeasurements;
+      if (
+        confirmAttached("probe feature", probe) ||
+        probe.prepareToMove() ||
+        probeFeature(probe, featureMeasurements)
+      ) {
+        return -1;
+      }
+
+      // TODO: output(featureMeasurements);
+    }
+
     //-------------------------------------------
     // Deprecated
     // For compatibility - these V-Commands are now D-Commands but production tests use V110# cmds.
@@ -239,7 +254,8 @@ int process_vcode(int command_code) {
       SERIAL_ECHOLNPGM("    V102 - set dispense height (must have dispenser attached) -- V102 Z0.140");
       SERIAL_ECHOLNPGM("  Probe");
       SERIAL_ECHOLNPGM("    V101 P - attach probe, include 'F' to force change");
-      SERIAL_ECHOLNPGM("    V4 - Probe at current position (retract by probe displacement + R) -- V4 R1");
+      SERIAL_ECHOLNPGM("    V4   - Probe point at current position (retract by probe displacement + R) -- V4 R1");
+      SERIAL_ECHOLNPGM("    V120 - Probe a feature at current position, include 'D' to indicate diameter of hole -- V120 D0.7");
       SERIAL_ECHOLNPGM("  Router");
       SERIAL_ECHOLNPGM("    V101 R - attach router, include 'F' to force change");
       SERIAL_ECHOLNPGM("    V110 - set router rotation speed -- V110 R100, no value or 0 means stop");

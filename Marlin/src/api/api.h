@@ -7,6 +7,7 @@ namespace tools {
 
 #include "movement/movement.h"
 #include "measurement/measurement.h"
+#include "probing/probing.h"
 
 // Tool States
 enum ToolStates {
