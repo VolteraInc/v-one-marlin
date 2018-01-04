@@ -193,27 +193,18 @@ int process_vcode(int command_code) {
     // Set dispense height
     // Note: Change will be applied to next movement
     case 102: {
-      // Confirm we have a dispenser
       auto& dispenser = vone->toolBox.dispenser;
-      if (dispenser.detached()) {
-        SERIAL_ERROR_START;
-        SERIAL_PAIR("Unable to set dispensing height, current tool is ", currentTool.name());
-        SERIAL_EOL;
-        return -1;
-      }
-      return dispenser.setDispenseHeight(code_seen('Z') ? code_value() : 0.0f);
+      return (
+        confirmAttached("set dispensing height", dispenser) ||
+        dispenser.setDispenseHeight(code_seen('Z') ? code_value() : 0.0f)
+      );
     }
 
     // Set rotation speed
     case 110: {
       auto& router = vone->toolBox.router;
-      if (router.detached()) {
-        SERIAL_ERROR_START;
-        SERIAL_PAIR("Unable to set rotation speed, current tool is ", currentTool.name());
-        SERIAL_EOL;
-        return -1;
-      }
       return (
+        confirmAttached("set rotation speed", router) ||
         router.prepareToMove() ||
         router.setRotationSpeed(code_seen('R') ? code_value() : 0.0f)
       );
