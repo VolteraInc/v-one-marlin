@@ -15,11 +15,14 @@ enum class VoltageType {
 
 inline const char* toString(VoltageType type) {
   switch (type) {
-    case VoltageType::ProbeTriggered: return "Triggered";
-    case VoltageType::ProbeMounted: return "Probe Mounted";
-    case VoltageType::RouterMounted: return "Router Mounted";
-    case VoltageType::NoToolMounted: return "Not Mounted";
     case VoltageType::Unknown: return "Unknown";
+    case VoltageType::NoToolMounted: return "Not Mounted";
+
+    case VoltageType::ProbeMounted: return "Probe Mounted";
+    case VoltageType::ProbeTriggered: return "Triggered";
+
+    case VoltageType::RouterMounted: return "Router Mounted";
+    case VoltageType::RouterResetting: return "Router Resetting";
   }
 }
 

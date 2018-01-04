@@ -1,11 +1,11 @@
-#pragma once
+#include "VoltageTypeStabilizer.h"
 
-#include "VoltateTypeStabilizer.h"
-
-#include "../../../Marlin.h"
+#include "../../../serial.h"
 #include "classifyVoltage.h"
 
-static void outputVoltages(float voltages, unsigned int num) {
+#if 0
+
+static void outputVoltages(float voltages[], unsigned int num) {
   SERIAL_ECHO_START;
   SERIAL_ECHOPGM("  voltages = [");
   serialArray(voltages, num);
@@ -13,24 +13,24 @@ static void outputVoltages(float voltages, unsigned int num) {
   SERIAL_EOL;
 }
 
-VoltateTypeStabilizer::VoltateTypeStabilizer() {
+toolDetection::VoltageTypeStabilizer::VoltageTypeStabilizer() {
   reset();
 }
 
-VoltateTypeStabilizer::reset() {
+void toolDetection::VoltageTypeStabilizer::reset() {
   m_type = VoltageType::Unknown;
   m_numVoltages = 0;
 
 }
 
-VoltateTypeStabilizer::addVoltage(float voltage) {
+void toolDetection::VoltageTypeStabilizer::addVoltage(float voltage) {
   if (m_numVoltages < maxVoltages) {
     voltages[numVoltages] = sample.voltage;
     ++numVoltages;
   }
 }
 
-void VoltateTypeStabilizer::setStable(bool stable) {
+void toolDetection::VoltageTypeStabilizer::setStable(bool stable) {
   if (m_stable == stable) {
     return;
   }
@@ -42,7 +42,7 @@ void VoltateTypeStabilizer::setStable(bool stable) {
   }
 }
 
-void VoltateTypeStabilizer::add(PTopPin::Sample& sample) {
+void toolDetection::VoltageTypeStabilizer::add(PTopPin::Sample& sample) {
 
   const delta = m_previousTime - sample.startTime;
 
@@ -57,16 +57,16 @@ void VoltateTypeStabilizer::add(PTopPin::Sample& sample) {
     count = 0;
   }
 
-  m_previousTime = sample.startTime;
+  m_previousSampleTime = sample.startTime;
 
   addVoltage(sample.voltage);
   const auto type = classifyVoltage(sample.voltage);
 
   // type differs from previous, reset counter
-  if (m_previousType != type) {
+  if (m_type != type) {
     reset();
+    m_type = type;
   }
-  previousType = type;
 
   // Set to stable when we collect enough matching
   // voltage type classications
@@ -74,7 +74,4 @@ void VoltateTypeStabilizer::add(PTopPin::Sample& sample) {
     setType(type);
   }
 }
-
-VoltageType VoltageTypeStabilizer::value() {
-  return m_type;
-}
+#endif
