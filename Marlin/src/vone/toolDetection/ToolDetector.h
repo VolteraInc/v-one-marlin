@@ -63,6 +63,13 @@ namespace toolDetection {
   }
 
   void ToolDetector::frequentInterruptibleWork() {
+    // Run every 0.1s
+    const auto now = millis();
+    if (now < m_nextCheckAt) {
+      return;
+    }
+    m_nextCheckAt = now + 100;
+
     // Keep current tool up-to-date
     if (m_enabled) {
       m_stabilizer.add(m_pin.value());

@@ -17,14 +17,13 @@ class VoltageTypeStabilizer {
   public:
     VoltageTypeStabilizer();
 
-    void add(PTopPin::Sample& sample);
-    VoltageType value() { return m_stableType; }
+    void add(unsigned int time, float voltage);
+    VoltageType value() { return m_stable ? m_type : VoltageType::Unknown; }
 
   private:
     unsigned int m_count = 0;
     unsigned long m_previousSampleTime;
     VoltageType m_type = VoltageType::Unknown;
-    VoltageType m_stableType = VoltageType::Unknown;
 
     static const unsigned int warningThreshold = 12;
     float voltages[warningThreshold];
