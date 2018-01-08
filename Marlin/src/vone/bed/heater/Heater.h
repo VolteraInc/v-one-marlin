@@ -20,6 +20,7 @@ class Heater {
   private:
     HeaterPin& m_heaterPin;
     BedTemperaturePin& m_temperaturePin;
+    unsigned int m_nextCheckAt = 0;
 
     volatile float m_currentTemp = 0.0f;
     volatile float m_targetTemp = 0.0f;
@@ -65,12 +66,11 @@ void Heater::updateHeating(float temperature) {
 
 void Heater::frequentInterruptibleWork() {
   // Run every 0.5s
-  static unsigned long nextCheckAt = 0;
   const auto now = millis();
-  if (now < nextCheckAt) {
+  if (now < m_nextCheckAt) {
     return;
   }
-  nextCheckAt = now + 500;
+  m_nextCheckAt = now + 500;
 
   // Update currentTemp (i.e. volatile member)
   m_currentTemp = m_temperaturePin.value().temperature;
