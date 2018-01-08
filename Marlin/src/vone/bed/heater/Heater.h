@@ -8,8 +8,8 @@ class Heater {
   public:
     inline Heater(HeaterPin& heatPin, BedTemperaturePin &tempPin);
 
-    float currentTemperature() { return currentTemp; };
-    float targetTemperature() { return targetTemp; };
+    float currentTemperature() { return m_currentTemp; };
+    float targetTemperature() { return m_targetTemp; };
     inline void setTargetTemperature(float target);
 
     bool isHeating() { ScopedInterruptDisable sid; return currentTemp < targetTemp; };
@@ -18,18 +18,18 @@ class Heater {
     inline void frequentInterruptibleWork();
 
   private:
-    HeaterPin& heaterPin;
-    BedTemperaturePin& temperaturePin;
+    HeaterPin& m_heaterPin;
+    BedTemperaturePin& m_temperaturePin;
 
-    volatile float currentTemp = 0.0f;
-    volatile float targetTemp = 0.0f;
+    volatile float m_currentTemp = 0.0f;
+    volatile float m_targetTemp = 0.0f;
 
     inline void updateHeating(float temperature);
 };
 
-Heater::Heater(HeaterPin& heatPin, BedTemperaturePin &tempPin)
-  : heaterPin(heatPin)
-  , temperaturePin(tempPin) {
+Heater::Heater(HeaterPin& heaterPin, BedTemperaturePin &temperaturePin)
+  : m_heaterPin(heaterPin)
+  , m_temperaturePin(temperaturePin) {
 }
 
 void Heater::setTargetTemperature(float target) {
@@ -51,15 +51,15 @@ void Heater::updateHeating(float temperature) {
     SERIAL_PAIR(" degrees, which is outside of the expected range, ", BED_MINTEMP);
     SERIAL_PAIR(" to ", BED_MAXTEMP);
     SERIAL_EOL;
-    heaterPin.stopHeating();
+    m_heaterPin.stopHeating();
     return;
   }
 
   // Turn heater on/off
-  if (temperature < targetTemp) {
-    heaterPin.startHeating();
+  if (temperature < m_targetTemp) {
+    m_heaterPin.startHeating();
   } else {
-    heaterPin.stopHeating();
+    m_heaterPin.stopHeating();
   }
 }
 
@@ -72,7 +72,9 @@ void Heater::frequentInterruptibleWork() {
   }
   nextCheckAt = now + 500;
 
-  // Get temperature then update heater
-  currentTemp = temperaturePin.value().temperature;
-  updateHeating(currentTemp);
+  // Update currentTemp (i.e. volatile member)
+  m_currentTemp = m_temperaturePin.value().temperature;
+
+  // Process the latest temperature
+  updateHeating(m_currentTemp);
 }
