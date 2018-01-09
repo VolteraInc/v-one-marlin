@@ -1,3 +1,5 @@
+#pragma once
+
 #include "NullTool.h"
 #include "Probe.h"
 #include "Dispenser.h"
