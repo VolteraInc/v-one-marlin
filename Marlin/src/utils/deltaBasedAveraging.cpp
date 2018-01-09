@@ -1,6 +1,6 @@
 #include "deltaBasedAveraging.h"
 
-#include <Arduino.h>
+#include <Arduino.h> // abs
 
 // Computing the average by averaging the deltas is less
 // susceptable to loss of precision. i.e. Sum will likely
