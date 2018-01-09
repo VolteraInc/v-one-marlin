@@ -30,6 +30,7 @@ namespace toolDetection {
       ToolBox& m_toolBox;
       const PTopPin& m_pin;
       volatile bool m_enabled = true;
+      unsigned int m_nextCheckAt = 0;
       VoltageTypeStabilizer m_stabilizer;
 
       inline Tool* mapToTool(VoltageType type);
@@ -60,23 +61,29 @@ namespace toolDetection {
       case VoltageType::Unknown:
         return nullptr;
     }
+    return nullptr;
   }
 
   void ToolDetector::frequentInterruptibleWork() {
-    // Run every 0.1s
+    // Run periodically
+    // Note: Voltage climbs from 0 to 5 over ~60ms,
+    //       Collecting every ~20ms should be sufficient
+    //       for tool classification and detach detection.
+    //       In the worst case it should take 3-4 samples.
     const auto now = millis();
     if (now < m_nextCheckAt) {
       return;
     }
-    m_nextCheckAt = now + 100;
+    m_nextCheckAt = now + 20;
 
-    // Keep current tool up-to-date
-    if (m_enabled) {
-      m_stabilizer.add(m_pin.value());
-      const auto detectedTool = mapToTool(m_stabilizer.value());
-      if (detectedTool) {
-        m_toolBox.setTool(detectedTool);
-      }
+    // Determine attached tool
+    auto sample = m_pin.value();
+    m_stabilizer.add(sample.startTime, sample.voltage);
+    const auto detectedTool = mapToTool(m_stabilizer.value());
+
+    // Update tool
+    if (detectedTool && m_enabled) {
+      m_toolBox.setTool(detectedTool);
     }
   }
 }
