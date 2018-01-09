@@ -12,7 +12,7 @@ class Heater {
     float targetTemperature() { return m_targetTemp; };
     inline void setTargetTemperature(float target);
 
-    bool isHeating() { ScopedInterruptDisable sid; return currentTemp < targetTemp; };
+    bool isHeating() { ScopedInterruptDisable sid; return m_currentTemp < m_targetTemp; };
     bool isCooling() { return !isHeating(); };
 
     inline void frequentInterruptibleWork();
@@ -36,7 +36,7 @@ Heater::Heater(HeaterPin& heaterPin, BedTemperaturePin &temperaturePin)
 void Heater::setTargetTemperature(float target) {
   {
     ScopedInterruptDisable sid;
-    targetTemp = target;
+    m_targetTemp = target;
   }
   SERIAL_ECHO_START;
   SERIAL_PAIR("New target Temperature: ", target);
