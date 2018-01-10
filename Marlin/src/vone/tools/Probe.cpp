@@ -6,6 +6,7 @@
 #include "../../api/measurement/measurement.h"
 #include "../../api/movement/movement.h"
 #include "../pins/PTopPin/PTopPin.h"
+#include "../toolDetection/classifyVoltage.h"
 
 int confirmAttachedAndNotTriggered(const char* context, tools::Probe& probe) {
   if (confirmAttached(context, probe)) {
@@ -58,7 +59,8 @@ int tools::Probe::enqueueMove(float x, float y, float z, float e, float f) {
 }
 
 bool tools::Probe::isTriggered(float voltage) {
-  return classifyVoltage(voltage) == TOOL_STATE_TRIGGERED;
+  using namespace toolDetection;
+  return classifyVoltage(voltage) == VoltageType::ProbeTriggered;
 }
 
 bool tools::Probe::readAnalogTriggered(float* o_voltageReading) {

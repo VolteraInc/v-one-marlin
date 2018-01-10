@@ -5,39 +5,65 @@
 
 // ----------------------------------------------
 // VoltageLog
-void toolDetection::VoltageTypeStabilizer::VoltageLog::push(unsigned int time, VoltageType type, float voltage) {
-  increment(m_writeIdx);
-  m_samples[m_writeIdx] = { time, type, voltage };
+void toolDetection::VoltageTypeStabilizer::VoltageLog::push(unsigned long time, VoltageType type, float voltage) {
+  // Advance front and back
+  // Note: if we are empty the front and back already point where we need them to be.
+  if (!empty()) {
+    if (full()) {
+      pop();
+    }
+    m_backIdx = increment(m_backIdx);
+  }
+
+  // store sample
+  m_samples[m_backIdx] = { time, type, voltage };
+  ++m_size;
 }
 
 void toolDetection::VoltageTypeStabilizer::VoltageLog::pop() {
-  increment(m_readIdx);
+  if (!empty()) {
+    m_frontIdx = increment(m_frontIdx);
+    --m_size;
+  }
 }
 
-unsigned int toolDetection::VoltageTypeStabilizer::VoltageLog::timespan() const {
-  return empty() ? 0 : front().time - back().time;
+unsigned long toolDetection::VoltageTypeStabilizer::VoltageLog::timespan() const {
+  return front().time - back().time;
 }
 
-unsigned int toolDetection::VoltageTypeStabilizer::VoltageLog::timeSpanOfCurrentType() const {
+unsigned long toolDetection::VoltageTypeStabilizer::VoltageLog::timeSpanOfCurrentType() const {
+  if (empty()) {
+    return 0;
+  }
   const auto type = back().type;
   auto startTime = back().time;
-  for (auto idx = m_writeIdx; idx == m_readIdx; decrement(idx)) {
+  auto idx = m_backIdx;
+  auto sz = size();
+  while (sz--) {
     if (m_samples[idx].type != type) {
       break;
     }
     startTime = m_samples[idx].time;
+    idx = decrement(idx);
   }
   return back().time - startTime;
 }
 
 void toolDetection::VoltageTypeStabilizer::VoltageLog::output() const {
-  for (auto idx = m_readIdx; idx == m_writeIdx; increment(idx)) {
-    if (idx != m_readIdx) {
+  if (empty()) {
+    return;
+  }
+  auto idx = m_frontIdx;
+  auto sz = size();
+  while (sz--) {
+    if (idx != m_frontIdx) {
       SERIAL_ECHOPGM(", ");
     }
     SERIAL_PAIR("(", m_samples[idx].time);
+    SERIAL_PAIR(", ", toString(m_samples[idx].type));
     SERIAL_PAIR(", ", m_samples[idx].voltage);
     SERIAL_ECHOPGM(")");
+    idx = increment(idx);
   }
 }
 
@@ -60,7 +86,8 @@ void toolDetection::VoltageTypeStabilizer::setStable(bool stable) {
     }
 
     SERIAL_ECHO_START;
-    SERIAL_ECHOPGM(" Voltage type stablized, voltages = [ ");
+    SERIAL_PAIR("Voltage type stablized in ", delta);
+    SERIAL_ECHOPGM("ms, voltages = [ ");
     m_voltages.output();
     SERIAL_ECHOPGM(" ]");
     SERIAL_EOL;
@@ -69,15 +96,17 @@ void toolDetection::VoltageTypeStabilizer::setStable(bool stable) {
   }
 }
 
-void toolDetection::VoltageTypeStabilizer::add(unsigned int time, float voltage) {
-
+void toolDetection::VoltageTypeStabilizer::add(unsigned long time, float voltage) {
   // Return if we already have this sample
   if (!m_voltages.empty() && m_voltages.back().time == time) {
     return;
   }
 
-  // If type has changed, mark as unstable
+  // Collect sample
   auto type = classifyVoltage(voltage);
+  m_voltages.push(time, type, voltage);
+
+  // If type has changed, mark as unstable
   if (m_type != type) {
     setStable(false);
     m_type = type;
@@ -88,9 +117,6 @@ void toolDetection::VoltageTypeStabilizer::add(unsigned int time, float voltage)
   if (m_stable) {
     return;
   }
-
-  // Collect voltage
-  m_voltages.push(time, type, voltage);
 
   if (
     // NoToolMounted is already high on the voltage scale
@@ -104,9 +130,3 @@ void toolDetection::VoltageTypeStabilizer::add(unsigned int time, float voltage)
     setStable(true);
   }
 }
-
-//
-// TODO:
-//  - move output voltages into VoltageLog
-//  - we want to warn if it takes too long to stablize (i.e. is unstable for more than 100)
-//    may need frequency suppression on this warning (don't have on voltage output...so maybe ok?)

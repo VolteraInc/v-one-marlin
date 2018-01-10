@@ -10,5 +10,6 @@ VOne::VOne(
   , adc(pins.ptop, pins.bedTemperature)
   , heater(pins.heater, pins.bedTemperature)
   , toolBox(stepper, pins.ptop)
+  , toolDetector(toolBox, pins.ptop)
 {
 }

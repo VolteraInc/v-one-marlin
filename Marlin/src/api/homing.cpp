@@ -179,11 +179,6 @@ int homeZ(tools::Tool& tool) {
     return -1;
   }
 
-  if (determineToolState() == TOOL_STATE_TRIGGERED) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to home Z-axis, tool triggered before contacting z-switch");
-    return -1;
-  }
 
   // Raise and set the max-z soft limit
   // Note: the point of contact can vary slightly, so we add some fudge to make to max tolerant

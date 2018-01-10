@@ -9,18 +9,6 @@ namespace tools {
 #include "measurement/measurement.h"
 #include "probing/probing.h"
 
-// Tool States
-enum ToolStates {
-  TOOL_STATE_UNKNOWN = 0,
-  TOOL_STATE_NOT_MOUNTED = 1,
-  TOOL_STATE_TRIGGERED = 2,
-  TOOL_STATE_PROBE_MOUNTED = 3,
-  TOOL_STATE_ROUTER_MOUNTED = 4
-};
-enum ToolStates classifyVoltage(float voltage);
-enum ToolStates determineToolState();
-const char* toolStateAsString(enum ToolStates state);
-
 // Homing
 bool homedXY();
 int homeXY(tools::Tool& tool);

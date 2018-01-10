@@ -179,7 +179,7 @@ int process_vcode(int command_code) {
     // Attach/Detach tool
     case 101: {
       // Disable tool detection if Force option included
-      enableToolDetection(!code_seen('F'));
+      vone->toolDetector.enable(!code_seen('F'));
 
       // Set Tool
       if      (code_seen('P')) vone->toolBox.setTool(&vone->toolBox.probe);

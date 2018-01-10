@@ -179,9 +179,19 @@ int process_mcode(int command_code) {
       return 0;
 
     // M125 - Output current Probe status to serial port
-    case 125:
-      SERIAL_PROTOCOLPGM("Probe: "); SERIAL_PROTOCOLLN(toolStateAsString(determineToolState()));
+    case 125: {
+      auto& probe = vone->toolBox.probe;
+      SERIAL_PROTOCOLPGM("Probe: ");
+      if (probe.detached()) {
+        SERIAL_PROTOCOLPGM("Not Mounted");
+      } else if (probe.readAnalogTriggered()) {
+        SERIAL_PROTOCOLPGM("Triggered");
+      } else {
+        SERIAL_PROTOCOLPGM("Probe Mounted");
+      }
+      SERIAL_EOL;
       return 0;
+    }
 
     // M140 - Set bed target temp
     case 140:

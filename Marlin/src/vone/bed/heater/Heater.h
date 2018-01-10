@@ -20,7 +20,7 @@ class Heater {
   private:
     HeaterPin& m_heaterPin;
     BedTemperaturePin& m_temperaturePin;
-    unsigned int m_nextCheckAt = 0;
+    unsigned long m_nextCheckAt = 0;
 
     volatile float m_currentTemp = 0.0f;
     volatile float m_targetTemp = 0.0f;

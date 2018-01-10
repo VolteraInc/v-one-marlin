@@ -144,7 +144,6 @@ void loop() {
   checkForEndstopHits(); // will detect expected hits as errors
   reportBufferEmpty();   // not important enough to monitor
   periodic_output();     // will generate excessive output
-  toolChanges();         // handling a tool change mid command would be needlessly complicated
 }
 
 // Stepper uses ISR(TIMER1_COMPA_vect)

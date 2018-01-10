@@ -79,32 +79,28 @@ int tools::Router::stopRotationIfMounted() {
   // having the change sync'd with movements makes it predictable.
   st_synchronize();
 
-  // TODO: better handling of resetting router
-  // perhaps we should test pin directly?
-  bool isMounted = determineToolState() == TOOL_STATE_ROUTER_MOUNTED;
-
-  if (!isMounted) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Router could not be explicitly stopped because it is not mounted");
-    goto DONE;
+  if (detached()) {
+    goto DETACHED;
   }
 
   if (s_sendAndRampTo(m_pin, 0)) {
-    bool stillMounted = determineToolState() == TOOL_STATE_ROUTER_MOUNTED;
-    if (stillMounted) {
-      SERIAL_ERROR_START;
-      SERIAL_ERRORLNPGM("Unable to stop router, confirm router is attached and powered");
-      return -1;
+    if (detached()) {
+      goto DETACHED;
     }
 
-    SERIAL_ECHO_START;
-    SERIAL_ERRORLNPGM("Router could not be explicitly stopped because it is not mounted");
-    goto DONE;
+    SERIAL_ERROR_START;
+    SERIAL_ERRORLNPGM("Unable to stop router, confirm router is attached and powered");
+    return -1;
   }
 
   // success
   SERIAL_ECHO_START;
   SERIAL_ERRORLNPGM("Router stopped");
+  goto DONE;
+
+DETACHED:
+  SERIAL_ECHO_START;
+  SERIAL_ERRORLNPGM("Router could not be explicitly stopped because it is not mounted");
 
 DONE:
   m_rotationSpeed = 0;

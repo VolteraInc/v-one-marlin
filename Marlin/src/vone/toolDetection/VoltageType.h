@@ -24,6 +24,7 @@ inline const char* toString(VoltageType type) {
     case VoltageType::RouterMounted: return "Router Mounted";
     case VoltageType::RouterResetting: return "Router Resetting";
   }
+  return "Unknown";
 }
 
 }

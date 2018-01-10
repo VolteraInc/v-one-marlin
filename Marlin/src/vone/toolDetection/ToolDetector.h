@@ -30,7 +30,8 @@ namespace toolDetection {
       ToolBox& m_toolBox;
       const PTopPin& m_pin;
       volatile bool m_enabled = true;
-      unsigned int m_nextCheckAt = 0;
+
+      unsigned long m_nextCheckAt = 0;
       VoltageTypeStabilizer m_stabilizer;
 
       inline Tool* mapToTool(VoltageType type);

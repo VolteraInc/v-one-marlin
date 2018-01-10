@@ -6,6 +6,7 @@
 #include "stepper/Stepper.h"
 
 #include "tools/ToolBox.h"
+#include "toolDetection/ToolDetector.h"
 
 class VOne {
   public:
@@ -21,6 +22,7 @@ class VOne {
     Heater heater;
     Stepper stepper;
     tools::ToolBox toolBox;
+    toolDetection::ToolDetector toolDetector;
 
     // Perform work that must happen frequently but can be
     // interrupted (briefly) by time critical work like
@@ -44,6 +46,10 @@ class VOne {
       //       by command processing
       heater.frequentInterruptibleWork();
 
+      // Tool Detection
+      // Note: Delaying tool detach detection (even for a few seconds) could
+      //       result in damage, i.e. a tool crash, broken drill bit, etc
+      toolDetector.frequentInterruptibleWork();
       SBI(TIMSK0, OCIE0B);
     }
 
