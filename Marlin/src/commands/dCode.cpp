@@ -250,7 +250,7 @@ int process_dcode(int command_code) {
     // Sample pin values
     case 106: {
       const unsigned pin = code_seen('P') ? code_value() : P_TOP_ANALOG_PIN;
-      const unsigned cycles = code_seen('C') ? code_value() : -1;
+      const unsigned cycles = code_seen('C') ? code_value() : 20;
       const unsigned intraSampleDelayMs = code_seen('M') ? code_value() : 1;
       return d106_samplePinValues(pin, cycles, intraSampleDelayMs);
     }
