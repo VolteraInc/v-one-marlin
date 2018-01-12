@@ -3,35 +3,37 @@
         {
             "name": "Mac",
             "includePath": [
-                "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino"
+                "/Applications/Arduino.app/Contents//Java/hardware/tools/avr/lib/gcc/avr/4.9.2/include/",
+                "/Applications/Arduino.app/Contents//Java/hardware/tools/avr/avr/include",
+                "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino",
+                "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/libraries/SoftwareSerial/src/",
+                "/Applications/Arduino.app/Contents//Java/hardware/arduino/avr/variants/mega/"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
-                    "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino"
+                    "${workspaceRoot}",
+                    "/Applications/Arduino.app/Contents//Java/hardware/tools/avr/lib/gcc/avr/4.9.2/include/",
+                    "/Applications/Arduino.app/Contents//Java/hardware/tools/avr/avr/include",
+                    "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino",
+                    "/Applications/Arduino.app/Contents//Java/hardware/arduino/avr/libraries/SoftwareSerial/src/",
+                    "/Applications/Arduino.app/Contents//Java/hardware/arduino/avr/variants/mega/"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
             },
             "macFrameworkPath": [
-                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk/System/Library/Frameworks"
             ]
         },
         {
             "name": "Linux",
             "includePath": [
-                "/usr/include",
-                "/usr/local/include",
-                "${workspaceRoot}"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
-                    "/usr/include",
-                    "/usr/local/include",
-                    "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
@@ -40,8 +42,6 @@
         {
             "name": "Win32",
             "includePath": [
-                "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include",
-                "${workspaceRoot}"
             ],
             "defines": [
                 "_DEBUG",
@@ -50,8 +50,6 @@
             "intelliSenseMode": "msvc-x64",
             "browse": {
                 "path": [
-                    "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*",
-                    "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
