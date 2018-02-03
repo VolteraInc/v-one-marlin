@@ -11,7 +11,7 @@ struct Point3d {
   float x, y, z;
 };
 
-static int rectangle(tools::Tool& tool, const Point3d& a, const Point3d& b, float xySpeed, float zSpeed) {
+static int verticalPlane(tools::Tool& tool, const Point3d& a, const Point3d& b, float xySpeed, float zSpeed) {
   return (
     // Ensure we are at the point 1
     moveZ(tool, a.z, zSpeed) || moveXY(tool, a.x, a.y, xySpeed) ||
@@ -28,8 +28,8 @@ static int crossPlanes(tools::Tool& tool, const Point3d& a, const Point3d& b, fl
   const Point3d a2 = { b.x, a.y, a.z };
   const Point3d b2 = { a.x, b.y, b.z };
   if (
-    rectangle(tool, a, b, xySpeed, zSpeed) ||
-    rectangle(tool, a2, b2, xySpeed, zSpeed)
+    verticalPlane(tool, a, b, xySpeed, zSpeed) ||
+    verticalPlane(tool, a2, b2, xySpeed, zSpeed)
   ) {
     SERIAL_ERROR_START;
     SERIAL_ERRORPGM("Unable to complete cross-planes from"); SERIAL_ERROR(a.x);
