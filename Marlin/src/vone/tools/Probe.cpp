@@ -187,6 +187,9 @@ int tools::Probe::moveToSafeHeight() {
   return moveZ(*this, safeHeight());
 }
 
+// ----------------------------------------------
+// Status
+
 void tools::Probe::outputStatus() const {
   SERIAL_ECHOPGM("Probe"); SERIAL_EOL;
   SERIAL_PAIR("  displacement: ", displacement());
