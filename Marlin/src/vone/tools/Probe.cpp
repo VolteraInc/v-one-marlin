@@ -186,3 +186,17 @@ int tools::Probe::moveToSafeHeight() {
   // move to safe height
   return moveZ(*this, safeHeight());
 }
+
+void tools::Probe::outputStatus() const {
+  SERIAL_ECHOPGM("Probe"); SERIAL_EOL;
+  SERIAL_PAIR("  displacement: ", displacement());
+  SERIAL_EOL;
+
+  SERIAL_ECHO("Height safety is ");
+  if (heightSafetyEnabled()) {
+    SERIAL_PAIR("ON, safe height is ", safeHeight());
+  } else {
+    SERIAL_ECHOPGM("OFF");
+  }
+  SERIAL_EOL;
+}

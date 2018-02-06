@@ -34,10 +34,12 @@ class Probe : public Tool {
     bool isTriggered(float voltage);
     bool readAnalogTriggered(float* o_voltageReading = nullptr);
 
-    bool heightSafetyEnabled() { return m_heightSafetyEnabled; }
+    bool heightSafetyEnabled() const { return m_heightSafetyEnabled; }
     void enableHeightSafety(bool enable = true);
     float safeHeight() const;
     int moveToSafeHeight();
+
+    void outputStatus() const;
 
   private:
     float m_probeDisplacement = 0.0f;

@@ -156,9 +156,7 @@ int process_vcode(int command_code) {
       SERIAL_PAIR("  type: ", currentTool.name()); SERIAL_EOL;
       SERIAL_PAIR("  prepared: ", currentTool.prepared()); ; SERIAL_EOL;
 
-      SERIAL_ECHOPGM("Probe"); SERIAL_EOL;
-      SERIAL_PAIR("  displacement: ", tb.probe.displacement());
-      SERIAL_EOL;
+      tb.probe.outputStatus();
 
       SERIAL_ECHOPGM("Dispenser"); SERIAL_EOL;
       SERIAL_PAIR("  dispense height: ", tb.dispenser.dispenseHeight());
