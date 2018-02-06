@@ -4,6 +4,8 @@ namespace tools {
   class Tool;
 }
 
+#include "Point3d.h"
+
 const int useDefaultFeedrate = -1;
 const float useDefaultMaxTravel = 9999.9f;
 const float useDefaultRetractDistance = -1.0f;

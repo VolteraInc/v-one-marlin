@@ -7,10 +7,6 @@
 
 #include "../../vone/tools/NullTool.h"
 
-struct Point3d {
-  float x, y, z;
-};
-
 static int verticalPlane(tools::Tool& tool, const Point3d& a, const Point3d& b, float xySpeed, float zSpeed) {
   return (
     // Ensure we are at the point 1
@@ -91,8 +87,7 @@ int burnInSequence(tools::NullTool& noTool, int steps) {
     // Entire volume, default (fast) speeds
     // Note: takes about 5min to complete 5 steps
     runCrossPlaneSequence(
-      noTool,
-      steps,
+      noTool, steps,
       { min_pos[X_AXIS], min_pos[Y_AXIS], 1.0f },
       { max_pos[X_AXIS], max_pos[Y_AXIS], Z_MAX_POS - 2 },
       useDefaultFeedrate, useDefaultFeedrate
