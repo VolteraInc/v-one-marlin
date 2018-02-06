@@ -4,6 +4,7 @@ namespace tools {
   class Tool;
 }
 
+#include "Point2d.h"
 #include "Point3d.h"
 
 const int useDefaultFeedrate = -1;
