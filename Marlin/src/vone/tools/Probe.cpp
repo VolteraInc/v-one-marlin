@@ -192,7 +192,7 @@ void tools::Probe::outputStatus() const {
   SERIAL_PAIR("  displacement: ", displacement());
   SERIAL_EOL;
 
-  SERIAL_ECHO("Height safety is ");
+  SERIAL_ECHO("  height safety: ");
   if (heightSafetyEnabled()) {
     SERIAL_PAIR("ON, safe height is ", safeHeight());
   } else {
