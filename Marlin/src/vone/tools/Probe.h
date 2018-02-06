@@ -1,4 +1,5 @@
 #pragma once
+#include <Arduino.h>
 #include "Tool.h"
 
 class PTopPin;
@@ -33,14 +34,25 @@ class Probe : public Tool {
     bool isTriggered(float voltage);
     bool readAnalogTriggered(float* o_voltageReading = nullptr);
 
+    bool heightSafetyEnabled() { return m_heightSafetyEnabled; }
+    void enableHeightSafety(bool enable = true);
+    float safeHeight() const;
+    int moveToSafeHeight();
+
   private:
     float m_probeDisplacement = 0.0f;
     PTopPin& m_pin;
+    bool m_heightSafetyEnabled = false;
+    unsigned int m_numHeightSamples = 0u;
+    float m_maxSampledHeight = -INFINITY;
+    float m_safeHeight = -INFINITY;
 
     virtual const char* name() const override { return "Probe"; }
     virtual int prepareToMoveImpl() override;
     virtual int resetPreparationsImpl() override;
     virtual int enqueueMove(float x, float y, float z, float e, float f) override;
+
+    void updateSafeHeight(float height);
 };
 
 }

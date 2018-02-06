@@ -115,6 +115,14 @@ int tools::Probe::probe(
     return -1;
   }
 
+  // Move to safe height, if enabled
+  if (heightSafetyEnabled()) {
+    updateSafeHeight(current_position[Z_AXIS]);
+    if (moveToSafeHeight()) {
+      return -1;
+    }
+  }
+
   // Success
   // TODO: should round to nearest step
   measurement = rawMeasurement + m_probeDisplacement;
@@ -132,4 +140,48 @@ int tools::Probe::probe(
     SERIAL_EOL;
   }
   return 0;
+}
+
+
+// ----------------------------------------------
+// Height safety
+
+void tools::Probe::enableHeightSafety(boolean enable) {
+  m_heightSafetyEnabled = enable;
+
+  // Reset safe height on disable
+  if (!m_heightSafetyEnabled) {
+    m_numHeightSamples = 0;
+    m_maxSampledHeight = -INFINITY;
+    m_safeHeight = -INFINITY;
+  }
+}
+
+void tools::Probe::updateSafeHeight(float height) {
+  // If we have a value safe height, update it
+  if (!isinf(m_safeHeight)) {
+    m_safeHeight = max(m_safeHeight, height);
+    return;
+  }
+
+  // Use the max of 3 height samples to establish a safe height
+  ++m_numHeightSamples;
+  m_maxSampledHeight = max(m_maxSampledHeight, height);
+  if (m_numHeightSamples == 3) {
+    m_safeHeight = m_maxSampledHeight;
+  }
+}
+
+float tools::Probe::safeHeight() const {
+  return isinf(m_safeHeight) ? max_pos[Z_AXIS] - 1.0 : m_safeHeight;
+}
+
+int tools::Probe::moveToSafeHeight() {
+  // If height safety is disabled, do nothing
+  if (!heightSafetyEnabled()) {
+    return 0;
+  }
+
+  // move to safe height
+  return moveZ(*this, safeHeight());
 }
