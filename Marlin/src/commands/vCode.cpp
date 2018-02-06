@@ -210,19 +210,42 @@ int process_vcode(int command_code) {
       );
     }
 
-    // Probe feature
-    case 120: {
+    // Probe hole
+    case 211: {
+      using namespace probing;
       auto& probe = vone->toolBox.probe;
-      FeatureMeasurements featureMeasurements;
+      const Point2d center = {
+        code_seen('X') ? code_value() : current_position[X_AXIS],
+        code_seen('Y') ? code_value() : current_position[Y_AXIS]
+      };
+      const auto holeDiameter = code_seen('D') ? code_value() : 0.0f;
+      const auto MaxMeasurements = 12;
+      Point3d measurements[MaxMeasurements];
+      auto numMeasurements = 0u;
       if (
-        confirmAttached("probe feature", probe) ||
+        confirmAttached("probe hole", probe) ||
         probe.prepareToMove() ||
-        probeFeature(probe, featureMeasurements)
+        probeHole(
+          probe,
+          center,
+          holeDiameter / 2,
+          measurements,
+          MaxMeasurements,
+          &numMeasurements
+        )
       ) {
         return -1;
       }
 
-      // TODO: output(featureMeasurements);
+      SERIAL_PROTOCOLPGM("probeHoleMeasurement: { measurements: [");
+      for (auto idx = 0u; idx < numMeasurements; ++idx) {
+        SERIAL_PAIR("{ x:", measurements[idx].x);
+        SERIAL_PAIR(", y:", measurements[idx].y);
+        SERIAL_PAIR(", z:", measurements[idx].z);
+        SERIAL_PROTOCOL(" }");
+      }
+      SERIAL_PROTOCOL("] }");
+      SERIAL_EOL;
     }
 
     //-------------------------------------------
@@ -255,7 +278,7 @@ int process_vcode(int command_code) {
       SERIAL_ECHOLNPGM("  Probe");
       SERIAL_ECHOLNPGM("    V101 P - attach probe, include 'F' to force change");
       SERIAL_ECHOLNPGM("    V4   - Probe point at current position (retract by probe displacement + R) -- V4 R1");
-      SERIAL_ECHOLNPGM("    V120 - Probe a feature at current position, include 'D' to indicate diameter of hole -- V120 D0.7");
+      SERIAL_ECHOLNPGM("    V211 - Probe hole with diameter D centered at X,Y (default to current position) -- V211 D1.0");
       SERIAL_ECHOLNPGM("  Router");
       SERIAL_ECHOLNPGM("    V101 R - attach router, include 'F' to force change");
       SERIAL_ECHOLNPGM("    V110 - set router rotation speed -- V110 R100, no value or 0 means stop");
