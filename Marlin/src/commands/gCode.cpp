@@ -5,7 +5,7 @@
 #include "../../stepper.h"
 #include "../../planner.h"
 
-#include "../../motion_control.h"
+#include "../api/movement/motion_control.h"
 
 #include "../vone/vone.h"
 
@@ -30,8 +30,22 @@ static void s_get_coordinates()
   }
 }
 
+static void s_clamp_to_software_endstops(float target[3]) {
+  if (min_software_endstops) {
+    if (target[X_AXIS] < min_pos[X_AXIS]) target[X_AXIS] = min_pos[X_AXIS];
+    if (target[Y_AXIS] < min_pos[Y_AXIS]) target[Y_AXIS] = min_pos[Y_AXIS];
+    if (target[Z_AXIS] < min_pos[Z_AXIS]) target[Z_AXIS] = min_pos[Z_AXIS];
+  }
+
+  if (max_software_endstops) {
+    if (target[X_AXIS] > max_pos[X_AXIS]) target[X_AXIS] = max_pos[X_AXIS];
+    if (target[Y_AXIS] > max_pos[Y_AXIS]) target[Y_AXIS] = max_pos[Y_AXIS];
+    if (target[Z_AXIS] > max_pos[Z_AXIS]) target[Z_AXIS] = max_pos[Z_AXIS];
+  }
+}
+
 static void s_prepare_move() {
-  clamp_to_software_endstops(destination);
+  s_clamp_to_software_endstops(destination);
 
   if (logging_enabled) {
     SERIAL_ECHO_START;
@@ -85,7 +99,16 @@ static void s_prepare_arc_move(char isclockwise) {
   float r = hypot(offset[X_AXIS], offset[Y_AXIS]); // Compute arc radius for mc_arc
 
   // Trace the arc
-  mc_arc(current_position, destination, offset, X_AXIS, Y_AXIS, Z_AXIS, feedrate*feedmultiply/60/100.0, r, isclockwise);
+  mc_arc(
+    vone->toolBox.currentTool(),
+    current_position,
+    destination,
+    offset,
+    X_AXIS, Y_AXIS, Z_AXIS,
+    feedrate * feedmultiply / 100.0,
+    r,
+    isclockwise
+  );
 
   // As far as the parser is concerned, the position is now == target. In reality the
   // motion control system might still be processing the action and the real tool position

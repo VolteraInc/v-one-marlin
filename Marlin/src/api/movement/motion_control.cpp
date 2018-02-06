@@ -19,29 +19,24 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "Marlin.h"
-#include "stepper.h"
-#include "planner.h"
-
-void clamp_to_software_endstops(float target[3]) {
-  if (min_software_endstops) {
-    if (target[X_AXIS] < min_pos[X_AXIS]) target[X_AXIS] = min_pos[X_AXIS];
-    if (target[Y_AXIS] < min_pos[Y_AXIS]) target[Y_AXIS] = min_pos[Y_AXIS];
-    if (target[Z_AXIS] < min_pos[Z_AXIS]) target[Z_AXIS] = min_pos[Z_AXIS];
-  }
-
-  if (max_software_endstops) {
-    if (target[X_AXIS] > max_pos[X_AXIS]) target[X_AXIS] = max_pos[X_AXIS];
-    if (target[Y_AXIS] > max_pos[Y_AXIS]) target[Y_AXIS] = max_pos[Y_AXIS];
-    if (target[Z_AXIS] > max_pos[Z_AXIS]) target[Z_AXIS] = max_pos[Z_AXIS];
-  }
-}
+#include "./motion_control.h"
+#include "../../../Marlin.h" // X_AXIS, etc.
+#include "../../vone/tools/tool.h"
 
 // The arc is approximated by generating a huge number of tiny, linear segments. The length of each
 // segment is configured in settings.mm_per_arc_segment.
-void mc_arc(float *position, float *target, float *offset, uint8_t axis_0, uint8_t axis_1,
-  uint8_t axis_linear, float feed_rate, float radius, uint8_t isclockwise)
-{
+int mc_arc(
+  tools::Tool & tool,
+  const float *position,
+  const float *target,
+  const float *offset,
+  uint8_t axis_0,
+  uint8_t axis_1,
+  uint8_t axis_linear,
+  float feed_rate,
+  float radius,
+  uint8_t isclockwise
+) {
   //   int acceleration_manager_was_enabled = plan_is_acceleration_manager_enabled();
   //   plan_set_acceleration_manager_enabled(false); // disable acceleration management for the duration of the arc
   float center_axis0 = position[axis_0] + offset[axis_0];
@@ -64,7 +59,7 @@ void mc_arc(float *position, float *target, float *offset, uint8_t axis_0, uint8
 
   float millimeters_of_travel = hypot(angular_travel * radius, fabs(linear_travel));
   if (millimeters_of_travel < 0.001) {
-    return;
+    return 0;
   }
 
   uint16_t segments = floor(millimeters_of_travel / MM_PER_ARC_SEGMENT);
@@ -146,12 +141,25 @@ void mc_arc(float *position, float *target, float *offset, uint8_t axis_0, uint8
     arc_target[axis_linear] += linear_per_segment;
     arc_target[E_AXIS] += extruder_per_segment;
 
-    clamp_to_software_endstops(arc_target);
-    plan_buffer_line(arc_target[X_AXIS], arc_target[Y_AXIS], arc_target[Z_AXIS], arc_target[E_AXIS], feed_rate);
-
+    if (tool.enqueueMove(
+      arc_target[X_AXIS],
+      arc_target[Y_AXIS],
+      arc_target[Z_AXIS],
+      arc_target[E_AXIS],
+      feed_rate
+    )) {
+      return -1;
+    }
   }
+
   // Ensure last segment arrives at target location.
-  plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feed_rate);
+  return tool.enqueueMove(
+    target[X_AXIS],
+    target[Y_AXIS],
+    target[Z_AXIS],
+    target[E_AXIS],
+    feed_rate
+  );
 
   //   plan_set_acceleration_manager_enabled(acceleration_manager_was_enabled);
 }
