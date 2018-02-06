@@ -49,6 +49,7 @@ int tools::Probe::prepareToMoveImpl() {
 }
 
 int tools::Probe::resetPreparationsImpl() {
+  enableHeightSafety(false);
   setHomedState(Z_AXIS, 0);
   enable_p_top(false);
   return 0;
