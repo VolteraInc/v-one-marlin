@@ -86,6 +86,11 @@ class PTopPin {
     unsigned long nextWarningAt = 0;
     adc::SamplingHelper adcSamples;
 
+    // We want the default value to classify as VoltageType::NoToolMounted
+    // This means we want rawToVoltage(DefaultRawVoltage) == 5.0,
+    // which works out to 1024.0f
+    static constexpr float DefaultRawVoltage = 1024.0f;
+
     // Direct read
     FORCE_INLINE bool _readDigitalValue();
 
@@ -107,7 +112,7 @@ class PTopPin {
 PTopPin::PTopPin(int digitalPin, int analogPin)
   : _digitalPin(digitalPin)
   , _analogPin(analogPin)
-  , adcSamples(numSamples, 5.0) // 5.0 means no tool mounted
+  , adcSamples(numSamples, DefaultRawVoltage)
   , serial(dummy_pin, _digitalPin)
 {
   // Reset attached tool, if there is one
