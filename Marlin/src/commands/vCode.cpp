@@ -218,6 +218,7 @@ int process_vcode(int command_code) {
         probe.enableHeightSafety(enable);
       }
       probe.outputStatus();
+      return 0;
     }
 
     // Probe hole
@@ -260,6 +261,7 @@ int process_vcode(int command_code) {
       }
       SERIAL_PROTOCOL("] }");
       SERIAL_EOL;
+      return 0;
     }
 
     //-------------------------------------------
