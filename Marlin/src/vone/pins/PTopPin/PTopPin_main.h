@@ -119,7 +119,6 @@ PTopPin::Sample PTopPin::readValue()   { return Sample( adcSamples.readValue() )
 
 // ----------------------------------------------
 // Idle
-// Note: Inlined for use below
 
 void PTopPin::setMode_Idle() {
   ScopedInterruptDisable sid;

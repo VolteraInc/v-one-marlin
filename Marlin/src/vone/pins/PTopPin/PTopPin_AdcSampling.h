@@ -40,7 +40,7 @@ void PTopPin::addAdcSample(unsigned long value) {
   if (ready) {
     // adcSamplingDelayMillis impacts how long it takes to read analog values
     // so smaller is better. Too small and it will be constantly toggling the
-    // pin mode from input to output, which 'feels' like a bad ideas
+    // pin mode from input to output, which 'feels' like a bad idea
     // (toggling every 1ms feels less bad)
     const unsigned int adcSamplingDelay = 1;
     delayAdcSamplingUntil = millis() + adcSamplingDelay;

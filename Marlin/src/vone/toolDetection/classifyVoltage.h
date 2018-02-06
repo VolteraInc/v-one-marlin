@@ -17,7 +17,7 @@ inline VoltageType classifyVoltage(float voltage) {
   } else if (voltage >= 1.21 && voltage <= 1.41) {
     return VoltageType::RouterMounted;
 
-  // Probe, expect ~3.55
+  // Probe, expect ~3.47
   } else if (voltage >= 3.25 && voltage <= 3.75) {
     return VoltageType::ProbeMounted;
 
