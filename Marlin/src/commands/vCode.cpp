@@ -237,6 +237,7 @@ int process_vcode(int command_code) {
       const auto MaxMeasurements = 12;
       Point3d measurements[MaxMeasurements];
       auto numMeasurements = 0u;
+      auto& probe = vone->toolBox.probe;
       if (
         confirmAttached("probe hole", probe) ||
         probe.prepareToMove() ||
@@ -254,6 +255,9 @@ int process_vcode(int command_code) {
 
       SERIAL_PROTOCOLPGM("probeHoleMeasurement: { measurements: [");
       for (auto idx = 0u; idx < numMeasurements; ++idx) {
+        if (idx != 0) {
+          SERIAL_PROTOCOLPGM(", ");
+        }
         SERIAL_PAIR("{ x:", measurements[idx].x);
         SERIAL_PAIR(", y:", measurements[idx].y);
         SERIAL_PAIR(", z:", measurements[idx].z);
