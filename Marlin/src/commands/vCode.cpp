@@ -208,6 +208,18 @@ int process_vcode(int command_code) {
       );
     }
 
+    // Probe height safety
+    // Note: if we ever need to set the safe height
+    //       we can use "V201 Z1.5"
+    case 201: {
+      auto& probe = vone->toolBox.probe;
+      if  (code_seen('E')) {
+        const auto enable = code_value() == 1;
+        probe.enableHeightSafety(enable);
+      }
+      probe.outputStatus();
+    }
+
     // Probe hole
     case 211: {
       using namespace probing;
@@ -276,6 +288,7 @@ int process_vcode(int command_code) {
       SERIAL_ECHOLNPGM("  Probe");
       SERIAL_ECHOLNPGM("    V101 P - attach probe, include 'F' to force change");
       SERIAL_ECHOLNPGM("    V4   - Probe point at current position (retract by probe displacement + R) -- V4 R1");
+      SERIAL_ECHOLNPGM("    V201 - E1 to enable, E0 to disable height safety -- V201 E1");
       SERIAL_ECHOLNPGM("    V211 - Probe hole with diameter D centered at X,Y (default to current position) -- V211 D1.0");
       SERIAL_ECHOLNPGM("  Router");
       SERIAL_ECHOLNPGM("    V101 R - attach router, include 'F' to force change");
