@@ -226,7 +226,7 @@ int process_vcode(int command_code) {
       using namespace probing;
       if (!code_seen('D')) {
         SERIAL_ERROR_START;
-        SERIAL_ERRORLN("Unable to probe hole, no diameter given");
+        SERIAL_ERRORPGMLN("Unable to probe hole, no diameter given");
         return -1;
       }
       const auto holeDiameter = code_value();
