@@ -78,7 +78,7 @@ namespace toolDetection {
     m_nextCheckAt = now + 20;
 
     // Determine attached tool
-    auto sample = m_pin.value();
+    const auto sample = m_pin.value();
     m_stabilizer.add(sample.startTime, sample.voltage);
     const auto detectedTool = mapToTool(m_stabilizer.value());
 
