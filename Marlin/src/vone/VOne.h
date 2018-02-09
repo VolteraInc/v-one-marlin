@@ -49,7 +49,25 @@ class VOne {
       // Tool Detection
       // Note: Delaying tool detach detection (even for a few seconds) could
       //       result in damage, i.e. a tool crash, broken drill bit, etc
-      toolDetector.frequentInterruptibleWork();
+      // Note: Voltage readings will start around 0 because we hold
+      //       voltage low on boot (to reset the attached tool).
+      //       To avoid this weirdness we ignore voltage readings
+      //       until after 1000ms. This value was determined by observtion,
+      //       (500ms was not enough, 600ms was close). This value depends
+      //       on how much work is being performed during system setup
+      const auto now = millis();
+      if (now > 1000) {
+        toolDetector.frequentInterruptibleWork();
+      // } else {
+      //   const auto sample = pins.ptop.value();
+      //   SERIAL_PAIR("now ", now);
+      //   SERIAL_PAIR(" sample.startTime ", sample.startTime);
+      //   SERIAL_PAIR(" sample.voltage ", sample.voltage);
+      //   SERIAL_EOL;
+      }
+
+      // Restore interrupt settings
+      // DEFER: is this needed ?
       SBI(TIMSK0, OCIE0B);
     }
 
