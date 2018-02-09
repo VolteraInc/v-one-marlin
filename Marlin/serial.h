@@ -7,6 +7,7 @@
 
 #define SERIAL_EOL MYSERIAL.print("\n")
 #define SERIAL_PAIR(name,value) do{ serialprintPGM(PSTR(name)); MYSERIAL.print(value); } while(0)
+#define SERIAL_PAIR_F(name,value,precision) do{ serialprintPGM(PSTR(name)); MYSERIAL.print(value, precision); } while(0)
 
 #define SERIAL_PROTOCOL(x) (MYSERIAL.print(x))
 #define SERIAL_PROTOCOL_F(x,y) (MYSERIAL.print((x),(y)))
