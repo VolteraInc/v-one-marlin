@@ -253,17 +253,17 @@ int process_vcode(int command_code) {
         return -1;
       }
 
-      SERIAL_PROTOCOLPGM("probeHoleMeasurement: { measurements: [");
+      SERIAL_PROTOCOLPGM("{ \"probeHoleMeasurement\": { \"measurements\": [");
       for (auto idx = 0u; idx < numMeasurements; ++idx) {
         if (idx != 0) {
           SERIAL_PROTOCOLPGM(", ");
         }
-        SERIAL_PAIR("{ x:", measurements[idx].x);
-        SERIAL_PAIR(", y:", measurements[idx].y);
-        SERIAL_PAIR(", z:", measurements[idx].z);
+        SERIAL_PAIR_F("{ \"x\":", measurements[idx].x, 6);
+        SERIAL_PAIR_F(", \"y\":", measurements[idx].y, 6);
+        SERIAL_PAIR_F(", \"z\":", measurements[idx].z, 6);
         SERIAL_PROTOCOL(" }");
       }
-      SERIAL_PROTOCOL("] }");
+      SERIAL_PROTOCOL("] } }");
       SERIAL_EOL;
       return 0;
     }
