@@ -10,5 +10,5 @@ class Stepper {
     int add(float x, float y, float z, float e, float f);
 
   private:
-    volatile bool m_stopped;
+    volatile bool m_stopped = false;
 };
