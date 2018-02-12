@@ -33,7 +33,7 @@ int PTopPin::readDigitalValue(bool& value) {
     return 0;
 
   } else if (trytoSetMode_DirectRead()) {
-    // Mode was Idle, not it's DirectRead, which sets the pin mode to INPUT.
+    // Mode was Idle, now it's DirectRead, which sets the pin mode to INPUT.
     // Return the mode to Idle before returning
     value = _readDigitalValue();
     setMode_Idle();
