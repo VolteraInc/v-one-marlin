@@ -78,22 +78,20 @@ void toolDetection::VoltageTypeStabilizer::setStable(bool stable) {
 
   // Log voltages when we stablized
   if (m_stable) {
-    if (logging_enabled) {
-      auto delta = millis() - m_unstableTime;
-      if (delta > 1000) {
-        SERIAL_ECHO_START;
-        SERIAL_PAIR("WARNING: Voltage type was unstable for ", delta);
-        SERIAL_ECHOPGM("ms");
-        SERIAL_EOL;
-      }
-
+    auto delta = millis() - m_unstableTime;
+    if (delta > 1000) {
       SERIAL_ECHO_START;
-      SERIAL_PAIR("Voltage type stablized in ", delta);
-      SERIAL_ECHOPGM("ms, voltages = [ ");
-      m_voltages.output();
-      SERIAL_ECHOPGM(" ]");
+      SERIAL_PAIR("WARNING: Voltage type was unstable for ", delta);
+      SERIAL_ECHOPGM("ms");
       SERIAL_EOL;
     }
+
+    SERIAL_ECHO_START;
+    SERIAL_PAIR("Voltage type stablized in ", delta);
+    SERIAL_ECHOPGM("ms, voltages = [ ");
+    m_voltages.output();
+    SERIAL_ECHOPGM(" ]");
+    SERIAL_EOL;
   } else {
     m_unstableTime = millis();
   }
