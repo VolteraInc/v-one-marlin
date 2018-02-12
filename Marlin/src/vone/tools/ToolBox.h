@@ -3,7 +3,7 @@
 #include "NullTool.h"
 #include "Probe.h"
 #include "Dispenser.h"
-#include "Router.h"
+#include "Drill.h"
 
 namespace tools {
 
@@ -15,13 +15,13 @@ class ToolBox {
     NullTool nullTool;
     Probe probe;
     Dispenser dispenser;
-    Router router;
+    Drill drill;
 
     ToolBox(Stepper& stepper, PTopPin& pin)
       : nullTool(stepper)
       , probe(stepper, pin)
       , dispenser(stepper)
-      , router(stepper, pin)
+      , drill(stepper, pin)
     {
       setTool(&nullTool);
     }

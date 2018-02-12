@@ -1,4 +1,4 @@
-#include "Router.h"
+#include "Drill.h"
 
 #include "../../../serial.h"
 #include "../../../Marlin.h"
@@ -22,7 +22,7 @@ static uint8_t CRC8(uint8_t data) {
 
 static int s_sendAndRampTo(PTopPin& pin, int percent) {
   SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Set router rotation speed to "); SERIAL_ECHOLN(percent);
+  SERIAL_ECHOPGM("Set drill rotation speed to "); SERIAL_ECHOLN(percent);
 
   // Format message
   char message[11];
@@ -34,7 +34,7 @@ static int s_sendAndRampTo(PTopPin& pin, int percent) {
     return -1;
   }
 
-  // Give router time to ramp up (or down) to speed
+  // Give drill time to ramp up (or down) to speed
   // NOTE: It takes 3s to ramp from 0 to max speed and
   //       we want some buffer too (hence the 500ul)
   const auto RampUpDuration = 3000ul;
@@ -43,14 +43,14 @@ static int s_sendAndRampTo(PTopPin& pin, int percent) {
   return 0;
 }
 
-tools::Router::Router(Stepper& stepper, PTopPin& pin)
+tools::Drill::Drill(Stepper& stepper, PTopPin& pin)
   : Tool(stepper)
   , m_pin(pin)
 {
 }
 
-int tools::Router::prepareToMoveImpl() {
-  const char* context = "prepare router";
+int tools::Drill::prepareToMoveImpl() {
+  const char* context = "prepare drill";
   return (
     raise() ||
     confirmAttached(context, *this) ||
@@ -65,7 +65,7 @@ int tools::Router::prepareToMoveImpl() {
   );
 }
 
-int tools::Router::resetPreparationsImpl() {
+int tools::Drill::resetPreparationsImpl() {
   setHomedState(Z_AXIS, 0);
   return (
     stopRotationIfMounted()
@@ -73,8 +73,8 @@ int tools::Router::resetPreparationsImpl() {
 }
 
 // i.e. don't return an error if the tool is not mounted
-int tools::Router::stopRotationIfMounted() {
-  // Finish pending moves before setting router speed.
+int tools::Drill::stopRotationIfMounted() {
+  // Finish pending moves before setting drill speed.
   // Note: Whether we are starting, stopping or just changing speeds
   // having the change sync'd with movements makes it predictable.
   st_synchronize();
@@ -89,39 +89,39 @@ int tools::Router::stopRotationIfMounted() {
     }
 
     SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to stop router, confirm router is attached and powered");
+    SERIAL_ERRORLNPGM("Unable to stop drill, confirm drill is attached and powered");
     return -1;
   }
 
   // success
   SERIAL_ECHO_START;
-  SERIAL_ERRORLNPGM("Router stopped");
+  SERIAL_ERRORLNPGM("Drill stopped");
   goto DONE;
 
 DETACHED:
   SERIAL_ECHO_START;
-  SERIAL_ERRORLNPGM("Router could not be explicitly stopped because it is not mounted");
+  SERIAL_ERRORLNPGM("Drill could not be explicitly stopped because it is not mounted");
 
 DONE:
   m_rotationSpeed = 0;
   return 0;
 }
 
-int tools::Router::enqueueMove(float x, float y, float z, float e, float f) {
+int tools::Drill::enqueueMove(float x, float y, float z, float e, float f) {
   return asyncRawMove(x, y, z, e, f);
 }
 
-int tools::Router::stopRotation() {
+int tools::Drill::stopRotation() {
   return setRotationSpeed(0);
 }
 
-int tools::Router::setRotationSpeed(unsigned speed) {
-  // Finish pending moves before setting router speed.
+int tools::Drill::setRotationSpeed(unsigned speed) {
+  // Finish pending moves before setting drill speed.
   // Note: Whether we are starting, stopping or just changing speeds
   // having the change sync'd with movements makes it predictable.
   st_synchronize();
 
-  if (confirmAttached("set router rotation speed", *this)) {
+  if (confirmAttached("set drill rotation speed", *this)) {
     return -1;
   }
 
@@ -132,13 +132,13 @@ int tools::Router::setRotationSpeed(unsigned speed) {
     return -1;
   }
 
-  // Send the speed to the router
+  // Send the speed to the drill
   if (s_sendAndRampTo(m_pin, speed)) {
     SERIAL_ERROR_START;
-    SERIAL_PAIR("Unable to set the router rotation speed to ", speed);
-    SERIAL_ERRORLNPGM(", confirm router is attached and powered");
+    SERIAL_PAIR("Unable to set the drill rotation speed to ", speed);
+    SERIAL_ERRORLNPGM(", confirm drill is attached and powered");
 
-    // Attempt to stop the router (just in case)
+    // Attempt to stop the drill (just in case)
     stopRotationIfMounted();
     return -1;
   }

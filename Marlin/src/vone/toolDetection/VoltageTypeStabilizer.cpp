@@ -109,7 +109,7 @@ static unsigned long s_stabilityThreshold(VoltageType type) {
     // Note: this should, in effect, hide these types, unless
     //       something has gone wrong as the voltage is stuck
     case VoltageType::ProbeTriggered:
-    case VoltageType::RouterResetting:
+    case VoltageType::DrillResetting:
     case VoltageType::Unknown:
       return 200;
 
@@ -117,7 +117,7 @@ static unsigned long s_stabilityThreshold(VoltageType type) {
     //       (i.e. the entire range). So, seeing the same type for 30ms is
     //        _plenty_ of time
     case VoltageType::ProbeMounted:
-    case VoltageType::RouterMounted:
+    case VoltageType::DrillMounted:
     default:
       return 30;
   }

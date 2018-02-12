@@ -304,8 +304,8 @@ int process_dcode(int command_code) {
 
     // Set rotation speed (without tool prep)
     case 110: {
-      auto& router = vone->toolBox.router;
-      return router.setRotationSpeed(code_seen('R') ? code_value() : 0.0f);
+      auto& drill = vone->toolBox.drill;
+      return drill.setRotationSpeed(code_seen('R') ? code_value() : 0.0f);
     }
 
     //-------------------------------------------
@@ -325,7 +325,7 @@ int process_dcode(int command_code) {
       SERIAL_ECHOLNPGM("  D105 - measure at switch -- D105 -X");
       SERIAL_ECHOLNPGM("  D106 - sample pin values (P=pin C=cycles M=milliseconds between readings) -- D106 P2 C10 M5 ");
       SERIAL_ECHOLNPGM("  D108 - measure at switch release -- D108 -Z");
-      SERIAL_ECHOLNPGM("  D110 - set router rotation speed -- D110 R100, no value or 1 means stop, 0 resets router");
+      SERIAL_ECHOLNPGM("  D110 - set drill rotation speed -- D110 R100, no value or 1 means stop, 0 resets drill");
       SERIAL_ECHOLNPGM("");
       return 0;
   }

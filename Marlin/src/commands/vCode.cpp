@@ -162,8 +162,8 @@ int process_vcode(int command_code) {
       SERIAL_PAIR("  dispense height: ", tb.dispenser.dispenseHeight());
       SERIAL_EOL;
 
-      SERIAL_ECHOPGM("Router"); SERIAL_EOL;
-      SERIAL_PAIR("  Speed: ", tb.router.rotationSpeed());
+      SERIAL_ECHOPGM("Drill"); SERIAL_EOL;
+      SERIAL_PAIR("  Speed: ", tb.drill.rotationSpeed());
       SERIAL_EOL;
 
       SERIAL_ECHOPGM("Homing"); SERIAL_EOL;
@@ -182,7 +182,7 @@ int process_vcode(int command_code) {
       // Set Tool
       if      (code_seen('P')) vone->toolBox.setTool(&vone->toolBox.probe);
       else if (code_seen('D')) vone->toolBox.setTool(&vone->toolBox.dispenser);
-      else if (code_seen('R')) vone->toolBox.setTool(&vone->toolBox.router);
+      else if (code_seen('R')) vone->toolBox.setTool(&vone->toolBox.drill);
       else                     vone->toolBox.setTool(&vone->toolBox.nullTool);
 
       return 0;
@@ -200,11 +200,11 @@ int process_vcode(int command_code) {
 
     // Set rotation speed
     case 110: {
-      auto& router = vone->toolBox.router;
+      auto& drill = vone->toolBox.drill;
       return (
-        confirmAttached("set rotation speed", router) ||
-        router.prepareToMove() ||
-        router.setRotationSpeed(code_seen('R') ? code_value() : 0.0f)
+        confirmAttached("set rotation speed", drill) ||
+        drill.prepareToMove() ||
+        drill.setRotationSpeed(code_seen('R') ? code_value() : 0.0f)
       );
     }
 
@@ -300,9 +300,9 @@ int process_vcode(int command_code) {
       SERIAL_ECHOLNPGM("    V4   - Probe point at current position (retract by probe displacement + R) -- V4 R1");
       SERIAL_ECHOLNPGM("    V201 - E1 to enable, E0 to disable height safety -- V201 E1");
       SERIAL_ECHOLNPGM("    V211 - Probe hole with diameter D centered at X,Y (default to current position) -- V211 D1.0");
-      SERIAL_ECHOLNPGM("  Router");
-      SERIAL_ECHOLNPGM("    V101 R - attach router, include 'F' to force change");
-      SERIAL_ECHOLNPGM("    V110 - set router rotation speed -- V110 R100, no value or 0 means stop");
+      SERIAL_ECHOLNPGM("  Drill");
+      SERIAL_ECHOLNPGM("    V101 R - attach drill, include 'F' to force change");
+      SERIAL_ECHOLNPGM("    V110 - set drill rotation speed -- V110 R100, no value or 0 means stop");
       return 0;
   }
 }
