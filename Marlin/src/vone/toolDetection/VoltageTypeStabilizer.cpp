@@ -3,6 +3,7 @@
 #include "../../../serial.h"
 #include "classifyVoltage.h"
 
+using namespace toolDetection;
 // ----------------------------------------------
 // VoltageLog
 void toolDetection::VoltageTypeStabilizer::VoltageLog::push(unsigned long time, VoltageType type, float voltage) {
@@ -77,22 +78,50 @@ void toolDetection::VoltageTypeStabilizer::setStable(bool stable) {
 
   // Log voltages when we stablized
   if (m_stable) {
-    auto delta = millis() - m_unstableTime;
-    if (delta > 1000) {
+    if (logging_enabled) {
+      auto delta = millis() - m_unstableTime;
+      if (delta > 1000) {
+        SERIAL_ECHO_START;
+        SERIAL_PAIR("WARNING: Voltage type was unstable for ", delta);
+        SERIAL_ECHOPGM("ms");
+        SERIAL_EOL;
+      }
+
       SERIAL_ECHO_START;
-      SERIAL_PAIR("WARNING: Voltage type was unstable for ", delta);
-      SERIAL_ECHOPGM("ms");
+      SERIAL_PAIR("Voltage type stablized in ", delta);
+      SERIAL_ECHOPGM("ms, voltages = [ ");
+      m_voltages.output();
+      SERIAL_ECHOPGM(" ]");
       SERIAL_EOL;
     }
-
-    SERIAL_ECHO_START;
-    SERIAL_PAIR("Voltage type stablized in ", delta);
-    SERIAL_ECHOPGM("ms, voltages = [ ");
-    m_voltages.output();
-    SERIAL_ECHOPGM(" ]");
-    SERIAL_EOL;
   } else {
     m_unstableTime = millis();
+  }
+}
+
+// Returns the amount of time needed to treat voltage as stable.
+static unsigned long s_stabilityThreshold(VoltageType type) {
+  switch (type) {
+    // NoToolMounted is already high on the voltage scale
+    // no need to collect multiple samples to disambiguate
+    case VoltageType::NoToolMounted:
+      return 0;
+
+    // Use a longer duration for transitory voltage types
+    // Note: this should, in effect, hide these types, unless
+    //       something has gone wrong as the voltage is stuck
+    case VoltageType::ProbeTriggered:
+    case VoltageType::RouterResetting:
+    case VoltageType::Unknown:
+      return 200;
+
+    // Note: it takes about 60ms to climb from 'Triggered' to 'Not Mounted'
+    //       (i.e. the entire range). So, seeing the same type for 30ms is
+    //        _plenty_ of time
+    case VoltageType::ProbeMounted:
+    case VoltageType::RouterMounted:
+    default:
+      return 30;
   }
 }
 
@@ -118,15 +147,9 @@ void toolDetection::VoltageTypeStabilizer::add(unsigned long time, float voltage
     return;
   }
 
-  if (
-    // NoToolMounted is already high on the voltage scale
-    // no need to collect multiple samples to disambiguate
-    m_type == VoltageType::NoToolMounted ||
-
-    // Note: it takes about 60ms to climb from triggered to not mounted
-    //       so, 40ms without changing type is plenty of time.
-    m_voltages.timeSpanOfCurrentType() >= 40
-  ) {
+  // Check for stability
+  const auto threshold = s_stabilityThreshold(type);
+  if (m_voltages.timeSpanOfCurrentType() >= threshold) {
     setStable(true);
   }
 }
