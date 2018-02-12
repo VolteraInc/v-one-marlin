@@ -1,6 +1,7 @@
 #include "api.h"
 
 #include "../../Marlin.h"
+#include "../vone/vone.h"
 #include "../../planner.h"
 #include "../../stepper.h"
 
@@ -93,17 +94,38 @@ static int s_homeAxis(int axis) {
     goto DONE;
   }
 
-  if (axis == X_AXIS || axis == Y_AXIS) {
-    // Move slightly away from switch
-    // Note: Otherwise we will not be able to go to 0,0 without
-    // hitting a limit switch (and messing up our position)
-    if (logging_enabled) {
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM("Retracting from home switch");
-    }
-    if (retractFromSwitch(axis, home_dir[axis], HOMING_XY_OFFSET)) {
-      goto DONE;
-    }
+  switch(axis) {
+    case X_AXIS:
+    case Y_AXIS:
+      // Move slightly away from switch
+      // Note: Otherwise we will not be able to go to 0,0 without
+      // hitting a limit switch (and messing up our position)
+      if (logging_enabled) {
+        SERIAL_ECHO_START;
+        SERIAL_ECHOLNPGM("Retracting from home switch");
+      }
+      if (retractFromSwitch(axis, home_dir[axis], HOMING_XY_OFFSET)) {
+        goto DONE;
+      }
+
+    case Z_AXIS:
+      // Confirm other z-switchs are not triggered
+      // Note: if the probe triggers before the z-switch, it suggests
+      //       that excessive force is needed to trigger the z-switch
+      //       which could result in broken nozzle when we home the
+      //       dispenser.
+      bool triggered;
+      if (vone->pins.ptop.readDigitalValue(triggered)) {
+        SERIAL_ERROR_START;
+        SERIAL_ERRORLNPGM("Unable to home Z-axis, could determine the state of other switches");
+        goto DONE;
+      }
+
+      if (triggered) {
+        SERIAL_ERROR_START;
+        SERIAL_ERRORLNPGM("Unable to home Z-axis, another switch triggered before the z-switch");
+        goto DONE;
+      }
   }
 
   // Set current position as home
@@ -178,7 +200,6 @@ int homeZ(tools::Tool& tool) {
   ) {
     return -1;
   }
-
 
   // Raise and set the max-z soft limit
   // Note: the point of contact can vary slightly, so we add some fudge to make to max tolerant
