@@ -2,6 +2,7 @@
 
 #include "../../../planner.h"
 #include "../../../stepper.h"
+#include "../../../serial.h"
 
 Stepper::Stepper() {
   plan_init();  // Initialize planner
@@ -21,6 +22,9 @@ int Stepper::add(float x, float y, float z, float e, float f) {
 
   // Check if we are stopped
   if (m_stopped) {
+    SERIAL_ERROR_START;
+    SERIAL_ERROR("Unable to add movement to stepper, stepper has been stopped");
+    SERIAL_EOL;
     return -1;
   }
 
@@ -33,6 +37,9 @@ int Stepper::add(float x, float y, float z, float e, float f) {
   // added, if necessary.
   if (m_stopped) {
     quickStop();
+    SERIAL_ERROR_START;
+    SERIAL_ERROR("Unable to add movement to stepper, stepper was stopped");
+    SERIAL_EOL;
     return -1;
   }
 
