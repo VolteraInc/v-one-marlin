@@ -9,12 +9,12 @@ inline VoltageType classifyVoltage(float voltage) {
   if (voltage < 0.08) {
     return VoltageType::ProbeTriggered;
 
-  // Router - Resetting, expect ~0.39
-  } else if (voltage >= 0.29 && voltage <= 0.49) {
+  // Router - Resetting, expect 0.39 ~ 0.43
+} else if (voltage >= 0.29 && voltage <= 0.53) {
     return VoltageType::RouterResetting;
 
-  // Router, expect ~1.31
-  } else if (voltage >= 1.21 && voltage <= 1.41) {
+  // Router, expect 1.31 ~ 1.34
+} else if (voltage >= 1.21 && voltage <= 1.44) {
     return VoltageType::RouterMounted;
 
   // Probe, expect ~3.47
