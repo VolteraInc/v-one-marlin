@@ -109,22 +109,29 @@ static int s_homeAxis(int axis) {
       }
 
     case Z_AXIS:
-      // Confirm other z-switchs are not triggered
-      // Note: if the probe triggers before the z-switch, it suggests
+      // Confirm probe not triggered
+      // NOTE:
+      //    1) if the probe triggers before the z-switch, it suggests
       //       that excessive force is needed to trigger the z-switch
       //       which could result in broken nozzle when we home the
       //       dispenser.
-      bool triggered;
-      if (vone->pins.ptop.readDigitalValue(triggered)) {
-        SERIAL_ERROR_START;
-        SERIAL_ERRORLNPGM("Unable to home Z-axis, could determine the state of other switches");
-        goto DONE;
-      }
+      //    2) The Drill's mounted voltages registers as 'triggered'
+      //       if we do a digital read on it.
+      // DEFER: This should happen in measureAtSwitch, i.e. take a pint
+      //        and confirm it triggers (instead of taking an axis)
+      if (vone->toolBox.probe.attached()) {
+        bool triggered;
+        if (vone->pins.ptop.readDigitalValue(triggered)) {
+          SERIAL_ERROR_START;
+          SERIAL_ERRORLNPGM("Unable to home Z-axis, could determine the state of other switches");
+          goto DONE;
+        }
 
-      if (triggered) {
-        SERIAL_ERROR_START;
-        SERIAL_ERRORLNPGM("Unable to home Z-axis, another switch triggered before the z-switch");
-        goto DONE;
+        if (triggered) {
+          SERIAL_ERROR_START;
+          SERIAL_ERRORLNPGM("Unable to home Z-axis, another switch triggered before the z-switch");
+          goto DONE;
+        }
       }
   }
 
