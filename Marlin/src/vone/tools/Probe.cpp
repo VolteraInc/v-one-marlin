@@ -110,7 +110,6 @@ int tools::Probe::probe(
     ) ||
 
     // Return to a safe travel height
-    // TODO: should return to height we were at when we started OR ???
     retractToolConditionally(m_probeDisplacement, additionalRetractDistance)
   ) {
     return -1;
