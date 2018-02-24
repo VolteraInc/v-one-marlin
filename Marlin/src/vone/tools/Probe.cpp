@@ -146,7 +146,7 @@ int tools::Probe::probe(
 // ----------------------------------------------
 // Height safety
 
-void tools::Probe::enableHeightSafety(boolean enable) {
+void tools::Probe::enableHeightSafety(bool enable) {
   m_heightSafetyEnabled = enable;
 
   // Reset safe height on disable
