@@ -11,7 +11,10 @@ class Probe : public Tool {
     Probe(Stepper& stepper, PTopPin& pin);
 
     // Retract constants
-    static constexpr float DefaultRetract = 0.2f;
+    // Note: Retract enough to ensure we don't crash when
+    // moving across the board. We've used 0.7mm for
+    // years without issue.
+    static constexpr float DefaultRetract = 0.7f;
 
     static constexpr float DefaultSpeed = 30;
     static constexpr float DefaultMaxSamples = 1u; // 30u;
