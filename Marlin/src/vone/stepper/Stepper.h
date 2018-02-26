@@ -4,6 +4,7 @@ class Stepper {
   public:
     Stepper();
 
+    bool stopped() { return m_stopped; }
     void stop();
     void resume();
 

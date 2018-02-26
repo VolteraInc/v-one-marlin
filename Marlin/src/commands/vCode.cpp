@@ -143,10 +143,11 @@ int process_vcode(int command_code) {
       setHomedState(X_AXIS, 0);
       setHomedState(Y_AXIS, 0);
       setHomedState(Z_AXIS, 0);
-      return (
-        currentTool.resetPreparations() ||
-        homeXY(currentTool)
-      );
+      if (currentTool.resetPreparations()) {
+        return -1;
+      }
+      vone->stepper.resume();
+      return homeXY(currentTool);
 
     //-------------------------------------------
     // Tool status

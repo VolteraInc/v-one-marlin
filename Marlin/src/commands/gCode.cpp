@@ -277,6 +277,7 @@ int process_gcode(int command_code) {
       bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
 
       vone->toolBox.currentTool().resetPreparations();
+      vone->stepper.resume();
 
       if (home_all || code_seen('Z')) {
         setHomedState(Z_AXIS, 0);

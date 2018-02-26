@@ -146,6 +146,31 @@ int process_dcode(int command_code) {
       SERIAL_EOL;
       return 0;
 
+    case 5: {
+      // Stop/resume Stepper
+      if (code_seen('E')) {
+        const auto enable = code_value() == 1;
+        if (enable) {
+          SERIAL_ECHOPGM("Stopping stepper");
+          vone->stepper.resume();
+        } else {
+          SERIAL_ECHOPGM("Stopping stepper");
+          vone->stepper.stop();
+        }
+        SERIAL_EOL;
+      }
+
+      // Output status
+      if (vone->stepper.stopped()) {
+        SERIAL_ECHOPGM("Stepper is stopped");
+      } else {
+        SERIAL_ECHOPGM("Stepper is ready");
+      }
+      SERIAL_EOL;
+
+      return 0;
+    }
+
     // Algorithms - prepare to move
     case 101:
       return tool.prepareToMove();
@@ -308,6 +333,7 @@ int process_dcode(int command_code) {
       return drill.setRotationSpeed(code_seen('R') ? code_value() : 0.0f);
     }
 
+
     //-------------------------------------------
     // List Commands
     default:
@@ -316,6 +342,7 @@ int process_dcode(int command_code) {
       SERIAL_ECHOLNPGM("  For manual debugging. subject to change");
       SERIAL_ECHOLNPGM("General Commands");
       SERIAL_ECHOLNPGM("  D1 - Toggle logging ON/OFF (default: OFF)");
+      SERIAL_ECHOLNPGM("  D5 - stepper stop/resume -- D5 E1 to resume, E0 to stop, no args for status");
       SERIAL_ECHOLNPGM("");
       SERIAL_ECHOLNPGM("Algorithms");
       SERIAL_ECHOLNPGM("  D101 - prepare tool to move");
