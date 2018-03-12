@@ -117,8 +117,8 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 // position is re-synchronized with the stepper after hitting the limit switch.
 #define X_MAX_LENGTH_BEFORE_HOMING 134
 #define Y_MAX_LENGTH_BEFORE_HOMING 160
-#define Z_MAX_TRAVEL_DOWN_BEFORE_HOMING 22 // so we don't hit the bottom of the carriage
-#define Z_MAX_TRAVEL_UP_BEFORE_HOMING 28 // so we can climb out of the xy-positioner
+#define Z_MAX_TRAVEL_DOWN_BEFORE_HOMING Z_MAX_POS // so we don't hit the bottom of the carriage
+#define Z_MAX_TRAVEL_UP_BEFORE_HOMING (Z_MAX_POS - Z_MIN_POS) // so we can climb out of the xy-positioner
 
 // Distance to retract from X,Y switches when homing
 #define HOMING_XY_OFFSET 1
@@ -135,7 +135,7 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 // (if we did, we'd hit the bottom limit switch, since with the tool attached the axis length is reduced significantly)
 #define Z_MAX_POS 22
 
-#define Z_MIN_POS -6
+#define Z_MIN_POS -6 // low enough to touch the bottom of the xy-positioner (with the probe)
 
 #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
 #define Y_MAX_LENGTH (Y_MAX_POS - Y_MIN_POS)
