@@ -31,8 +31,6 @@ class Probe : public Tool {
       unsigned* o_touchesUsed = nullptr
     );
 
-    int partiallyPrepare(const char* context);
-
     float displacement() const;
     bool isTriggered(float voltage);
     bool readAnalogTriggered(float* o_voltageReading = nullptr);
@@ -53,7 +51,9 @@ class Probe : public Tool {
     float m_safeHeight = -INFINITY;
 
     virtual const char* name() const override { return "Probe"; }
-    virtual int prepareToMoveImpl() override;
+    virtual int prepareToMoveImpl_Start() override;
+    virtual int prepareToMoveImpl_HomeXY() override;
+    virtual int prepareToMoveImpl_CalibrateXYZ() override;
     virtual int resetPreparationsImpl() override;
     virtual int enqueueMove(float x, float y, float z, float e, float f) override;
 

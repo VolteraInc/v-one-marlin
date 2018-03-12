@@ -4,7 +4,7 @@
 #include "../../vone/tools/Probe.h"
 
 int calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeResults) {
-  if (probe.partiallyPrepare("calibrate positions")) {
+  if (probe.prepareToMove(tools::PrepareToMove::Options::skipCalibrateXYZ)) {
     SERIAL_ERROR_START;
     SERIAL_ERRORLN("Unable to calibrate positions, could not prepare probe");
     return -1;

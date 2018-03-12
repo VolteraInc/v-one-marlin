@@ -27,19 +27,20 @@ tools::Probe::Probe(Stepper& stepper, PTopPin& pin)
 {
 }
 
-int tools::Probe::partiallyPrepare(const char* context) {
+int tools::Probe::prepareToMoveImpl_Start() {
   enable_p_top(true);
   return (
     raise() ||
-    confirmAttachedAndNotTriggered(context, *this) ||
-    ensureHomedInXY(*this)
+    confirmAttachedAndNotTriggered("prepare probe", *this)
   );
 }
 
-int tools::Probe::prepareToMoveImpl() {
-  const char* context = "prepare probe";
+int tools::Probe::prepareToMoveImpl_HomeXY() {
+  return ensureHomedInXY(*this);
+}
+
+int tools::Probe::prepareToMoveImpl_CalibrateXYZ() {
   return (
-    tools::Probe::partiallyPrepare(context) ||
     homeZ(*this) || // home Z so we can enter the xy pos with decent precision
     centerTool(*this) ||
     measureProbeDisplacement(*this, m_probeDisplacement) || // do this now, saves a trip back to the xy-pos after re-homing

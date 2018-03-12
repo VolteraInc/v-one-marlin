@@ -7,8 +7,19 @@ tools::NullTool::NullTool(Stepper& stepper)
 {
 }
 
-int tools::NullTool::prepareToMoveImpl() {
+int tools::NullTool::prepareToMoveImpl_Start() {
+  return (
+    raise() ||
+    confirmAttached("prepare empty tool carriage", *this)
+  );
+}
+
+int tools::NullTool::prepareToMoveImpl_HomeXY() {
   return ensureHomedInXY(*this);
+}
+
+int tools::NullTool::prepareToMoveImpl_CalibrateXYZ() {
+  return 0;
 }
 
 int tools::NullTool::resetPreparationsImpl() {

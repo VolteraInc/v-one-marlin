@@ -20,7 +20,9 @@ class Drill : public Tool {
     int stopRotationIfMounted();
 
     virtual const char* name() const override { return "Drill"; }
-    virtual int prepareToMoveImpl() override;
+    virtual int prepareToMoveImpl_Start() override;
+    virtual int prepareToMoveImpl_HomeXY() override;
+    virtual int prepareToMoveImpl_CalibrateXYZ() override;
     virtual int resetPreparationsImpl() override;
     virtual int enqueueMove(float x, float y, float z, float e, float f) override;
 

@@ -6,6 +6,15 @@
 
 #include "../vone/VOne.h"
 
+int prepareTool(tools::Tool& tool, bool xyzMoves, bool eMoves) {
+  // Note: Doing a full prepare for an E-only move would be unexpected
+  if (eMoves && !xyzMoves) {
+    return tool.prepareToMove(tools::PrepareToMove::Options::eOnly);
+  } else {
+    return tool.prepareToMove();
+  }
+}
+
 int process_vcode(int command_code) {
   auto& currentTool = vone->toolBox.currentTool();
   switch(command_code) {
@@ -19,11 +28,9 @@ int process_vcode(int command_code) {
     case 1: {
       // Prepare, if necessary
       // Note: preparing for an E-only move would be unexpected
-      auto xyzMoves = code_seen('X') || code_seen('Y') || code_seen('Z');
-      if (xyzMoves) {
-        if (currentTool.prepareToMove()) {
-          return -1;
-        }
+      const auto xyzMoves = code_seen('X') || code_seen('Y') || code_seen('Z');
+      if (prepareTool(currentTool, xyzMoves, code_seen('E'))) {
+        return -1;
       }
 
       const float x = code_seen('X') ? code_value() : current_position[ X_AXIS ];
@@ -53,12 +60,9 @@ int process_vcode(int command_code) {
     // Relative move
     case 2: {
       // Prepare, if necessary
-      // Note: preparing for an E-only move would be unexpected
-      auto xyzMoves = code_seen('X') || code_seen('Y') || code_seen('Z');
-      if (xyzMoves) {
-        if (currentTool.prepareToMove()) {
-          return -1;
-        }
+      const auto xyzMoves = code_seen('X') || code_seen('Y') || code_seen('Z');
+      if (prepareTool(currentTool, xyzMoves, code_seen('E'))) {
+        return -1;
       }
 
       return asyncRelativeMove(

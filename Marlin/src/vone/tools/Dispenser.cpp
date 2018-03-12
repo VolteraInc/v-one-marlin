@@ -16,18 +16,23 @@ int tools::Dispenser::meshGears() {
   );
 }
 
-int tools::Dispenser::prepareToMoveImpl() {
-  const char* context = "prepare dispenser";
+int tools::Dispenser::prepareToMoveImpl_Start() {
   return (
     raise() ||
-    confirmAttached(context, *this) ||
-    meshGears() ||
+    confirmAttached("prepare dispenser", *this) ||
+    meshGears()
+  );
+}
 
-    ensureHomedInXY(*this) ||
+int tools::Dispenser::prepareToMoveImpl_HomeXY() {
+  return ensureHomedInXY(*this);
+}
+
+int tools::Dispenser::prepareToMoveImpl_CalibrateXYZ() {
+  return (
     homeZ(*this) || // home Z so we can enter the xy pos with decent precision
     centerTool(*this) ||
     homeZ(*this) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
-
     raise()
   );
 }
