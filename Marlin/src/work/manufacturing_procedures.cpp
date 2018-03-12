@@ -32,7 +32,17 @@ void manufacturing_procedures() {
   // a tool is contacting the switch. if it is, then raising is
   // good idea.
   if (READ_PIN(Z_MIN)) {
-    raise();
+    auto& currentTool = vone->toolBox.currentTool();
+
+    if (
+      currentTool.prepareToMove(tools::PrepareToMove::Options::startOnly) ||
+      raise()
+    ) {
+      SERIAL_ECHO_START;
+      SERIAL_ECHOLN("WARNING: Unable to release z-switch on boot, ignoring");
+      return;
+    }
+
     if (READ_PIN(Z_MIN)) {
       s_run();
     }

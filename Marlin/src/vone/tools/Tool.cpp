@@ -22,6 +22,7 @@ int tools::Tool::prepareToMove(tools::PrepareToMove::Options options) {
   using Options = tools::PrepareToMove::Options;
   if (
     m_prepare_Completed ||
+    (options == Options::startOnly && m_prepare_Started) ||
     (options == Options::eOnly && m_prepare_Started) ||
     (options == Options::skipCalibrateXYZ && m_prepare_HomedXY)
   ) {
@@ -42,7 +43,12 @@ int tools::Tool::prepareToMove(tools::PrepareToMove::Options options) {
   }
   m_prepare_Started = true;
 
-  // Return if that's all we needed
+  // Return if that's all we need
+  if (options == Options::startOnly) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Preparing tool -- completed start-only prepare");
+    return 0;
+  }
   if (options == Options::eOnly) {
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Preparing tool -- completed e-only prepare");

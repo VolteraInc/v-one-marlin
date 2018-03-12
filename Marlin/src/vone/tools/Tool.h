@@ -5,6 +5,7 @@ namespace tools {
 
 namespace PrepareToMove {
   enum class Options {
+    startOnly,
     eOnly,
     skipCalibrateXYZ,
     None
