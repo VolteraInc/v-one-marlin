@@ -10,9 +10,10 @@ tools::Dispenser::Dispenser(Stepper& stepper)
 
 int tools::Dispenser::meshGears() {
   // Move E backward, then move forward.
+  // NOTE: we have seen 0.02 fail to mesh the gears so we are trying 0.06
   return (
-    relativeRawMoveE(-0.02) ||
-    relativeRawMoveE(0.02)
+    relativeRawMoveE(-0.06) ||
+    relativeRawMoveE(0.06)
   );
 }
 
