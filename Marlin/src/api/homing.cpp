@@ -216,10 +216,9 @@ int homeZ(tools::Tool& tool) {
   }
   max_pos[Z_AXIS] = current_position[Z_AXIS] + fudge;
 
-  if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("setting soft limit max-z to "); SERIAL_ECHOLN(max_pos[Z_AXIS]);
-  }
+  SERIAL_ECHO_START;
+  SERIAL_PAIR("setting soft limit max-z to ", max_pos[Z_AXIS]);
+  SERIAL_EOL;
 
   return 0;
 }
