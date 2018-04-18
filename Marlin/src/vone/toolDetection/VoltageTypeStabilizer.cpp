@@ -76,7 +76,7 @@ void toolDetection::VoltageTypeStabilizer::setStable(bool stable) {
   }
   m_stable = stable;
 
-  // Log voltages when we stablized
+  // Log voltages when we stabilized
   if (m_stable) {
     auto delta = millis() - m_unstableTime;
     if (delta > 1000) {
@@ -87,7 +87,7 @@ void toolDetection::VoltageTypeStabilizer::setStable(bool stable) {
     }
 
     SERIAL_ECHO_START;
-    SERIAL_PAIR("Voltage type stablized in ", delta);
+    SERIAL_PAIR("Voltage type stabilized in ", delta);
     SERIAL_ECHOPGM("ms, voltages = [ ");
     m_voltages.output();
     SERIAL_ECHOPGM(" ]");
