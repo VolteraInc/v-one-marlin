@@ -56,9 +56,14 @@ int PTopPin::_recvAcknowledgement() {
   const bool acknowledged = ackCount > 3;
 
   SERIAL_ECHO_START;
-  SERIAL_PAIR("Received ", acknowledged ? "ack" : "noAck");
-  SERIAL_PAIR(", count = ", ackCount);
-  SERIAL_PAIR(" of ", count);
+  if (acknowledged) {
+    SERIAL_ECHOPGM("Tool confirmed message received, (");
+  } else {
+    SERIAL_ECHOPGM("Tool did not confirm message received, (");
+  }
+  SERIAL_ECHO(ackCount);
+  SERIAL_PAIR(" signals seen in ", count);
+  SERIAL_ECHOPGM(" reads)");
   SERIAL_EOL;
 
   return acknowledged ? 0 : -1;

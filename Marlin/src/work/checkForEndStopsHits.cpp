@@ -8,6 +8,10 @@ void checkForEndstopHits() {
   bool triggered[3];
   long stepsWhenTriggered[3];
   if (readAndResetEndstops(triggered, stepsWhenTriggered)) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPGM("Limit switch triggered unexpectedly, clean up, then report error");
+    SERIAL_EOL;
+
     // Reset homing and tool preparations
     // Note: We might not need to reset all the axes, but it's more robust to do so.
     setHomedState(X_AXIS, 0);

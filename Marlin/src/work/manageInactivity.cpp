@@ -37,8 +37,10 @@ void manage_inactivity() {
     if(!blocks_queued()) {
       refresh_cmd_timeout(); // Reseting timeout stops us from constantly checking.
       SERIAL_ECHO_START;
-      SERIAL_ECHOPGM("The stepper has been inactive for more than "); SERIAL_ECHO(stepper_inactive_time);
-      SERIAL_ECHOPGM("ms, deactivating motors\n");
+      SERIAL_PAIR("The stepper has been inactive for more than ", stepper_inactive_time);
+      SERIAL_ECHOPGM("ms, deactivating motors");
+      SERIAL_EOL;
+
       disable_x();
       disable_y();
       disable_z();
