@@ -177,6 +177,10 @@ void processSerialCommands() {
     process_command();
     command_queue.pop();
 
+    // Check end-stops now so that synchronous commands
+    // will report errors before sending OK
+    checkForEndstopHits();
+
     // Send Acknowledgement
     SERIAL_PROTOCOLLNPGM("ok");
 
