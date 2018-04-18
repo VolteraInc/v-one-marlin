@@ -536,30 +536,30 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   float current_speed[4];
   float speed_factor = 1.0; //factor <=1 do decrease speed
 
-  for(int i=0; i < 4; i++)
-  {
+  for (int i = 0; i < 4; ++i) {
     current_speed[i] = delta_mm[i] * inverse_second;
-/*
-      SERIAL_PROTOCOLPGM(" Speed:");
-      SERIAL_PROTOCOL(current_speed[i]);
-      SERIAL_PROTOCOLLN("");*/
 
-    if(fabs(current_speed[i]) > max_feedrate[i])
-      speed_factor = min(speed_factor, max_feedrate[i] / fabs(current_speed[i]));
+    // SERIAL_PROTOCOLPGM(" Speed:");
+    // SERIAL_PROTOCOL(current_speed[i]);
+    // SERIAL_PROTOCOLLN("");
 
+    if(fabs(current_speed[i]) > max_feedrate[i]) {
+      speed_factor = min(
+        speed_factor,
+        max_feedrate[i] / fabs(current_speed[i])
+      );
+    }
   }
 
-
   // Correct the speed
-  if( speed_factor < 1.0)
-  {
-    for(unsigned char i=0; i < 4; i++)
-    {
+  if (speed_factor < 1.0) {
+    for (unsigned char i=0; i < 4; ++i) {
       current_speed[i] *= speed_factor;
 
-/*      SERIAL_PROTOCOLPGM(" Speed Corrected:");
-      SERIAL_PROTOCOL(current_speed[i]);
-      SERIAL_PROTOCOLLN("");*/
+      // SERIAL_ECHO_START;
+      // SERIAL_PAIR(" Speed Corrected:", current_speed[i]);
+      // SERIAL_PROTOCOLLN("");
+      // SERIAL_EOL;
     }
     block->nominal_speed *= speed_factor;
     block->nominal_rate *= speed_factor;
