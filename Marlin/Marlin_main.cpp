@@ -139,9 +139,13 @@ void loop() {
 
   periodic_work();
 
-  // This work is excluded from periodic_work() becuase we
+  // The work below is excluded from periodic_work() becuase we
   // don't want to do these in the middle of processing a command
-  checkForEndstopHits(); // will detect expected hits as errors
+
+  // Detect unexpected end-stop hits caused by asynchronous commands
+  // Note: hits for synchronous commands are detected in processSerialCommands
+  checkForEndstopHits();
+
   reportBufferEmpty();   // not important enough to monitor
   periodic_output();     // will generate excessive output
 }
