@@ -95,7 +95,7 @@ static char s_buffer[MAX_CMD_SIZE];
 static int s_index = 0;
 
 static void read_commands() {
-  auto tooLong = false;
+  static auto s_tooLong = false;
 
   while (!command_queue.full()) {
     char ch = MYSERIAL.read();
@@ -107,9 +107,10 @@ static void read_commands() {
     // End of command
     } else if (ch == '\n' || ch == '\r') {
       // Handle long lines
-      if (tooLong) {
+      if (s_tooLong) {
         SERIAL_ECHO_START;
         SERIAL_ECHOLNPGM("Finished receiving long command");
+        s_tooLong = false;
       } else {
         // Add to command queue
         s_buffer[s_index] = 0; // terminate string
@@ -127,8 +128,8 @@ static void read_commands() {
     // Note: Report long commands when they happen, as opposed to
     //       waiting for the end of the command (which may never come)
     } else if (s_index >= (MAX_CMD_SIZE - 1)) {
-      if (!tooLong) {
-        tooLong = true;
+      if (!s_tooLong) {
+        s_tooLong = true;
         s_buffer[s_index] = 0; // terminate string (so we can include it in the error)
         SERIAL_ERROR_START;
         SERIAL_ERRORPGM("Unable to process command, command is too long, will ignore until end of command found --");
