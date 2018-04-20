@@ -100,10 +100,9 @@ static int s_homeAxis(int axis) {
       // Move slightly away from switch
       // Note: Otherwise we will not be able to go to 0,0 without
       // hitting a limit switch (and messing up our position)
-      if (logging_enabled) {
-        SERIAL_ECHO_START;
-        SERIAL_ECHOLNPGM("Retracting from home switch");
-      }
+      SERIAL_ECHO_START;
+      SERIAL_ECHOPGM("Retracting from axis limit switch");
+      SERIAL_EOL;
       if (retractFromSwitch(axis, home_dir[axis], HOMING_XY_OFFSET)) {
         goto DONE;
       }
@@ -123,13 +122,13 @@ static int s_homeAxis(int axis) {
         bool triggered;
         if (vone->pins.ptop.readDigitalValue(triggered)) {
           SERIAL_ERROR_START;
-          SERIAL_ERRORLNPGM("Unable to home Z-axis, could determine the state of other switches");
+          SERIAL_ERRORLNPGM("Unable to zero Z-axis, could not read the state of the probe's contact sensor");
           goto DONE;
         }
 
         if (triggered) {
           SERIAL_ERROR_START;
-          SERIAL_ERRORLNPGM("Unable to home Z-axis, another switch triggered before the z-switch");
+          SERIAL_ERRORLNPGM("Unable to zero Z-axis, probe tip triggered before the z-switch");
           goto DONE;
         }
       }
