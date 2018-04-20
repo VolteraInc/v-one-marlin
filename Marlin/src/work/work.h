@@ -15,8 +15,11 @@ void glow_leds();
 void manufacturing_init();
 void manufacturing_procedures();
 
+// Command processing
+void processSerialCommands();
+void checkForEndstopHits();
+void flushAndRequestResend();
+
 // Other
 void periodic_output();
 void reportBufferEmpty();
-void checkForEndstopHits();
-void processSerialCommands();

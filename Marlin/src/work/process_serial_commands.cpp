@@ -143,6 +143,40 @@ static void read_commands() {
   }
 }
 
+// Flush Note: used to handle async errors
+int flushAndRequestResend() {
+  // If any data is buffered we will need to request a resend
+  auto shouldRequestResend = s_index != 0;
+
+  // Clear the buffer
+  s_index = 0;
+
+  // Flush for a little while
+  // Note:
+  //   1) There is a race between the app and this attempt to flush, so give
+  //      the app some extra time to send. This also allows data that is
+  //      in transit to arrive and be flushed.
+  //   2) We flush repeatedly just in case the app is sending a long message
+  //   3) if new data arrives while flushing we'll need to request a resend
+  auto flushUntil = millis() + 1000;
+  for (auto cnt = 10; cnt--;) {
+    shouldRequestResend |= MYSERIAL.available() != 0
+    MYSERIAL.flush();
+    delay(100);
+  }
+
+  // Request a resend, if needed
+  if (shouldRequestResend) {
+    requestResend(s_expectedLineNumber, PSTR("Flush and request resend"), "");
+  } else {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPGM("Flush complete, no resend needed");
+    SERIAL_EOL;
+    return;
+  }
+}
+
+
 static void process_command() {
   if        (command_prefix_seen('V')) { int code = (int)code_value(); process_vcode(code_seen('?') ? -1 : code);
   } else if (command_prefix_seen('D')) { int code = (int)code_value(); process_dcode(code_seen('?') ? -1 : code);

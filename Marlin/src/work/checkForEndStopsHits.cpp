@@ -3,6 +3,7 @@
 #include "../../planner.h"
 #include "../api/api.h"
 #include "../vone/vone.h"
+#include "work.h"
 
 void checkForEndstopHits() {
   bool triggered[3];
@@ -32,5 +33,7 @@ void checkForEndstopHits() {
       SERIAL_ERRORPGM(" z:"); SERIAL_ERROR((float)stepsWhenTriggered[Z_AXIS] / axis_steps_per_unit[Z_AXIS]);
     }
     SERIAL_EOL;
+
+    flushAndRequestResend();
   }
 }
