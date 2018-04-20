@@ -90,10 +90,11 @@ inline const char* parse(
   return newCommandStart;
 }
 
+static uint16_t s_expectedLineNumber = 0;
+static char s_buffer[MAX_CMD_SIZE];
+static int s_index = 0;
+
 static void read_commands() {
-  static uint16_t expectedLineNumber = 0;
-  static char buffer[MAX_CMD_SIZE];
-  static int index = 0;
   auto tooLong = false;
 
   while (!command_queue.full()) {
@@ -111,8 +112,8 @@ static void read_commands() {
         SERIAL_ECHOLNPGM("Finished receiving long command");
       } else {
         // Add to command queue
-        buffer[index] = 0; // terminate string
-        const char* command = parse(buffer, index, expectedLineNumber);
+        s_buffer[s_index] = 0; // terminate string
+        const char* command = parse(s_buffer, s_index, expectedLineNumber);
         if (command) {
           ++expectedLineNumber;
           command_queue.push(command);
@@ -120,23 +121,23 @@ static void read_commands() {
       }
 
       // Reset the write position for the next command
-      index = 0;
+      s_index = 0;
 
     // Command too long, report
     // Note: Report long commands when they happen, as opposed to
     //       waiting for the end of the command (which may never come)
-    } else if (index >= (MAX_CMD_SIZE - 1)) {
+    } else if (s_index >= (MAX_CMD_SIZE - 1)) {
       if (!tooLong) {
         tooLong = true;
-        buffer[index] = 0; // terminate string (so we can include it in the error)
+        s_buffer[s_index] = 0; // terminate string (so we can include it in the error)
         SERIAL_ERROR_START;
         SERIAL_ERRORPGM("Unable to process command, command is too long, will ignore until end of command found --");
-        SERIAL_ERRORLN(buffer);
+        SERIAL_ERRORLN(s_buffer);
       }
 
     // Add character to command
     } else {
-      buffer[index++] = ch;
+      s_buffer[s_index++] = ch;
     }
   }
 }
