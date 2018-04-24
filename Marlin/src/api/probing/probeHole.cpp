@@ -14,7 +14,7 @@ int probing::probeHole(
   float probePitch
 ) {
   // Determine number of measurements
-  const auto circumference = TWO_PI * radius;
+  const auto circumference = TWO_PI * radius * 2;
   const unsigned int numMeasurements = max(
     minPoints,
     floor(circumference/probePitch)
