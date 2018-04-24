@@ -239,7 +239,7 @@ int process_vcode(int command_code) {
         code_seen('X') ? code_value() : current_position[X_AXIS],
         code_seen('Y') ? code_value() : current_position[Y_AXIS]
       };
-      const auto MaxMeasurements = 12;
+      const auto MaxMeasurements = 100;
       Point3d measurements[MaxMeasurements];
       auto numMeasurements = 0u;
       auto& probe = vone->toolBox.probe;
