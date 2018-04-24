@@ -114,16 +114,25 @@ static void read_commands() {
       if (s_tooLong) {
         SERIAL_ECHO_START;
         SERIAL_ECHOLNPGM("Finished receiving long command");
+        s_sendResponseOk();
+
         s_tooLong = false;
       } else {
         // Add to command queue
         s_buffer[s_bufferIndex] = 0; // terminate string
         const char* command = parse(s_buffer, s_bufferIndex, s_expectedLineNumber);
         if (command) {
-          ++expectedLineNumber;
           command_queue.push(command);
         }
       }
+
+      // Increment
+      // Note: we increment if we
+      //       - request re-send
+      //       - send an ok now
+      //       - if we accept the command (and will send an ok later)
+      // TODO: smells weird, should eliminate command queue
+      ++s_expectedLineNumber;
 
       // Reset the write position for the next command
       s_bufferIndex = 0;
@@ -225,7 +234,7 @@ void processSerialCommands() {
     checkForEndstopHits();
 
     // Send Acknowledgement
-    SERIAL_PROTOCOLLNPGM("ok");
+    s_sendResponseOk();
 
     // Refresh the timeout after processing so that the user/sw
     // has then entire timeout duration to issue another command
