@@ -129,6 +129,11 @@ void toolDetection::VoltageTypeStabilizer::add(unsigned long time, float voltage
     return;
   }
 
+  // Initialize unstable time based on first sample
+  if (m_unstableTime == 0) {
+    m_unstableTime = time;
+  }
+
   // Collect sample
   auto type = classifyVoltage(voltage);
   m_voltages.push(time, type, voltage);
