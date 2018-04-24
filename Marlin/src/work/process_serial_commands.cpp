@@ -141,7 +141,7 @@ static void read_commands() {
     // Command too long, report
     // Note: Report long commands when they happen, as opposed to
     //       waiting for the end of the command (which may never come)
-    } else if (s_index >= (MAX_CMD_SIZE - 1)) {
+    } else if (s_bufferIndex >= (MAX_CMD_SIZE - 1)) {
       if (!s_tooLong) {
         s_tooLong = true;
         s_buffer[s_bufferIndex] = 0; // terminate string (so we can include it in the error)
