@@ -56,6 +56,17 @@ inline const char* parse(
     return commandStart;
   }
 
+  // static auto fakeResend = false;
+  // fakeResend = !fakeResend;
+  // if (fakeResend) {
+  //   s_requestResend(
+  //     expectedLineNumber,
+  //     PSTR("Fake resend"),
+  //     msg
+  //   );
+  //   return nullptr;
+  // }
+
   // Confirm checksum present
   const char* star = strchr(commandStart, '*');
   if (!star) {
