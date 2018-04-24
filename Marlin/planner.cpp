@@ -536,7 +536,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   float current_speed[4];
   float speed_factor = 1.0; //factor <=1 do decrease speed
 
-  for (int i = 0; i < 4; ++i) {
+  for (auto i = 0u; i < 4; ++i) {
     current_speed[i] = delta_mm[i] * inverse_second;
 
     // SERIAL_PROTOCOLPGM(" Speed:");
@@ -553,7 +553,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
 
   // Correct the speed
   if (speed_factor < 1.0) {
-    for (unsigned char i=0; i < 4; ++i) {
+    for (auto i = 0u; i < 4; ++i) {
       current_speed[i] *= speed_factor;
 
       // SERIAL_ECHO_START;

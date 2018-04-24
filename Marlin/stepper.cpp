@@ -287,16 +287,6 @@ FORCE_INLINE void trapezoid_generator_reset() {
   acc_step_rate = current_block->initial_rate;
   acceleration_time = calc_timer(acc_step_rate);
   OCR1A = acceleration_time;
-
-  //    SERIAL_ECHO_START;
-  //    SERIAL_ECHOPGM("advance :");
-  //    SERIAL_ECHO(current_block->advance/256.0);
-  //    SERIAL_ECHOPGM("advance rate :");
-  //    SERIAL_ECHO(current_block->advance_rate/256.0);
-  //    SERIAL_ECHOPGM("initial advance :");
-  //    SERIAL_ECHO(current_block->initial_advance/256.0);
-  //    SERIAL_ECHOPGM("final advance :");
-  //    SERIAL_ECHOLN(current_block->final_advance/256.0);
 }
 
 // int idx = 0;
@@ -615,10 +605,8 @@ void st_synchronize() {
   while (blocks_queued()) {
     periodic_work();
   }
-  if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("synchonized");
-  }
+  SERIAL_ECHO_START;
+  SERIAL_ECHOLNPGM("synchonized");
 }
 
 void st_set_position(const long& x, const long& y, const long& z, const long& e) {
