@@ -2,6 +2,10 @@
 
 #include "../../Configuration.h"
 
+// TODO: remove CommandQueue, we only handle one command at a time
+//       handling multiple would require a different approach to handling
+//       async errors (i.e. requesting a resend of only the most recent
+//       message will not be enough).
 class CommandQueue {
 public:
   CommandQueue() {
@@ -15,6 +19,7 @@ public:
   const char* front() { return &commands[read_index][0]; }
   bool full() { return commands_in_queue == BUFSIZE; }
   bool empty() { return commands_in_queue == 0; }
+  void flush();
 
 private:
   char commands[BUFSIZE][MAX_CMD_SIZE];

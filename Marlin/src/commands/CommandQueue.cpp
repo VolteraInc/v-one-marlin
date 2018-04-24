@@ -43,3 +43,9 @@ void CommandQueue::pop() {
     SERIAL_ECHOPGM(" read_index="); SERIAL_ECHOLN(read_index);
   }
 }
+
+void CommandQueue::flush() {
+  while (!empty()) {
+    pop();
+  }
+}

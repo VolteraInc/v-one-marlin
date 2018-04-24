@@ -17,8 +17,8 @@ void manufacturing_procedures();
 
 // Command processing
 void processSerialCommands();
+void flushSerialCommands();
 void checkForEndstopHits();
-void flushAndRequestResend();
 
 // Other
 void periodic_output();

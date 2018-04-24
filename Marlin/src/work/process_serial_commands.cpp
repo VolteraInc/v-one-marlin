@@ -162,6 +162,8 @@ void flushSerialCommands() {
   SERIAL_ECHOPGM("Flushing commands");
   SERIAL_EOL;
 
+  // Clear queued commands
+  command_queue.flush();
 
   // Clear the message buffer
   // Note: might have a partial message there
@@ -173,23 +175,14 @@ void flushSerialCommands() {
   //      the app some extra time to send. This also allows data that is
   //      in transit to arrive and be flushed.
   //   2) We flush repeatedly just in case the app is sending a long message
-  //   3) if new data arrives while flushing we'll need to request a resend
-  auto flushUntil = millis() + 1000;
   for (auto cnt = 10; cnt--;) {
-    shouldRequestResend |= MYSERIAL.available() != 0
+    delay(100); // 100ms x 10 times --> at least 1 second of flushing
     MYSERIAL.flush();
-    delay(100);
   }
 
-  // Request a resend, if needed
-  if (shouldRequestResend) {
-    requestResend(s_expectedLineNumber, PSTR("Flush and request resend"), "");
-  } else {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Flush complete, no resend needed");
-    SERIAL_EOL;
-    return;
-  }
+  SERIAL_ECHO_START;
+  SERIAL_ECHOPGM("Flush complete");
+  SERIAL_EOL;
 }
 
 

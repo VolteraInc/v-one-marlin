@@ -27,10 +27,12 @@ void checkForEndstopHits() {
 
   // Stop/reset everything
   // Note: We might not need to reset all the axes, but it's more robust to do so.
+  vone->stepper.stop();
   setHomedState(X_AXIS, 0);
   setHomedState(Y_AXIS, 0);
   setHomedState(Z_AXIS, 0);
   vone->toolBox.currentTool().resetPreparations();
+  flushSerialCommands();
 
   // Output Error
   SERIAL_ERROR_START;
