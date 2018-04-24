@@ -2,6 +2,8 @@
 #include "../commands/processing.h"
 #include "work.h"
 
+static int s_bufferIndex = 0;
+
 inline byte checksum(const char* start, const char* end) {
   byte checksum = 0;
   while (start != end) {
@@ -16,7 +18,7 @@ inline void skipWhitespace(const char** ptr) {
   }
 }
 
-inline void requestResend(
+void s_requestResend(
   unsigned long expectedLineNumber,
   const char* pgmReason,
   const char* msg
@@ -26,6 +28,10 @@ inline void requestResend(
   SERIAL_PAIR("\", message:\"", msg);
   SERIAL_PROTOCOLPGM("\"");
   SERIAL_EOL;
+}
+
+void s_sendResponseOk() {
+  SERIAL_PROTOCOLLNPGM("ok");
 }
 
 inline const char* parse(
@@ -53,7 +59,7 @@ inline const char* parse(
   // Confirm checksum present
   const char* star = strchr(commandStart, '*');
   if (!star) {
-    requestResend(
+    s_requestResend(
       expectedLineNumber,
       PSTR("Missing checksum"),
       msg
@@ -65,7 +71,7 @@ inline const char* parse(
   const auto msgChecksum = strtol(star + 1, nullptr, 10);
   const auto computedChecksum = checksum(commandStart, star);
   if (msgChecksum != computedChecksum) {
-    requestResend(
+    s_requestResend(
       expectedLineNumber,
       PSTR("Bad checksum"),
       msg
@@ -77,7 +83,7 @@ inline const char* parse(
   const char* newCommandStart = nullptr;
   const auto lineNumber = strtol(commandStart + 1, const_cast<char**>(&newCommandStart), 10);
   if (lineNumber != expectedLineNumber) {
-    requestResend(
+    s_requestResend(
       expectedLineNumber,
       PSTR("Line number does not match expected value"),
       msg
@@ -90,11 +96,9 @@ inline const char* parse(
   return newCommandStart;
 }
 
-static uint16_t s_expectedLineNumber = 0;
-static char s_buffer[MAX_CMD_SIZE];
-static int s_index = 0;
-
 static void read_commands() {
+  static uint16_t s_expectedLineNumber = 0;
+  static char s_buffer[MAX_CMD_SIZE];
   static auto s_tooLong = false;
 
   while (!command_queue.full()) {
@@ -113,8 +117,8 @@ static void read_commands() {
         s_tooLong = false;
       } else {
         // Add to command queue
-        s_buffer[s_index] = 0; // terminate string
-        const char* command = parse(s_buffer, s_index, expectedLineNumber);
+        s_buffer[s_bufferIndex] = 0; // terminate string
+        const char* command = parse(s_buffer, s_bufferIndex, s_expectedLineNumber);
         if (command) {
           ++expectedLineNumber;
           command_queue.push(command);
@@ -122,7 +126,8 @@ static void read_commands() {
       }
 
       // Reset the write position for the next command
-      s_index = 0;
+      s_bufferIndex = 0;
+
 
     // Command too long, report
     // Note: Report long commands when they happen, as opposed to
@@ -130,7 +135,7 @@ static void read_commands() {
     } else if (s_index >= (MAX_CMD_SIZE - 1)) {
       if (!s_tooLong) {
         s_tooLong = true;
-        s_buffer[s_index] = 0; // terminate string (so we can include it in the error)
+        s_buffer[s_bufferIndex] = 0; // terminate string (so we can include it in the error)
         SERIAL_ERROR_START;
         SERIAL_ERRORPGM("Unable to process command, command is too long, will ignore until end of command found --");
         SERIAL_ERRORLN(s_buffer);
@@ -138,18 +143,20 @@ static void read_commands() {
 
     // Add character to command
     } else {
-      s_buffer[s_index++] = ch;
+      s_buffer[s_bufferIndex++] = ch;
     }
   }
 }
 
-// Flush Note: used to handle async errors
-int flushAndRequestResend() {
-  // If any data is buffered we will need to request a resend
-  auto shouldRequestResend = s_index != 0;
+void flushSerialCommands() {
+  SERIAL_ECHO_START;
+  SERIAL_ECHOPGM("Flushing commands");
+  SERIAL_EOL;
 
-  // Clear the buffer
-  s_index = 0;
+
+  // Clear the message buffer
+  // Note: might have a partial message there
+  s_bufferIndex = 0;
 
   // Flush for a little while
   // Note:
@@ -213,7 +220,7 @@ void processSerialCommands() {
     process_command();
     command_queue.pop();
 
-    // Check end-stops now so that synchronous commands
+    // Check end-stops so that synchronous commands
     // will report errors before sending OK
     checkForEndstopHits();
 
