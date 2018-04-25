@@ -341,8 +341,14 @@ int process_mcode(int command_code) {
       return 0;
 
     // M502 - reverts to the default "factory settings".
+    //        include an 'S' to clear stored settings too.
     case 502: {
       Config_UseDefaultSettings();
+
+      const auto save = code_seen('S');
+      if (save) {
+        Config_ClearStoredSettings();
+      }
       return 0;
     }
 

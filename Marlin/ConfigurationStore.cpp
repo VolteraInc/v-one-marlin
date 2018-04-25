@@ -35,8 +35,8 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size) {
 // ALSO:  always make sure the variables in the Store and retrieve sections are in the same order.
 #define EEPROM_VERSION_V10 "V10"
 #define EEPROM_VERSION_V11 "V11"
-#define EEPROM_VERSION EEPROM_VERSION_V11
-
+#define EEPROM_VERSION_V12 "V12"
+#define EEPROM_VERSION EEPROM_VERSION_V12
 
 void Config_StoreCalibration() {
   // Mark the stored settings as invalid
@@ -63,6 +63,16 @@ void Config_StoreCalibration() {
 
   SERIAL_ECHO_START;
   SERIAL_ECHOLNPGM("Calibration Stored");
+}
+
+void Config_ClearStoredSettings() {
+  char ver[4]= "000";
+  int i = EEPROM_OFFSET;
+  EEPROM_WRITE_VAR(i, ver);
+
+  SERIAL_ECHO_START;
+  SERIAL_ECHOPGM("Cleared stored settings -- defaults will be used");
+  SERIAL_EOL;
 }
 
 void Config_StoreSettings() {
@@ -179,13 +189,14 @@ void Config_RetrieveCalibration() {
     char stored_ver[4];
     EEPROM_READ_VAR(i, stored_ver);
     const bool isV10 = strncmp(stored_ver, EEPROM_VERSION_V10, 3) == 0;
+    const bool isV11 = strncmp(stored_ver, EEPROM_VERSION_V11, 3) == 0;
     const bool isCurrent = strncmp(stored_ver, EEPROM_VERSION, 3) == 0;
 
     SERIAL_ECHO_START;
     SERIAL_PAIR("Reading calibration settings, version ", stored_ver);
     SERIAL_EOL;
 
-    if (isCurrent || isV10) {
+    if (isCurrent || isV11 || isV10) {
         if (isV10) {
           EEPROM_READ_VAR_SIZE(i, product_serial_number, 11);
           // Note: we do not upgrade-and-write the stored values using
@@ -269,6 +280,15 @@ void Config_RetrieveSettings() {
       SERIAL_ECHOPGM("NOTICE: Using stored values for speed settings");
       SERIAL_EOL;
     } else {
+      const auto isOldConfig = strncmp(stored_ver, "000", 3) != 0;
+      if (isOldConfig) {
+        SERIAL_ECHO_START;
+        SERIAL_PAIR("Reading speed settings, version ", stored_ver);
+        SERIAL_EOL;
+
+        Config_ClearStoredSettings();
+      }
+
       Config_UseDefaultSettings();
     }
 }
