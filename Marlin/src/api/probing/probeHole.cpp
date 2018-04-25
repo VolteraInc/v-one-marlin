@@ -17,7 +17,7 @@ int probing::probeHole(
   const auto circumference = TWO_PI * radius;
   const unsigned int numMeasurements = max(
     minPoints,
-    floor(circumference/probePitch)
+    ceil(circumference/probePitch)
   );
 
   // Confirm we have enough room for the measurements
