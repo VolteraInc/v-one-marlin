@@ -340,10 +340,11 @@ int process_mcode(int command_code) {
       Config_RetrieveSettings();
       return 0;
 
-    // M502 - reverts to the default "factory settings".  You still need to store them in EEPROM afterwards if you want to.
-    case 502:
-      Config_ResetDefault();
+    // M502 - reverts to the default "factory settings".
+    case 502: {
+      Config_UseDefaultSettings();
       return 0;
+    }
 
     // M503 - print the current settings (from memory not from EEPROM)
     case 503:

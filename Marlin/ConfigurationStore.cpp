@@ -90,7 +90,8 @@ void Config_StoreSettings() {
   EEPROM_WRITE_VAR(i, ver2);
 
   SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Settings Stored");
+  SERIAL_ECHOPGM("Speed settings stored");
+  SERIAL_EOL;
 }
 
 void Config_PrintSettings() {
@@ -181,7 +182,7 @@ void Config_RetrieveCalibration() {
     const bool isCurrent = strncmp(stored_ver, EEPROM_VERSION, 3) == 0;
 
     SERIAL_ECHO_START;
-    SERIAL_ECHO("Reading calibration settings, version "); SERIAL_ECHO(stored_ver);
+    SERIAL_PAIR("Reading calibration settings, version ", stored_ver);
     SERIAL_EOL;
 
     if (isCurrent || isV10) {
@@ -239,11 +240,15 @@ void Config_RetrieveSettings() {
 
     // Read stored version
     char stored_ver[4];
-    char ver[4] = EEPROM_VERSION;
     EEPROM_READ_VAR(i, stored_ver);
 
+
     // check version
-    if (strncmp(ver, stored_ver, 3) == 0) {
+    if (strncmp(stored_ver, EEPROM_VERSION, 3) == 0) {
+      SERIAL_ECHO_START;
+      SERIAL_PAIR("Reading speed settings, version ", stored_ver);
+      SERIAL_EOL;
+
       EEPROM_READ_VAR(i, axis_steps_per_unit);
       EEPROM_READ_VAR(i, max_feedrate);
       EEPROM_READ_VAR(i, max_acceleration_units_per_sq_second);
@@ -261,13 +266,14 @@ void Config_RetrieveSettings() {
       EEPROM_READ_VAR(i, max_e_jerk);
 
       SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM("Stored settings retrieved");
+      SERIAL_ECHOPGM("NOTICE: Using stored values for speed settings");
+      SERIAL_EOL;
     } else {
-      Config_ResetDefault();
+      Config_UseDefaultSettings();
     }
 }
 
-void Config_ResetDefault() {
+void Config_UseDefaultSettings() {
   float tmp1[] = DEFAULT_AXIS_STEPS_PER_UNIT;
   float tmp2[] = DEFAULT_MAX_FEEDRATE;
   long tmp3[] = DEFAULT_MAX_ACCELERATION;
@@ -290,5 +296,6 @@ void Config_ResetDefault() {
   max_e_jerk = DEFAULT_EJERK;
 
   SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
+  SERIAL_ECHOPGM("Using hardcoded defaults for speed settings");
+  SERIAL_EOL;
 }
