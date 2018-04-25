@@ -165,7 +165,7 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 */
 
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,1600,1714.2857142857144}
-#define DEFAULT_MAX_FEEDRATE          {12000/60.0, 7500.0/60.0, 200.0/60.0, 140.0/60.0}    // (mm/sec)
+#define DEFAULT_MAX_FEEDRATE          {6000/60.0, 6000.0/60.0, 200.0/60.0, 140.0/60.0}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {1500,700,100,50}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
 
 #define DEFAULT_ACCELERATION          1000    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
