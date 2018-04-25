@@ -130,8 +130,11 @@ void plan_enable_skew_adjustment(bool enabed) {
 
 // Calculates the distance (not time) it takes to accelerate from initial_rate to target_rate using the
 // given acceleration:
-FORCE_INLINE float estimate_acceleration_distance(float initial_rate, float target_rate, float acceleration)
-{
+FORCE_INLINE float estimate_acceleration_distance(
+  float initial_rate,
+  float target_rate,
+  float acceleration
+) {
   if (acceleration!=0) {
     return((target_rate*target_rate-initial_rate*initial_rate)/
       (2.0*acceleration));
@@ -146,8 +149,12 @@ FORCE_INLINE float estimate_acceleration_distance(float initial_rate, float targ
 // a total travel of distance. This can be used to compute the intersection point between acceleration and
 // deceleration in the cases where the trapezoid has no plateau (i.e. never reaches maximum speed)
 
-FORCE_INLINE float intersection_distance(float initial_rate, float final_rate, float acceleration, float distance)
-{
+FORCE_INLINE float intersection_distance(
+  float initial_rate,
+  float final_rate,
+  float acceleration,
+  float distance
+) {
   if (acceleration!=0) {
     return((2.0*acceleration*distance-initial_rate*initial_rate+final_rate*final_rate)/
       (4.0*acceleration) );
@@ -672,8 +679,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
 
 }
 
-void plan_set_position(float x, float y, float z, float e)
-{
+void plan_set_position(float x, float y, float z, float e) {
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Resetting planner position to");
@@ -698,8 +704,7 @@ void plan_set_position(float x, float y, float z, float e)
   previous_speed[3] = 0.0;
 }
 
-void plan_set_e_position(float e)
-{
+void plan_set_e_position(float e) {
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Resetting planner's E position to");
@@ -711,16 +716,13 @@ void plan_set_e_position(float e)
   st_set_e_position(position[E_AXIS]);
 }
 
-uint8_t movesplanned()
-{
+uint8_t movesplanned() {
   return (block_buffer_head-block_buffer_tail + BLOCK_BUFFER_SIZE) & (BLOCK_BUFFER_SIZE - 1);
 }
 
 // Calculate the steps/s^2 acceleration rates, based on the mm/s^s
-void reset_acceleration_rates()
-{
-	for(int8_t i=0; i < NUM_AXIS; i++)
-        {
-        axis_steps_per_sqr_second[i] = max_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];
-        }
+void reset_acceleration_rates() {
+	for (auto i = 0u; i < NUM_AXIS; ++i)  {
+    axis_steps_per_sqr_second[i] = max_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];
+  }
 }
