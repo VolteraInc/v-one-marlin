@@ -539,9 +539,9 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   for (auto i = 0u; i < 4; ++i) {
     current_speed[i] = delta_mm[i] * inverse_second;
 
-    // SERIAL_PROTOCOLPGM(" Speed:");
-    // SERIAL_PROTOCOL(current_speed[i]);
-    // SERIAL_PROTOCOLLN("");
+    // SERIAL_PAIR(" Speed: ", current_speed[i]);
+    // SERIAL_PAIR(", maxF: ", max_feedrate[i]);
+    // SERIAL_EOL;
 
     if(fabs(current_speed[i]) > max_feedrate[i]) {
       speed_factor = min(
@@ -557,8 +557,8 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
       current_speed[i] *= speed_factor;
 
       // SERIAL_ECHO_START;
-      // SERIAL_PAIR(" Speed Corrected:", current_speed[i]);
-      // SERIAL_PROTOCOLLN("");
+      // SERIAL_PAIR(" Corrected Speed:", current_speed[i]);
+      // SERIAL_PAIR(", factor:", speed_factor);
       // SERIAL_EOL;
     }
     block->nominal_speed *= speed_factor;
