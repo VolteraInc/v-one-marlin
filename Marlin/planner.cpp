@@ -677,10 +677,10 @@ void plan_set_position(float x, float y, float z, float e)
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Resetting planner position to");
-    SERIAL_ECHOPAIR(" X:", x);
-    SERIAL_ECHOPAIR(" Y:", y);
-    SERIAL_ECHOPAIR(" Z:", z);
-    SERIAL_ECHOPAIR(" E:", e);
+    SERIAL_PAIR(" X:", x);
+    SERIAL_PAIR(" Y:", y);
+    SERIAL_PAIR(" Z:", z);
+    SERIAL_PAIR(" E:", e);
     SERIAL_EOL;
   }
 

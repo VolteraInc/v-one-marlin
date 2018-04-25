@@ -97,45 +97,45 @@ void Config_PrintSettings() {
   SERIAL_ECHO_START;
   SERIAL_ECHOLNPGM("Steps per unit:");
   SERIAL_ECHO_START;
-  SERIAL_ECHOPAIR("  M92 X",axis_steps_per_unit[0]);
-  SERIAL_ECHOPAIR(" Y",axis_steps_per_unit[1]);
-  SERIAL_ECHOPAIR(" Z",axis_steps_per_unit[2]);
-  SERIAL_ECHOPAIR(" E",axis_steps_per_unit[3]);
+  SERIAL_PAIR("  M92 X",axis_steps_per_unit[0]);
+  SERIAL_PAIR(" Y",axis_steps_per_unit[1]);
+  SERIAL_PAIR(" Z",axis_steps_per_unit[2]);
+  SERIAL_PAIR(" E",axis_steps_per_unit[3]);
   SERIAL_ECHOLN("");
 
   SERIAL_ECHO_START;
   SERIAL_ECHOLNPGM("Maximum feedrates (mm/s):");
   SERIAL_ECHO_START;
-  SERIAL_ECHOPAIR("  M203 X",max_feedrate[0]);
-  SERIAL_ECHOPAIR(" Y",max_feedrate[1] );
-  SERIAL_ECHOPAIR(" Z", max_feedrate[2] );
-  SERIAL_ECHOPAIR(" E", max_feedrate[3]);
+  SERIAL_PAIR("  M203 X",max_feedrate[0]);
+  SERIAL_PAIR(" Y",max_feedrate[1] );
+  SERIAL_PAIR(" Z", max_feedrate[2] );
+  SERIAL_PAIR(" E", max_feedrate[3]);
   SERIAL_ECHOLN("");
 
   SERIAL_ECHO_START;
   SERIAL_ECHOLNPGM("Maximum Acceleration (mm/s2):");
   SERIAL_ECHO_START;
-  SERIAL_ECHOPAIR("  M201 X" ,max_acceleration_units_per_sq_second[0] );
-  SERIAL_ECHOPAIR(" Y" , max_acceleration_units_per_sq_second[1] );
-  SERIAL_ECHOPAIR(" Z" ,max_acceleration_units_per_sq_second[2] );
-  SERIAL_ECHOPAIR(" E" ,max_acceleration_units_per_sq_second[3]);
+  SERIAL_PAIR("  M201 X" ,max_acceleration_units_per_sq_second[0] );
+  SERIAL_PAIR(" Y" , max_acceleration_units_per_sq_second[1] );
+  SERIAL_PAIR(" Z" ,max_acceleration_units_per_sq_second[2] );
+  SERIAL_PAIR(" E" ,max_acceleration_units_per_sq_second[3]);
   SERIAL_ECHOLN("");
   SERIAL_ECHO_START;
   SERIAL_ECHOLNPGM("Acceleration: S=acceleration, T=retract acceleration");
   SERIAL_ECHO_START;
-  SERIAL_ECHOPAIR("  M204 S",acceleration );
-  SERIAL_ECHOPAIR(" T" ,retract_acceleration);
+  SERIAL_PAIR("  M204 S",acceleration );
+  SERIAL_PAIR(" T" ,retract_acceleration);
   SERIAL_ECHOLN("");
 
   SERIAL_ECHO_START;
   SERIAL_ECHOLNPGM("Advanced variables: S=Min feedrate (mm/s), T=Min travel feedrate (mm/s), B=minimum segment time (ms), X=maximum XY jerk (mm/s),  Z=maximum Z jerk (mm/s),  E=maximum E jerk (mm/s)");
   SERIAL_ECHO_START;
-  SERIAL_ECHOPAIR("  M205 S",minimumfeedrate );
-  SERIAL_ECHOPAIR(" T" ,mintravelfeedrate );
-  SERIAL_ECHOPAIR(" B" ,minsegmenttime );
-  SERIAL_ECHOPAIR(" X" ,max_xy_jerk );
-  SERIAL_ECHOPAIR(" Z" ,max_z_jerk);
-  SERIAL_ECHOPAIR(" E" ,max_e_jerk);
+  SERIAL_PAIR("  M205 S",minimumfeedrate );
+  SERIAL_PAIR(" T" ,mintravelfeedrate );
+  SERIAL_PAIR(" B" ,minsegmenttime );
+  SERIAL_PAIR(" X" ,max_xy_jerk );
+  SERIAL_PAIR(" Z" ,max_z_jerk);
+  SERIAL_PAIR(" E" ,max_e_jerk);
   SERIAL_ECHOLN("");
 }
 
@@ -148,10 +148,10 @@ void Config_PrintCalibration() {
   SERIAL_ECHO_START;
   SERIAL_ECHOLNPGM("Offsets:");
   SERIAL_ECHO_START;
-  SERIAL_ECHOPAIR(" M505 X:", min_z_x_pos);
-  SERIAL_ECHOPAIR(" Y:", min_z_y_pos);
-  SERIAL_ECHOPAIR(" I:", xypos_x_pos);
-  SERIAL_ECHOPAIR(" J:", xypos_y_pos);
+  SERIAL_PAIR(" M505 X:", min_z_x_pos);
+  SERIAL_PAIR(" Y:", min_z_y_pos);
+  SERIAL_PAIR(" I:", xypos_x_pos);
+  SERIAL_PAIR(" J:", xypos_y_pos);
   SERIAL_ECHOLN("");
 
   SERIAL_ECHO_START;

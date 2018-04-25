@@ -21,10 +21,10 @@ int process_icode(int command_code) {
 
       SERIAL_ECHO_START;
       SERIAL_ECHOLNPGM("Reset Positions to");
-      SERIAL_ECHOPAIR(" xyPositioner_x:", xypos_x_pos);
-      SERIAL_ECHOPAIR(" xyPositioner_y:", xypos_y_pos);
-      SERIAL_ECHOPAIR(" zSwitch_x:", min_z_x_pos);
-      SERIAL_ECHOPAIR(" zSwitch_y:", min_z_y_pos);
+      SERIAL_PAIR(" xyPositioner_x:", xypos_x_pos);
+      SERIAL_PAIR(" xyPositioner_y:", xypos_y_pos);
+      SERIAL_PAIR(" zSwitch_x:", min_z_x_pos);
+      SERIAL_PAIR(" zSwitch_y:", min_z_y_pos);
       SERIAL_EOL;
       return 0;
 
@@ -38,11 +38,11 @@ int process_icode(int command_code) {
       // Output
       SERIAL_ECHO_START;
       SERIAL_ECHOPGM("positionCalibration");
-      SERIAL_ECHOPAIR(" cycles:", cycles);
-      SERIAL_ECHOPAIR(" xyPositioner_x:", xypos_x_pos);
-      SERIAL_ECHOPAIR(" xyPositioner_y:", xypos_y_pos);
-      SERIAL_ECHOPAIR(" zSwitch_x:", min_z_x_pos);
-      SERIAL_ECHOPAIR(" zSwitch_y:", min_z_y_pos);
+      SERIAL_PAIR(" cycles:", cycles);
+      SERIAL_PAIR(" xyPositioner_x:", xypos_x_pos);
+      SERIAL_PAIR(" xyPositioner_y:", xypos_y_pos);
+      SERIAL_PAIR(" zSwitch_x:", min_z_x_pos);
+      SERIAL_PAIR(" zSwitch_y:", min_z_y_pos);
       SERIAL_EOL;
       Config_PrintCalibration();
 

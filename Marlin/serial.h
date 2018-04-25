@@ -31,9 +31,6 @@ extern const char errormagic[] PROGMEM;
 #define SERIAL_ECHOLNPGM(x) SERIAL_PROTOCOLLNPGM(x)
 #define SERIAL_ECHO_F(x,y) SERIAL_PROTOCOL_F((x),(y))
 
-#define SERIAL_ECHOPAIR SERIAL_PAIR
-//TODO: replace all SERIAL_ECHOPAIR with SERIAL_PAIR
-
 // For serial printing from PROGMEM. (Saves loads of SRAM.)
 FORCE_INLINE void serialprintPGM(const char* str) {
   while (char ch = pgm_read_byte(str++)) MYSERIAL.write(ch);

@@ -176,11 +176,11 @@ int asyncRawMove(float x, float y, float z, float e, float f, bool confirmMoveIs
   if (logging_enabled) {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("Move");
-    SERIAL_ECHOPAIR(" X:", current_position[ X_AXIS ]);
-    SERIAL_ECHOPAIR(" Y:", current_position[ Y_AXIS ]);
-    SERIAL_ECHOPAIR(" Z:", current_position[ Z_AXIS ]);
-    SERIAL_ECHOPAIR(" E:", current_position[ E_AXIS ]);
-    SERIAL_ECHOPAIR(" F:", speed_in_mm_per_min);
+    SERIAL_PAIR(" X:", current_position[ X_AXIS ]);
+    SERIAL_PAIR(" Y:", current_position[ Y_AXIS ]);
+    SERIAL_PAIR(" Z:", current_position[ Z_AXIS ]);
+    SERIAL_PAIR(" E:", current_position[ E_AXIS ]);
+    SERIAL_PAIR(" F:", speed_in_mm_per_min);
     SERIAL_EOL;
   }
 

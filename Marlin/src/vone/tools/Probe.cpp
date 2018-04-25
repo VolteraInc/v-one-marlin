@@ -132,12 +132,12 @@ int tools::Probe::probe(
   if (logging_enabled) {
     const auto duration = millis() - startTime;
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("probe height: ", rawMeasurement);
-    SERIAL_ECHOPAIR(", displacement: ", m_probeDisplacement);
-    SERIAL_ECHOPAIR(", measurement: ", measurement);
-    SERIAL_ECHOPAIR(", samplesTaken: ", samplesTaken);
-    SERIAL_ECHOPAIR(", totalTouches: ", totalTouches);
-    SERIAL_ECHOPAIR(", duration: ", duration);
+    SERIAL_PAIR("probe height: ", rawMeasurement);
+    SERIAL_PAIR(", displacement: ", m_probeDisplacement);
+    SERIAL_PAIR(", measurement: ", measurement);
+    SERIAL_PAIR(", samplesTaken: ", samplesTaken);
+    SERIAL_PAIR(", totalTouches: ", totalTouches);
+    SERIAL_PAIR(", duration: ", duration);
     SERIAL_EOL;
   }
   return 0;
