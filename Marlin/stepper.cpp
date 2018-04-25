@@ -605,8 +605,10 @@ void st_synchronize() {
   while (blocks_queued()) {
     periodic_work();
   }
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("synchonized");
+  if (logging_enabled) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("synchonized");
+  }
 }
 
 void st_set_position(const long& x, const long& y, const long& z, const long& e) {
