@@ -165,15 +165,9 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 */
 
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,1600,1714.2857142857144}
-#define DEFAULT_MAX_FEEDRATE          {12000/60.0, 7500.0/60.0, 200.0/60.0, 140.0/60.0}    // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {1500, 700, 100, 50}    // X, Y, Z, E maximum start speed for accelerated moves
 
-// TODO: implementing these hides a problem in the y-axis mechanical systems
-//       need to address that, and potentially add a new test to detect/prevent
-//       or we could run burn-in with original parameters
-// #define DEFAULT_MAX_FEEDRATE          {6000/60.0, 6000.0/60.0, 200.0/60.0, 140.0/60.0}    // (mm/sec)
-// #define DEFAULT_MAX_ACCELERATION      {100, 100, 100, 50}    // X, Y, Z, E maximum start speed for accelerated moves
-
+#define DEFAULT_MAX_FEEDRATE          {6000f/60.0, 6000f/60.0, 200.0/60.0, 140.0/60.0}    // (mm/sec)
+#define DEFAULT_MAX_ACCELERATION      {100, 100, 100, 50}    // X, Y, Z, E maximum start speed for accelerated moves
 #define DEFAULT_ACCELERATION          1000    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  50   // X, Y, Z and E max acceleration in mm/s^2 for retracts
 
