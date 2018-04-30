@@ -5,9 +5,9 @@
 static void outputBedTemperatureUpdate(float current, float target, float timeRemaining) {
   protocol
     << F("bedTemperatureUpdate")
-    << F(" current:") << serialFloat(current, 1)
-    << F(" target:") << serialFloat(target, 1)
-    << F(" timeRemaining:") << serialFloat(timeRemaining, 1)
+    << F(" current:") << FloatWithFormat(current, 1)
+    << F(" target:") << FloatWithFormat(target, 1)
+    << F(" timeRemaining:") << FloatWithFormat(timeRemaining, 1)
     << endl;
 }
 

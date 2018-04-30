@@ -24,7 +24,7 @@ static unsigned s_countTriggers(unsigned maxSamples) {
   if (logging_enabled) {
     const auto duration = millis() - startTime;
     log
-      << F("countTriggers voltages: [") << serialArray(voltages, maxSamples)
+      << F("countTriggers voltages: [") << ArrayWithSize<float>(voltages, maxSamples)
       << F("], duration: ") << duration
       << F(", count: ") << count
       << F(", position: ") << current_position[Z_AXIS]

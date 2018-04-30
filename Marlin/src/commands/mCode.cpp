@@ -91,8 +91,8 @@ int process_mcode(int command_code) {
       protocol
         << F("T:0.0")
         << F(" /0.0")
-        << F(" B:") << serialFloat(vone->heater.currentTemperature(), 1)
-        << F(" /") << serialFloat(vone->heater.targetTemperature(), 1)
+        << F(" B:") << FloatWithFormat(vone->heater.currentTemperature(), 1)
+        << F(" /") << FloatWithFormat(vone->heater.targetTemperature(), 1)
         << F(" @:0")
         << F(" B@:") << (vone->heater.isHeating() ? 127 : 0)
         << endl;
@@ -227,7 +227,7 @@ int process_mcode(int command_code) {
       while ( target_direction ? (vone->heater.isHeating()) : (vone->heater.isCooling() && (CooldownNoWait==false)) ) {
         // Print Temp Reading every 1 second while heating up.
         if ((millis() - codenum) > 1000) {
-          protocol << F("T:0 E:0 B:") << serialFloat(vone->heater.currentTemperature(), 1) << endl;
+          protocol << F("T:0 E:0 B:") << FloatWithFormat(vone->heater.currentTemperature(), 1) << endl;
           codenum = millis();
         }
         periodic_work();

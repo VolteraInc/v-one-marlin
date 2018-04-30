@@ -14,15 +14,16 @@ class VoltageTypeStabilizer {
     void add(unsigned long time, float voltage);
     VoltageType value() { return m_stable ? m_type : VoltageType::Unknown; }
 
-  private:
     class VoltageLog {
-      struct Sample {
-        unsigned long time;
-        VoltageType type;
-        float voltage;
-      };
-
       public:
+        struct Sample {
+          unsigned long time;
+          VoltageType type;
+          float voltage;
+
+          friend MarlinSerial& operator<<(MarlinSerial& os, const Sample& smp);  
+        };
+
         unsigned int size() const { return m_size; }
         bool empty() const { return m_size == 0; }
         bool full() const { return m_size == MAX_SAMPLES; }
@@ -51,8 +52,11 @@ class VoltageTypeStabilizer {
         static inline unsigned int decrement(unsigned int idx) {
           return idx == 0 ? MAX_SAMPLES - 1 : idx - 1;
         }
+
+        friend MarlinSerial& operator<<(MarlinSerial& obj, const VoltageLog& vl);  
     };
 
+  private:
     VoltageLog m_voltages;
     bool m_stable = false;
     unsigned long m_unstableTime = 0;
@@ -61,4 +65,19 @@ class VoltageTypeStabilizer {
     void setStable(bool stable);
 };
 
+inline MarlinSerial& operator<<(MarlinSerial &obj, const toolDetection::VoltageTypeStabilizer::VoltageLog& vl) {
+  obj << ArrayWithSize<toolDetection::VoltageTypeStabilizer::VoltageLog::Sample>(vl.m_samples, vl.size());
+  return obj;
 }
+
+inline MarlinSerial& operator<<(MarlinSerial &obj, const toolDetection::VoltageTypeStabilizer::VoltageLog::Sample& smp) {
+  obj 
+    << F("(") << smp.time
+    << F(", ") << toString(smp.type)
+    << F(", ") << smp.voltage
+    << F(")");
+  return obj;
+}
+
+}
+

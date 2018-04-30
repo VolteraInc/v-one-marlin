@@ -50,26 +50,6 @@ unsigned long toolDetection::VoltageTypeStabilizer::VoltageLog::timeSpanOfCurren
   return back().time - startTime;
 }
 
-MarlinSerial& toolDetection::VoltageTypeStabilizer::VoltageLog::output() const {
-  if (empty()) {
-    return MYSERIAL;
-  }
-  auto idx = m_frontIdx;
-  auto sz = size();
-  while (sz--) {
-    if (idx != m_frontIdx) {
-      MYSERIAL << F(", ");
-    }
-    MYSERIAL
-      << F("(") << m_samples[idx].time
-      << F(", ") << toString(m_samples[idx].type)
-      << F(", ") << m_samples[idx].voltage
-      << F(")");
-    idx = increment(idx);
-  }
-  return MYSERIAL;
-}
-
 // ----------------------------------------------
 // VoltageTypeStabilizer
 void toolDetection::VoltageTypeStabilizer::setStable(bool stable) {
@@ -88,7 +68,7 @@ void toolDetection::VoltageTypeStabilizer::setStable(bool stable) {
     log
       << F("Voltage type stabilized in ") << delta
       << F("ms, voltages = [ ")
-      << m_voltages.output()
+      << m_voltages
       << F(" ]")
       << endl;
   } else {
