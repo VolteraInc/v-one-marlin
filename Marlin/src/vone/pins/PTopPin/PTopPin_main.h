@@ -83,7 +83,6 @@ class PTopPin {
     volatile bool preventAdcSampling = false;
     volatile unsigned long delayAdcSamplingUntil = 0;
     unsigned long lastAdcSampleStartedAt = 0;
-    unsigned long nextWarningAt = 0;
     adc::SamplingHelper adcSamples;
 
     // We want the default value to classify as VoltageType::NoToolMounted
