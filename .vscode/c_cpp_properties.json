@@ -23,34 +23,32 @@
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
             },
-            "macFrameworkPath": [
-            ]
+            "macFrameworkPath": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
         },
         {
             "name": "Linux",
-            "includePath": [
-            ],
+            "includePath": [],
             "defines": [],
             "intelliSenseMode": "clang-x64",
             "browse": {
-                "path": [
-                ],
+                "path": [],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
             }
         },
         {
             "name": "Win32",
-            "includePath": [
-            ],
+            "includePath": [],
             "defines": [
                 "_DEBUG",
                 "UNICODE"
             ],
             "intelliSenseMode": "msvc-x64",
             "browse": {
-                "path": [
-                ],
+                "path": [],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
             }
