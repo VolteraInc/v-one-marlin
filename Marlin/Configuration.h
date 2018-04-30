@@ -164,12 +164,12 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 1/16 6857.142857142858
 */
 
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,1600,1714.2857142857144}
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {100.0,100.0,1600.0,1714.2857142857144}
 
-#define DEFAULT_MAX_FEEDRATE          {6000f/60.0, 6000f/60.0, 200.0/60.0, 140.0/60.0}    // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {100, 100, 100, 50}    // X, Y, Z, E maximum start speed for accelerated moves
-#define DEFAULT_ACCELERATION          1000    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  50   // X, Y, Z and E max acceleration in mm/s^2 for retracts
+#define DEFAULT_MAX_FEEDRATE          {6000.0/60.0, 6000.0/60.0, 200.0/60.0, 140.0/60.0}    // (mm/sec)
+#define DEFAULT_MAX_ACCELERATION      {100.0, 100.0, 100.0, 50.0}    // X, Y, Z, E maximum start speed for accelerated moves
+#define DEFAULT_ACCELERATION          1000.0    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
+#define DEFAULT_RETRACT_ACCELERATION  50.0   // X, Y, Z and E max acceleration in mm/s^2 for retracts
 
 // The speed change that does not require acceleration (i.e. the software might assume it can be done instantaneously)
 #define DEFAULT_XYJERK                1.0    // (mm/sec)

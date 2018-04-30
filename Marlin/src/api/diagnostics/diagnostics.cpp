@@ -2,6 +2,8 @@
 #include "../../api/api.h"
 #include "../../api/diagnostics/diagnostics.h"
 
+#include "../../../planner.h"
+
 #include "../../vone/tools/NullTool.h"
 #include "../../vone/tools/Probe.h"
 
@@ -52,8 +54,8 @@ int runBurnInSequence(tools::NullTool& noTool) {
 
   // Restore speed settings
   log << F("Restoring feedrate and acceleration settings") << endl;
-  max_feedrate[ X_AXIS ] = maxFX
-  max_feedrate[ Y_AXIS ] = maxFY
+  max_feedrate[ X_AXIS ] = maxFX;
+  max_feedrate[ Y_AXIS ] = maxFY;
   max_acceleration_units_per_sq_second[ X_AXIS ] = maxAX;
   max_acceleration_units_per_sq_second[ Y_AXIS ] = maxAY;
   acceleration = maxA;
