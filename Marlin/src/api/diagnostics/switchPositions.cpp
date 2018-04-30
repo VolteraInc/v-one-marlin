@@ -5,8 +5,7 @@
 
 int calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeResults) {
   if (probe.prepareToMove(tools::PrepareToMove::Options::skipCalibrateXYZ)) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLN("Unable to calibrate positions, could not prepare probe");
+    logError << F("Unable to calibrate positions, could not prepare probe") << endl;
     return -1;
   }
 
@@ -41,8 +40,7 @@ int calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeRes
 
   // Store positions
   if (storeResults) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Storing settings...");
+    log << "Storing settings..." << endl;
     Config_StoreCalibration();
   }
 

@@ -13,11 +13,11 @@ int multiMultiTouch(
 ) {
   const auto memoryCheck = 30u;
   if (maxSamples > memoryCheck) {
-    SERIAL_ERROR_START;
-    SERIAL_ERROR("Unable to "); SERIAL_ERROR(context);
-    SERIAL_PAIR(", requested number of samples ", maxSamples);
-    SERIAL_PAIR(" exceeds allocated space ", memoryCheck);
-    SERIAL_EOL;
+    logError
+      << F("Unable to ") << context << F(", ")
+      << F("the requested number of samples ") << maxSamples
+      << F(" exceeds allocated space ") << memoryCheck
+      << endl;
     return -1;
   }
 
@@ -35,11 +35,11 @@ int multiMultiTouch(
       maxTouchesPerSample,
       &touchesUsed
     )) {
-      SERIAL_ERROR_START;
-      SERIAL_ERROR("Unable to "); SERIAL_ERROR(context);
-      SERIAL_PAIR(", measurement ", i + 1);
-      SERIAL_ERROR(" did not complete");
-      SERIAL_EOL;
+      logError
+        << F("Unable to ") << context
+        << F(", measurement ") << i + 1
+        << F(" did not complete")
+        << endl;
       return -1;
     };
 
@@ -59,12 +59,12 @@ int multiMultiTouch(
   // Use average if measurements never meet the criteria of the given function
   result = average(samples, samplesTaken);
   // TODO: restore multi-touch for beta
-  // SERIAL_ECHO_START;
-  // SERIAL_ECHOPGM("Notice: ("); SERIAL_ECHO(context);
-  // SERIAL_ECHO(") multi-touch measurements did not meet stability target, using average ");
-  // SERIAL_PAIR("result: ", result);
-  // SERIAL_ECHOPGM(", samples: "); serialArray(samples, samplesTaken);
-  // SERIAL_EOL;
+  // logNotice
+  //   << context
+  //   << F(", multi-touch measurements did not meet stability target, using average ")
+  //   << F("result: ") << result
+  //   << F(", samples: ") << serialArray(samples, samplesTaken);
+  //   << endl;
 
 SUCCESS:
   if (o_samplesTaken) { *o_samplesTaken = samplesTaken; }

@@ -58,12 +58,6 @@ class VOne {
       const auto now = millis();
       if (now > 1000) {
         toolDetector.frequentInterruptibleWork();
-      // } else {
-      //   const auto sample = pins.ptop.value();
-      //   SERIAL_PAIR("now ", now);
-      //   SERIAL_PAIR(" sample.startTime ", sample.startTime);
-      //   SERIAL_PAIR(" sample.voltage ", sample.voltage);
-      //   SERIAL_EOL;
       }
 
       // Restore interrupt settings

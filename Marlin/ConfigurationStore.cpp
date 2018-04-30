@@ -61,8 +61,7 @@ void Config_StoreCalibration() {
   i=EEPROM_OFFSET_CALIB;
   EEPROM_WRITE_VAR(i,ver2); // validate data
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Calibration Stored");
+  log << F("Calibration Stored") << endl;
 }
 
 void Config_ClearStoredSettings() {
@@ -70,9 +69,7 @@ void Config_ClearStoredSettings() {
   int i = EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i, ver);
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Cleared stored settings -- defaults will be used");
-  SERIAL_EOL;
+  log << F("Cleared stored settings -- defaults will be used") << endl;
 }
 
 void Config_StoreSettings() {
@@ -99,86 +96,68 @@ void Config_StoreSettings() {
   i = EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i, ver2);
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Speed settings stored");
-  SERIAL_EOL;
+  log << F("Speed settings stored") << endl;
 }
 
 void Config_PrintSettings() {
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Steps per unit:");
-  SERIAL_ECHO_START;
-  SERIAL_PAIR("  M92 X",axis_steps_per_unit[0]);
-  SERIAL_PAIR(" Y",axis_steps_per_unit[1]);
-  SERIAL_PAIR(" Z",axis_steps_per_unit[2]);
-  SERIAL_PAIR(" E",axis_steps_per_unit[3]);
-  SERIAL_ECHOLN("");
+  log << F("Steps per unit:") << endl;
+  log << F("  M92 X") << axis_steps_per_unit[0]
+      << F(" Y") << axis_steps_per_unit[1]
+      << F(" Z") << axis_steps_per_unit[2]
+      << F(" E") << axis_steps_per_unit[3]
+      << endl;
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Maximum feedrates (mm/s):");
-  SERIAL_ECHO_START;
-  SERIAL_PAIR("  M203 X",max_feedrate[0]);
-  SERIAL_PAIR(" Y",max_feedrate[1] );
-  SERIAL_PAIR(" Z", max_feedrate[2] );
-  SERIAL_PAIR(" E", max_feedrate[3]);
-  SERIAL_ECHOLN("");
+  log << F("Maximum feedrates (mm/s):") << endl;
+  log << F("  M203 X") << max_feedrate[0]
+      << F(" Y") << max_feedrate[1]
+      << F(" Z") << max_feedrate[2]
+      << F(" E") << max_feedrate[3]
+      << endl;
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Maximum Acceleration (mm/s2):");
-  SERIAL_ECHO_START;
-  SERIAL_PAIR("  M201 X" ,max_acceleration_units_per_sq_second[0] );
-  SERIAL_PAIR(" Y" , max_acceleration_units_per_sq_second[1] );
-  SERIAL_PAIR(" Z" ,max_acceleration_units_per_sq_second[2] );
-  SERIAL_PAIR(" E" ,max_acceleration_units_per_sq_second[3]);
-  SERIAL_ECHOLN("");
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Acceleration: S=acceleration, T=retract acceleration");
-  SERIAL_ECHO_START;
-  SERIAL_PAIR("  M204 S",acceleration );
-  SERIAL_PAIR(" T" ,retract_acceleration);
-  SERIAL_ECHOLN("");
+  log << F("Maximum Acceleration (mm/s2):") << endl;
+  log << F("  M201 X" ) << max_acceleration_units_per_sq_second[0]
+      << F(" Y") << max_acceleration_units_per_sq_second[1]
+      << F(" Z") << max_acceleration_units_per_sq_second[2]
+      << F(" E") << max_acceleration_units_per_sq_second[3]
+      << endl;
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Advanced variables: S=Min feedrate (mm/s), T=Min travel feedrate (mm/s), B=minimum segment time (ms), X=maximum XY jerk (mm/s),  Z=maximum Z jerk (mm/s),  E=maximum E jerk (mm/s)");
-  SERIAL_ECHO_START;
-  SERIAL_PAIR("  M205 S",minimumfeedrate );
-  SERIAL_PAIR(" T" ,mintravelfeedrate );
-  SERIAL_PAIR(" B" ,minsegmenttime );
-  SERIAL_PAIR(" X" ,max_xy_jerk );
-  SERIAL_PAIR(" Z" ,max_z_jerk);
-  SERIAL_PAIR(" E" ,max_e_jerk);
-  SERIAL_ECHOLN("");
+  log << F("Acceleration: S=acceleration, T=retract acceleration") << endl;
+  log << F("  M204 S") << acceleration
+      << F(" T") << retract_acceleration
+      << endl;
+
+  log << F("Advanced variables: S=Min feedrate (mm/s), T=Min travel feedrate (mm/s), B=minimum segment time (ms), X=maximum XY jerk (mm/s),  Z=maximum Z jerk (mm/s),  E=maximum E jerk (mm/s)") << endl;
+  log << F("  M205 S") << minimumfeedrate
+      << F(" T") << mintravelfeedrate
+      << F(" B") << minsegmenttime
+      << F(" X") << max_xy_jerk
+      << F(" Z") << max_z_jerk
+      << F(" E") << max_e_jerk
+      << endl;
 }
 
 void Config_PrintCalibration() {
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Serial No:");
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM(" M504 S:"); SERIAL_ECHOLN(product_serial_number);
+  log << F("Serial No:") << endl;
+  log << F(" M504 S:") << product_serial_number
+      << endl;
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Offsets:");
-  SERIAL_ECHO_START;
-  SERIAL_PAIR(" M505 X:", min_z_x_pos);
-  SERIAL_PAIR(" Y:", min_z_y_pos);
-  SERIAL_PAIR(" I:", xypos_x_pos);
-  SERIAL_PAIR(" J:", xypos_y_pos);
-  SERIAL_ECHOLN("");
+  log << F("Offsets:") << endl;
+  log << F(" M505 X:") << min_z_x_pos
+      << F(" Y:") << min_z_y_pos
+      << F(" I:") << xypos_x_pos
+      << F(" J:") << xypos_y_pos
+      << endl;
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Scaling and Skew (A in radians):");
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM(" M506 X:"); SERIAL_PROTOCOL_F(calib_x_scale, 6);
-  SERIAL_ECHOPGM(" Y:"); SERIAL_PROTOCOL_F(calib_y_scale, 6);
-  SERIAL_ECHOPGM(" A:"); SERIAL_PROTOCOL_F(atan(calib_tan_theta),6); //We use atan because it preserves the sign.
-  SERIAL_ECHOLN("");
+  log << F("Scaling and Skew (A in radians):") << endl;
+  log << F(" M506 X:") << calib_x_scale
+      << F(" Y:") << calib_y_scale
+      << F(" A:") << atan(calib_tan_theta) // We use atan because it preserves the sign.
+      << endl;
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Backlash Compensation:");
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM(" M507 X:"); SERIAL_PROTOCOL_F(calib_x_backlash, 6);
-  SERIAL_ECHOPGM(" Y:"); SERIAL_PROTOCOL_F(calib_y_backlash, 6);
-  SERIAL_ECHOLN("");
+  log << F("Backlash Compensation:") << endl;
+  log << F(" M507 X:") << calib_x_backlash
+      << F(" Y:") << calib_y_backlash
+      << endl;
 }
 
 // Attempts to load from EEPROM, reverts to default if not possible.
@@ -188,14 +167,11 @@ void Config_RetrieveCalibration() {
     // Read version of stored settings
     char stored_ver[4];
     EEPROM_READ_VAR(i, stored_ver);
+    log << F("Reading calibration settings, version ") << stored_ver << endl;
+
     const bool isV10 = strncmp(stored_ver, EEPROM_VERSION_V10, 3) == 0;
     const bool isV11 = strncmp(stored_ver, EEPROM_VERSION_V11, 3) == 0;
     const bool isCurrent = strncmp(stored_ver, EEPROM_VERSION, 3) == 0;
-
-    SERIAL_ECHO_START;
-    SERIAL_PAIR("Reading calibration settings, version ", stored_ver);
-    SERIAL_EOL;
-
     if (isCurrent || isV11 || isV10) {
         if (isV10) {
           EEPROM_READ_VAR_SIZE(i, product_serial_number, 11);
@@ -220,9 +196,8 @@ void Config_RetrieveCalibration() {
         EEPROM_READ_VAR(i,calib_x_backlash);
         EEPROM_READ_VAR(i,calib_y_backlash);
     } else {
-        //Print an error and revert to default.
-        SERIAL_ECHO_START;
-        SERIAL_ECHOLNPGM("Error. EEPROM Offsets missing. Is the unit calibrated?");
+        // Print an error and revert to default.
+        log << F("Error. EEPROM Offsets missing. Is the unit calibrated?") << endl;
         strcpy(product_serial_number, PRODUCT_SERIAL);
         min_z_x_pos= MIN_Z_X_POS;
         min_z_y_pos= MIN_Z_Y_POS;
@@ -253,12 +228,9 @@ void Config_RetrieveSettings() {
     char stored_ver[4];
     EEPROM_READ_VAR(i, stored_ver);
 
-
     // check version
     if (strncmp(stored_ver, EEPROM_VERSION, 3) == 0) {
-      SERIAL_ECHO_START;
-      SERIAL_PAIR("Reading speed settings, version ", stored_ver);
-      SERIAL_EOL;
+      log << F("Reading speed settings, version ") << stored_ver << endl;
 
       EEPROM_READ_VAR(i, axis_steps_per_unit);
       EEPROM_READ_VAR(i, max_feedrate);
@@ -276,16 +248,11 @@ void Config_RetrieveSettings() {
       EEPROM_READ_VAR(i, max_z_jerk);
       EEPROM_READ_VAR(i, max_e_jerk);
 
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM("NOTICE: Using stored values for speed settings");
-      SERIAL_EOL;
+      logNotice << F("Using stored values for speed settings") << endl;
     } else {
       const auto isOldConfig = strncmp(stored_ver, "000", 3) != 0;
       if (isOldConfig) {
-        SERIAL_ECHO_START;
-        SERIAL_PAIR("Reading speed settings, version ", stored_ver);
-        SERIAL_EOL;
-
+        log << F("Reading speed settings, version ") << stored_ver << endl;
         Config_ClearStoredSettings();
       }
 
@@ -315,7 +282,5 @@ void Config_UseDefaultSettings() {
   max_z_jerk = DEFAULT_ZJERK;
   max_e_jerk = DEFAULT_EJERK;
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Using hardcoded defaults for speed settings");
-  SERIAL_EOL;
+  log << F("Using hardcoded defaults for speed settings") << endl;
 }

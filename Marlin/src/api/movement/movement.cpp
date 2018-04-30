@@ -58,60 +58,61 @@ static float s_maxTravelInAxis(int axis, int direction) {
     case Y_AXIS: return getHomedState(Y_AXIS) ? Y_MAX_LENGTH : Y_MAX_LENGTH_BEFORE_HOMING;
     case Z_AXIS: return getHomedState(Z_AXIS) ? Z_MAX_LENGTH : (direction < 0 ? Z_MAX_TRAVEL_DOWN_BEFORE_HOMING : Z_MAX_TRAVEL_UP_BEFORE_HOMING);
     default:
-      SERIAL_ERROR_START;
-      SERIAL_ERRORPGM("Unable to determine max travel distance for axis, axis "); SERIAL_ERROR(axis);
-      SERIAL_ERRORLNPGM(" is not recognized - defaulting to a value of 0");
+      logError
+        << F("Unable to determine max travel distance for axis, axis ") << axis
+        << F(" is not recognized - defaulting to a value of 0")
+        << endl;
       return 0; // Will likely result in an obvious error, which we can fix
   }
 }
 
 int outputMovementStatus() {
   // Position
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Position");
-  SERIAL_ECHOPGM(" X:"); SERIAL_ECHO(current_position[X_AXIS]);
-  SERIAL_ECHOPGM(" Y:"); SERIAL_ECHO(current_position[Y_AXIS]);
-  SERIAL_ECHOPGM(" Z:"); SERIAL_ECHO(current_position[Z_AXIS]);
-  SERIAL_ECHOPGM(" E:"); SERIAL_ECHO(current_position[E_AXIS]);
-  SERIAL_ECHOPGM("\n");
+  log
+    << F("Position")
+    << F(" X:") << current_position[X_AXIS]
+    << F(" Y:") << current_position[Y_AXIS]
+    << F(" Z:") << current_position[Z_AXIS]
+    << F(" E:") << current_position[E_AXIS]
+    << endl;
 
   // Stepper status
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("StepperPosition");
-  SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(st_get_position_mm(X_AXIS));
-  SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(st_get_position_mm(Y_AXIS));
-  SERIAL_ECHOPGM(" z:"); SERIAL_ECHO(st_get_position_mm(Z_AXIS));
-  SERIAL_ECHOPGM(" e:"); SERIAL_ECHO(st_get_position_mm(E_AXIS));
-  SERIAL_ECHOPGM("\n");
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("StepperCounts");
-  SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(st_get_position(X_AXIS));
-  SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(st_get_position(Y_AXIS));
-  SERIAL_ECHOPGM(" z:"); SERIAL_ECHO(st_get_position(Z_AXIS));
-  SERIAL_ECHOPGM(" e:"); SERIAL_ECHO(st_get_position(E_AXIS));
-  SERIAL_ECHOPGM("\n");
+  log
+    << F("StepperPosition")
+    << F(" x:") << st_get_position_mm(X_AXIS)
+    << F(" y:") << st_get_position_mm(Y_AXIS)
+    << F(" z:") << st_get_position_mm(Z_AXIS)
+    << F(" e:") << st_get_position_mm(E_AXIS)
+    << endl;
+  log
+    << F("StepperCounts")
+    << F(" x:") << st_get_position(X_AXIS)
+    << F(" y:") << st_get_position(Y_AXIS)
+    << F(" z:") << st_get_position(Z_AXIS)
+    << F(" e:") << st_get_position(E_AXIS)
+    << endl;
 
   // Planner
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Planner");
-  SERIAL_ECHOPGM(" movesPlanned:"); SERIAL_ECHO((int)movesplanned());
-  SERIAL_ECHOPGM("\n");
+  log
+    << F("Planner")
+    << F(" movesPlanned:") << (int)movesplanned()
+    << endl;
 
   // Homing state on each axis
   // 0 = not homed, -1 = homed to min extent, 1 = homed to max extent
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Homing");
-  SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(getHomedState(X_AXIS));
-  SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(getHomedState(Y_AXIS));
-  SERIAL_ECHOPGM(" z:"); SERIAL_ECHO(getHomedState(Z_AXIS));
-  SERIAL_ECHOPGM("\n");
+  log
+    << F("Homing")
+    << F(" x:") << getHomedState(X_AXIS)
+    << F(" y:") << getHomedState(Y_AXIS)
+    << F(" z:") << getHomedState(Z_AXIS)
+    << endl;
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Axis ranges");
-  SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(min_pos[X_AXIS]); SERIAL_ECHOPGM(" to "); SERIAL_ECHO(max_pos[X_AXIS]);
-  SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(min_pos[Y_AXIS]); SERIAL_ECHOPGM(" to "); SERIAL_ECHO(max_pos[Y_AXIS]);
-  SERIAL_ECHOPGM(" z:"); SERIAL_ECHO(min_pos[Z_AXIS]); SERIAL_ECHOPGM(" to "); SERIAL_ECHO(max_pos[Z_AXIS]);
-  SERIAL_ECHOPGM("\n");
+  log
+    << F("Axis ranges")
+    << F(" x:") << min_pos[X_AXIS] << F(" to ") << max_pos[X_AXIS]
+    << F(" y:") << min_pos[Y_AXIS] << F(" to ") << max_pos[Y_AXIS]
+    << F(" z:") << min_pos[Z_AXIS] << F(" to ") << max_pos[Z_AXIS]
+    << endl;
 
   return 0;
 }
@@ -142,10 +143,11 @@ static bool s_moveIsUnsafeInAxis(int axis, float value) {
 
   // Out-of-bounds movements are unsafe
   if (value < min_pos[axis] || value > max_pos[axis]) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to move to "); SERIAL_ERROR(value);
-    SERIAL_ERRORPGM(" in "); SERIAL_ERROR(axis_codes[axis]);
-    SERIAL_ERRORPGM("-axis, position falls outside of safe bounds\n");
+    logError
+      << F("Unable to move to ") << value
+      << F(" in ") << axis_codes[axis]
+      << F("-axis, position falls outside of safe bounds")
+      << endl;
     return true;
   }
 
@@ -174,14 +176,14 @@ int asyncRawMove(float x, float y, float z, float e, float f, bool confirmMoveIs
   current_position[ E_AXIS ] = e;
 
   if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Move");
-    SERIAL_PAIR(" X:", current_position[ X_AXIS ]);
-    SERIAL_PAIR(" Y:", current_position[ Y_AXIS ]);
-    SERIAL_PAIR(" Z:", current_position[ Z_AXIS ]);
-    SERIAL_PAIR(" E:", current_position[ E_AXIS ]);
-    SERIAL_PAIR(" F:", speed_in_mm_per_min);
-    SERIAL_EOL;
+    log
+      << F("Move")
+      << F(" X:") << current_position[ X_AXIS ]
+      << F(" Y:") << current_position[ Y_AXIS ]
+      << F(" Z:") << current_position[ Z_AXIS ]
+      << F(" E:") << current_position[ E_AXIS ]
+      << F(" F:") << speed_in_mm_per_min
+      << endl;
   }
 
   // HACK: should not have to pull in stepper link this
@@ -232,8 +234,11 @@ int relativeRawMoveXYZ(float x, float y, float z, float speed_in_mm_per_min, boo
 
 int moveToLimit(int axis, int direction, float f, float maxTravel) {
   if(logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Move to limit: "); SERIAL_ECHO(direction < 0 ? '-' : '+'); SERIAL_ECHOLN(axis_codes[axis]);
+    log
+      << F("Move to limit: ")
+      << (direction < 0 ? '-' : '+')
+      << axis_codes[axis]
+      << endl;
   }
 
   // Finish any pending moves (prevents crashes)
@@ -255,9 +260,12 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
 
   // Confirm we triggered
   if (!endstop_triggered(axis)) { // TODO: weak test, should check specific switches
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to move to "); SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
-    SERIAL_ERRORPGM(" limit, limit switch did not trigger\n");
+    logError
+      << F("Unable to move to ")
+      << (direction < 0 ? '-' : '+')
+      << axis_codes[axis]
+      << F(" limit, limit switch did not trigger")
+      << endl;
     return -1;
   }
 
@@ -272,8 +280,11 @@ int raise() {
 
 int retractFromSwitch(int axis, int direction, float retractDistance) {
   if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Retract from switch: "); SERIAL_ECHO(direction < 0 ? '-' : '+'); SERIAL_ECHOLN(axis_codes[axis]);
+    log
+      << F("Retract from switch: ")
+      << (direction < 0 ? '-' : '+')
+      << axis_codes[axis]
+      << endl;
   }
 
   // Finish any pending moves (prevents crashes)
@@ -281,9 +292,8 @@ int retractFromSwitch(int axis, int direction, float retractDistance) {
 
   // Retract slightly
   const float distance = retractDistance < 0 ? s_defaultRetractDistance[axis] : retractDistance;
-  if(logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Retract by: "); SERIAL_ECHOLN(distance);
+  if (logging_enabled) {
+    log << F("Retract by: ") << distance << endl;
   }
   if (relativeRawMoveXYZ(
       axis == X_AXIS ? distance * -direction : 0,
@@ -296,9 +306,12 @@ int retractFromSwitch(int axis, int direction, float retractDistance) {
   // Confirm that the switch was released
   // READ_PIN ?
   if (endstop_triggered(axis)) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to retract from "); SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
-    SERIAL_ERRORPGM(" switch, switch did not release during retract movement\n");
+    logError
+      << F("Unable to retract from ")
+      << (direction < 0 ? '-' : '+')
+      << axis_codes[axis]
+      << F(" switch, switch did not release during retract movement")
+      << endl;
     return -1;
   }
 

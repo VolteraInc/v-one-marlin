@@ -38,20 +38,18 @@ void Heater::setTargetTemperature(float target) {
     ScopedInterruptDisable sid;
     m_targetTemp = target;
   }
-  SERIAL_ECHO_START;
-  SERIAL_PAIR("New target Temperature: ", target);
-  SERIAL_EOL;
+  log << F("New target Temperature: ") << target << endl;
 };
 
 void Heater::updateHeating(float temperature) {
   // Shut off the heater if the temperature is out of range
   // Notes: A temp below the minimum suggests the thermometer is broken
   if (temperature < BED_MINTEMP || temperature > BED_MAXTEMP) {
-    SERIAL_ERROR_START;
-    SERIAL_PAIR("Unable to operate heater, current temperature is ", temperature);
-    SERIAL_PAIR(" degrees, which is outside of the expected range, ", BED_MINTEMP);
-    SERIAL_PAIR(" to ", BED_MAXTEMP);
-    SERIAL_EOL;
+    logError
+      << F("Unable to operate heater, current temperature is ") << temperature
+      << F(" degrees, which is outside of the expected range, ") << BED_MINTEMP
+      << F(" to ") << BED_MAXTEMP
+      << endl;
     m_heaterPin.stopHeating();
     return;
   }

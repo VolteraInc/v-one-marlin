@@ -4,9 +4,7 @@
 
 void CommandQueue::push(const char* command) {
   if (full()) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to process command, command queue is full -- ");
-    SERIAL_ERRORLN(command);
+    logError << F("Unable to process command, command queue is full -- ") << command << endl;
     return;
   }
 
@@ -18,17 +16,17 @@ void CommandQueue::push(const char* command) {
   }
 
   if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Enqueued command '"); SERIAL_ECHO(command);
-    SERIAL_ECHOPGM("' commands_in_queue="); SERIAL_ECHO(commands_in_queue);
-    SERIAL_ECHOPGM(" write_index="); SERIAL_ECHOLN(write_index);
+    log
+      << F("Enqueued command '") << command
+      << F("' commands_in_queue=") << commands_in_queue
+      << F(" write_index=") << write_index
+      << endl;
   }
 }
 
 void CommandQueue::pop() {
   if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Dequeued command '"); SERIAL_ECHO(front());
+    log << F("Dequeued command '") << front() << F("'") << endl;
   }
 
   commands[read_index][0] = 0; // write a empty string to make it clear this command is done
@@ -39,8 +37,10 @@ void CommandQueue::pop() {
   }
 
   if (logging_enabled) {
-    SERIAL_ECHOPGM("' commands_in_queue="); SERIAL_ECHO(commands_in_queue);
-    SERIAL_ECHOPGM(" read_index="); SERIAL_ECHOLN(read_index);
+    log
+      << F(" commands_in_queue=") << commands_in_queue
+      << F(" read_index=") << read_index
+      << endl;
   }
 }
 

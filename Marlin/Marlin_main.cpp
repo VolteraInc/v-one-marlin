@@ -75,28 +75,23 @@ void setup() {
 
   // sometimes there are noise characters in the first message,
   // so we make the first message a bit more distinct by including dashes
-  SERIAL_PROTOCOLLNPGM("--start--");
+  protocol << F("--start--") << endl;
 
   // Check startup - does nothing if bootloader sets MCUSR to 0
   byte mcu = MCUSR;
   if (mcu) {
-    SERIAL_ECHO_START;
-    if(mcu & 1) SERIAL_ECHOLNPGM("PowerUp");
-    if(mcu & 2) SERIAL_ECHOLNPGM(" External Reset");
-    if(mcu & 4) SERIAL_ECHOLNPGM(" Brown out Reset");
-    if(mcu & 8) SERIAL_ECHOLNPGM(" Watchdog Reset");
-    if(mcu & 32) SERIAL_ECHOLNPGM(" Software Reset");
+    if(mcu & 1) log << F("PowerUp") << endl;
+    if(mcu & 2) log << F(" External Reset") << endl;
+    if(mcu & 4) log << F(" Brown out Reset") << endl;
+    if(mcu & 8) log << F(" Watchdog Reset") << endl;
+    if(mcu & 32) log << F(" Software Reset") << endl;
   }
   MCUSR = 0;
 
-  SERIAL_ECHO_START;
-  SERIAL_PAIR(" Free Memory: ", freeMemory());
-  SERIAL_PAIR("  PlannerBufferBytes: ", (int)sizeof(block_t)*BLOCK_BUFFER_SIZE);
-  SERIAL_EOL;
+  log << F(" Free Memory: ") << freeMemory() << endl;
+  log << F("  PlannerBufferBytes: ") << (int)sizeof(block_t)*BLOCK_BUFFER_SIZE << endl;
 
-  SERIAL_PROTOCOLPGM("firmwareVersionReport: ");
-  SERIAL_PROTOCOLPGM(VERSION_STRING);
-  SERIAL_PROTOCOLPGM("\n");
+  protocol << F("firmwareVersionReport: ") << VERSION_STRING << endl;
 
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
@@ -124,7 +119,7 @@ void setup() {
 
   sei();
 
-  SERIAL_PROTOCOLLNPGM("ready");
+  protocol << F("--ready--") << endl;
 }
 
 void periodic_work() {

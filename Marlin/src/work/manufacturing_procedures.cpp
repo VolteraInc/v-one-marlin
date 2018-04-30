@@ -15,8 +15,7 @@ static int s_run() {
   } else if (vone->toolBox.nullTool.attached()) {
     return runBurnInSequence(vone->toolBox.nullTool);
   } else {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Notice: No manufacturing procedures executed, resume normal operation");
+    logNotice << F("No manufacturing procedures executed, resume normal operation") << endl;
     return 0;
   }
 }
@@ -38,8 +37,7 @@ void manufacturing_procedures() {
       currentTool.prepareToMove(tools::PrepareToMove::Options::startOnly) ||
       raise()
     ) {
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLN("WARNING: Unable to release z-switch on boot, ignoring");
+      logWarning << F("Unable to release z-switch on boot, ignoring") << endl;
       return;
     }
 

@@ -65,8 +65,7 @@ BedTemperaturePin::BedTemperaturePin(int analogPin)
   //    inputs, you should disable the digital buffers, to save power.
   //    Once disabled, a digitalRead on those pins will always read zero."
   //       - https://www.gammon.com.au/adc
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Disable digital reads of the bed temperature pin");
+  log << F("Disable digital reads of the bed temperature pin") << endl;
   SBI(DIDR0, _analogPin);
 }
 

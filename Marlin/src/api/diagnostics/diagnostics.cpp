@@ -7,8 +7,7 @@
 
 static void s_start() {
   overrideLeds(0, 255, 0, 0); // blink green
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Starting manufacturing procedure");
+  log << F("Starting manufacturing procedure") << endl;
 }
 
 static int s_end(tools::Tool& tool, int result) {
@@ -17,15 +16,13 @@ static int s_end(tools::Tool& tool, int result) {
 
     // Success, pulse leds and go to finished position
     // (trying to make it obvious that we are done)
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Manufacturing procedure completed successfully");
+    log << F("Manufacturing procedure completed successfully") << endl;
     raise();
     moveXY(tool, bedCenterX, max_pos[Y_AXIS]);
 
     overrideLeds(255, 255, 255, 3); // pulse white (which also helps confirm LEDs have all 3 colors)
   } else {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Manufacturing procedure failed");
+    logError << F("Manufacturing procedure failed") << endl;
     overrideLeds(255, 80, 0, 0); // blink yellow
   }
   return result;

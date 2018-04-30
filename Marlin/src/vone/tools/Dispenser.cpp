@@ -51,9 +51,10 @@ float tools::Dispenser::dispenseHeight() const {
 
 int tools::Dispenser::setDispenseHeight(float height) {
   if (height < 0.0f || height > 2.0f ) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to set dispensing height to "); SERIAL_ERROR(height);
-    SERIAL_ERRORPGM("mm, value is outside expected range\n");
+    logError
+      << F("Unable to set dispensing height to ") << height
+      << F("mm, value is outside expected range")
+      << endl;
     return -1;
   }
 
@@ -61,10 +62,7 @@ int tools::Dispenser::setDispenseHeight(float height) {
   m_dispenseHeight = height;
 
   if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_PAIR("Dispense height set to ", m_dispenseHeight);
-    SERIAL_ECHOPGM("mm");
-    SERIAL_EOL;
+    log << F("Dispense height set to ") << m_dispenseHeight << F("mm") << endl;
   }
 
   return 0;

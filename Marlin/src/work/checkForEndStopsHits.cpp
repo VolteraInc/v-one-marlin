@@ -13,16 +13,16 @@ void checkForEndstopHits() {
   }
 
   // Output a context message
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Limit switch triggered unexpectedly, cleaning up, before reporting error");
-  SERIAL_EOL;
+  log
+    << F("Limit switch triggered unexpectedly, cleaning up, before reporting error")
+    << endl;
 
   // Output switch status
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Note: the following switch statuses are read direct from ");
-  SERIAL_ECHOPGM("the switches, if they do not match the error below then ");
-  SERIAL_ECHOPGM("the switch may be triggering intermittently");
-  SERIAL_EOL;
+  log
+    << F("Note: the following switch statuses are read direct from ")
+    << F("the switches, if they do not match the error below then ")
+    << F("the switch may be triggering intermittently")
+    << endl;
   vone->pins.outputEndStopStatus();
 
   // Stop/reset everything
@@ -35,16 +35,14 @@ void checkForEndstopHits() {
   flushSerialCommands();
 
   // Output Error
-  SERIAL_ERROR_START;
-  SERIAL_ERRORPGM("Unable to complete movement, limit switch triggered. Motion stopped at");
-  if (triggered[ X_AXIS ]) {
-    SERIAL_PAIR(" x:", (float)stepsWhenTriggered[X_AXIS] / axis_steps_per_unit[X_AXIS]);
-  }
-  if (triggered[ Y_AXIS ]) {
-    SERIAL_PAIR(" y:", (float)stepsWhenTriggered[Y_AXIS] / axis_steps_per_unit[Y_AXIS]);
-  }
-  if (triggered[ Z_AXIS ]) {
-    SERIAL_PAIR(" z:", (float)stepsWhenTriggered[Z_AXIS] / axis_steps_per_unit[Z_AXIS]);
-  }
-  SERIAL_EOL;
+  logError
+    << F("Unable to complete movement, limit switch triggered in")
+    << (triggered[ X_AXIS ] ? F(" X") : F(""))
+    << (triggered[ Y_AXIS ] ? F(" Y") : F(""))
+    << (triggered[ Z_AXIS ] ? F(" Z") : F(""))
+    << ", position is "
+    << (float)stepsWhenTriggered[X_AXIS] / axis_steps_per_unit[X_AXIS]
+    << (float)stepsWhenTriggered[Y_AXIS] / axis_steps_per_unit[Y_AXIS]
+    << (float)stepsWhenTriggered[Z_AXIS] / axis_steps_per_unit[Z_AXIS]
+    << endl;
 }

@@ -11,7 +11,7 @@ int touch(
   float& releaseEnd
 ) {
   const auto startTime = millis();
-  
+
   if (moveToLimit(axis, direction, speed, maxTravel)) {
     return -1;
   }
@@ -24,9 +24,7 @@ int touch(
 
   if (logging_enabled) {
     const auto duration = millis() - startTime;
-    SERIAL_ECHO_START;
-    SERIAL_PAIR("touch duration: ", duration);
-    SERIAL_EOL;
+    log << F("touch duration: ") << duration << endl;
   }
 
   return 0;
@@ -45,13 +43,13 @@ int fastTouch() {
 
   if (logging_enabled) {
     const auto duration = millis() - startTime;
-    SERIAL_ECHO_START;
-    SERIAL_ECHO("fastTouch ");
-    SERIAL_PAIR("approach: ", approach);
-    SERIAL_PAIR(", releaseStart: ", releaseStart);
-    SERIAL_PAIR(", releaseEnd: ", releaseEnd);
-    SERIAL_PAIR(", duration: ", duration);
-    SERIAL_EOL;
+    log
+      << F("fastTouch ")
+      << F("approach: ") << approach
+      << F(", releaseStart: ") << releaseStart
+      << F(", releaseEnd: ") << releaseEnd
+      << F(", duration: ") << duration
+      << endl;
   }
 
   return 0;

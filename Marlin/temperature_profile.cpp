@@ -22,32 +22,32 @@ int profile_validate_input(const int temperature, const int duration){
 
   // Ensure both parameters were received.
   if (temperature == 0 || duration == 0){
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Cannot interpret heating profile. Temperature: "); SERIAL_ERROR(temperature);
-    SERIAL_ERRORPGM(" Duration: "); SERIAL_ERROR(duration);
-    SERIAL_ERRORPGM("\n");
+    logError
+      << F("Cannot interpret heating profile. Temperature: ") << temperature
+      << F(" Duration: ") << duration
+      << endl;
     return -1;
   }
 
   if (temperature < 0 || temperature > 240){
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Invalid temperature target received: "); SERIAL_ERROR(temperature);
-    SERIAL_ERRORPGM("\n");
+    logError
+      << F("Invalid temperature target received: ") << temperature
+      << endl;
     return -1;
   }
 
   if (duration < 0 || duration > 60 * 60){ //Max 1 hour.
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Invalid duration time received: "); SERIAL_ERROR(duration);
-    SERIAL_ERRORPGM("\n");
+    logError
+      << F("Invalid duration received: ") << duration
+      << endl;
     return -1;
   }
 
   // Check if we still have space.
   if (profile.tail >= PROFILE_SIZE){
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Cannot append to heating profile. Queue full");
-    SERIAL_ERRORPGM("\n");
+    logError
+      << F("Cannot append to heating profile. Queue full")
+      << endl;
     return -1;
   }
 
@@ -142,30 +142,31 @@ void manage_heating_profile() {
 
     // Check if our safety timeout has been exceeeded. Looks only at time.
     if (now >= profile.safetyTimeout) {
-      SERIAL_ERROR_START;
-      SERIAL_PAIR("Failed to reach target temperature within timeout period. Current: ", current);
-      SERIAL_PAIR("C Target: ", target);
-      SERIAL_ERRORPGM("C");
-      SERIAL_EOL;
+      logError
+        << F("Failed to reach target temperature within timeout period. ")
+        << F("Current: ") << current << F("C")
+        << F("Target: ") << target << F("C")
+        << endl;
       profile_reset();
     }
 
     // Check if the temperature has not moved at all during heating. Could indicate a loose/fallen thermistor
     if (now >= profile.changeTimeout && (target > current) && abs(current - profile.changeTemperature) < 2) {
-      SERIAL_ERROR_START;
-      SERIAL_PAIR("Temperature change not detected. Current: ", current);
-      SERIAL_PAIR("C Target: ", target);
-      SERIAL_ERRORPGM("C");
-      SERIAL_EOL;
+      logError
+        << F("Temperature change not detected. ")
+        << F("Current: ") << current << F("C")
+        << F("Target: ") << target << F("C")
+        << endl;
       profile_reset();
     }
 
     // Check if we are within 2 degrees
     if (abs(target - current) < 2) {
-      SERIAL_ECHO_START;
-      SERIAL_PAIR("Reached target temperature. Holding for ", profile.duration[profile.head]);
-      SERIAL_ECHOPGM(" seconds");
-      SERIAL_EOL;
+      log
+        << F("Reached target temperature. Holding for ")
+        << profile.duration[profile.head]
+        << F(" seconds")
+        << endl;
       profile.holdUntil = now + profile.duration[profile.head] * 1000; // Hold this temp for X seconds
       profile.ramping = false;
       profile.holding = true;
@@ -179,7 +180,7 @@ void manage_heating_profile() {
       profile.head ++;
 
       if(profile_complete()){
-        SERIAL_PROTOCOLLNPGM("profileComplete");
+        protocol << F("profileComplete") << endl;
         profile_reset();
       }
     }

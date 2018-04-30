@@ -33,8 +33,7 @@ int tools::Tool::prepareToMove(tools::PrepareToMove::Options options) {
   m_prepare_HomedXY = false;
   m_prepare_Completed = false;
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Preparing tool");
+  log << F("Preparing tool") << endl;
 
   // Start
   m_stepper.resume();
@@ -45,13 +44,11 @@ int tools::Tool::prepareToMove(tools::PrepareToMove::Options options) {
 
   // Return if that's all we need
   if (options == Options::startOnly) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Preparing tool -- completed start-only prepare");
+    log << F("Preparing tool -- completed start-only prepare") << endl;
     return 0;
   }
   if (options == Options::eOnly) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Preparing tool -- completed e-only prepare");
+    log << F("Preparing tool -- completed e-only prepare") << endl;
     return 0;
   }
 
@@ -63,16 +60,14 @@ int tools::Tool::prepareToMove(tools::PrepareToMove::Options options) {
 
   // Calibrate XYZ
   if (options == Options::skipCalibrateXYZ) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Preparing tool -- skipping xyz-calibration");
+    log << F("Preparing tool -- skipping xyz-calibration") << endl;
     return 0;
   }
   if (prepareToMoveImpl_CalibrateXYZ()) {
     return -1;
   }
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Preparing tool -- completed full prepare");
+  log << F("Preparing tool -- completed full prepare") << endl;
   m_prepare_Completed = true;
   return 0;
 }
@@ -83,8 +78,7 @@ int tools::Tool::resetPreparations() {
     m_prepare_HomedXY = false;
     m_prepare_Completed = false;
 
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Reset tool preparations");
+    log << F("Reset tool preparations") << endl;
     return resetPreparationsImpl();
   }
   return 0;

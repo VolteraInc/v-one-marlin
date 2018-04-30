@@ -27,16 +27,16 @@ static int crossPlanes(tools::Tool& tool, const Point3d& a, const Point3d& b, fl
     verticalPlane(tool, a, b, xySpeed, zSpeed) ||
     verticalPlane(tool, a2, b2, xySpeed, zSpeed)
   ) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to complete cross-planes from"); SERIAL_ERROR(a.x);
-    SERIAL_ERRORPGM(","); SERIAL_ERROR(a.y);
-    SERIAL_ERRORPGM(","); SERIAL_ERROR(a.z);
-    SERIAL_ERRORPGM(" to "); SERIAL_ERROR(b.x);
-    SERIAL_ERRORPGM(","); SERIAL_ERROR(b.y);
-    SERIAL_ERRORPGM(","); SERIAL_ERROR(b.z);
-    SERIAL_ERRORPGM(" with z-speed "); SERIAL_ERROR(zSpeed);
-    SERIAL_ERRORPGM(" and xy-speed "); SERIAL_ERROR(xySpeed);
-    SERIAL_EOL;
+    logError
+      << F("Unable to complete cross-planes from") << a.x
+      << F(",") << a.y
+      << F(",") << a.z
+      << F(" to ") << b.x
+      << F(",") << b.y
+      << F(",") << b.z
+      << F(" with z-speed ") << zSpeed
+      << F(" and xy-speed ") << xySpeed
+      << endl;
     return -1;
   }
   return 0;
@@ -111,8 +111,7 @@ int burnInSequence(tools::NullTool& noTool, int steps) {
       100, 10
     )
   ) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to complete burn-in sequence");
+    logError << F("Unable to complete burn-in sequence") << endl;
     return -1;
   }
   return 0;

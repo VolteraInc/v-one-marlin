@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../../serial.h"
 #include "VoltageType.h"
 
 namespace toolDetection {
@@ -34,7 +35,7 @@ class VoltageTypeStabilizer {
 
         unsigned long timespan() const;
         unsigned long timeSpanOfCurrentType() const;
-        void output() const;
+        MarlinSerial& output() const;
 
       private:
         static const unsigned int MAX_SAMPLES = 12;

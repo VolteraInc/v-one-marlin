@@ -4,18 +4,17 @@
 
 #include "../../utils/deltaBasedAveraging.h"
 
-
-static void s_echoMeasurements(
-  const float approaches[],
-  const float releaseStarts[],
-  const float releaseEnds[],
-  size_t size
-) {
-  SERIAL_ECHOPGM("approachs: ["), serialArray(approaches, size); SERIAL_ECHOPGM("]");
-  SERIAL_ECHOPGM(", releaseStarts: ["), serialArray(releaseStarts, size); SERIAL_ECHOPGM("]");
-  SERIAL_ECHOPGM(", releaseEnds: ["), serialArray(releaseEnds, size); SERIAL_ECHOPGM("]");
-}
-
+// static MarlinSerial& s_echoMeasurements(
+//   const float approaches[],
+//   const float releaseStarts[],
+//   const float releaseEnds[],
+//   size_t size
+// ) {
+//   return MYSERIAL
+//     << F("approachs: [") << serialArray(approaches, size) << F("]")
+//     << F(", releaseStarts: [") << serialArray(releaseStarts, size) << F("]")
+//     << F(", releaseEnds: [") << serialArray(releaseEnds, size) << F("]");
+// }
 
 int multiTouch(
   const char* context,
@@ -26,11 +25,11 @@ int multiTouch(
 ) {
   const auto memoryCheck = 50u;
   if (maxTouches > memoryCheck) {
-    SERIAL_ERROR_START;
-    SERIAL_ERROR("Unable to "); SERIAL_ERROR(context);
-    SERIAL_PAIR(", requested number of touches ", maxTouches);
-    SERIAL_PAIR(" exceeds allocated space ", memoryCheck);
-    SERIAL_EOL;
+    logError
+      << F("Unable to ") << context
+      << F(", requested number of touches ") << maxTouches
+      << F(" exceeds allocated space ") << memoryCheck
+      << endl;
     return -1;
   }
 
@@ -46,11 +45,11 @@ int multiTouch(
       speed, maxDownwardTravel,
       approaches[i], releaseStarts[i], releaseEnds[i]
     )) {
-      SERIAL_ERROR_START;
-      SERIAL_ERROR("Unable to "); SERIAL_ERROR(context);
-      SERIAL_PAIR(", measurement ", i + 1);
-      SERIAL_ERROR(" did not complete");
-      SERIAL_EOL;
+      logError
+        << F("Unable to ") << context
+        << F(", measurement ") << i + 1
+        << F(" did not complete")
+        << endl;
       return -1;
     }
 
@@ -76,22 +75,21 @@ int multiTouch(
   // returning an error, if warranted.
   result = average(releaseStarts, touchesUsed);
   // TODO: restore multi-touch for beta
-  // SERIAL_ECHO_START;
-  // SERIAL_ECHOPGM("Notice: ("); SERIAL_ECHO(context);
-  // SERIAL_ECHOPGM(") multi-touch measurements did not meet stability target, using average. ");
-  // SERIAL_EOL;
+  // logNotice
+  //   << context
+  //   << F(", multi-touch measurements did not meet stability target, using average. ")
+  //   << endl;
 
 SUCCESS:
   if (o_touchesUsed) {
     *o_touchesUsed = touchesUsed;
   }
   // TODO: restore multi-touch for beta
-  // SERIAL_ECHO_START;
-  // SERIAL_ECHO(context);
-  // SERIAL_ECHOPGM(" - touches ");
-  // SERIAL_PAIR("result: ", result);
-  // SERIAL_PAIR(", touchesUsed: ", touchesUsed);
-  // SERIAL_ECHOPGM(", "); s_echoMeasurements(approaches, releaseStarts, releaseEnds, touchesUsed);
-  // SERIAL_EOL;
+  // log
+  //   << context << F(" - touches ")
+  //   << F("result: ") << result
+  //   << F(", touchesUsed: ") << touchesUsed << F(", ")
+  //   << s_echoMeasurements(approaches, releaseStarts, releaseEnds, touchesUsed)
+  //   << endl;
   return 0;
 }

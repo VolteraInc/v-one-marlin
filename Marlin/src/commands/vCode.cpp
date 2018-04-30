@@ -41,8 +41,7 @@ int process_vcode(int command_code) {
 
       if (code_seen('D')) {
         if (!code_seen('Z')) {
-          SERIAL_ERROR_START;
-          SERIAL_ERRORLNPGM("Unable to perform movement, D option can not be applied unless Z is given");
+          logError << F("Unable to perform movement, D option can not be applied unless Z is given") << endl;
           return -1;
         }
 
@@ -105,9 +104,7 @@ int process_vcode(int command_code) {
     case 4: {
       auto& probe = vone->toolBox.probe;
       if (probe.detached()) {
-        SERIAL_ERROR_START;
-        SERIAL_PAIR("Unable to probe, current tool is ", currentTool.name());
-        SERIAL_EOL;
+        logError << F("Unable to probe, current tool is ") << currentTool.name() << endl;
         return -1;
       }
 
@@ -131,14 +128,15 @@ int process_vcode(int command_code) {
       }
 
       // Output position
-      SERIAL_PROTOCOLPGM("probeMeasurement");
-      SERIAL_PAIR(" x:", current_position[X_AXIS]);
-      SERIAL_PAIR(" y:", current_position[Y_AXIS]);
-      SERIAL_PAIR(" z:", measurement);
-      SERIAL_PAIR(" displacement:", probe.displacement());
-      SERIAL_PAIR(" samplesTaken:", samplesTaken);
-      SERIAL_PAIR(" touchesUsed:", touchesUsed);
-      SERIAL_EOL;
+      protocol 
+        << F("probeMeasurement")
+        << F(" x:") << current_position[X_AXIS]
+        << F(" y:") << current_position[Y_AXIS]
+        << F(" z:") << measurement
+        << F(" displacement:") << probe.displacement()
+        << F(" samplesTaken:") << samplesTaken
+        << F(" touchesUsed:") << touchesUsed
+        << endl;
       return 0;
     }
 
@@ -157,24 +155,22 @@ int process_vcode(int command_code) {
     // Tool status
     case 100: {
       const auto& tb = vone->toolBox;
-      SERIAL_ECHOPGM("Tool"); SERIAL_EOL;
-      SERIAL_PAIR("  type: ", currentTool.name()); SERIAL_EOL;
-      SERIAL_PAIR("  prepared: ", currentTool.prepared()); ; SERIAL_EOL;
+      log << F("Tool") << endl;
+      log << F("  type: ") << currentTool.name() << endl;
+      log << F("  prepared: ") << currentTool.prepared() << endl;
 
       tb.probe.outputStatus();
 
-      SERIAL_ECHOPGM("Dispenser"); SERIAL_EOL;
-      SERIAL_PAIR("  dispense height: ", tb.dispenser.dispenseHeight());
-      SERIAL_EOL;
+      log << F("Dispenser") << endl;
+      log << F("  dispense height: ") << tb.dispenser.dispenseHeight() << endl;
 
-      SERIAL_ECHOPGM("Drill"); SERIAL_EOL;
-      SERIAL_PAIR("  Speed: ", tb.drill.rotationSpeed());
-      SERIAL_EOL;
+      log << F("Drill") << endl;
+      log << F("  Speed: ") << tb.drill.rotationSpeed() << endl;
 
-      SERIAL_ECHOPGM("Homing"); SERIAL_EOL;
-      SERIAL_PAIR("  x: ", getHomedState(X_AXIS)); SERIAL_EOL;
-      SERIAL_PAIR("  y: ", getHomedState(Y_AXIS)); SERIAL_EOL;
-      SERIAL_PAIR("  z: ", getHomedState(Z_AXIS)); SERIAL_EOL;
+      log << F("Homing") << endl;
+      log << F("  x: ") << getHomedState(X_AXIS) << endl;
+      log << F("  y: ") << getHomedState(Y_AXIS) << endl;
+      log << F("  z: ") << getHomedState(Z_AXIS) << endl;
 
       return 0;
     }
@@ -230,8 +226,7 @@ int process_vcode(int command_code) {
     case 211: {
       using namespace probing;
       if (!code_seen('D')) {
-        SERIAL_ERROR_START;
-        SERIAL_ERRORLNPGM("Unable to probe hole, no diameter given");
+        logError << F("Unable to probe hole, no diameter given") << endl;
         return -1;
       }
       const auto holeDiameter = code_value();
@@ -258,18 +253,18 @@ int process_vcode(int command_code) {
         return -1;
       }
 
-      SERIAL_PROTOCOLPGM("{ \"probeHoleMeasurement\": { \"measurements\": [");
+      protocol << F("{ \"probeHoleMeasurement\": { \"measurements\": [");
       for (auto idx = 0u; idx < numMeasurements; ++idx) {
-        if (idx != 0) {
-          SERIAL_PROTOCOLPGM(", ");
-        }
-        SERIAL_PAIR_F("{ \"x\":", measurements[idx].x, 6);
-        SERIAL_PAIR_F(", \"y\":", measurements[idx].y, 6);
-        SERIAL_PAIR_F(", \"z\":", measurements[idx].z, 6);
-        SERIAL_PROTOCOL(" }");
+        protocol 
+          << (idx != 0 ? F(", ") : F(""))
+          << F("{ \"x\":") << measurements[idx].x
+          << F(", \"y\":") << measurements[idx].y
+          << F(", \"z\":") << measurements[idx].z
+          << F(" }");
       }
-      SERIAL_PROTOCOL("] } }");
-      SERIAL_EOL;
+      protocol 
+        << F("] } }") 
+        << endl;
       return 0;
     }
 
@@ -282,32 +277,34 @@ int process_vcode(int command_code) {
     //-------------------------------------------
     // List Commands
     default:
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM("V-Commands");
-      SERIAL_ECHOLNPGM("  smart commands to simplify interactions. These commands will");
-      SERIAL_ECHOLNPGM("  automatically home, calibrate tool, etc. if needed ");
-      SERIAL_ECHOLNPGM("Movement Commands");
-      SERIAL_ECHOLNPGM("  V0 - Movement status");
-      SERIAL_ECHOLNPGM("  V1 - Move/Dispense -- V1 X100 Y100 Z10 E30 F6000");
-      SERIAL_ECHOLNPGM("  V2 - Relative Move/Dispense -- V2 X5 Y3 Z-1 E2 F6000");
-      SERIAL_ECHOLNPGM("  V3 - Move until limit switch triggers -- V3 -X -Y -Z F6000");
-      SERIAL_ECHOLNPGM("  V5 - raise, home XY, and reset tool preparations -- V5");
-      SERIAL_ECHOLNPGM("");
-      SERIAL_ECHOLNPGM("Tool Commands");
-      SERIAL_ECHOLNPGM("  General");
-      SERIAL_ECHOLNPGM("    V100 - Tool status");
-      SERIAL_ECHOLNPGM("    V101 - detach tool (i.e. set tool to none), attach options listed below, include 'F' to force change");
-      SERIAL_ECHOLNPGM("  Dispenser");
-      SERIAL_ECHOLNPGM("    V101 D - attach dispenser, include 'F' to force change");
-      SERIAL_ECHOLNPGM("    V102 - set dispense height (must have dispenser attached) -- V102 Z0.140");
-      SERIAL_ECHOLNPGM("  Probe");
-      SERIAL_ECHOLNPGM("    V101 P - attach probe, include 'F' to force change");
-      SERIAL_ECHOLNPGM("    V4   - Probe point at current position (retract by probe displacement + R) -- V4 R1");
-      SERIAL_ECHOLNPGM("    V201 - E1 to enable, E0 to disable height safety -- V201 E1");
-      SERIAL_ECHOLNPGM("    V211 - Probe hole with diameter D centered at X,Y (default to current position) -- V211 D1.0");
-      SERIAL_ECHOLNPGM("  Drill");
-      SERIAL_ECHOLNPGM("    V101 R - attach drill, include 'F' to force change");
-      SERIAL_ECHOLNPGM("    V110 - set drill rotation speed -- V110 R100, no value or 0 means stop");
+      log << F("V-Commands") << endl;
+      log << F("  smart commands to simplify interactions. These commands will") << endl;
+      log << F("  automatically home, calibrate tool, etc. if needed ") << endl;
+      log << endl;
+
+      log << F("Movement Commands") << endl;
+      log << F("  V0 - Movement status") << endl;
+      log << F("  V1 - Move/Dispense -- V1 X100 Y100 Z10 E30 F6000") << endl;
+      log << F("  V2 - Relative Move/Dispense -- V2 X5 Y3 Z-1 E2 F6000") << endl;
+      log << F("  V3 - Move until limit switch triggers -- V3 -X -Y -Z F6000") << endl;
+      log << F("  V5 - raise, home XY, and reset tool preparations -- V5") << endl;
+      log << endl;
+
+      log << F("Tool Commands") << endl;
+      log << F("  General") << endl;
+      log << F("    V100 - Tool status") << endl;
+      log << F("    V101 - detach tool (i.e. set tool to none), attach options listed below, include 'F' to force change") << endl;
+      log << F("  Dispenser") << endl;
+      log << F("    V101 D - attach dispenser, include 'F' to force change") << endl;
+      log << F("    V102 - set dispense height (must have dispenser attached) -- V102 Z0.140") << endl;
+      log << F("  Probe") << endl;
+      log << F("    V101 P - attach probe, include 'F' to force change") << endl;
+      log << F("    V4   - Probe point at current position (retract by probe displacement + R) -- V4 R1") << endl;
+      log << F("    V201 - E1 to enable, E0 to disable height safety -- V201 E1") << endl;
+      log << F("    V211 - Probe hole with diameter D centered at X,Y (default to current position) -- V211 D1.0") << endl;
+      log << F("  Drill") << endl;
+      log << F("    V101 R - attach drill, include 'F' to force change") << endl;
+      log << F("    V110 - set drill rotation speed -- V110 R100, no value or 0 means stop") << endl;
       return 0;
   }
 }

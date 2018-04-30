@@ -19,13 +19,13 @@ int process_icode(int command_code) {
       min_z_x_pos = MIN_Z_X_POS;
       min_z_y_pos = MIN_Z_Y_POS;
 
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM("Reset Positions to");
-      SERIAL_PAIR(" xyPositioner_x:", xypos_x_pos);
-      SERIAL_PAIR(" xyPositioner_y:", xypos_y_pos);
-      SERIAL_PAIR(" zSwitch_x:", min_z_x_pos);
-      SERIAL_PAIR(" zSwitch_y:", min_z_y_pos);
-      SERIAL_EOL;
+      log
+        << F("Reset Positions to")
+        << F(" xyPositioner_x:") << xypos_x_pos
+        << F(" xyPositioner_y:") << xypos_y_pos
+        << F(" zSwitch_x:") << min_z_x_pos
+        << F(" zSwitch_y:") << min_z_y_pos
+        << endl;
       return 0;
 
     // Calibrate the locations of the z-switch and xy-positioner
@@ -36,14 +36,14 @@ int process_icode(int command_code) {
       }
 
       // Output
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM("positionCalibration");
-      SERIAL_PAIR(" cycles:", cycles);
-      SERIAL_PAIR(" xyPositioner_x:", xypos_x_pos);
-      SERIAL_PAIR(" xyPositioner_y:", xypos_y_pos);
-      SERIAL_PAIR(" zSwitch_x:", min_z_x_pos);
-      SERIAL_PAIR(" zSwitch_y:", min_z_y_pos);
-      SERIAL_EOL;
+      log
+        << F("positionCalibration")
+        << F(" cycles:") << cycles
+        << F(" xyPositioner_x:") << xypos_x_pos
+        << F(" xyPositioner_y:") << xypos_y_pos
+        << F(" zSwitch_x:") << min_z_x_pos
+        << F(" zSwitch_y:") << min_z_y_pos
+        << endl;
       Config_PrintCalibration();
 
       return 0;
@@ -56,8 +56,7 @@ int process_icode(int command_code) {
     //-------------------------------------------
     // Error if command unknown
     default:
-      SERIAL_ERROR_START;
-      SERIAL_ERRORLNPGM("Unknown command");
+      logError << F("Unknown command") << endl;
       return -1;
   }
 }

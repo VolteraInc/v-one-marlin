@@ -15,17 +15,13 @@ static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveT
       );
 
     default:
-      SERIAL_ERROR_START;
-      SERIAL_ERRORLNPGM("Unable to move to xy-positioner, unrecognized arguments");
+      logError << F("Unable to move to xy-positioner, unrecognized arguments") << endl;
       return -1;
   }
 }
 
 int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
-  if(logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Move to xy positioner");
-  }
+  log << F("Move to xy positioner") << endl;
 
   // Raise, unless we are really close to the target x,y position
   auto const dx = abs(xypos_x_pos - current_position[X_AXIS]);
@@ -55,8 +51,7 @@ int xyPositionerTouch(tools::Tool&, int axis, int direction, float& measurement)
 
 static int s_findCenter(tools::Tool& tool, long cycles, float& o_centerX, float& o_centerY) {
   if(logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Find center of xy positioner");
+    log << F("Find center of xy positioner") << endl;
   }
 
   // Compute the center
@@ -75,12 +70,12 @@ static int s_findCenter(tools::Tool& tool, long cycles, float& o_centerX, float&
     centerX = (measurement2 + measurement1) / 2;
 
     if (logging_enabled){
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM("xyPositionerCenterX");
-      SERIAL_ECHOPGM(" m1:"); SERIAL_ECHO(measurement1);
-      SERIAL_ECHOPGM(" m2:"); SERIAL_ECHO(measurement2);
-      SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(centerX);
-      SERIAL_ECHOPGM("\n");
+      log
+        << F("xyPositionerCenterX")
+        << F(" m1:") << measurement1
+        << F(" m2:") << measurement2
+        << F(" x:") << centerX
+        << endl;
     }
 
     // Compute center Y
@@ -93,12 +88,12 @@ static int s_findCenter(tools::Tool& tool, long cycles, float& o_centerX, float&
     centerY = (measurement2 + measurement1) / 2;
 
     if (logging_enabled){
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM("xyPositionerCenterY");
-      SERIAL_ECHOPGM(" m1:"); SERIAL_ECHO(measurement1);
-      SERIAL_ECHOPGM(" m2:"); SERIAL_ECHO(measurement2);
-      SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(centerY);
-      SERIAL_ECHOPGM("\n");
+      log
+        << F("xyPositionerCenterY")
+        << F(" m1:") << measurement1
+        << F(" m2:") << measurement2
+        << F(" y:") << centerY
+        << endl;
     }
 
     // Each cycle takes a non-trivial amount of time so reset the inactivity timer

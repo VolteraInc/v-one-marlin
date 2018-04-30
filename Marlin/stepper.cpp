@@ -397,12 +397,10 @@ ISR(TIMER1_COMPA_vect) {
           endstop_z_hit = true;
           step_events_completed = current_block->step_event_count;
 
-          // SERIAL_ECHO_START;
           // for (unsigned int i = 0; i < 5; ++i) {
-          //   SERIAL_ECHO("a["); SERIAL_ECHO(i); SERIAL_ECHO("] = "); SERIAL_ECHO(a[i]); SERIAL_ECHO(", ");
+          //   log << "a[" << i << "] = " << a[i] << ", " << endl;
           //   a[i] = 0;
           // }
-          // SERIAL_EOL;
           // idx = 0;
         }
       }
@@ -606,8 +604,7 @@ void st_synchronize() {
     periodic_work();
   }
   if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("synchonized");
+    log << F("synchonized") << endl;
   }
 }
 

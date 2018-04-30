@@ -21,8 +21,7 @@ static uint8_t CRC8(uint8_t data) {
 }
 
 static int s_sendAndRampTo(PTopPin& pin, int percent) {
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Set drill rotation speed to "); SERIAL_ECHOLN(percent);
+  log << F("Set drill rotation speed to ") << percent << endl;
 
   // Format message
   char message[11];
@@ -93,19 +92,16 @@ int tools::Drill::stopRotationIfMounted() {
       goto DETACHED;
     }
 
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to stop drill, confirm drill is attached and powered");
+    logError << F("Unable to stop drill, confirm drill is attached and powered") << endl;
     return -1;
   }
 
   // success
-  SERIAL_ECHO_START;
-  SERIAL_ERRORLNPGM("Drill stopped");
+  log << F("Drill stopped") << endl;
   goto DONE;
 
 DETACHED:
-  SERIAL_ECHO_START;
-  SERIAL_ERRORLNPGM("Drill could not be explicitly stopped because it is not mounted");
+  log << F("Drill could not be explicitly stopped because it is not mounted") << endl;
 
 DONE:
   m_rotationSpeed = 0;
@@ -131,17 +127,19 @@ int tools::Drill::setRotationSpeed(unsigned speed) {
   }
 
   if (speed > 100) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORPGM("Unable to set rotation speed to "); SERIAL_ERROR(speed);
-    SERIAL_ERRORLNPGM(" percent, value is outside expected range");
+    logError
+      << F("Unable to set rotation speed to ") << speed
+      << F(" percent, value is outside expected range")
+      << endl;
     return -1;
   }
 
   // Send the speed to the drill
   if (s_sendAndRampTo(m_pin, speed)) {
-    SERIAL_ERROR_START;
-    SERIAL_PAIR("Unable to set the drill rotation speed to ", speed);
-    SERIAL_ERRORLNPGM(", confirm drill is attached and powered");
+    logError
+      << F("Unable to set the drill rotation speed to ") << speed
+      << F(", confirm drill is attached and powered")
+      << endl;
 
     // Attempt to stop the drill (just in case)
     stopRotationIfMounted();

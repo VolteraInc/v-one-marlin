@@ -13,9 +13,9 @@ int confirmAttachedAndNotTriggered(const char* context, tools::Probe& probe) {
     return -1;
   }
   if (probe.readAnalogTriggered()) {
-    SERIAL_ERROR_START;
-    SERIAL_PAIR("Unable to ", context); SERIAL_ERRORPGM(", probe reported contact before movement started");
-    SERIAL_EOL;
+    logError
+      << F("Unable to ") << context
+      << F(", probe reported contact before movement started") << endl;
     return -1;
   }
   return 0;
@@ -131,14 +131,14 @@ int tools::Probe::probe(
   if (o_touchesUsed) { *o_touchesUsed = totalTouches; }
   if (logging_enabled) {
     const auto duration = millis() - startTime;
-    SERIAL_ECHO_START;
-    SERIAL_PAIR("probe height: ", rawMeasurement);
-    SERIAL_PAIR(", displacement: ", m_probeDisplacement);
-    SERIAL_PAIR(", measurement: ", measurement);
-    SERIAL_PAIR(", samplesTaken: ", samplesTaken);
-    SERIAL_PAIR(", totalTouches: ", totalTouches);
-    SERIAL_PAIR(", duration: ", duration);
-    SERIAL_EOL;
+    log
+      << F("probe height: ") << rawMeasurement
+      << F(", displacement: ") << m_probeDisplacement
+      << F(", measurement: ") << measurement
+      << F(", samplesTaken: ") << samplesTaken
+      << F(", totalTouches: ") << totalTouches
+      << F(", duration: ") << duration
+      << endl;
   }
   return 0;
 }
@@ -191,15 +191,12 @@ int tools::Probe::moveToSafeHeight() {
 // Status
 
 void tools::Probe::outputStatus() const {
-  SERIAL_ECHOPGM("Probe"); SERIAL_EOL;
-  SERIAL_PAIR("  displacement: ", displacement());
-  SERIAL_EOL;
+  log << F("Probe") << endl;
+  log << F("  displacement: ") << displacement() << endl;
 
-  SERIAL_ECHO("  height safety: ");
   if (heightSafetyEnabled()) {
-    SERIAL_PAIR("ON, safe height is ", safeHeight());
+    log << F("  height safety: ON, safe height is ") << safeHeight() << endl;
   } else {
-    SERIAL_ECHOPGM("OFF");
+    log << F("  height safety: OFF") << endl;
   }
-  SERIAL_EOL;
 }

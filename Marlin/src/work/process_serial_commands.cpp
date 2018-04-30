@@ -20,18 +20,19 @@ inline void skipWhitespace(const char** ptr) {
 
 void s_requestResend(
   unsigned long expectedLineNumber,
-  const char* pgmReason,
+  const __FlashStringHelper* pgmReason,
   const char* msg
 ) {
-  SERIAL_PAIR("Resend lineNumber:", expectedLineNumber);
-  SERIAL_PROTOCOLPGM(", reason:\""); serialprintPGM(pgmReason);
-  SERIAL_PAIR("\", message:\"", msg);
-  SERIAL_PROTOCOLPGM("\"");
-  SERIAL_EOL;
+  protocol
+    << F("Resend lineNumber:") << expectedLineNumber
+    << F(", reason:\"") << pgmReason
+    << F("\", message:\"") << msg
+    << F("\"")
+    << endl;
 }
 
 void s_sendResponseOk() {
-  SERIAL_PROTOCOLLNPGM("ok");
+  protocol << F("ok") << endl;
 }
 
 inline const char* parse(
@@ -42,8 +43,7 @@ inline const char* parse(
   // skip empty lines
   if (len == 0) {
     // We output a message, because this is a symptom that something is wrong
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("NOTICE: Received a blank command, ignoring");
+    logNotice << F("Received a blank command, ignoring") << endl;
     return nullptr;
   }
 
@@ -72,7 +72,7 @@ inline const char* parse(
   if (!star) {
     s_requestResend(
       expectedLineNumber,
-      PSTR("Missing checksum"),
+      F("Missing checksum"),
       msg
     );
     return nullptr;
@@ -84,7 +84,7 @@ inline const char* parse(
   if (msgChecksum != computedChecksum) {
     s_requestResend(
       expectedLineNumber,
-      PSTR("Bad checksum"),
+      F("Bad checksum"),
       msg
     );
     return nullptr;
@@ -96,7 +96,7 @@ inline const char* parse(
   if (lineNumber != expectedLineNumber) {
     s_requestResend(
       expectedLineNumber,
-      PSTR("Line number does not match expected value"),
+      F("Line number does not match expected value"),
       msg
     );
     return nullptr;
@@ -123,8 +123,7 @@ static void read_commands() {
     } else if (ch == '\n' || ch == '\r') {
       // Handle long lines
       if (s_tooLong) {
-        SERIAL_ECHO_START;
-        SERIAL_ECHOLNPGM("Finished receiving long command");
+        log << F("Finished receiving long command") << endl;
         s_sendResponseOk();
 
         s_tooLong = false;
@@ -156,9 +155,11 @@ static void read_commands() {
       if (!s_tooLong) {
         s_tooLong = true;
         s_buffer[s_bufferIndex] = 0; // terminate string (so we can include it in the error)
-        SERIAL_ERROR_START;
-        SERIAL_ERRORPGM("Unable to process command, command is too long, will ignore until end of command found --");
-        SERIAL_ERRORLN(s_buffer);
+        logError
+          << F("Unable to process command, command is too long, ")
+          << F("will ignore until end of command found --")
+          << s_buffer
+          << endl;
       }
 
     // Add character to command
@@ -169,9 +170,7 @@ static void read_commands() {
 }
 
 void flushSerialCommands() {
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Flushing commands");
-  SERIAL_EOL;
+  log << F("Flushing commands") << endl;
 
   // Clear queued commands
   command_queue.flush();
@@ -191,9 +190,7 @@ void flushSerialCommands() {
     MYSERIAL.flush();
   }
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("Flush complete");
-  SERIAL_EOL;
+  log << F("Flush complete") << endl;
 }
 
 
@@ -211,10 +208,9 @@ static void process_command() {
     process_vcode();
     process_dcode();
   } else {
-    SERIAL_ECHO_START;
-    SERIAL_PAIR("Unknown command: \"", command_queue.front());
-    SERIAL_ECHOPGM("\"");
-    SERIAL_EOL;
+    logNotice
+      << F("Unknown command: \"") << command_queue.front() << F("\"")
+      << endl;
   }
 }
 

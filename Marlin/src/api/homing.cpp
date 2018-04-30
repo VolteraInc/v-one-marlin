@@ -26,9 +26,7 @@ int getHomedState(int axis) {
 
 void setHomedState(int axis, int value) {
   if (axis_homed_state[axis] != value) {
-    SERIAL_ECHO_START;
-    SERIAL_PAIR("Homed ", axis_codes[axis]); SERIAL_ECHOPGM("-axis");
-    SERIAL_EOL;
+    log << F("Homed ") << axis_codes[axis] << F("-axis") << endl;
 
     axis_homed_state[axis] = value;
     sendHomedStatusUpdate();
@@ -41,11 +39,12 @@ void setHomedState(int axis, int value) {
 }
 
 void sendHomedStatusUpdate() {
-  SERIAL_PROTOCOLPGM("homedStatusUpdate");
-  SERIAL_PROTOCOLPGM(" x:"); SERIAL_PROTOCOL(getHomedState(X_AXIS));
-  SERIAL_PROTOCOLPGM(" y:"); SERIAL_PROTOCOL(getHomedState(Y_AXIS));
-  SERIAL_PROTOCOLPGM(" z:"); SERIAL_PROTOCOL(getHomedState(Z_AXIS));
-  SERIAL_PROTOCOLPGM("\n");
+  protocol
+    << F("homedStatusUpdate")
+    << F(" x:") << getHomedState(X_AXIS)
+    << F(" y:") << getHomedState(Y_AXIS)
+    << F(" z:") << getHomedState(Z_AXIS)
+    << endl;
 }
 
 static void axisIsAtHome(int axis) {
@@ -63,10 +62,7 @@ static void axisIsAtHome(int axis) {
 
 static int s_homeAxis(int axis) {
   int returnValue = -1;
-  if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("home axis:"); SERIAL_ECHOLN(axis_codes[axis]);
-  }
+  log << F("home axis:") << axis_codes[axis] << endl;
 
   // Finish any pending moves (prevents crashes)
   st_synchronize();
@@ -100,9 +96,7 @@ static int s_homeAxis(int axis) {
       // Move slightly away from switch
       // Note: Otherwise we will not be able to go to 0,0 without
       // hitting a limit switch (and messing up our position)
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM("Retracting from axis limit switch");
-      SERIAL_EOL;
+      log << F("Retracting from axis limit switch") << endl;
       if (retractFromSwitch(axis, home_dir[axis], HOMING_XY_OFFSET)) {
         goto DONE;
       }
@@ -121,14 +115,18 @@ static int s_homeAxis(int axis) {
       if (vone->toolBox.probe.attached()) {
         bool triggered;
         if (vone->pins.ptop.readDigitalValue(triggered)) {
-          SERIAL_ERROR_START;
-          SERIAL_ERRORLNPGM("Unable to zero Z-axis, could not read the state of the probe's contact sensor");
+          logError
+            << F("Unable to zero Z-axis, ")
+            << F("could not read the state of the probe's contact sensor")
+            << endl;
           goto DONE;
         }
 
         if (triggered) {
-          SERIAL_ERROR_START;
-          SERIAL_ERRORLNPGM("Unable to zero Z-axis, probe tip triggered before the z-switch");
+          logError
+            << F("Unable to zero Z-axis, ")
+            << F("probe tip triggered before the z-switch")
+            << endl;
           goto DONE;
         }
       }
@@ -171,14 +169,13 @@ int rawHome(tools::Tool& tool, bool homingX, bool homingY, bool homingZ) {
 
 // TODO: move to some other file
 int moveToZSwitchXY(tools::Tool& tool) {
-  if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Move to z-switch's x,y position");
-  }
+  log << F("Move to z-switch's x,y position") << endl;
 
   if (!homedXY()) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Unable to move to Z-Switch, either the x-axis or the y-axis has not been homed");
+    logError
+      << F("Unable to move to Z-Switch, ")
+      << F("either the x-axis or the y-axis has not been homed")
+      << endl;
     return -1;
   }
 
@@ -214,10 +211,7 @@ int homeZ(tools::Tool& tool) {
     return -1;
   }
   max_pos[Z_AXIS] = current_position[Z_AXIS] + fudge;
-
-  SERIAL_ECHO_START;
-  SERIAL_PAIR("setting soft limit max-z to ", max_pos[Z_AXIS]);
-  SERIAL_EOL;
+  log << F("setting soft limit max-z to ") << max_pos[Z_AXIS] << endl;
 
   return 0;
 }

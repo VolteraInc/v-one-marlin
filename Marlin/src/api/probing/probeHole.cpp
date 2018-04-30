@@ -22,10 +22,10 @@ int probing::probeHole(
 
   // Confirm we have enough room for the measurements
   if (numMeasurements > maxMeasurements) {
-    SERIAL_ERROR_START;
-    SERIAL_PAIR("Unable to probe hole, required number of measurements (", numMeasurements);
-    SERIAL_PAIR(") exceeds maximum, ", maxMeasurements);
-    SERIAL_EOL;
+    logError
+      << F("Unable to probe hole, required number of measurements (") << numMeasurements
+      << F(") exceeds maximum, ") << maxMeasurements
+      << endl;
     return -1;
   }
 

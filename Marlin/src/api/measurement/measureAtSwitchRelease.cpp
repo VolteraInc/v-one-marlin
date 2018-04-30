@@ -23,12 +23,12 @@ static unsigned s_countTriggers(unsigned maxSamples) {
 
   if (logging_enabled) {
     const auto duration = millis() - startTime;
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("countTriggers voltages: ["); serialArray(voltages, maxSamples);
-    SERIAL_PAIR("], duration: ", duration);
-    SERIAL_PAIR(", count: ", count);
-    SERIAL_PAIR(", position: ", current_position[Z_AXIS]);
-    SERIAL_EOL;
+    log
+      << F("countTriggers voltages: [") << serialArray(voltages, maxSamples)
+      << F("], duration: ") << duration
+      << F(", count: ") << count
+      << F(", position: ") << current_position[Z_AXIS]
+      << endl;
   }
 
   return count;
@@ -44,9 +44,7 @@ static unsigned s_countTriggers(unsigned maxSamples) {
 
 int measureAtSwitchRelease(int axis, int direction, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
   if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Measure at switch retract: ");
-    SERIAL_ECHO(direction < 0 ? '-' : '+'); SERIAL_ECHOLN(axis_codes[axis]);
+    log << F("Measure at switch retract: ") << (direction < 0 ? '-' : '+') << axis_codes[axis] << endl;
   }
 
   // Finish any pending moves (prevents crashes)
@@ -77,9 +75,8 @@ int measureAtSwitchRelease(int axis, int direction, float& releaseStartedAt, flo
     }
 
     // Retract by one step
-    if(logging_enabled) {
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM("Retract by: "); SERIAL_ECHOLN(distance);
+    if (logging_enabled) {
+      log << F("Retract by: ") << distance << endl;
     }
     if (relativeRawMoveXYZ(
         axis == X_AXIS ? distance * -direction : 0,
@@ -95,12 +92,12 @@ int measureAtSwitchRelease(int axis, int direction, float& releaseStartedAt, flo
     }
   }
 
-  SERIAL_ERROR_START;
-  SERIAL_ERRORPGM("Unable to measure at release of ");
-  SERIAL_ERROR(direction < 0 ? '-' : '+'); SERIAL_ERROR(axis_codes[axis]);
-  SERIAL_PAIR(" switch, switch did not release after ", maxTravel);
-  SERIAL_ERROR("mm of travel");
-  SERIAL_EOL;
+  logError
+    << F("Unable to measure at release of ")
+    << (direction < 0 ? '-' : '+') << axis_codes[axis]
+    << F(" switch, switch did not release after ") << maxTravel
+    << F("mm of travel")
+    << endl;
 
   return -1;
 }

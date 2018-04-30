@@ -11,10 +11,11 @@ static int s_samplePTop(unsigned cycles, unsigned intraSampleDelayMs) {
     PTopPin::Sample samples[maxCycles];
 
     if (cycles > maxCycles) {
-      SERIAL_ECHO_START;
-      SERIAL_PAIR("Warning: The requested number of cycles (", cycles);
-      SERIAL_PAIR(") exceeds the maximum (", maxCycles);
-      SERIAL_ECHOLNPGM(") using maximum");
+      logWarning
+        << F("The requested number of cycles (") << cycles
+        << F(") exceeds the maximum (") << maxCycles
+        << F("), using maximum")
+        << endl;
       cycles = maxCycles;
     }
 
@@ -27,13 +28,13 @@ static int s_samplePTop(unsigned cycles, unsigned intraSampleDelayMs) {
     }
 
     // Output the voltage readings
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Values -- voltage, startTime, endTime");
+    log << F("Values -- voltage, startTime, endTime") << endl;
     for (auto i = 0u; i < cycles; ++i) {
-      SERIAL_PAIR("  ", samples[i].voltage);
-      SERIAL_PAIR(",  ", samples[i].startTime);
-      SERIAL_PAIR(",  ", samples[i].endTime);
-      SERIAL_EOL;
+      log
+        << F("  ") << samples[i].voltage
+        << F(",  ") << samples[i].startTime
+        << F(",  ") << samples[i].endTime
+        << endl;
     }
 
   return 0;
@@ -44,10 +45,11 @@ static int s_sampleBedTemperature(unsigned cycles, unsigned intraSampleDelayMs) 
     BedTemperaturePin::Sample samples[maxCycles];
 
     if (cycles > maxCycles) {
-      SERIAL_ECHO_START;
-      SERIAL_PAIR("Warning: The requested number of cycles (", cycles);
-      SERIAL_PAIR(") exceeds the maximum (", maxCycles);
-      SERIAL_ECHOLNPGM(") using maximum");
+      logWarning
+        << F("The requested number of cycles (") << cycles
+        << F(") exceeds the maximum (") << maxCycles
+        << F("), using maximum")
+        << endl;
       cycles = maxCycles;
     }
 
@@ -60,13 +62,13 @@ static int s_sampleBedTemperature(unsigned cycles, unsigned intraSampleDelayMs) 
     }
 
     // Output the voltage readings
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Values -- temperature(C), startTime, endTime");
+    log << F("Values -- temperature(C), startTime, endTime") << endl;
     for (auto i = 0u; i < cycles; ++i) {
-      SERIAL_PAIR("  ", samples[i].temperature);
-      SERIAL_PAIR(",  ", samples[i].startTime);
-      SERIAL_PAIR(",  ", samples[i].endTime);
-      SERIAL_EOL;
+      log
+        << F("  ") << samples[i].temperature
+        << F(",  ") << samples[i].startTime
+        << F(",  ") << samples[i].endTime
+        << endl;
     }
 
   return 0;
@@ -77,10 +79,11 @@ static int s_sampleDigitalPin(int pin, unsigned cycles, unsigned intraSampleDela
   bool samples[maxCycles];
 
   if (cycles > maxCycles) {
-    SERIAL_ECHO_START;
-    SERIAL_PAIR("Warning: The requested number of cycles (", cycles);
-    SERIAL_PAIR(") exceeds the maximum (", maxCycles);
-    SERIAL_ECHOLNPGM(") using maximum");
+    logWarning
+      << F("The requested number of cycles (") << cycles
+      << F(") exceeds the maximum (") << maxCycles
+      << F("), using maximum")
+      << endl;
     cycles = maxCycles;
   }
 
@@ -88,8 +91,7 @@ static int s_sampleDigitalPin(int pin, unsigned cycles, unsigned intraSampleDela
   for (auto i = 0u; i < cycles; ++i) {
     if (pin == P_TOP_PIN) {
       if (vone->pins.ptop.readDigitalValue(samples[i])) {
-        SERIAL_ERROR_START;
-        SERIAL_ERRORLN("Unable to complete digital read of p-top pin");
+        logError << F("Unable to complete digital read of p-top pin") << endl;
         return -1;
       }
     } else {
@@ -101,10 +103,9 @@ static int s_sampleDigitalPin(int pin, unsigned cycles, unsigned intraSampleDela
   }
 
   // Output the voltage readings
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Values -- triggered");
+  log << F("Values -- triggered") << endl;
   for (auto i = 0u; i < cycles; ++i) {
-    SERIAL_PAIR("  ", samples[i]); SERIAL_EOL;
+    log << F("  ") << samples[i] << endl;
   }
 
   return 0;
@@ -116,13 +117,12 @@ int d106_samplePinValues(int pin, unsigned samples, unsigned intraSampleDelayMs)
     case TEMP_BED_PIN:     return s_sampleBedTemperature(samples, intraSampleDelayMs);
     case P_TOP_PIN:        return s_sampleDigitalPin(pin, samples, intraSampleDelayMs);
     default:
-
-      SERIAL_ECHO_START;
-      SERIAL_PAIR("WARNING: Ignoring unrecognized pin ", pin);
-      SERIAL_ECHOPGM(", valid pins are: "); SERIAL_EOL;
-      SERIAL_PAIR("    ", P_TOP_ANALOG_PIN ); SERIAL_ECHOPGM(" p-top analog"  ); SERIAL_EOL;
-      SERIAL_PAIR("    ", P_TOP_PIN        ); SERIAL_ECHOPGM(" p-top digital" ); SERIAL_EOL;
-      SERIAL_PAIR("    ", TEMP_BED_PIN     ); SERIAL_ECHOPGM(" bedTemperature"); SERIAL_EOL;
+      log
+        << F("Ignoring unrecognized pin ") << pin << F(", valid pins are: ")
+        << P_TOP_ANALOG_PIN << F(" - p-top analog, ")
+        << P_TOP_PIN        << F(" - p-top digital, ")
+        << TEMP_BED_PIN     << F(" - bedTemperature")
+        << endl;
       return 0;
   }
 }
@@ -137,13 +137,10 @@ int process_dcode(int command_code) {
     case 1:
       // Toggle logging
       logging_enabled = !logging_enabled;
-      SERIAL_ECHO_START;
-      if (logging_enabled) {
-        SERIAL_ECHOPGM("Logging ON");
-      } else {
-        SERIAL_ECHOPGM("Logging OFF");
-      }
-      SERIAL_EOL;
+      log
+        << F("Logging ")
+        << (logging_enabled ? F("ON") : F("OFF"))
+        << endl;
       return 0;
 
     case 5: {
@@ -151,22 +148,19 @@ int process_dcode(int command_code) {
       if (code_seen('E')) {
         const auto enable = code_value() == 1;
         if (enable) {
-          SERIAL_ECHOPGM("Stopping stepper");
+          log << F("Resuming stepper") << endl;
           vone->stepper.resume();
         } else {
-          SERIAL_ECHOPGM("Stopping stepper");
+          log << F("Stopping stepper") << endl;
           vone->stepper.stop();
         }
-        SERIAL_EOL;
       }
 
       // Output status
-      if (vone->stepper.stopped()) {
-        SERIAL_ECHOPGM("Stepper is stopped");
-      } else {
-        SERIAL_ECHOPGM("Stepper is ready");
-      }
-      SERIAL_EOL;
+      log
+        << F("Stepper is ")
+        << (vone->stepper.stopped() ? F("stopped") : F("ready"))
+        << endl;
 
       return 0;
     }
@@ -209,13 +203,13 @@ int process_dcode(int command_code) {
         const int returnValue = xyPositionerFindCenter(tool, cycles, centerX, centerY);
 
         // Output
-        SERIAL_ECHO_START;
-        SERIAL_ECHOPGM("xyPositionerFindCenter");
-        SERIAL_ECHOPGM(" returnValue:"); SERIAL_ECHO(returnValue);
-        SERIAL_ECHOPGM(" cycles:"); SERIAL_ECHO(cycles);
-        SERIAL_ECHOPGM(" x:"); SERIAL_ECHO(centerX);
-        SERIAL_ECHOPGM(" y:"); SERIAL_ECHO(centerY);
-        SERIAL_ECHOPGM("\n");
+        log
+          << F("xyPositionerFindCenter")
+          << F(" returnValue:") << returnValue
+          << F(" cycles:") << cycles
+          << F(" x:") << centerX
+          << F(" y:") << centerY
+          << endl;
         return 0;
       }
 
@@ -233,11 +227,11 @@ int process_dcode(int command_code) {
       const int returnValue = measureProbeDisplacement(probe, displacement);
 
       // Output
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM("measureProbeDisplacement");
-      SERIAL_ECHOPGM(" returnValue:"); SERIAL_ECHO(returnValue);
-      SERIAL_ECHOPGM(" displacement:"); SERIAL_ECHO(displacement);
-      SERIAL_EOL;
+      log
+        << F("measureProbeDisplacement")
+        << F(" returnValue:") << returnValue
+        << F(" displacement:") << displacement
+        << endl;
       return 0;
     }
 
@@ -261,13 +255,13 @@ int process_dcode(int command_code) {
         const int returnValue = measureAtSwitch(axis, direction, useDefaultMaxTravel, measurement);
 
         // Output
-        SERIAL_ECHO_START;
-        SERIAL_ECHOPGM("measureAtSwitch");
-        SERIAL_ECHOPGM(" returnValue:"); SERIAL_ECHO(returnValue);
-        SERIAL_ECHOPGM(" axis:"); SERIAL_ECHO(axis_codes[axis]);
-        SERIAL_ECHOPGM(" direction:"); SERIAL_ECHO(direction);
-        SERIAL_ECHOPGM(" measurement:"); SERIAL_ECHO_F(measurement, 6);
-        SERIAL_ECHOLN("");
+        log
+          << F("measureAtSwitch")
+          << F(" returnValue:") << returnValue
+          << F(" axis:") << axis_codes[axis]
+          << F(" direction:") << direction
+          << F(" measurement:") << measurement
+          << endl;
       }
       return 0;
     }
@@ -285,10 +279,9 @@ int process_dcode(int command_code) {
       float x = code_seen('X') ? code_value() : current_position[ X_AXIS ];
       float y = code_seen('Y') ? code_value() : current_position[ Y_AXIS ];
       float height = bedHeightAt(x, y);
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM("Bed height at ("); SERIAL_ECHO(x);
-      SERIAL_ECHOPGM(", "); SERIAL_ECHO(y);
-      SERIAL_ECHOPGM(") is "); SERIAL_ECHOLN(height);
+      log
+        << F("Bed height at (") << x << F(", ") << y << F(") is ") << height
+        << endl;
       return 0;
     }
 
@@ -313,16 +306,16 @@ int process_dcode(int command_code) {
       auto returnValue = measureAtSwitchRelease(axis, direction, releaseStartedAt, releaseCompletedAt, delay);
 
       // Output
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM("measureAtSwitchRelease");
-      SERIAL_PAIR(", axis:", axis_codes[axis]);
-      SERIAL_PAIR(", direction:", direction);
-      SERIAL_PAIR(", delay:", delay);
-      SERIAL_PAIR(", returnValue:", returnValue);
-      SERIAL_PAIR(", releaseStartedAt:", releaseStartedAt);
-      SERIAL_PAIR(", releaseCompletedAt:", releaseCompletedAt);
-      SERIAL_PAIR(", startPosition:", startPosition);
-      SERIAL_EOL;
+      log
+        << F("measureAtSwitchRelease")
+        << F(", axis:") << axis_codes[axis]
+        << F(", direction:") << direction
+        << F(", delay:") << delay
+        << F(", returnValue:") << returnValue
+        << F(", releaseStartedAt:") << releaseStartedAt
+        << F(", releaseCompletedAt:") << releaseCompletedAt
+        << F(", startPosition:") << startPosition
+        << endl;
 
       return 0; // always succeed
     }
@@ -337,23 +330,22 @@ int process_dcode(int command_code) {
     //-------------------------------------------
     // List Commands
     default:
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM("D-Commands");
-      SERIAL_ECHOLNPGM("  For manual debugging. subject to change");
-      SERIAL_ECHOLNPGM("General Commands");
-      SERIAL_ECHOLNPGM("  D1 - Toggle logging ON/OFF (default: OFF)");
-      SERIAL_ECHOLNPGM("  D5 - stepper stop/resume -- D5 E1 to resume, E0 to stop, no args for status");
-      SERIAL_ECHOLNPGM("");
-      SERIAL_ECHOLNPGM("Algorithms");
-      SERIAL_ECHOLNPGM("  D101 - prepare tool to move");
-      SERIAL_ECHOLNPGM("  D102 - Home -- D102 or D102 XY");
-      SERIAL_ECHOLNPGM("  D103 - xy positioner -- D103 or D103 M (move-only)");
-      SERIAL_ECHOLNPGM("  D104 - measure probe displacement");
-      SERIAL_ECHOLNPGM("  D105 - measure at switch -- D105 -X");
-      SERIAL_ECHOLNPGM("  D106 - sample pin values (P=pin C=cycles M=milliseconds between readings) -- D106 P2 C10 M5 ");
-      SERIAL_ECHOLNPGM("  D108 - measure at switch release -- D108 -Z");
-      SERIAL_ECHOLNPGM("  D110 - set drill rotation speed -- D110 R100, no value or 1 means stop, 0 resets drill");
-      SERIAL_ECHOLNPGM("");
+      log << F("D-Commands") << endl;
+      log << F("  For manual debugging. subject to change") << endl;
+      log << F("General Commands") << endl;
+      log << F("  D1 - Toggle logging ON/OFF (default: OFF)") << endl;
+      log << F("  D5 - stepper stop/resume -- D5 E1 to resume, E0 to stop, no args for status") << endl;
+      log << F("") << endl;
+      log << F("Algorithms") << endl;
+      log << F("  D101 - prepare tool to move") << endl;
+      log << F("  D102 - Home -- D102 or D102 XY") << endl;
+      log << F("  D103 - xy positioner -- D103 or D103 M (move-only)") << endl;
+      log << F("  D104 - measure probe displacement") << endl;
+      log << F("  D105 - measure at switch -- D105 -X") << endl;
+      log << F("  D106 - sample pin values (P=pin C=cycles M=milliseconds between readings) -- D106 P2 C10 M5 ") << endl;
+      log << F("  D108 - measure at switch release -- D108 -Z") << endl;
+      log << F("  D110 - set drill rotation speed -- D110 R100, no value or 1 means stop, 0 resets drill") << endl;
+      log << F("") << endl;
       return 0;
   }
 }

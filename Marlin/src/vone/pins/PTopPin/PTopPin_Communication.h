@@ -21,8 +21,7 @@ void PTopPin::_sendMessage(char* msg) {
     delay(1);
   }
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHO("Sending "); SERIAL_ECHOLN(msg);
+  log << F("Sending ") << msg << endl;
 
   serial.begin(baud);
   serial.listen();
@@ -55,16 +54,14 @@ int PTopPin::_recvAcknowledgement() {
   // complicate this code for little gain.
   const bool acknowledged = ackCount > 3;
 
-  SERIAL_ECHO_START;
-  if (acknowledged) {
-    SERIAL_ECHOPGM("Tool confirmed message received, (");
-  } else {
-    SERIAL_ECHOPGM("Tool did not confirm message received, (");
-  }
-  SERIAL_ECHO(ackCount);
-  SERIAL_PAIR(" signals seen in ", count);
-  SERIAL_ECHOPGM(" reads)");
-  SERIAL_EOL;
+  log
+    << F("Tool")
+    << (acknowledged ? F("confirmed") : F("did not confirm"))
+    << F("message received, (")
+    << ackCount
+    << F(" signals seen in ") << count
+    << F(" reads)")
+    << endl;
 
   return acknowledged ? 0 : -1;
 }
@@ -75,8 +72,7 @@ int PTopPin::send(char* msg) {
   for (attempt = 1; attempt <= maxAttempts; ++attempt) {
 
     if (attempt > 1) {
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM("Retrying");
+      log << F("Retrying") << endl;
     }
 
     _sendMessage(msg);
@@ -88,10 +84,10 @@ int PTopPin::send(char* msg) {
     // Note: seeing this message suggests that something unexpected is happening
     //       and/or the maximum number of retries is too low
     if (attempt > 2) {
-      SERIAL_ECHO_START;
-      SERIAL_PAIR("NOTICE: p-top message sent on attempt ", attempt);
-      SERIAL_PAIR(" of ", maxAttempts);
-      SERIAL_EOL;
+      logNotice
+        << F("p-top message sent on attempt ") << attempt
+        << F(" of ") << maxAttempts
+        << endl;
     }
 
     // Success

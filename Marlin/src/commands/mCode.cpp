@@ -88,13 +88,14 @@ int process_mcode(int command_code) {
     // TODO: not sure if this output is used in manufacturing scripts.
     // I'd like to trim it down
     case 105 :
-      SERIAL_PROTOCOLPGM("T:"); SERIAL_PROTOCOL_F(0.0, 1);
-      SERIAL_PROTOCOLPGM(" /"); SERIAL_PROTOCOL_F(0.0, 1 );
-      SERIAL_PROTOCOLPGM(" B:"); SERIAL_PROTOCOL_F(vone->heater.currentTemperature(), 1);
-      SERIAL_PROTOCOLPGM(" /"); SERIAL_PROTOCOL_F(vone->heater.targetTemperature(), 1);
-      SERIAL_PROTOCOLPGM(" @:"); SERIAL_PROTOCOL(0);
-      SERIAL_PROTOCOLPGM(" B@:"); SERIAL_PROTOCOL(vone->heater.isHeating() ? 127 : 0);
-      SERIAL_PROTOCOLLN("");
+      protocol
+        << F("T:0.0")
+        << F(" /0.0")
+        << F(" B:") << serialFloat(vone->heater.currentTemperature(), 1)
+        << F(" /") << serialFloat(vone->heater.targetTemperature(), 1)
+        << F(" @:0")
+        << F(" B@:") << (vone->heater.isHeating() ? 127 : 0)
+        << endl;
       return 0;
 
     case 112:
@@ -109,48 +110,31 @@ int process_mcode(int command_code) {
 
     // M114 - Output current position to serial port
     case 114:
-      SERIAL_PROTOCOLPGM("X:");
-      SERIAL_PROTOCOL_F(current_position[X_AXIS], 6);
-      SERIAL_PROTOCOLPGM(" Y:");
-      SERIAL_PROTOCOL_F(current_position[Y_AXIS], 6);
-      SERIAL_PROTOCOLPGM(" Z:");
-      SERIAL_PROTOCOL_F(current_position[Z_AXIS], 6);
-      SERIAL_PROTOCOLPGM(" E:");
-      SERIAL_PROTOCOL_F(current_position[E_AXIS], 6);
+      protocol
+        << F("X:") << current_position[X_AXIS]
+        << F(" Y:") << current_position[Y_AXIS]
+        << F(" Z:") << current_position[Z_AXIS]
+        << F(" E:") << current_position[E_AXIS]
 
-      SERIAL_PROTOCOLPGM(" Count X: ");
-      SERIAL_PROTOCOL_F(st_get_position_mm(X_AXIS), 6);
-      SERIAL_PROTOCOLPGM(" Y:");
-      SERIAL_PROTOCOL_F(st_get_position_mm(Y_AXIS), 6);
-      SERIAL_PROTOCOLPGM(" Z:");
-      SERIAL_PROTOCOL_F(st_get_position_mm(Z_AXIS), 6);
+        << F(" Count X: ") << st_get_position_mm(X_AXIS)
+        << F(" Y:") << st_get_position_mm(Y_AXIS)
+        << F(" Z:") << st_get_position_mm(Z_AXIS)
 
-      SERIAL_PROTOCOLPGM(" Absolute X:");
-      SERIAL_PROTOCOL(st_get_position(X_AXIS));
-      SERIAL_PROTOCOLPGM(" Y:");
-      SERIAL_PROTOCOL(st_get_position(Y_AXIS));
+        << F(" Absolute X:") << st_get_position(X_AXIS)
+        << F(" Y:") << st_get_position(Y_AXIS)
 
-      // # of moves queued in buffer
-      SERIAL_PROTOCOLPGM(" B:");
-      SERIAL_PROTOCOL_F(movesplanned(), DEC);
+        // # of moves queued in buffer
+        << F(" B:") << (int)movesplanned()
 
-      // Homing state on each axis
-      // 0 = not homed, -1 = homed to min extent, 1 = homed to max extent
-      SERIAL_PROTOCOLPGM(" H:");
-      SERIAL_PROTOCOL(getHomedState(X_AXIS));
-      SERIAL_PROTOCOL(',');
-      SERIAL_PROTOCOL(getHomedState(Y_AXIS));
-      SERIAL_PROTOCOL(',');
-      SERIAL_PROTOCOL(getHomedState(Z_AXIS));
-
-      SERIAL_PROTOCOLLN("");
+        // Homing state on each axis
+        // 0 = not homed, -1 = homed to min extent, 1 = homed to max extent
+        << F(" H:") << getHomedState(X_AXIS) << ',' << getHomedState(Y_AXIS) << ',' << getHomedState(Z_AXIS)
+        << endl;
       return 0;
 
     // M115 - Capabilities string
     case 115:
-      SERIAL_PROTOCOLPGM("V-One by Voltera (www.voltera.io). Firmware: ");
-      SERIAL_PROTOCOLPGM(VERSION_STRING);
-      SERIAL_EOL;
+      protocol << F("V-One by Voltera (www.voltera.io). Firmware: ") << VERSION_STRING << endl;
       return 0;
 
     // M119 - Output Endstop status to serial port
@@ -181,15 +165,14 @@ int process_mcode(int command_code) {
     // M125 - Output current Probe status to serial port
     case 125: {
       auto& probe = vone->toolBox.probe;
-      SERIAL_PROTOCOLPGM("Probe: ");
+      auto prefix = F("Probe: ");
       if (probe.detached()) {
-        SERIAL_PROTOCOLPGM("Not Mounted");
+        protocol << prefix << F("Not Mounted") << endl;
       } else if (probe.readAnalogTriggered()) {
-        SERIAL_PROTOCOLPGM("Triggered");
+        protocol << prefix << F("Triggered") << endl;
       } else {
-        SERIAL_PROTOCOLPGM("Probe Mounted");
+        protocol << prefix << F("Probe Mounted") << endl;
       }
-      SERIAL_EOL;
       return 0;
     }
 
@@ -244,9 +227,7 @@ int process_mcode(int command_code) {
       while ( target_direction ? (vone->heater.isHeating()) : (vone->heater.isCooling() && (CooldownNoWait==false)) ) {
         // Print Temp Reading every 1 second while heating up.
         if ((millis() - codenum) > 1000) {
-          SERIAL_PROTOCOLPGM("T:0 E:0 B:");
-          SERIAL_PROTOCOL_F(vone->heater.currentTemperature(), 1);
-          SERIAL_EOL;
+          protocol << F("T:0 E:0 B:") << serialFloat(vone->heater.currentTemperature(), 1) << endl;
           codenum = millis();
         }
         periodic_work();
@@ -407,11 +388,13 @@ int process_mcode(int command_code) {
 
     // - M906 Get all digital potentiometer values.
     case 906: {
-      SERIAL_PROTOCOLLNPGM("Stepper Driver Currents (Max: 255)");
-      SERIAL_PROTOCOLPGM("M907 X:"); SERIAL_PROTOCOL((int)digiPotGetCurrent(X_AXIS));
-      SERIAL_PROTOCOLPGM("  Y:"); SERIAL_PROTOCOL((int)digiPotGetCurrent(Y_AXIS));
-      SERIAL_PROTOCOLPGM("  Z:"); SERIAL_PROTOCOL((int)digiPotGetCurrent(Z_AXIS));
-      SERIAL_PROTOCOLPGM("  E:"); SERIAL_PROTOCOLLN((int)digiPotGetCurrent(E_AXIS));
+      protocol << F("Stepper Driver Currents (Max: 255)") << endl;
+      protocol
+        << F("M907 X:") << (int)digiPotGetCurrent(X_AXIS)
+        << F("  Y:") << (int)digiPotGetCurrent(Y_AXIS)
+        << F("  Z:") << (int)digiPotGetCurrent(Z_AXIS)
+        << F("  E:") << (int)digiPotGetCurrent(E_AXIS)
+        << endl;
       return 0;
     }
 
@@ -428,52 +411,51 @@ int process_mcode(int command_code) {
     //-------------------------------------------
     // List Commands
     default:
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM("M-Commands");
-      SERIAL_ECHOLNPGM("  Configuration, temperature control and Utility commands");
-      SERIAL_ECHOLNPGM("");
+      log << F("M-Commands") << endl;
+      log << F("  Configuration, temperature control and Utility commands") << endl;
+      log << endl;
 
-      SERIAL_ECHOLNPGM("Utilities");
-      SERIAL_ECHOLNPGM("  M400 - Finish all moves");
-      SERIAL_ECHOLNPGM("  M93  - Manually control LEDs. Set the RGB LEDs using R[1-255] V[1-255] B[1-255] (uses V instead of G for green)");
-      SERIAL_ECHOLNPGM("");
+      log << F("Utilities") << endl;
+      log << F("  M400 - Finish all moves") << endl;
+      log << F("  M93  - Manually control LEDs. Set the RGB LEDs using R[1-255] V[1-255] B[1-255] (uses V instead of G for green)") << endl;
+      log << endl;
 
-      SERIAL_ECHOLNPGM("Temperature");
-      SERIAL_ECHOLNPGM("  M105 - Output current temperature");
-      SERIAL_ECHOLNPGM("  M141 - Append a temperature and duration to the heating profile (max 10 commands) -- M141 T200 D60");
-      SERIAL_ECHOLNPGM("  M142 - Stop heating and discard heating profile");
-      SERIAL_ECHOLNPGM("");
+      log << F("Temperature") << endl;
+      log << F("  M105 - Output current temperature") << endl;
+      log << F("  M141 - Append a temperature and duration to the heating profile (max 10 commands) -- M141 T200 D60") << endl;
+      log << F("  M142 - Stop heating and discard heating profile") << endl;
+      log << endl;
 
-      SERIAL_ECHOLNPGM("Status");
-      SERIAL_ECHOLNPGM("  M114 - Output status (planner and stepper position, queued moves, etc)");
-      SERIAL_ECHOLNPGM("  M115 - Output version string");
-      SERIAL_ECHOLNPGM("  M119 - Output limit switch status");
-      SERIAL_ECHOLNPGM("  M125 - Output current Probe status to serial port");
-      SERIAL_ECHOLNPGM("");
+      log << F("Status") << endl;
+      log << F("  M114 - Output status (planner and stepper position, queued moves, etc)") << endl;
+      log << F("  M115 - Output version string") << endl;
+      log << F("  M119 - Output limit switch status") << endl;
+      log << F("  M125 - Output current Probe status to serial port") << endl;
+      log << endl;
 
-      SERIAL_ECHOLNPGM("Motors");
-      SERIAL_ECHOLNPGM("  M17  - Enable (Power) all stepper motors");
-      SERIAL_ECHOLNPGM("  M18  - Disable motors until next move -- M18 X Y Z E or M18 for all");
-      SERIAL_ECHOLNPGM("         set inactivity timeout in seconds -- M18 S60, S0 to disable");
-      SERIAL_ECHOLNPGM("");
+      log << F("Motors") << endl;
+      log << F("  M17  - Enable (Power) all stepper motors") << endl;
+      log << F("  M18  - Disable motors until next move -- M18 X Y Z E or M18 for all") << endl;
+      log << F("         set inactivity timeout in seconds -- M18 S60, S0 to disable") << endl;
+      log << endl;
 
-      SERIAL_ECHOLNPGM("Configuration");
-      SERIAL_ECHOLNPGM("  M500 - write configuration to EEPROM");
-      SERIAL_ECHOLNPGM("  M501 - read (ie. reset) configuration from EEPROM");
-      SERIAL_ECHOLNPGM("  M502 - revert to factory defaults (still need to write to EEPROM)");
-      SERIAL_ECHOLNPGM("  M503 - output configuration");
-      SERIAL_ECHOLNPGM("");
+      log << F("Configuration") << endl;
+      log << F("  M500 - write configuration to EEPROM") << endl;
+      log << F("  M501 - read (ie. reset) configuration from EEPROM") << endl;
+      log << F("  M502 - revert to factory defaults (still need to write to EEPROM)") << endl;
+      log << F("  M503 - output configuration") << endl;
+      log << endl;
 
-      SERIAL_ECHOLNPGM("Internal use");
-      SERIAL_ECHOLNPGM("  M92  - Set axis steps per unit - same syntax as G92");
-      SERIAL_ECHOLNPGM("  M520 - output calibrated positions and factors");
-      SERIAL_ECHOLNPGM("  M906 - output driver current settings");
-      SERIAL_ECHOLNPGM("  M201 - Set max acceleration in units/s^2 for print moves (M201 X1000 Y1000)");
-      SERIAL_ECHOLNPGM("  M203 - Set maximum feedrate that your machine can sustain (M203 X200 Y200 Z300 E10000) in mm/sec");
-      SERIAL_ECHOLNPGM("  M204 - Set default acceleration: S normal moves T filament only moves (M204 S3000 T7000) in mm/sec^2");
-      SERIAL_ECHOLNPGM("         also sets minimum segment time in ms (B20000) to prevent buffer under-runs and M20 minimum feedrate");
-      SERIAL_ECHOLNPGM("  M205 - advanced settings:  minimum travel speed S=while printing T=travel only,  B=minimum segment time X= maximum xy jerk, Z=maximum Z jerk, E=maximum E jerk");
-      SERIAL_ECHOLNPGM("");
+      log << F("Internal use") << endl;
+      log << F("  M92  - Set axis steps per unit - same syntax as G92") << endl;
+      log << F("  M520 - output calibrated positions and factors") << endl;
+      log << F("  M906 - output driver current settings") << endl;
+      log << F("  M201 - Set max acceleration in units/s^2 for print moves (M201 X1000 Y1000)") << endl;
+      log << F("  M203 - Set maximum feedrate that your machine can sustain (M203 X200 Y200 Z300 E10000) in mm/sec") << endl;
+      log << F("  M204 - Set default acceleration: S normal moves T filament only moves (M204 S3000 T7000) in mm/sec^2") << endl;
+      log << F("         also sets minimum segment time in ms (B20000) to prevent buffer under-runs and M20 minimum feedrate") << endl;
+      log << F("  M205 - advanced settings:  minimum travel speed S=while printing T=travel only,  B=minimum segment time X= maximum xy jerk, Z=maximum Z jerk, E=maximum E jerk") << endl;
+      log << endl;
       return 0;
   }
 }

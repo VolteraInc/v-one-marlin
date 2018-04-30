@@ -1,14 +1,13 @@
 #include "PinSet.h"
 
+#include "../../../serial.h"
 #include "../../../Marlin.h"
 
 static void s_outputPin(const char* name, bool value) {
-  SERIAL_PROTOCOL(name);
-  if (value) {
-    SERIAL_PROTOCOLLNPGM("TRIGGERED");
-  } else {
-    SERIAL_PROTOCOLLNPGM("open");
-  }
+  protocol 
+    << name
+    << (value ? F("TRIGGERED") : F("open"))
+    << endl;
 }
 
 PinSet::PinSet(
@@ -28,7 +27,7 @@ int PinSet::outputEndStopStatus() {
   int returnValue = ptop.readDigitalValue(ptopValue);
 
   // Note: this output is used in manufacturing scripts
-  SERIAL_PROTOCOLLNPGM("Reporting endstop status");
+  protocol << F("Reporting endstop status") << endl;
 
   s_outputPin("x_min: ", READ_PIN(X_MIN));
   s_outputPin("y_min: ", READ_PIN(Y_MIN));

@@ -392,14 +392,12 @@ static void s_applyCompensationAlgorithms(float& x, float& y, float& z, float& e
   if (skew_adjustments_enabled) {
     applySkewCompensation(x, y, calib_cos_theta, calib_tan_theta);
   } else {
-    if (logging_enabled) {
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM("Skipping skew compensation for ("); SERIAL_ECHO(x);
-      SERIAL_ECHOPGM(","); SERIAL_ECHO(y);
-      SERIAL_ECHOPGM(","); SERIAL_ECHO(z);
-      SERIAL_ECHOPGM(","); SERIAL_ECHO(e);
-      SERIAL_ECHOPGM(")\n");
-    }
+    log
+      << F("Skipping skew compensation for ") << x
+      << F(",") << y
+      << F(",") << z
+      << F(",") << e
+      << endl;
   }
 
   // Axis scaling compensation
@@ -546,9 +544,10 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   for (auto i = 0u; i < 4; ++i) {
     current_speed[i] = delta_mm[i] * inverse_second;
 
-    // SERIAL_PAIR(" Speed: ", current_speed[i]);
-    // SERIAL_PAIR(", maxF: ", max_feedrate[i]);
-    // SERIAL_EOL;
+    // log
+    //   << F(" Speed: ") << current_speed[i]
+    //   << F(", maxF: ") << max_feedrate[i]
+    //   << endl;
 
     if(fabs(current_speed[i]) > max_feedrate[i]) {
       speed_factor = min(
@@ -563,10 +562,10 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
     for (auto i = 0u; i < 4; ++i) {
       current_speed[i] *= speed_factor;
 
-      // SERIAL_ECHO_START;
-      // SERIAL_PAIR(" Corrected Speed:", current_speed[i]);
-      // SERIAL_PAIR(", factor:", speed_factor);
-      // SERIAL_EOL;
+      // log
+      //   << F(" Corrected Speed:") << current_speed[i]
+      //   << F(", factor:") << speed_factor
+      //   << endl;
     }
     block->nominal_speed *= speed_factor;
     block->nominal_rate *= speed_factor;
@@ -633,15 +632,11 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   double v_allowable = max_allowable_speed(-block->acceleration,MINIMUM_PLANNER_SPEED,block->millimeters);
   block->entry_speed = min(vmax_junction, v_allowable);
 
-/*  SERIAL_PROTOCOLPGM(" max entry speed");
-  SERIAL_PROTOCOL(block->max_entry_speed);
-  SERIAL_PROTOCOLLN("");
-  SERIAL_PROTOCOLPGM(" nominal Speed ");
-  SERIAL_PROTOCOL(block->nominal_speed);
-  SERIAL_PROTOCOLLN("");
-  SERIAL_PROTOCOLPGM(" entrySpeed ");
-  SERIAL_PROTOCOL(block->entry_speed);
-  SERIAL_PROTOCOLLN("");*/
+  // log 
+  //   << F(" max entry speed") << block->max_entry_speed
+  //   << F(", nominal speed ") << block->nominal_speed
+  //   << F(", entrySpeed ") << block->entry_speed
+  //   << end;
 
   // Initialize planner efficiency flags
   // Set flag if block will always reach maximum junction speed regardless of entry/exit speeds.
@@ -680,15 +675,13 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
 }
 
 void plan_set_position(float x, float y, float z, float e) {
-  if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Resetting planner position to");
-    SERIAL_PAIR(" X:", x);
-    SERIAL_PAIR(" Y:", y);
-    SERIAL_PAIR(" Z:", z);
-    SERIAL_PAIR(" E:", e);
-    SERIAL_EOL;
-  }
+  log
+    << F("Resetting planner position to")
+    << F(" X:") << x
+    << F(" Y:") << y
+    << F(" Z:") << z
+    << F(" E:") << e
+    << endl;
 
   // Apply compensation algorithms to compute the new position in steps
   // Note: we don't need to apply backlash compensation because we are not moving
@@ -705,13 +698,7 @@ void plan_set_position(float x, float y, float z, float e) {
 }
 
 void plan_set_e_position(float e) {
-  if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("Resetting planner's E position to");
-    SERIAL_ECHOPGM(" E:"); SERIAL_ECHO(e);
-    SERIAL_ECHOPGM("\n");
-  }
-
+  log << F("Resetting planner's E position to E:") << e << endl;
   position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]);
   st_set_e_position(position[E_AXIS]);
 }

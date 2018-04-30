@@ -48,14 +48,14 @@ static void s_prepare_move() {
   s_clamp_to_software_endstops(destination);
 
   if (logging_enabled) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("s_prepare_move");
-    SERIAL_ECHOPGM(" X:"); SERIAL_ECHO(destination[ X_AXIS ]);
-    SERIAL_ECHOPGM(" Y:"); SERIAL_ECHO(destination[ Y_AXIS ]);
-    SERIAL_ECHOPGM(" Z:"); SERIAL_ECHO(destination[ Z_AXIS ]);
-    SERIAL_ECHOPGM(" E:"); SERIAL_ECHO(destination[ E_AXIS ]);
-    SERIAL_ECHOPGM(" F:"); SERIAL_ECHO(feedrate);
-    SERIAL_ECHOPGM("\n");
+    log
+     << F("s_prepare_move")
+     << F(" X:") << destination[ X_AXIS ]
+     << F(" Y:") << destination[ Y_AXIS ]
+     << F(" Z:") << destination[ Z_AXIS ]
+     << F(" E:") << destination[ E_AXIS ]
+     << F(" F:") << feedrate
+     << endl;
   }
 
   // Do not use feedmultiply for E or Z only moves
@@ -159,8 +159,7 @@ int process_gcode(int command_code) {
         || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
         return -1;
       }
-      SERIAL_PROTOCOLPGM("xyPositionerMeasurement +Y:"); SERIAL_PROTOCOL_F(measurement, 3);
-      SERIAL_PROTOCOLPGM("\n");
+      protocol << F("xyPositionerMeasurement +Y:") << measurement << endl;
       return 0;
     }
 
@@ -171,8 +170,7 @@ int process_gcode(int command_code) {
         || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
         return -1;
       }
-      SERIAL_PROTOCOLPGM("xyPositionerMeasurement -Y:"); SERIAL_PROTOCOL_F(measurement, 3);
-      SERIAL_PROTOCOLPGM("\n");
+      protocol << F("xyPositionerMeasurement -Y:") << measurement << endl;
       return 0;
     }
 
@@ -183,8 +181,7 @@ int process_gcode(int command_code) {
         || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
         return -1;
       }
-      SERIAL_PROTOCOLPGM("xyPositionerMeasurement +X:"); SERIAL_PROTOCOL_F(measurement, 3);
-      SERIAL_PROTOCOLPGM("\n");
+      protocol << F("xyPositionerMeasurement +X:") << measurement << endl;
       return 0;
     }
 
@@ -195,8 +192,7 @@ int process_gcode(int command_code) {
         || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
           return -1;
       }
-      SERIAL_PROTOCOLPGM("xyPositionerMeasurement -X:"); SERIAL_PROTOCOL_F(measurement, 3);
-      SERIAL_PROTOCOLPGM("\n");
+      protocol << F("xyPositionerMeasurement -X:") << measurement << endl;
       return 0;
     }
 
@@ -212,9 +208,7 @@ int process_gcode(int command_code) {
       // we have to let the planner know where we are right now as it is not where we said to go.
       current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
       plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-      SERIAL_PROTOCOLPGM("Z: ");
-      SERIAL_PROTOCOL(float(current_position[Z_AXIS]*1000));
-      SERIAL_PROTOCOLPGM("\n");
+      protocol << F("Z: ") << (current_position[Z_AXIS] * 1000) << endl;
     }
     return 0;
 
@@ -230,9 +224,7 @@ int process_gcode(int command_code) {
       // we have to let the planner know where we are right now as it is not where we said to go.
       current_position[X_AXIS] = st_get_position_mm(X_AXIS);
       plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-      SERIAL_PROTOCOLPGM("X: ");
-      SERIAL_PROTOCOL(float(current_position[X_AXIS]*1000));
-      SERIAL_PROTOCOLPGM("\n");
+      protocol << F("X: ") << (current_position[X_AXIS] * 1000) << endl;
     }
     return 0;
 
@@ -248,9 +240,7 @@ int process_gcode(int command_code) {
       // we have to let the planner know where we are right now as it is not where we said to go.
       current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
       plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-      SERIAL_PROTOCOLPGM("Y: ");
-      SERIAL_PROTOCOL(float(current_position[Y_AXIS]*1000));
-      SERIAL_PROTOCOLPGM("\n");
+      protocol << F("Y: ") << (current_position[Y_AXIS] * 1000) << endl;
     }
     return 0;
 
@@ -266,9 +256,7 @@ int process_gcode(int command_code) {
       // we have to let the planner know where we are right now as it is not where we said to go.
       current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
       plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-      SERIAL_PROTOCOLPGM("Z: ");
-      SERIAL_PROTOCOL(float(current_position[Z_AXIS]*1000));
-      SERIAL_PROTOCOLPGM("\n");
+      protocol << F("Z: ") << (current_position[Z_AXIS] * 1000) << endl;
     }
     return 0;
 
@@ -319,11 +307,12 @@ int process_gcode(int command_code) {
       }
 
       // Output position
-      SERIAL_PROTOCOLPGM("probeMeasurement");
-      SERIAL_PROTOCOLPGM(" x:"); SERIAL_PROTOCOL_F(current_position[X_AXIS], 3);
-      SERIAL_PROTOCOLPGM(" y:"); SERIAL_PROTOCOL_F(current_position[Y_AXIS], 3);
-      SERIAL_PROTOCOLPGM(" z:"); SERIAL_PROTOCOL_F(measurement, 3);
-      SERIAL_PROTOCOLPGM("\n");
+      protocol
+        << F("probeMeasurement")
+        << F(" x:") << current_position[X_AXIS]
+        << F(" y:") << current_position[Y_AXIS]
+        << F(" z:") << measurement
+        << endl;
       return 0;
     }
 
@@ -333,8 +322,10 @@ int process_gcode(int command_code) {
       if (measureProbeDisplacement(vone->toolBox.probe, z_probe_offset)) {
         return -1;
       }
-      SERIAL_PROTOCOLPGM("Probe Offset: "); SERIAL_PROTOCOL(z_probe_offset * 1000); // TODO: should use SERIAL_PROTOCOL_F instead of *1000
-      SERIAL_PROTOCOLPGM("\n");
+      protocol
+        << F("Probe Offset: ")
+        << z_probe_offset * 1000 // TODO: should use formating, not multiplication
+        << endl;
       return 0;
     }
 
@@ -372,31 +363,30 @@ int process_gcode(int command_code) {
     //-------------------------------------------
     // List Commands
     default:
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM("G-Commands");
-      SERIAL_ECHOLNPGM("  non-smart commands. It's up to the user to ensure homing and ");
-      SERIAL_ECHOLNPGM("  calibration are performed, if they are needed.");
-      SERIAL_ECHOLNPGM("");
+      log << F("G-Commands") << endl;
+      log << F("  non-smart commands. It's up to the user to ensure homing and ") << endl;
+      log << F("  calibration are performed, if they are needed.") << endl;
+      log << F("") << endl;
 
-      SERIAL_ECHOLNPGM("Movement/Utilities");
-      SERIAL_ECHOLNPGM("  G1 - move to the given position -- G1 X10.3 Y23.4 Z3.3 E32 F3000");
-      SERIAL_ECHOLNPGM("  G2 - clockwise arc from current location to given location with arc center at given offset");
-      SERIAL_ECHOLNPGM("       if no target location given current location is used (so you get a circle) -- G2 I5 will make a 10mm circle at X+5");
-      SERIAL_ECHOLNPGM("  G3 - counter-clockwise arc");
-      SERIAL_ECHOLNPGM("");
+      log << F("Movement/Utilities") << endl;
+      log << F("  G1 - move to the given position -- G1 X10.3 Y23.4 Z3.3 E32 F3000") << endl;
+      log << F("  G2 - clockwise arc from current location to given location with arc center at given offset") << endl;
+      log << F("       if no target location given current location is used (so you get a circle) -- G2 I5 will make a 10mm circle at X+5") << endl;
+      log << F("  G3 - counter-clockwise arc") << endl;
+      log << F("") << endl;
 
-      SERIAL_ECHOLNPGM("Utilities");
-      SERIAL_ECHOLNPGM("  G4 - Dwell for a given duration -- G4 S<seconds> or P<milliseconds>");
-      SERIAL_ECHOLNPGM(" G90 - Use Absolute Coordinates");
-      SERIAL_ECHOLNPGM(" G91 - Use Relative Coordinates");
-      SERIAL_ECHOLNPGM(" G92 - Set current position to coordinates given -- G92 Z3.4");
-      SERIAL_ECHOLNPGM("");
+      log << F("Utilities") << endl;
+      log << F("  G4 - Dwell for a given duration -- G4 S<seconds> or P<milliseconds>") << endl;
+      log << F(" G90 - Use Absolute Coordinates") << endl;
+      log << F(" G91 - Use Relative Coordinates") << endl;
+      log << F(" G92 - Set current position to coordinates given -- G92 Z3.4") << endl;
+      log << F("") << endl;
 
-      SERIAL_ECHOLNPGM("Homing/Probing - deprecated");
-      SERIAL_ECHOLNPGM(" G28 - Home axes -- G28 X, G28 XY, G28");
-      SERIAL_ECHOLNPGM(" G30 - Probe bed at current position");
-      SERIAL_ECHOLNPGM(" G33 - Home to z-switch");
-      SERIAL_ECHOLNPGM("");
+      log << F("Homing/Probing - deprecated") << endl;
+      log << F(" G28 - Home axes -- G28 X, G28 XY, G28") << endl;
+      log << F(" G30 - Probe bed at current position") << endl;
+      log << F(" G33 - Home to z-switch") << endl;
+      log << F("") << endl;
       return 0;
   }
 }

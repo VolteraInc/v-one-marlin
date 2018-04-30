@@ -26,8 +26,7 @@ float bedHeightAt(float x, float y) {
   //   return Z_MAX_POS;
   // }
 
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("TODO: bed height estimation is not implemented, assuming a height of -1.0mm");
+  log << F("TODO: bed height estimation is not implemented, assuming a height of -1.0mm") << endl;
   return -1.0; // with the current safetyMargin this should
 }
 

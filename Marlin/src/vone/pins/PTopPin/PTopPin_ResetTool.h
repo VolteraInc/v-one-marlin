@@ -7,8 +7,7 @@
 bool PTopPin::trytoSetMode_ResetTool() {
   ScopedInterruptDisable sid;
   if (mode == Mode::Idle) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Resetting tool");
+    log << F("Resetting tool") << endl;
     digitalWrite(_digitalPin, LOW);
     mode = Mode::ResetTool;
     return true;

@@ -50,22 +50,24 @@ unsigned long toolDetection::VoltageTypeStabilizer::VoltageLog::timeSpanOfCurren
   return back().time - startTime;
 }
 
-void toolDetection::VoltageTypeStabilizer::VoltageLog::output() const {
+MarlinSerial& toolDetection::VoltageTypeStabilizer::VoltageLog::output() const {
   if (empty()) {
-    return;
+    return MYSERIAL;
   }
   auto idx = m_frontIdx;
   auto sz = size();
   while (sz--) {
     if (idx != m_frontIdx) {
-      SERIAL_ECHOPGM(", ");
+      MYSERIAL << F(", ");
     }
-    SERIAL_PAIR("(", m_samples[idx].time);
-    SERIAL_PAIR(", ", toString(m_samples[idx].type));
-    SERIAL_PAIR(", ", m_samples[idx].voltage);
-    SERIAL_ECHOPGM(")");
+    MYSERIAL
+      << F("(") << m_samples[idx].time
+      << F(", ") << toString(m_samples[idx].type)
+      << F(", ") << m_samples[idx].voltage
+      << F(")");
     idx = increment(idx);
   }
+  return MYSERIAL;
 }
 
 // ----------------------------------------------
@@ -80,18 +82,15 @@ void toolDetection::VoltageTypeStabilizer::setStable(bool stable) {
   if (m_stable) {
     auto delta = millis() - m_unstableTime;
     if (delta > 1000) {
-      SERIAL_ECHO_START;
-      SERIAL_PAIR("WARNING: Voltage type was unstable for ", delta);
-      SERIAL_ECHOPGM("ms");
-      SERIAL_EOL;
+      logWarning << F("Voltage type was unstable for ") << delta << F("ms") << endl;
     }
 
-    SERIAL_ECHO_START;
-    SERIAL_PAIR("Voltage type stabilized in ", delta);
-    SERIAL_ECHOPGM("ms, voltages = [ ");
-    m_voltages.output();
-    SERIAL_ECHOPGM(" ]");
-    SERIAL_EOL;
+    log
+      << F("Voltage type stabilized in ") << delta
+      << F("ms, voltages = [ ")
+      << m_voltages.output()
+      << F(" ]")
+      << endl;
   } else {
     m_unstableTime = millis();
   }

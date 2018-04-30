@@ -2,8 +2,9 @@
 #include "../../../serial.h"
 
 static void outputToolUpdate(const char* type) {
-  SERIAL_PAIR("toolUpdate type:", type);
-  SERIAL_EOL;
+  protocol
+    << F("toolUpdate type:") << type
+    << endl;
 }
 
 void tools::ToolBox::setTool(tools::Tool *tool) {
