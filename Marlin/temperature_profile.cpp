@@ -2,6 +2,7 @@
 #include "serial.h"
 #include "src/vone/VOne.h"
 #include "src/vone/bed/heater/Heater.h"
+#include "src/utils/time.h"
 
 #define PROFILE_SIZE (10)
 static struct {
@@ -120,7 +121,7 @@ float profile_remaining_time(){
     sum += s_computeRampTime(vone->heater.currentTemperature(), vone->heater.targetTemperature());
   } else {
     // Substract our elapsed time. (duration - time remaining)
-    sum -= profile.duration[profile.head] - (profile.holdUntil - millis()) / 1000;
+    sum -= profile.duration[profile.head] - (profile.holdUntil - millis()) / 1000ul;
   }
 
   return sum;
@@ -167,7 +168,7 @@ void manage_heating_profile() {
         << profile.duration[profile.head]
         << F(" seconds")
         << endl;
-      profile.holdUntil = now + profile.duration[profile.head] * 1000; // Hold this temp for X seconds
+      profile.holdUntil = now + seconds(profile.duration[profile.head]); // Hold this temp for X seconds
       profile.ramping = false;
       profile.holding = true;
     }
@@ -188,9 +189,9 @@ void manage_heating_profile() {
     // If not ramping or holding, set temperature and ramping timeout.
     // Different timeout if we are heating or cooling
     const auto newTarget = profile.temperature[profile.head];
-    const auto safetyTimeout = newTarget > current ? 4 * 60 * 1000ul : 25 * 60 * 1000ul;
+    const auto safetyTimeout = minutes(newTarget > current ? 8 : 25);
     profile.safetyTimeout = now + safetyTimeout;
-    profile.changeTimeout = now + 10 * 1000ul; // 10 seconds to register a change in temperature.
+    profile.changeTimeout = now + seconds(10); // 10 seconds to register a change in temperature.
     profile.changeTemperature = current; // Take snapshot of current temperature.
     profile.ramping = true;
     vone->heater.setTargetTemperature(newTarget);
