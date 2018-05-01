@@ -3,12 +3,6 @@
 #include "../../../serial.h"
 #include "../../../Marlin.h"
 
-static void s_outputPin(const char* name, bool value) {
-  protocol 
-    << name
-    << (value ? F("TRIGGERED") : F("open"))
-    << endl;
-}
 
 PinSet::PinSet(
   int ptopDigialPin,
@@ -22,26 +16,59 @@ PinSet::PinSet(
 {
 }
 
+static const __FlashStringHelper* s_pinStatusToString(bool isTriggered) {
+  return isTriggered ? F("TRIGGERED") : F("open");
+}
+
 int PinSet::outputEndStopStatus() {
+  bool ptopValue = false;
+  int returnValue = ptop.readDigitalValue(ptopValue);
+  
+  log << F("Endstop status") << endl;
+  log << F("  right (x-min): ") << s_pinStatusToString(READ_PIN(X_MIN)) << endl;
+  log << F("  back (y-min): ") << s_pinStatusToString(READ_PIN(Y_MIN)) << endl;
+
+  log << F("  z-switch (z-min): ") << s_pinStatusToString(READ_PIN(Z_MIN)) << endl;
+  log << F("  top (z-max): ") << s_pinStatusToString(READ_PIN(Z_MAX)) << endl;
+  log << F("  calibration plate (p-bot): ") << s_pinStatusToString(READ_PIN(P_BOT)) << endl;
+  log << F("  tool switch (p-top): ") << s_pinStatusToString(ptopValue) << endl;
+
+  log << F("  xy-positioner right (xy-min-x): ") << s_pinStatusToString(READ_PIN(XY_MIN_X)) << endl;
+  log << F("  xy-positioner left (xy_max_x): ") << s_pinStatusToString(READ_PIN(XY_MAX_X)) << endl;
+  log << F("  xy-positioner back (xy_min_y): ") << s_pinStatusToString(READ_PIN(XY_MIN_Y)) << endl;
+  log << F("  xy-positioner front (xy_max_y): ") << s_pinStatusToString(READ_PIN(XY_MAX_Y)) << endl;
+
+  return returnValue;
+}
+
+// -----------------------------------------------------------------------
+// Note: this output is used in manufacturing scripts 
+//       so we can't change it without updating those scripts
+
+static const __FlashStringHelper* s_deprecatedFormat(bool isTriggered) {
+  return isTriggered ? F("TRIGGERED") : F("open");
+}
+int PinSet::deprecated_OutputEndStopStatus() {
   bool ptopValue = false;
   int returnValue = ptop.readDigitalValue(ptopValue);
 
   // Note: this output is used in manufacturing scripts
   protocol << F("Reporting endstop status") << endl;
 
-  s_outputPin("x_min: ", READ_PIN(X_MIN));
-  s_outputPin("y_min: ", READ_PIN(Y_MIN));
+  protocol << F("x_min: ") << s_deprecatedFormat(READ_PIN(X_MIN)) << endl;
+  protocol << F("y_min: ") << s_deprecatedFormat(READ_PIN(Y_MIN)) << endl;
 
-  s_outputPin("z_min: ", READ_PIN(Z_MIN));
-  s_outputPin("z_max: ", READ_PIN(Z_MAX));
+  protocol << F("z_min: ") << s_deprecatedFormat(READ_PIN(Z_MIN)) << endl;
+  protocol << F("z_max: ") << s_deprecatedFormat(READ_PIN(Z_MAX)) << endl;
 
-  s_outputPin("p_top: ", ptopValue);
-  s_outputPin("p_bot: ", READ_PIN(P_BOT));
+  protocol << F("p_top: ") << ptopValue << endl;
+  protocol << F("p_bot: ") << s_deprecatedFormat(READ_PIN(P_BOT)) << endl;
 
-  s_outputPin("xy_min_x: ", READ_PIN(XY_MIN_X));
-  s_outputPin("xy_max_x: ", READ_PIN(XY_MAX_X));
-  s_outputPin("xy_min_y: ", READ_PIN(XY_MIN_Y));
-  s_outputPin("xy_max_y: ", READ_PIN(XY_MAX_Y));
+  protocol << F("xy_min_x: ") << s_deprecatedFormat(READ_PIN(XY_MIN_X)) << endl;
+  protocol << F("xy_max_x: ") << s_deprecatedFormat(READ_PIN(XY_MAX_X)) << endl;
+  protocol << F("xy_min_y: ") << s_deprecatedFormat(READ_PIN(XY_MIN_Y)) << endl;
+  protocol << F("xy_max_y: ") << s_deprecatedFormat(READ_PIN(XY_MAX_Y)) << endl;
 
   return returnValue;
 }
+

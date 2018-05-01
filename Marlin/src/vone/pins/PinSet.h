@@ -17,4 +17,5 @@ struct PinSet {
   );
 
   int outputEndStopStatus();
+  int deprecated_OutputEndStopStatus();
 };
