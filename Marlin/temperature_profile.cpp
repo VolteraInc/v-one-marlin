@@ -19,7 +19,7 @@ static struct {
 } profile;
 
 
-int profile_validate_input(const int temperature, const int duration){
+static int s_validate_input(const int temperature, const int duration){
 
   // Ensure both parameters were received.
   if (temperature == 0 || duration == 0){
@@ -69,11 +69,18 @@ void profile_reset() {
   vone->heater.setTargetTemperature(0); //DEFER: refactor to eliminate dependency on vone object
 }
 
-void profile_add(const int temperature, const int duration) {
+int profile_add(const int temperature, const int duration) {
+  // Confirm sensible values were received.
+  if (s_validate_input(temperature, duration)){
+    return -1;
+  }
+
   // Add to temperature and duration to buffer.
   profile.temperature[profile.tail] = temperature;
   profile.duration[profile.tail] = duration;
   profile.tail ++;
+
+  return 0;
 }
 
 bool profile_empty() {

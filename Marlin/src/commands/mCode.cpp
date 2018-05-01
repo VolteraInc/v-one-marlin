@@ -193,14 +193,8 @@ int process_mcode(int command_code) {
       if (code_seen('D'))
         duration = code_value();
 
-      // Confirm sensible values were received.
-      if (profile_validate_input(temperature, duration)){
-        return -1;
-      }
-
       // Add the temperature
-      profile_add(temperature, duration);
-      return 0;
+      return profile_add(temperature, duration);
     }
 
     // Stop the profile.
