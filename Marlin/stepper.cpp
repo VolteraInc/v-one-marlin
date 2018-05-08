@@ -398,6 +398,14 @@ ISR(TIMER1_COMPA_vect) {
           endstop_z_hit = true;
           step_events_completed = current_block->step_event_count;
 
+          // log 
+          //   << "z_min" << z_min
+          //   << " calibration_plate_enabled" << calibration_plate_enabled
+          //   << " p_bot" << p_bot
+          //   << " p_top_enabled" << p_top_enabled
+          //   << " p_top" << p_top
+          //   << endl;
+
           // for (unsigned int i = 0; i < 5; ++i) {
           //   log << "a[" << i << "] = " << a[i] << ", " << endl;
           //   a[i] = 0;
@@ -416,6 +424,10 @@ ISR(TIMER1_COMPA_vect) {
         endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
         endstop_z_hit = true;
         step_events_completed = current_block->step_event_count;
+
+        // log 
+        //   << "z_max_endstop" << z_max_endstop
+        //   << endl;
       }
       old_z_max_endstop = z_max_endstop;
     }
