@@ -55,9 +55,9 @@ int PTopPin::_recvAcknowledgement() {
   const bool acknowledged = ackCount > 3;
 
   log
-    << F("Tool")
+    << F("Tool ")
     << (acknowledged ? F("confirmed") : F("did not confirm"))
-    << F("message received, (")
+    << F(" message received, (")
     << ackCount
     << F(" signals seen in ") << count
     << F(" reads)")
