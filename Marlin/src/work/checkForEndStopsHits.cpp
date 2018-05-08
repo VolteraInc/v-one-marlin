@@ -5,6 +5,15 @@
 #include "../vone/vone.h"
 #include "work.h"
 
+static void s_outputError(int axis, long stepsWhenTriggered[3]) {
+  logError
+    << F("Unable to complete movement, limit switch triggered in ")
+    << axis_codes[axis]
+    << F(" at position ")
+    << (float)stepsWhenTriggered[axis] / axis_steps_per_unit[axis]
+    << endl;
+}
+
 void checkForEndstopHits() {
   bool triggered[3];
   long stepsWhenTriggered[3];
@@ -35,14 +44,14 @@ void checkForEndstopHits() {
   flushSerialCommands();
 
   // Output Error
-  logError
-    << F("Unable to complete movement, limit switch triggered in")
-    << (triggered[ X_AXIS ] ? F(" X") : F(""))
-    << (triggered[ Y_AXIS ] ? F(" Y") : F(""))
-    << (triggered[ Z_AXIS ] ? F(" Z") : F(""))
-    << ", position is "
-    << (float)stepsWhenTriggered[X_AXIS] / axis_steps_per_unit[X_AXIS]
-    << (float)stepsWhenTriggered[Y_AXIS] / axis_steps_per_unit[Y_AXIS]
-    << (float)stepsWhenTriggered[Z_AXIS] / axis_steps_per_unit[Z_AXIS]
-    << endl;
+  // NOTE: should generally see just one of these
+  if (triggered[ X_AXIS ]) {
+    s_outputError(X_AXIS, stepsWhenTriggered);
+  }
+  if (triggered[ Y_AXIS ]) {
+    s_outputError(Y_AXIS, stepsWhenTriggered);
+  }
+  if (triggered[ Z_AXIS ]) {
+    s_outputError(Z_AXIS, stepsWhenTriggered);
+  } 
 }
