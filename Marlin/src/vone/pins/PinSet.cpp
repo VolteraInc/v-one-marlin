@@ -61,7 +61,7 @@ int PinSet::deprecated_OutputEndStopStatus() {
   protocol << F("z_min: ") << s_deprecatedFormat(READ_PIN(Z_MIN)) << endl;
   protocol << F("z_max: ") << s_deprecatedFormat(READ_PIN(Z_MAX)) << endl;
 
-  protocol << F("p_top: ") << ptopValue << endl;
+  protocol << F("p_top: ") << s_deprecatedFormat(ptopValue) << endl;
   protocol << F("p_bot: ") << s_deprecatedFormat(READ_PIN(P_BOT)) << endl;
 
   protocol << F("xy_min_x: ") << s_deprecatedFormat(READ_PIN(XY_MIN_X)) << endl;
