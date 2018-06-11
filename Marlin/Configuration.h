@@ -172,7 +172,7 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 #define DEFAULT_RETRACT_ACCELERATION  50.0   // X, Y, Z and E max acceleration in mm/s^2 for retracts
 
 // The speed change that does not require acceleration (i.e. the software might assume it can be done instantaneously)
-#define DEFAULT_XYJERK                1.0    // (mm/sec)
+#define DEFAULT_XYJERK                10.0    // (mm/sec)
 #define DEFAULT_ZJERK                 0.1//0.4  // (mm/sec)
 #define DEFAULT_EJERK                 0.1  //100   // (microns/sec)
 
