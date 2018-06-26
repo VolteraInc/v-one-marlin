@@ -173,8 +173,8 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 
 // The speed change that does not require acceleration (i.e. the software might assume it can be done instantaneously)
 #define DEFAULT_XYJERK                10.0    // (mm/sec)
-#define DEFAULT_ZJERK                 0.1//0.4  // (mm/sec)
-#define DEFAULT_EJERK                 0.1  //100   // (microns/sec)
+#define DEFAULT_ZJERK                 5.0    // (mm/sec)
+#define DEFAULT_EJERK                 5.0  // (mm/sec)
 
 //===========================================================================
 //=============================Mechanical Settings===========================
