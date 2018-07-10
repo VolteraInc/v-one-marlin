@@ -86,8 +86,11 @@ const bool P_BOT_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 
 const bool Y_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-const bool X_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-const bool Y_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+
+const bool X_LIM_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool Y_LIM_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool E_LIM_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+
 
 const bool XY_MIN_X_ENDSTOP_INVERTING = true;
 const bool XY_MAX_X_ENDSTOP_INVERTING = true;
@@ -104,7 +107,7 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #define INVERT_X_DIR true
 #define INVERT_Y_DIR true
 #define INVERT_Z_DIR true
-#define INVERT_E0_DIR true
+#define INVERT_E_DIR true
 
 // ENDSTOP SETTINGS:
 
@@ -142,9 +145,17 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #define Z_MAX_LENGTH (Z_MAX_POS - Z_MIN_POS)
 //============================= Bed Auto Leveling ===========================
 
+
+// Flag to indicate trinamic drivers.
+#define TRINAMIC_DRIVERS (3)
+
 //// MOVEMENT SETTINGS
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
-#define HOMING_FEEDRATE {1200, 1200, 200 , 0}  // set the homing speeds (mm/min)
+#ifdef TRINAMIC_DRIVERS
+#define HOMING_FEEDRATE {2800, 2800, 200 , 50}  // set the homing speeds (mm/min)
+#else
+#define HOMING_FEEDRATE {1200, 1200, 200 , 0} // set the homing speeds (mm/min)
+#endif
 
 // default settings
 
@@ -163,6 +174,8 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 1/8  3428.571428571429
 1/16 6857.142857142858
 */
+
+
 
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {100.0,100.0,1600.0,1714.2857142857144}
 

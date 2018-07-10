@@ -114,6 +114,111 @@ static void s_prepare_arc_move(char isclockwise) {
   memcpy(current_position, destination, sizeof(current_position));
 }
 
+int moveAndMeasure(int axis) {
+
+  int minStall = 1024;
+  int tempStall = 0;
+  unsigned long tempStallSum =  0;
+  const int THRESHOLD = 186;
+  int index = 0;
+
+  int xMotion = axis == X_AXIS ? 100 : 10;
+  int yMotion = axis == Y_AXIS ? 100 : 10;
+
+  asyncMove(vone->toolBox.nullTool, xMotion, yMotion, current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[axis]);
+  while (blocks_queued()) {
+    tempStall = trinamicGetStallGuard(axis);
+    if (tempStall !=0 && trinamicGetTStep(axis) < THRESHOLD) {
+
+      tempStallSum += tempStall;
+      index ++;
+      if(tempStall < minStall) {
+        minStall = tempStall;
+      }
+    }
+  }
+  log << F("Forward Motion Min StallValue:") << minStall << F(" Average Value: ") << tempStallSum / index << endl;
+
+  tempStallSum = 0;
+  index = 0;
+
+  asyncMove(vone->toolBox.nullTool, 10, 10, current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[axis]);
+  while (blocks_queued()) {
+    tempStall = trinamicGetStallGuard(axis);
+    if (tempStall !=0 && trinamicGetTStep(axis) < THRESHOLD) {
+
+      tempStallSum += tempStall;
+      index ++;
+      if(tempStall < minStall) {
+        minStall = tempStall;
+      }
+    }
+  }
+  log << F("Reverse Motion Min StallValue:") << minStall << F(" Average Value: ") << tempStallSum / index << endl;
+
+  return minStall;
+}
+
+int moveAndMeasure2() {
+
+  const int value = 300;
+  int minStall = 999999;
+  int tempStall = 0;
+  uint32_t tStepLog[value];
+  int stallValueLog[value];
+  unsigned long timing[value];
+  unsigned long waitUntil = 0;
+  int i = 0;
+  unsigned long startingTime = millis();
+
+  asyncMove(vone->toolBox.nullTool, 100, 10, current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[X_AXIS]);
+  while (blocks_queued()) {
+
+    waitUntil = millis();
+    while(millis() < waitUntil + 15) {
+      ;
+    }
+    if (i < value) {
+      tStepLog[i] = trinamicGetTStep(X_AXIS);
+      stallValueLog[i] = trinamicGetStallGuard(X_AXIS);
+      timing[i] = waitUntil - startingTime;
+      i ++;
+    }
+  }
+  //
+  log << F("Forward Motion Min StallValue:") << minStall << endl;
+
+  log << F("Outputting value pairs") << endl;
+  for (int j = 0; j < i; j ++) {
+    log << timing[j] << F(", ") << tStepLog[j] << F(",  ") << stallValueLog[j] << endl;
+  }
+
+
+  asyncMove(vone->toolBox.nullTool, 0, 10, current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[X_AXIS]);
+  i = 0;
+  while (blocks_queued()) {
+
+    waitUntil = millis();
+    while(millis() < waitUntil + 15) {
+      ;
+    }
+    if (i < value) {
+      tStepLog[i] = trinamicGetTStep(X_AXIS);
+      stallValueLog[i] = trinamicGetStallGuard(X_AXIS);
+      timing[i] = waitUntil - startingTime;
+      i ++;
+    }
+  }
+  //
+  log << F("Forward Motion Min StallValue:") << minStall << endl;
+
+  log << F("Outputting value pairs in Reverse") << endl;
+  for (int j = 0; j < i; j ++) {
+    log << timing[j] << F(", ") << tStepLog[j] << F(",  ") << stallValueLog[j] << endl;
+  }
+  return 0;
+}
+
 int process_gcode(int command_code) {
   // look here for descriptions of G-codes: http://linuxcnc.org/handbook/gcode/g-code.html
   // http://objects.reprap.org/wiki/Mendel_User_Manual:_RepRapGCodes
@@ -149,6 +254,60 @@ int process_gcode(int command_code) {
       while(millis() < waitUntil) {
         periodic_work();
       }
+      return 0;
+    }
+
+    // G4  - Dwell S<seconds> or P<milliseconds>
+    case 5: {
+
+      bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
+
+      vone->toolBox.currentTool().resetPreparations();
+      vone->stepper.resume();
+      setHomedState(X_AXIS, 0);
+      setHomedState(Y_AXIS, 0);
+      int minStallGuardValue;
+      int stallSensitivity;
+
+      if (code_seen('X') ) {
+        rawHome( vone->toolBox.nullTool, true, false, false );
+
+        minStallGuardValue = 1024;
+        stallSensitivity = 64;
+
+        while(minStallGuardValue > 10 && stallSensitivity > -64) {
+          stallSensitivity -= 3;
+          log << F("Setting Sensitivity to: ") << stallSensitivity << endl;
+          trinamicSetSG(X_AXIS, stallSensitivity);
+          minStallGuardValue = moveAndMeasure(X_AXIS);
+        }
+
+        // Save the settings.
+        stallSensitivity = min(stallSensitivity + 10, 63);
+        trinamicSetSG(X_AXIS, stallSensitivity);
+        log << F("Optimum Stallguard is: ") << stallSensitivity << endl;
+
+      }
+
+      if (code_seen('Y')) {
+        rawHome( vone->toolBox.nullTool, false, true, false );
+
+        minStallGuardValue = 1024;
+        stallSensitivity = 64;
+
+        while(minStallGuardValue > 10 && stallSensitivity > -64) {
+          stallSensitivity -= 3;
+          log << F("Setting Sensitivity to: ") << stallSensitivity << endl;
+          trinamicSetSG(Y_AXIS, stallSensitivity);
+          minStallGuardValue = moveAndMeasure(Y_AXIS);
+        }
+
+        // Save the settings.
+        stallSensitivity = min(stallSensitivity + 10, 63);
+        trinamicSetSG(Y_AXIS, stallSensitivity);
+        log << F("Optimum Stallguard is: ") << stallSensitivity << endl;
+      }
+
       return 0;
     }
 

@@ -504,7 +504,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   if (block->steps_x != 0) { enable_x(); }
   if (block->steps_y != 0) { enable_y(); }
   if (block->steps_z != 0) { enable_z(); }
-  if (block->steps_e != 0) { enable_e0(); }
+  if (block->steps_e != 0) { enable_e(); }
 
   if (block->steps_e == 0) {
     if (feed_rate < mintravelfeedrate) { feed_rate = mintravelfeedrate; }

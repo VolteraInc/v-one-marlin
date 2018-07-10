@@ -22,8 +22,8 @@ void setHomedState(int axis, int value);
 #define enable_z() WRITE(Z_ENABLE_PIN, Z_ENABLE_ON)
 #define disable_z() { WRITE(Z_ENABLE_PIN,!Z_ENABLE_ON); setHomedState(Z_AXIS, 0); }
 
-#define enable_e0() WRITE(E0_ENABLE_PIN, E_ENABLE_ON)
-#define disable_e0() WRITE(E0_ENABLE_PIN,!E_ENABLE_ON)
+#define enable_e() WRITE(E_ENABLE_PIN, E_ENABLE_ON)
+#define disable_e() WRITE(E_ENABLE_PIN,!E_ENABLE_ON)
 
 enum AxisEnum {X_AXIS=0, Y_AXIS=1, Z_AXIS=2, E_AXIS=3};
 

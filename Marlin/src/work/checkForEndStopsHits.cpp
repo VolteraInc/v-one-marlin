@@ -5,7 +5,7 @@
 #include "../vone/vone.h"
 #include "work.h"
 
-static void s_outputError(int axis, long stepsWhenTriggered[3]) {
+static void s_outputError(int axis, long stepsWhenTriggered[4]) {
   logError
     << F("Unable to complete movement, limit switch triggered in ")
     << axis_codes[axis]
@@ -15,8 +15,8 @@ static void s_outputError(int axis, long stepsWhenTriggered[3]) {
 }
 
 void checkForEndstopHits() {
-  bool triggered[3];
-  long stepsWhenTriggered[3];
+  bool triggered[4];
+  long stepsWhenTriggered[4];
   if (!readAndResetEndstops(triggered, stepsWhenTriggered)) {
     return;
   }
@@ -53,5 +53,8 @@ void checkForEndstopHits() {
   }
   if (triggered[ Z_AXIS ]) {
     s_outputError(Z_AXIS, stepsWhenTriggered);
-  } 
+  }
+  if (triggered[ E_AXIS ]) {
+    s_outputError(E_AXIS, stepsWhenTriggered);
+  }
 }
