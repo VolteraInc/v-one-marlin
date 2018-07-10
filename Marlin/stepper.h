@@ -22,15 +22,16 @@
 #define stepper_h
 
 #include <inttypes.h>
+#include "Configuration.h"
 
 // Mod by VOLTERA
 #define WRITE_Z_STEP(v) WRITE(Z_STEP_PIN, v)
 #define NORM_Z_DIR() WRITE(Z_DIR_PIN, !INVERT_Z_DIR)
 #define REV_Z_DIR() WRITE(Z_DIR_PIN, INVERT_Z_DIR)
 
-#define WRITE_E_STEP(v) WRITE(E0_STEP_PIN, v)
-#define NORM_E_DIR() WRITE(E0_DIR_PIN, !INVERT_E0_DIR)
-#define REV_E_DIR() WRITE(E0_DIR_PIN, INVERT_E0_DIR)
+#define WRITE_E_STEP(v) WRITE(E_STEP_PIN, v)
+#define NORM_E_DIR() WRITE(E_DIR_PIN, !INVERT_E_DIR)
+#define REV_E_DIR() WRITE(E_DIR_PIN, INVERT_E_DIR)
 
 // Initialize and start the stepper motor subsystem
 void st_init();
@@ -62,10 +63,31 @@ void checkStepperErrors(); //Print errors detected by the stepper
 
 void quickStop();
 
-void digiPotInit();
-void digiPotSetCurrent(uint8_t axis, uint8_t current);
-uint8_t digiPotGetCurrent(uint8_t axis);
-void digiPotWrite(uint8_t address, uint8_t value);
-uint8_t digiPotRead(uint8_t address);
+#ifdef TRINAMIC_DRIVERS
+  void trinamicInit();
+
+  void trinamicSetCurrent(int axis, int current);
+  int trinamicSetSG(int axis, int value);
+
+  int trinamicGetSG(int axis);
+  int trinamicGetCurrentScaling(int axis);
+  uint32_t trinamicGetTStep(int axis);
+  uint32_t trinamicGetStealthMaxSpeed(int axis);
+  uint32_t trinamicGetStallGuardMinSpeed(int axis);
+
+  int trinamicGetStalled(int axis);
+  int trinamicGetStallGuard(int axis);
+  uint32_t trinamicGetDRVSTATUS(int axis);
+  int trinamicGetGStat(int axis);
+
+
+#else
+  void digiPotInit();
+  void digiPotSetCurrent(uint8_t axis, uint8_t current);
+  uint8_t digiPotGetCurrent(uint8_t axis);
+  void digiPotWrite(uint8_t address, uint8_t value);
+  uint8_t digiPotRead(uint8_t address);
+#endif // TRINAMIC_DRIVERS
+
 
 #endif

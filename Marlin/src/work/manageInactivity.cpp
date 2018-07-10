@@ -1,5 +1,6 @@
 #include "../../Marlin.h"
 #include "../../planner.h"
+#include "../../stepper.h"
 #include "../api/api.h"
 #include "../../macros.h"
 #include "../../temperature_profile.h"
@@ -32,6 +33,19 @@ void manage_inactivity() {
     return;
   }
   nextCheckAt = now + 1000;
+  if (logging_enabled) {
+  log
+    << F("Stall Value X:") << trinamicGetStallGuard(X_AXIS)
+    << F("  Y:") << trinamicGetStallGuard(Y_AXIS)
+    << F("  Z:") << trinamicGetStallGuard(Z_AXIS)
+    << F("  E:") << trinamicGetStallGuard(E_AXIS)
+    << F(" Is Stalled X:") << trinamicGetStalled(X_AXIS)
+    << F("  Y:") << trinamicGetStalled(Y_AXIS)
+    << F("  Z:") << trinamicGetStalled(Z_AXIS)
+    << F("  E:") << trinamicGetStalled(E_AXIS)
+    << endl;
+  }
+
 
   if((now - previous_millis_active_cmd) > stepper_inactive_time && stepper_inactive_time) {
     if(!blocks_queued()) {
@@ -45,7 +59,7 @@ void manage_inactivity() {
       disable_x();
       disable_y();
       disable_z();
-      disable_e0();
+      disable_e();
       vone->toolBox.currentTool().resetPreparations();
     }
   }

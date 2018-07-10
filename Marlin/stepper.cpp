@@ -27,7 +27,14 @@ and Philipp Tiefenbacher. */
 #include "Configuration.h"
 #include "planner.h"
 #include "speed_lookuptable.h"
+
+#if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
 #include <SPI.h>
+#endif
+
+#ifdef TRINAMIC_DRIVERS
+#include <TMC2130Stepper.h>
+#endif
 
 #include "src/vone/VOne.h"
 
@@ -53,18 +60,19 @@ static char step_loops;
 static unsigned short OCR1A_nominal;
 static unsigned short step_loops_nominal;
 
-volatile long endstops_trigsteps[3]={0,0,0};
+volatile long endstops_trigsteps[4]={0,0,0,0};
 volatile long endstops_stepsTotal,endstops_stepsDone;
 static volatile bool endstop_x_hit=false;
 static volatile bool endstop_y_hit=false;
 static volatile bool endstop_z_hit=false;
+static volatile bool endstop_e_hit=false;
 
-static bool old_x_min_endstop=false;
-static bool old_x_max_endstop=false;
-static bool old_y_min_endstop=false;
-static bool old_y_max_endstop=false;
+// static bool old_x_min_endstop=false;
+// static bool old_x_max_endstop=false;
+// static bool old_y_min_endstop=false;
+// static bool old_y_max_endstop=false;
 static bool old_z_min_endstop=false;
-static bool old_z_max_endstop=false;
+// static bool old_z_max_endstop=false;
 
 static volatile bool p_top_enabled = false;
 static volatile bool calibration_plate_enabled = false;
@@ -156,35 +164,42 @@ bool endstop_triggered(int axis) {
       case X_AXIS: triggered = endstop_x_hit; break;
       case Y_AXIS: triggered = endstop_y_hit; break;
       case Z_AXIS: triggered = endstop_z_hit; break;
+      case E_AXIS: triggered = endstop_e_hit; break;
     }
   CRITICAL_SECTION_END;
   return triggered;
 }
 
 /// Returns true if an endstop was hit
-bool readAndResetEndstops(bool triggered[3], long stepsWhenTriggered[3]) {
+bool readAndResetEndstops(bool triggered[4], long stepsWhenTriggered[4]) {
   CRITICAL_SECTION_START;
     // Read and reset hit flags
     triggered[ X_AXIS ] = endstop_x_hit;
     triggered[ Y_AXIS ] = endstop_y_hit;
     triggered[ Z_AXIS ] = endstop_z_hit;
+    triggered[ E_AXIS ] = endstop_e_hit;
+
     endstop_x_hit = false;
     endstop_y_hit = false;
     endstop_z_hit = false;
+    endstop_e_hit = false;
 
     // Read and reset stepper location when triggered
     stepsWhenTriggered[ X_AXIS ] = endstops_trigsteps[ X_AXIS ];
     stepsWhenTriggered[ Y_AXIS ] = endstops_trigsteps[ Y_AXIS ];
     stepsWhenTriggered[ Z_AXIS ] = endstops_trigsteps[ Z_AXIS ];
+    stepsWhenTriggered[ E_AXIS ] = endstops_trigsteps[ E_AXIS ];
     endstops_trigsteps[ X_AXIS ] = 0;
     endstops_trigsteps[ Y_AXIS ] = 0;
     endstops_trigsteps[ Z_AXIS ] = 0;
+    endstops_trigsteps[ E_AXIS ] = 0;
   CRITICAL_SECTION_END;
 
   return (
     triggered[ X_AXIS ] ||
     triggered[ Y_AXIS ] ||
-    triggered[ Z_AXIS ]
+    triggered[ Z_AXIS ] ||
+    triggered[ E_AXIS ]
   );
 }
 
@@ -194,6 +209,7 @@ void clear_endstop(int axis) {
       case X_AXIS: endstop_x_hit = false; break;
       case Y_AXIS: endstop_y_hit = false; break;
       case Z_AXIS: endstop_z_hit = false; break;
+      case E_AXIS: endstop_e_hit = false; break;
     }
   CRITICAL_SECTION_END;
 }
@@ -337,39 +353,39 @@ ISR(TIMER1_COMPA_vect) {
     // Set direction to check limit switches / endstops.
     // Note: adjustments made here to monitor the correct XY-positioner limit switches
     if ((out_bits & (1<<X_AXIS)) != 0) {   // stepping along -X axis
-      bool x_min_endstop = READ_PIN(X_MIN) || READ_PIN(XY_MIN_X); // X- direction, also monitors XY_min_X
-      if (x_min_endstop && old_x_min_endstop && (current_block->steps_x > 0)) {
+      bool x_min_endstop = READ_PIN(X_MIN) || READ_PIN(XY_MIN_X) || READ_PIN(X_LIM); // X- direction, also monitors XY_min_X
+      if (x_min_endstop && (current_block->steps_x > 0)) {
         endstops_trigsteps[X_AXIS] = count_position[X_AXIS];
         endstop_x_hit = true;
         step_events_completed = current_block->step_event_count;
       }
-      old_x_min_endstop = x_min_endstop;
+      //old_x_min_endstop = x_min_endstop;
     } else { // +direction
-      bool x_max_endstop = READ_PIN(XY_MAX_X); // X+ direction, also monitors XY_max_X
-      if (x_max_endstop && old_x_max_endstop && (current_block->steps_x > 0)){
+      bool x_max_endstop = READ_PIN(XY_MAX_X) || READ_PIN(X_LIM); // X+ direction, also monitors XY_max_X
+      if (x_max_endstop && (current_block->steps_x > 0)){
         endstops_trigsteps[X_AXIS] = count_position[X_AXIS];
         endstop_x_hit = true;
         step_events_completed = current_block->step_event_count;
       }
-      old_x_max_endstop = x_max_endstop;
+      //old_x_max_endstop = x_max_endstop;
     }
 
     if ((out_bits & (1<<Y_AXIS)) != 0) {   // -direction
-      bool y_min_endstop = READ_PIN(Y_MIN) || READ_PIN(XY_MIN_Y); // Y- direction, also monitors XY_min_Y
-      if (y_min_endstop && old_y_min_endstop && (current_block->steps_y > 0)) {
+      bool y_min_endstop = READ_PIN(Y_MIN) || READ_PIN(XY_MIN_Y) || READ_PIN(Y_LIM); // Y- direction, also monitors XY_min_Y
+      if (y_min_endstop && (current_block->steps_y > 0)) {
         endstops_trigsteps[Y_AXIS] = count_position[Y_AXIS];
         endstop_y_hit = true;
         step_events_completed = current_block->step_event_count;
       }
-      old_y_min_endstop = y_min_endstop;
+      //old_y_min_endstop = y_min_endstop;
     } else { // +direction
-      bool y_max_endstop = READ_PIN(XY_MAX_Y);
-      if (y_max_endstop && old_y_max_endstop && (current_block->steps_y > 0)){
+      bool y_max_endstop = READ_PIN(XY_MAX_Y) || READ_PIN(Y_LIM);
+      if (y_max_endstop && (current_block->steps_y > 0)){
         endstops_trigsteps[Y_AXIS] = count_position[Y_AXIS];
         endstop_y_hit = true;
         step_events_completed = current_block->step_event_count;
       }
-      old_y_max_endstop = y_max_endstop;
+      //old_y_max_endstop = y_max_endstop;
     }
 
     if ((out_bits & (1<<Z_AXIS)) != 0) { // -direction
@@ -398,7 +414,7 @@ ISR(TIMER1_COMPA_vect) {
           endstop_z_hit = true;
           step_events_completed = current_block->step_event_count;
 
-          // log 
+          // log
           //   << "z_min" << z_min
           //   << " calibration_plate_enabled" << calibration_plate_enabled
           //   << " p_bot" << p_bot
@@ -420,24 +436,38 @@ ISR(TIMER1_COMPA_vect) {
       count_direction[Z_AXIS] = 1;
 
       bool z_max_endstop = READ_PIN(Z_MAX);
-      if (z_max_endstop && old_z_max_endstop && (current_block->steps_z > 0)) {
+      if (z_max_endstop  && (current_block->steps_z > 0)) {
         endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
         endstop_z_hit = true;
         step_events_completed = current_block->step_event_count;
 
-        // log 
+        // log
         //   << "z_max_endstop" << z_max_endstop
         //   << endl;
       }
-      old_z_max_endstop = z_max_endstop;
+      //old_z_max_endstop = z_max_endstop;
     }
 
     if ((out_bits & (1<<E_AXIS)) != 0) {  // -direction
       REV_E_DIR();
       count_direction[E_AXIS] = -1;
+
+      bool e_min_endstop = READ_PIN(E_LIM);
+      if(e_min_endstop && (current_block->steps_e > 0)) {
+        endstops_trigsteps[E_AXIS] = count_position[E_AXIS];
+        endstop_e_hit = true;
+        step_events_completed = current_block->step_event_count;
+      }
     } else { // +direction
       NORM_E_DIR();
       count_direction[E_AXIS] = 1;
+
+      bool e_min_endstop = READ_PIN(E_LIM);
+      if(e_min_endstop && (current_block->steps_e  > 0)) {
+        endstops_trigsteps[E_AXIS] = count_position[E_AXIS];
+        endstop_e_hit = true;
+        step_events_completed = current_block->step_event_count;
+      }
     }
 
     for (int8_t i = 0; i < step_loops; i++) { // Take multiple steps per interrupt (For high speed moves)
@@ -533,29 +563,39 @@ ISR(TIMER1_COMPA_vect) {
 }
 
 void st_init() {
+
+  // Initialize Trinamic Driver.
+  #ifdef TRINAMIC_DRIVERS
+  trinamicInit(); // trinamicInit initalizes all the pins for us.
+  #else
   // Initialize Digipot Motor Current
   digiPotInit();
 
-  // Initialize Dir Pins
+  //Initialize Dir Pins
   SET_OUTPUT(X_DIR_PIN);
   SET_OUTPUT(Y_DIR_PIN);
   SET_OUTPUT(Z_DIR_PIN);
-  SET_OUTPUT(E0_DIR_PIN);
+  SET_OUTPUT(E_DIR_PIN);
 
   // Initialize Enable Pins - steppers default to disabled.
   SET_OUTPUT(X_ENABLE_PIN);  if (!X_ENABLE_ON) { WRITE(X_ENABLE_PIN,  HIGH); }
   SET_OUTPUT(Y_ENABLE_PIN);  if (!Y_ENABLE_ON) { WRITE(Y_ENABLE_PIN,  HIGH); }
   SET_OUTPUT(Z_ENABLE_PIN);  if (!Z_ENABLE_ON) { WRITE(Z_ENABLE_PIN,  HIGH); }
-  SET_OUTPUT(E0_ENABLE_PIN); if (!E_ENABLE_ON) { WRITE(E0_ENABLE_PIN, HIGH); }
-
+  SET_OUTPUT(E_ENABLE_PIN); if (!E_ENABLE_ON) { WRITE(E_ENABLE_PIN, HIGH); }
+  #endif
   // Endstops and pullups
   SET_INPUT(X_MIN_PIN);
   SET_INPUT(Y_MIN_PIN);
   SET_INPUT(Z_MIN_PIN);
+  SET_INPUT(Z_MAX_PIN);
 
+  // Endstops and pullups
+  SET_INPUT(X_LIM_PIN);
+  SET_INPUT(Y_LIM_PIN);
+  SET_INPUT(E_LIM_PIN);
+  
   SET_INPUT(P_BOT_PIN);
 
-  SET_INPUT(Z_MAX_PIN);
 
   SET_INPUT(XY_MIN_X_PIN);
   SET_INPUT(XY_MAX_X_PIN);
@@ -585,9 +625,9 @@ void st_init() {
   WRITE(Z_STEP_PIN, INVERT_Z_STEP_PIN);
   disable_z();
 
-  SET_OUTPUT(E0_STEP_PIN);
-  WRITE(E0_STEP_PIN, INVERT_E_STEP_PIN);
-  disable_e0();
+  SET_OUTPUT(E_STEP_PIN);
+  WRITE(E_STEP_PIN, INVERT_E_STEP_PIN);
+  disable_e();
 
   // waveform generation = 0100 = CTC
   TCCR1B &= ~(1<<WGM13);
@@ -673,6 +713,181 @@ void quickStop() {
   ENABLE_STEPPER_DRIVER_INTERRUPT();
 }
 
+#ifdef TRINAMIC_DRIVERS
+
+const int motorPins[4][4] = {
+  {X_ENABLE_PIN, X_DIR_PIN, X_STEP_PIN, X_CS_PIN},
+  {Y_ENABLE_PIN, Y_DIR_PIN, Y_STEP_PIN, Y_CS_PIN},
+  {Z_ENABLE_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_CS_PIN},
+  {E_ENABLE_PIN, E_DIR_PIN, E_STEP_PIN, E_CS_PIN},
+};
+
+TMC2130Stepper TMC2130_x = TMC2130Stepper(motorPins[X_AXIS][0], motorPins[X_AXIS][1], motorPins[X_AXIS][2], motorPins[X_AXIS][3]);
+TMC2130Stepper TMC2130_y = TMC2130Stepper(motorPins[Y_AXIS][0], motorPins[Y_AXIS][1], motorPins[Y_AXIS][2], motorPins[Y_AXIS][3]);
+TMC2130Stepper TMC2130_z = TMC2130Stepper(motorPins[Z_AXIS][0], motorPins[Z_AXIS][1], motorPins[Z_AXIS][2], motorPins[Z_AXIS][3]);
+TMC2130Stepper TMC2130_e = TMC2130Stepper(motorPins[E_AXIS][0], motorPins[E_AXIS][1], motorPins[E_AXIS][2], motorPins[E_AXIS][3]);
+
+const TMC2130Stepper TMC2130[4] = { TMC2130_x, TMC2130_y, TMC2130_z, TMC2130_e };
+
+void trinamicInit() {
+
+  // 90000 pps -> 186 tStep
+  // 100000 pps ->  167 tStep
+
+
+  const float homing_feedrate[] = HOMING_FEEDRATE;
+
+  /**************  X AXIS ****************/
+
+  TMC2130[X_AXIS].begin(); // Initializes Pins and SPI.
+  TMC2130[X_AXIS].off_time(4);
+  TMC2130[X_AXIS].blank_time(36);
+  TMC2130[X_AXIS].hysteresis_start(1);
+  TMC2130[X_AXIS].hysteresis_end(2);
+
+  // Current and Microsteps
+  TMC2130[X_AXIS].setCurrent(180, 0.33, 1); //Current in milliamps, sense resistor value, holding current fraction.
+  TMC2130[X_AXIS].microsteps(16); // Out of the box, we are using 16 microsteps.
+  TMC2130[X_AXIS].interpolate(1); // Interpolate the 16 stepping to 256 stepping.
+  TMC2130[X_AXIS].hold_delay(8); // How long to wait after standstill is detected before powering down.
+  TMC2130[X_AXIS].power_down_delay(128); // Wait about 2 seconds before reducing current.
+
+  // Stealthchop settings
+  TMC2130[X_AXIS].stealthChop(1);
+  TMC2130[X_AXIS].stealth_autoscale(1);
+  TMC2130[X_AXIS].stealth_freq(1);
+  TMC2130[X_AXIS].stealth_amplitude(255); //0...255
+  TMC2130[X_AXIS].stealth_gradient(4); // 1...15
+  TMC2130[X_AXIS].stealth_max_speed(250); // TPWMTHRS - Upper velocity threshold for stealChop
+
+  // Stallguard settings
+  TMC2130[X_AXIS].coolstep_min_speed(186); // TCOOLTHRS - Velocity threshold of when to turn on stallguard/coolstep feature.
+  TMC2130[X_AXIS].diag1_active_high(1);
+  TMC2130[X_AXIS].diag1_stall(1); // Enable DIAG0 active on motor stall
+  TMC2130[X_AXIS].sg_stall_value(10); // -64...0....64 - Tunes sensitivity.
+
+  /**************  Y AXIS ****************/
+
+  TMC2130[Y_AXIS].begin(); // Initializes Pins and SPI.
+  TMC2130[Y_AXIS].off_time(4);
+  TMC2130[Y_AXIS].blank_time(36);
+  TMC2130[Y_AXIS].hysteresis_start(1);
+  TMC2130[Y_AXIS].hysteresis_end(2);
+
+  // Current and Microsteps
+  TMC2130[Y_AXIS].setCurrent(300, 0.33, 1); //Current in milliamps, sense resistor value, holding current fraction.
+  TMC2130[Y_AXIS].microsteps(16); // Out of the box, we are using 16 microsteps.
+  TMC2130[Y_AXIS].interpolate(1); // Interpolate the 16 stepping to 256 stepping.
+  TMC2130[Y_AXIS].hold_delay(8); // How long to wait after standstill is detected before powering down.
+  TMC2130[Y_AXIS].power_down_delay(128); // Wait about 2 seconds before reducing current.
+
+  // Stealthchop settings
+  TMC2130[Y_AXIS].stealthChop(1);
+  TMC2130[Y_AXIS].stealth_autoscale(1);
+  TMC2130[Y_AXIS].stealth_freq(1);
+  TMC2130[Y_AXIS].stealth_amplitude(255); //0...255
+  TMC2130[Y_AXIS].stealth_gradient(4); // 1...15
+  TMC2130[Y_AXIS].stealth_max_speed(250); // TPWMTHRS - Upper velocity threshold for stealChop
+
+  // Stallguard settings
+  TMC2130[Y_AXIS].coolstep_min_speed(186); // TCOOLTHRS - Velocity threshold of when to turn on stallguard/coolstep feature.
+  TMC2130[Y_AXIS].diag1_active_high(1);
+  TMC2130[Y_AXIS].diag1_stall(1); // Enable DIAG0 active on motor stall
+  TMC2130[Y_AXIS].sg_stall_value(10); // -64...0....64 - Tunes sensitivity
+
+  /**************  Z AXIS ****************/
+
+  TMC2130[Z_AXIS].begin(); // Initializes Pins and SPI.
+  TMC2130[Z_AXIS].off_time(4);
+  TMC2130[Z_AXIS].blank_time(36);
+  TMC2130[Z_AXIS].hysteresis_start(1);
+  TMC2130[Z_AXIS].hysteresis_end(2);
+
+  // Current and Microsteps
+  TMC2130[Z_AXIS].setCurrent(180, 0.33, 1); //Current in milliamps, sense resistor value, holding current fraction.
+  TMC2130[Z_AXIS].microsteps(16); // Out of the box, we are using 16 microsteps.
+  TMC2130[Z_AXIS].interpolate(1); // Interpolate the 16 stepping to 256 stepping.
+  TMC2130[Z_AXIS].hold_delay(8); // How long to wait after standstill is detected before powering down.
+  TMC2130[Z_AXIS].power_down_delay(128); // Wait about 2 seconds before reducing current.
+
+  // Stealthchop settings
+  TMC2130[Z_AXIS].stealthChop(1);
+  TMC2130[Z_AXIS].stealth_autoscale(1);
+  TMC2130[Z_AXIS].stealth_freq(1);
+  TMC2130[Z_AXIS].stealth_amplitude(255); //0...255
+  TMC2130[Z_AXIS].stealth_gradient(4); // 1...15
+  TMC2130[Z_AXIS].stealth_max_speed(50); // TPWMTHRS - Upper velocity threshold for stealChop
+
+
+  /**************  E AXIS ****************/
+
+  TMC2130[E_AXIS].begin(); // Initializes Pins and SPI.
+  TMC2130[E_AXIS].off_time(4);
+  TMC2130[E_AXIS].blank_time(36);
+  TMC2130[E_AXIS].hysteresis_start(1);
+  TMC2130[E_AXIS].hysteresis_end(2);
+
+  // Current and Microsteps
+  TMC2130[E_AXIS].setCurrent(180, 0.33, 1); //Current in milliamps, sense resistor value, holding current fraction.
+  TMC2130[E_AXIS].microsteps(8); // Out of the box, we are using 16 microsteps.
+  TMC2130[E_AXIS].interpolate(1); // Interpolate the 16 stepping to 256 stepping.
+  TMC2130[E_AXIS].hold_delay(8); // How long to wait after standstill is detected before powering down.
+  TMC2130[E_AXIS].power_down_delay(128); // Wait about 2 seconds before reducing current.
+
+  //Stealthchop settings
+  TMC2130[E_AXIS].stealthChop(1);
+  TMC2130[E_AXIS].stealth_autoscale(1);
+  TMC2130[E_AXIS].stealth_freq(1);
+  TMC2130[E_AXIS].stealth_amplitude(255); //0...255
+  TMC2130[E_AXIS].stealth_gradient(4); // 1...15
+  TMC2130[E_AXIS].stealth_max_speed(115); // TPWMTHRS - Upper velocity threshold for stealChop
+
+  // Stallguard settings
+  TMC2130[E_AXIS].coolstep_min_speed(100); // TCOOLTHRS - Velocity threshold of when to turn on stallguard/coolstep feature.
+  TMC2130[E_AXIS].diag1_active_high(1);
+  TMC2130[E_AXIS].diag1_stall(1); // Enable DIAG0 active on motor stall
+  TMC2130[E_AXIS].sg_stall_value(10); // -63...0....63 - Tunes sensitivity
+
+}
+
+// Turning functions
+void trinamicSetCurrent(int axis, int current) {
+  TMC2130[axis].setCurrent(current, 0.10, 0.7);
+}
+
+uint32_t trinamicGetTStep(int axis) {
+  return TMC2130[axis].microstep_time();
+}
+
+int trinamicGetCurrentScaling(int axis) {
+  return (int)TMC2130[axis].run_current();
+}
+
+int trinamicGetStalled(int axis) {
+  return (int)(TMC2130[axis].DRVSTATUS() >> 24 & 0x1);
+}
+
+int trinamicGetStallGuard(int axis){
+  // Should clear stalled value...maybe
+  uint32_t value = TMC2130[axis].DRVSTATUS();
+  return (int)(value & 0x03FF);
+}
+
+int trinamicSetSG(int axis, int value) {
+  TMC2130[axis].sg_stall_value(value);
+}
+
+int trinamicGetSG(int axis) {
+  return (int) TMC2130[axis].sg_stall_value();
+}
+
+int trinamicGetGStat(int axis) {
+  return (int) TMC2130[axis].GSTAT();
+}
+
+
+#else
+
 void digiPotInit() { //Initialize Digipot Motor Current
   const uint8_t digipot_motor_current[] = DIGIPOT_MOTOR_CURRENT;
   SPI.begin();
@@ -720,3 +935,4 @@ uint8_t digiPotRead(uint8_t address) {
   SPI.endTransaction();
   return val;
 }
+#endif // TRINAMIC DRIVERS.
