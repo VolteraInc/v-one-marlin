@@ -23,7 +23,7 @@ static const __FlashStringHelper* s_pinStatusToString(bool isTriggered) {
 int PinSet::outputEndStopStatus() {
   bool ptopValue = false;
   int returnValue = ptop.readDigitalValue(ptopValue);
-  
+
   log << F("Endstop status") << endl;
   log << F("  right (x-min): ") << s_pinStatusToString(READ_PIN(X_MIN)) << endl;
   log << F("  back (y-min): ") << s_pinStatusToString(READ_PIN(Y_MIN)) << endl;
@@ -34,15 +34,15 @@ int PinSet::outputEndStopStatus() {
   log << F("  tool switch (p-top): ") << s_pinStatusToString(ptopValue) << endl;
 
   log << F("  xy-positioner right (xy-min-x): ") << s_pinStatusToString(READ_PIN(XY_MIN_X)) << endl;
-  log << F("  xy-positioner left (xy_max_x): ") << s_pinStatusToString(READ_PIN(XY_MAX_X)) << endl;
-  log << F("  xy-positioner back (xy_min_y): ") << s_pinStatusToString(READ_PIN(XY_MIN_Y)) << endl;
-  log << F("  xy-positioner front (xy_max_y): ") << s_pinStatusToString(READ_PIN(XY_MAX_Y)) << endl;
+  log << F("  xy-positioner left (xy-max-x): ") << s_pinStatusToString(READ_PIN(XY_MAX_X)) << endl;
+  log << F("  xy-positioner back (xy-min-y): ") << s_pinStatusToString(READ_PIN(XY_MIN_Y)) << endl;
+  log << F("  xy-positioner front (xy-max-y): ") << s_pinStatusToString(READ_PIN(XY_MAX_Y)) << endl;
 
   return returnValue;
 }
 
 // -----------------------------------------------------------------------
-// Note: this output is used in manufacturing scripts 
+// Note: this output is used in manufacturing scripts
 //       so we can't change it without updating those scripts
 
 static const __FlashStringHelper* s_deprecatedFormat(bool isTriggered) {
@@ -71,4 +71,3 @@ int PinSet::deprecated_OutputEndStopStatus() {
 
   return returnValue;
 }
-
