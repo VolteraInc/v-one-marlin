@@ -9,6 +9,7 @@ static struct {
   unsigned long holdUntil = 0;
   unsigned long safetyTimeout = 0;
   unsigned long changeTimeout = 0;
+  unsigned long startTime = 0;
   float changeTemperature = 0;
   bool ramping = false;
   bool holding = false;
@@ -63,6 +64,7 @@ void profile_reset() {
   profile.ramping = false;
   profile.holding = false; //<-- not really required, but reads nicer.
   profile.holdUntil = 0;
+  profile.startTime = 0;
   profile.safetyTimeout = 0;
   profile.changeTimeout = 0;
   profile.changeTemperature = 0;
@@ -170,11 +172,21 @@ void manage_heating_profile() {
 
     // Check if we are within 2 degrees
     if (abs(target - current) < 2) {
+      const auto rampDuration = now - profile.startTime;
+      const auto averageTempchange = rampDuration > 0 ? (target - profile.changeTemperature)  / rampDuration : 0;
       log
-        << F("Reached target temperature. Holding for ")
-        << profile.duration[profile.head]
-        << F(" seconds")
-        << endl;
+          << F("Reached ")
+          << target
+          << F("C from ")
+          << profile.changeTemperature
+          << F(" in ")
+          << rampDuration / 1000.0
+          << F("s; average ramp: ")
+          << averageTempchange * 1000.0
+          << F("C/s. Holding for ")
+          << profile.duration[profile.head]
+          << F("s")
+          << endl;
       profile.holdUntil = now + seconds(profile.duration[profile.head]); // Hold this temp for X seconds
       profile.ramping = false;
       profile.holding = true;
@@ -197,6 +209,7 @@ void manage_heating_profile() {
     // Different timeout if we are heating or cooling
     const auto newTarget = profile.temperature[profile.head];
     const auto safetyTimeout = minutes(newTarget > current ? 8 : 25);
+    profile.startTime = now;
     profile.safetyTimeout = now + safetyTimeout;
     profile.changeTimeout = now + seconds(10); // 10 seconds to register a change in temperature.
     profile.changeTemperature = current; // Take snapshot of current temperature.
