@@ -7,8 +7,6 @@
 #define PROFILE_SIZE (10)
 static struct {
   unsigned long holdUntil = 0;
-  unsigned long safetyTimeout = 0;
-  unsigned long changeTimeout = 0;
   unsigned long startTime = 0;
   float changeTemperature = 0;
   bool ramping = false;
@@ -65,8 +63,6 @@ void profile_reset() {
   profile.holding = false; //<-- not really required, but reads nicer.
   profile.holdUntil = 0;
   profile.startTime = 0;
-  profile.safetyTimeout = 0;
-  profile.changeTimeout = 0;
   profile.changeTemperature = 0;
   vone->heater.setTargetTemperature(0); //DEFER: refactor to eliminate dependency on vone object
 }
@@ -151,7 +147,8 @@ void manage_heating_profile() {
   if (profile.ramping) {
 
     // Check if our safety timeout has been exceeeded. Looks only at time.
-    if (now >= profile.safetyTimeout) {
+    const auto safetyTimeout = minutes(profile.temperature[profile.head] > current ? 8 : 25);
+    if (now >= (profile.startTime + safetyTimeout)) {
       logError
         << F("Failed to reach target temperature within timeout period. ")
         << F("Current: ") << current << F("C")
@@ -161,7 +158,7 @@ void manage_heating_profile() {
     }
 
     // Check if the temperature has not moved at all during heating. Could indicate a loose/fallen thermistor
-    if (now >= profile.changeTimeout && (target > current) && abs(current - profile.changeTemperature) < 2) {
+    if (now >= (profile.startTime + seconds(10)) && (target > current) && abs(current - profile.changeTemperature) < 2) {
       logError
         << F("Temperature change not detected. ")
         << F("Current: ") << current << F("C")
@@ -173,7 +170,7 @@ void manage_heating_profile() {
     // Check if we are within 2 degrees
     if (abs(target - current) < 2) {
       const auto rampDuration = now - profile.startTime;
-      const auto averageTempchange = rampDuration > 0 ? (target - profile.changeTemperature)  / rampDuration : 0;
+      const auto averageTempchange = abs(target - profile.changeTemperature) > 2 ? (target - profile.changeTemperature)  / rampDuration : 0;
       log
           << F("Reached ")
           << target
@@ -208,10 +205,7 @@ void manage_heating_profile() {
     // If not ramping or holding, set temperature and ramping timeout.
     // Different timeout if we are heating or cooling
     const auto newTarget = profile.temperature[profile.head];
-    const auto safetyTimeout = minutes(newTarget > current ? 8 : 25);
     profile.startTime = now;
-    profile.safetyTimeout = now + safetyTimeout;
-    profile.changeTimeout = now + seconds(10); // 10 seconds to register a change in temperature.
     profile.changeTemperature = current; // Take snapshot of current temperature.
     profile.ramping = true;
     vone->heater.setTargetTemperature(newTarget);
