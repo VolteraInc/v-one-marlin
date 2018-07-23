@@ -312,7 +312,7 @@ int process_gcode(int command_code) {
     }
 
     case 6: {
-      #if TRINAMIC_SENSORLESS
+      #ifdef TRINAMIC_SENSORLESS
         float retract_amount = code_seen('D') ? code_value() : DEFAULT_PRIME_RETRACT;
         primeE(retract_amount);
       #else
