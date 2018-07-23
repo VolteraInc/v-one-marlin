@@ -143,19 +143,14 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
 #define Y_MAX_LENGTH (Y_MAX_POS - Y_MIN_POS)
 #define Z_MAX_LENGTH (Z_MAX_POS - Z_MIN_POS)
+#define E_MAX_LENGTH (20)
 //============================= Bed Auto Leveling ===========================
 
 
 // Flag to indicate trinamic drivers.
 #define TRINAMIC_DRIVERS (3)
-
-//// MOVEMENT SETTINGS
-#define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
-#ifdef TRINAMIC_DRIVERS
-#define HOMING_FEEDRATE {2800, 2800, 200 , 50}  // set the homing speeds (mm/min)
-#else
-#define HOMING_FEEDRATE {1200, 1200, 200 , 0} // set the homing speeds (mm/min)
-#endif
+#define TRINAMIC_SENSORLESS
+#define DEFAULT_PRIME_RETRACT (0.35) // How much to retract when priming.
 
 // default settings
 
@@ -175,9 +170,16 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 1/16 6857.142857142858
 */
 
+//// MOVEMENT SETTINGS
+#define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
+#ifdef TRINAMIC_DRIVERS
+  #define HOMING_FEEDRATE {2800, 2800, 200 , 50}  // set the homing speeds (mm/min)
+  #define DEFAULT_AXIS_STEPS_PER_UNIT   {100.0,100.0,1600.0,6857.142857142858}
 
-
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {100.0,100.0,1600.0,1714.2857142857144}
+#else
+  #define HOMING_FEEDRATE {1200, 1200, 200 , 0} // set the homing speeds (mm/min)
+  #define DEFAULT_AXIS_STEPS_PER_UNIT   {100.0, 100.0, 1600.0, 1714.2857142857144}
+#endif
 
 #define DEFAULT_MAX_FEEDRATE          {6000.0/60.0, 6000.0/60.0, 200.0/60.0, 140.0/60.0}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {100, 100, 100, 50}    // X, Y, Z, E maximum start speed for accelerated moves
@@ -209,7 +211,7 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 #define INVERT_E_STEP_PIN false
 
 //default stepper release if idle, default heater timeout if idle
-#define DEFAULT_STEPPER_DEACTIVE_TIME (5*60) // 5 mins
+#define DEFAULT_STEPPER_DEACTIVE_TIME (2*60) // 5 mins
 #define DEFAULT_HEATER_DEACTIVE_TIME (60*60) // 60 mins
 
 #define DEFAULT_MINIMUMFEEDRATE       0.0     // minimum feedrate

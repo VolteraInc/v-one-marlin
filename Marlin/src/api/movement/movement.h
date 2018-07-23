@@ -27,6 +27,7 @@ int relativeMove(tools::Tool& tool, float x, float y, float z, float e, float f 
 
 // Move until switch hit
 int moveToLimit(int axis, int direction, float f = useDefaultFeedrate, float maxTravel = useDefaultMaxTravel);
+int moveToLimitE(int direction);
 int raise();
 
 

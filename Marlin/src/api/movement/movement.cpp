@@ -198,7 +198,6 @@ int asyncRawMove(float x, float y, float z, float e, float f, bool confirmMoveIs
 }
 
 int relativeRawMoveE(float e, float speed_in_mm_per_min) {
-
   if(asyncRawMove(
     current_position[ X_AXIS ],
     current_position[ Y_AXIS ],
@@ -274,6 +273,32 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
   return 0;
 }
 
+int moveToLimitE(int direction) {
+  if(logging_enabled) {
+    log
+      << F("Move to limit: ")
+      << (direction < 0 ? '-E' : '+E')
+      << endl;
+  }
+
+  // Finish any pending moves (prevents crashes)
+  st_synchronize();
+  const auto travel = direction < 0 ? -E_MAX_LENGTH : E_MAX_LENGTH;
+  if (relativeRawMoveE(travel, homing_feedrate[E_AXIS])) {
+    return -1;
+  }
+
+  // Confirm we triggered
+  if (!endstop_triggered(E_AXIS)) {
+    return -1;
+  }
+
+  // Resync with true position
+  s_fixPosition(E_AXIS);
+  return 0;
+}
+
+
 int raise() {
   return moveToLimit(Z_AXIS, 1);
 }
@@ -295,12 +320,20 @@ int retractFromSwitch(int axis, int direction, float retractDistance) {
   if (logging_enabled) {
     log << F("Retract by: ") << distance << endl;
   }
-  if (relativeRawMoveXYZ(
-      axis == X_AXIS ? distance * -direction : 0,
-      axis == Y_AXIS ? distance * -direction : 0,
-      axis == Z_AXIS ? distance * -direction : 0
-    )) {
-    return -1;
+
+  if (axis == E_AXIS) {
+    if(relativeRawMoveE(distance * direction, homing_feedrate[E_AXIS])){
+      return -1;
+    }
+  }
+  else{
+      if (relativeRawMoveXYZ(
+        axis == X_AXIS ? distance * -direction : 0,
+        axis == Y_AXIS ? distance * -direction : 0,
+        axis == Z_AXIS ? distance * -direction : 0
+      )) {
+      return -1;
+    }
   }
 
   // Confirm that the switch was released

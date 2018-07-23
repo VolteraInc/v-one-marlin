@@ -62,6 +62,9 @@ static void axisIsAtHome(int axis) {
 
 static int s_homeAxis(int axis) {
   int returnValue = -1;
+  int acc_x = max_acceleration_units_per_sq_second[ X_AXIS ];
+  int acc_y = max_acceleration_units_per_sq_second[ Y_AXIS ];
+
   log << F("home axis:") << axis_codes[axis] << endl;
 
   // Finish any pending moves (prevents crashes)
@@ -82,26 +85,57 @@ static int s_homeAxis(int axis) {
   current_position[axis] = 0;
   plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 
-  // Move to the switch
-  // Note: we use measureAtSwitch so that we contact the switch accurately
-  // TODO: use measureAtSwitchRelease for homing?
-  float measurement;
-  if (measureAtSwitch(axis, home_dir[axis], useDefaultMaxTravel, measurement)) {
-    goto DONE;
-  }
 
   switch(axis) {
     case X_AXIS:
     case Y_AXIS:
-      // Move slightly away from switch
-      // Note: Otherwise we will not be able to go to 0,0 without
+      #ifdef TRINAMIC_SENSORLESS
+        // Trinamic Drivers need a minimum speed to properly do sensorless homing.
+        // When we home in X and Y, we don't need very precise measurements, +/- 0.25 mm is probably ok.
+        // The XY Positioner will give us the accuracy we require.
+        max_acceleration_units_per_sq_second[ X_AXIS ] = 700;
+        max_acceleration_units_per_sq_second[ Y_AXIS ] = 700;
+        reset_acceleration_rates();
+        trinamicSetStealthMaxSpeed(X_AXIS, XY_STEALTH_MAX_SPEED);
+        trinamicSetStealthMaxSpeed(Y_AXIS, XY_STEALTH_MAX_SPEED);
+        trinamicSetCoolstepMinSpeed(X_AXIS, XY_COOLSTEP_MIN_SPEED);
+        trinamicSetCoolstepMinSpeed(Y_AXIS, XY_COOLSTEP_MIN_SPEED);
+
+
+        // Move in +X and +Y a bit to create space. So we can reach sensorless homing speeds.
+        if (retractFromSwitch(axis, home_dir[axis], HOMING_XY_OFFSET * 3)) {
+          logError
+            << F("Unable to create space in  ")
+            << axis_codes[axis]
+            << F(" axis during homing.")
+            << endl;
+          goto DONE;
+        }
+      #endif
+
+      if (moveToLimit(axis, home_dir[axis]) != 0) {
+        logError
+          << F("Unable to home ")
+          << axis_codes[axis]
+          << F(" axis, switch did not trigger during initial approach")
+          << endl;
+        goto DONE;
+      }
+
+      // Move in +X, +Y slightly from switch, otherwise we will not be able to go to 0,0 without
       // hitting a limit switch (and messing up our position)
       log << F("Retracting from axis limit switch") << endl;
       if (retractFromSwitch(axis, home_dir[axis], HOMING_XY_OFFSET)) {
         goto DONE;
       }
+      break;
 
     case Z_AXIS:
+      float measurement;
+      if (measureAtSwitch(axis, home_dir[axis], useDefaultMaxTravel, measurement)) {
+        goto DONE;
+      }
+
       // Confirm probe not triggered
       // NOTE:
       //    1) if the probe triggers before the z-switch, it suggests
@@ -138,6 +172,18 @@ static int s_homeAxis(int axis) {
   returnValue = 0;
 
 DONE:
+  #ifdef TRINAMIC_SENSORLESS
+    max_acceleration_units_per_sq_second[ X_AXIS ] = acc_x;
+    max_acceleration_units_per_sq_second[ Y_AXIS ] = acc_y;
+    reset_acceleration_rates();
+
+    // Disable Stallguard, Enable Stealthchop for the full motion.
+    trinamicSetStealthMaxSpeed(X_AXIS, 0);
+    trinamicSetStealthMaxSpeed(Y_AXIS, 0);
+    trinamicSetCoolstepMinSpeed(X_AXIS, 0);
+    trinamicSetCoolstepMinSpeed(Y_AXIS, 0);
+  #endif
+
   plan_enable_skew_adjustment(true);
   return returnValue;
 }
@@ -221,4 +267,33 @@ int homeXY(tools::Tool& tool) {
     raise() ||
     rawHome(tool, true, true, false)
   );
+}
+
+int primeE(float retract_amount) {
+
+  // Autopriming procedure for E.
+  // 1. Advance Gear until ink pressure causes a stall.
+  // 2. Retract Gear a small amount to relieve pressure.
+
+  // Enable stallguard.
+  trinamicSetCoolstepMinSpeed(E_AXIS, E_COOLSTEP_MIN_SPEED);
+
+  enable_e_max_endstops(true);
+  log << F("Advancing gear until pressure detected") << endl;
+  if (moveToLimitE(1) != 0) {
+    logError
+      << F("Unable to prime E axis, ink pressure not detected.")
+      << endl;
+      goto DONE;
+  }
+
+  // As soon as we contact the ink , back off to relieve pressure.
+  enable_e_max_endstops(false); // Disable endstops to prevent false triggering.
+  retractFromSwitch(E_AXIS, -1, retract_amount); // Back off the kick amount roughly.
+
+  DONE:
+  // Cleanup
+  enable_e_max_endstops(false); // Ensure we exit with endstops disabled.
+  trinamicSetCoolstepMinSpeed(E_AXIS, 0); // Disable stallguard.
+  return 0;
 }

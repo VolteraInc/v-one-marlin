@@ -38,6 +38,11 @@ int PinSet::outputEndStopStatus() {
   log << F("  xy-positioner back (xy-min-y): ") << s_pinStatusToString(READ_PIN(XY_MIN_Y)) << endl;
   log << F("  xy-positioner front (xy-max-y): ") << s_pinStatusToString(READ_PIN(XY_MAX_Y)) << endl;
 
+  #ifdef TRINAMIC_SENSORLESS
+  log << F("  x-motor (x-lim): ") << s_pinStatusToString(READ_PIN(X_LIM)) << endl;
+  log << F("  y-motor (y-lim): ") << s_pinStatusToString(READ_PIN(Y_LIM)) << endl;
+  log << F("  e-motor (e-lim): ") << s_pinStatusToString(READ_PIN(E_LIM)) << endl;
+  #endif
   return returnValue;
 }
 

@@ -311,113 +311,15 @@ int process_gcode(int command_code) {
       return 0;
     }
 
-    // G18: XYPositioner Y1 - Move in +Y until a switch is triggered
-    case 18: {
-      float measurement;
-      if ( xyPositionerTouch(vone->toolBox.probe, Y_AXIS, 1, measurement)
-        || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
-        return -1;
-      }
-      protocol << F("xyPositionerMeasurement +Y:") << measurement << endl;
+    case 6: {
+      #if TRINAMIC_SENSORLESS
+        float retract_amount = code_seen('D') ? code_value() : DEFAULT_PRIME_RETRACT;
+        primeE(retract_amount);
+      #else
+        logError << F("Automatic Priming not available in this hardware version.") << endl;
+      #endif
       return 0;
     }
-
-    // G19: XYPositioner Y2 - Move in -Y until a switch is triggered
-    case 19: {
-      float measurement;
-      if ( xyPositionerTouch(vone->toolBox.probe, Y_AXIS, -1, measurement)
-        || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
-        return -1;
-      }
-      protocol << F("xyPositionerMeasurement -Y:") << measurement << endl;
-      return 0;
-    }
-
-    // G20: XYPositioner X1 - Move in +X until a switch is triggered
-    case 20: {
-      float measurement;
-      if ( xyPositionerTouch(vone->toolBox.probe, X_AXIS, 1, measurement)
-        || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
-        return -1;
-      }
-      protocol << F("xyPositionerMeasurement +X:") << measurement << endl;
-      return 0;
-    }
-
-    // G21: XYPositioner X2 - Move in -X until switch triggered
-    case 21: {
-      float measurement;
-      if ( xyPositionerTouch(vone->toolBox.probe, X_AXIS, -1, measurement)
-        || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
-          return -1;
-      }
-      protocol << F("xyPositionerMeasurement -X:") << measurement << endl;
-      return 0;
-    }
-
-    // G24 - Test the zMIN endstop trigger position
-    // move to impossible position, and report where limit switch triggered.
-    case 24: {
-      feedrate = homing_feedrate[Z_AXIS]/(6);
-      // move down until you find the bed
-      float zPosition = -10;
-      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60);
-      st_synchronize();
-
-      // we have to let the planner know where we are right now as it is not where we said to go.
-      current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-      protocol << F("Z: ") << (current_position[Z_AXIS] * 1000) << endl;
-    }
-    return 0;
-
-    // G25 - Test the xAxis endstop trigger position
-    // move to impossible position, and report where limit switch triggered.
-    case 25: {
-      // move down until you find the bed
-      feedrate = homing_feedrate[X_AXIS]/(6);
-      float xPosition = -10;
-      plan_buffer_line(xPosition, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60);
-      st_synchronize();
-
-      // we have to let the planner know where we are right now as it is not where we said to go.
-      current_position[X_AXIS] = st_get_position_mm(X_AXIS);
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-      protocol << F("X: ") << (current_position[X_AXIS] * 1000) << endl;
-    }
-    return 0;
-
-    // G26 - Test the yAxis endstop trigger position
-    // move to impossible position, and report where limit switch triggered.
-    case 26: {
-      // move down until you find the bed
-      feedrate = homing_feedrate[Y_AXIS]/(6);
-      float yPosition = -10;
-      plan_buffer_line(current_position[X_AXIS], yPosition, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60);
-      st_synchronize();
-
-      // we have to let the planner know where we are right now as it is not where we said to go.
-      current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-      protocol << F("Y: ") << (current_position[Y_AXIS] * 1000) << endl;
-    }
-    return 0;
-
-    // G27 - Test the zMAX trigger position
-    // move to impossible position, and report where limit switch triggered.
-    case 27: {
-      // move down until you find the bed
-      feedrate = homing_feedrate[Z_AXIS]/(6);
-      float zPosition = 30;
-      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60);
-      st_synchronize();
-
-      // we have to let the planner know where we are right now as it is not where we said to go.
-      current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-      protocol << F("Z: ") << (current_position[Z_AXIS] * 1000) << endl;
-    }
-    return 0;
 
     // G28 - Home X and Y normally, home Z to the top (legacy code relies on this behavior)
     case 28: {

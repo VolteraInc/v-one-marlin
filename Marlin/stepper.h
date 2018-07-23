@@ -24,14 +24,8 @@
 #include <inttypes.h>
 #include "Configuration.h"
 
-// Mod by VOLTERA
 #define WRITE_Z_STEP(v) WRITE(Z_STEP_PIN, v)
-#define NORM_Z_DIR() WRITE(Z_DIR_PIN, !INVERT_Z_DIR)
-#define REV_Z_DIR() WRITE(Z_DIR_PIN, INVERT_Z_DIR)
-
 #define WRITE_E_STEP(v) WRITE(E_STEP_PIN, v)
-#define NORM_E_DIR() WRITE(E_DIR_PIN, !INVERT_E_DIR)
-#define REV_E_DIR() WRITE(E_DIR_PIN, INVERT_E_DIR)
 
 // Initialize and start the stepper motor subsystem
 void st_init();
@@ -58,27 +52,36 @@ void clear_endstop(int axis);
 
 void enable_p_top(bool enable);
 void enable_calibration_plate(bool enable);
+void enable_e_max_endstops(bool enable);
 
 void checkStepperErrors(); //Print errors detected by the stepper
 
 void quickStop();
 
 #ifdef TRINAMIC_DRIVERS
+
+  #define XY_STEALTH_MAX_SPEED (300)
+  #define XY_COOLSTEP_MIN_SPEED (186)
+  #define E_STEALTH_MAX_SPEED (400)
+  #define E_COOLSTEP_MIN_SPEED (160)
+
   void trinamicInit();
 
   void trinamicSetCurrent(int axis, int current);
-  int trinamicSetSG(int axis, int value);
+  void trinamicSetSG(int axis, int value);
+  void trinamicSetStealthMaxSpeed(int axis, int max_speed);
+  void trinamicSetCoolstepMinSpeed(int axis, int min_speed); // Not USED.
 
   int trinamicGetSG(int axis);
   int trinamicGetCurrentScaling(int axis);
   uint32_t trinamicGetTStep(int axis);
-  uint32_t trinamicGetStealthMaxSpeed(int axis);
-  uint32_t trinamicGetStallGuardMinSpeed(int axis);
+
 
   int trinamicGetStalled(int axis);
   int trinamicGetStallGuard(int axis);
   uint32_t trinamicGetDRVSTATUS(int axis);
   int trinamicGetGStat(int axis);
+
 
 
 #else
