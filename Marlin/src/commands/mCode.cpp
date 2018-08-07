@@ -139,7 +139,7 @@ int process_mcode(int command_code) {
 
     // M119 - Output Endstop status to serial port
     case 119:
-      return vone->pins.deprecated_OutputEndStopStatus();
+      return vone->endstops.deprecated_outputStatus();
 
     // M122 - We let the planner know where we are
     case 122: {

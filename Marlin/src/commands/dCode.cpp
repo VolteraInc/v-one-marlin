@@ -144,8 +144,8 @@ int process_dcode(int command_code) {
         << endl;
       return 0;
 
-    case 2: 
-      vone->pins.outputEndStopStatus();
+    case 2:
+      vone->endstops.outputStatus();
       return 0;
 
     case 5: {
