@@ -5,17 +5,27 @@
             "includePath": [
                 "/Applications/Arduino.app/Contents//Java/hardware/tools/avr/lib/gcc/avr/4.9.2/include/",
                 "/Applications/Arduino.app/Contents//Java/hardware/tools/avr/avr/include",
+                "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/libraries/SPI/src",
                 "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino",
                 "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/libraries/SoftwareSerial/src/",
                 "/Applications/Arduino.app/Contents//Java/hardware/arduino/avr/variants/mega/"
             ],
-            "defines": [],
+            "defines": [
+              "mmcu=atmega2560",
+              "F_CPU=16000000L",
+              "ARDUINO=10613",
+              "ARDUINO_ARCH_AVR",
+              "ARDUINO_AVR_MEGA2560",
+              "__AVR_ATmega2560__",
+              "__AVR_ENHANCED__"
+            ],
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
                     "${workspaceRoot}",
                     "/Applications/Arduino.app/Contents//Java/hardware/tools/avr/lib/gcc/avr/4.9.2/include/",
                     "/Applications/Arduino.app/Contents//Java/hardware/tools/avr/avr/include",
+                    "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/libraries/SPI/src",
                     "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino",
                     "/Applications/Arduino.app/Contents//Java/hardware/arduino/avr/libraries/SoftwareSerial/src/",
                     "/Applications/Arduino.app/Contents//Java/hardware/arduino/avr/variants/mega/"
@@ -37,7 +47,10 @@
                 "path": [],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
         },
         {
             "name": "Win32",
@@ -51,8 +64,11 @@
                 "path": [],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
         }
     ],
-    "version": 3
+    "version": 4
 }
