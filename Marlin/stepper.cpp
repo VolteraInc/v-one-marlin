@@ -536,59 +536,6 @@ void st_init() {
   // Initialize Digipot Motor Current
   digiPotInit();
 
-  // Initialize Dir Pins
-  SET_OUTPUT(X_DIR_PIN);
-  SET_OUTPUT(Y_DIR_PIN);
-  SET_OUTPUT(Z_DIR_PIN);
-  SET_OUTPUT(E0_DIR_PIN);
-
-  // Initialize Enable Pins - steppers default to disabled.
-  SET_OUTPUT(X_ENABLE_PIN);  if (!X_ENABLE_ON) { WRITE(X_ENABLE_PIN,  HIGH); }
-  SET_OUTPUT(Y_ENABLE_PIN);  if (!Y_ENABLE_ON) { WRITE(Y_ENABLE_PIN,  HIGH); }
-  SET_OUTPUT(Z_ENABLE_PIN);  if (!Z_ENABLE_ON) { WRITE(Z_ENABLE_PIN,  HIGH); }
-  SET_OUTPUT(E0_ENABLE_PIN); if (!E_ENABLE_ON) { WRITE(E0_ENABLE_PIN, HIGH); }
-
-  // Endstops and pullups
-  SET_INPUT(X_MIN_PIN);
-  SET_INPUT(Y_MIN_PIN);
-  SET_INPUT(Z_MIN_PIN);
-
-  SET_INPUT(P_BOT_PIN);
-
-  SET_INPUT(Z_MAX_PIN);
-
-  SET_INPUT(XY_MIN_X_PIN);
-  SET_INPUT(XY_MAX_X_PIN);
-  SET_INPUT(XY_MIN_Y_PIN);
-  SET_INPUT(XY_MAX_Y_PIN);
-
-  // LED Pins
-  SET_OUTPUT(LED_RED_PIN);
-  WRITE(LED_RED_PIN, LOW);
-
-  SET_OUTPUT(LED_GREEN_PIN);
-  WRITE(LED_GREEN_PIN, LOW);
-
-  SET_OUTPUT(LED_BLUE_PIN);
-  WRITE(LED_BLUE_PIN, LOW);
-
-  // Initialize Step Pins
-  SET_OUTPUT(X_STEP_PIN);
-  WRITE(X_STEP_PIN, INVERT_X_STEP_PIN);
-  disable_x();
-
-  SET_OUTPUT(Y_STEP_PIN);
-  WRITE(Y_STEP_PIN, INVERT_Y_STEP_PIN);
-  disable_y();
-
-  SET_OUTPUT(Z_STEP_PIN);
-  WRITE(Z_STEP_PIN, INVERT_Z_STEP_PIN);
-  disable_z();
-
-  SET_OUTPUT(E0_STEP_PIN);
-  WRITE(E0_STEP_PIN, INVERT_E_STEP_PIN);
-  disable_e0();
-
   // waveform generation = 0100 = CTC
   TCCR1B &= ~(1<<WGM13);
   TCCR1B |=  (1<<WGM12);
