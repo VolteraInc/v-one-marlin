@@ -226,11 +226,6 @@ void enable_calibration_plate(bool enable) {
   //  step_events_completed reaches block->decelerate_after after which it decelerates until the trapezoid generator is reset.
   //  The slope of acceleration is calculated with the leib ramp alghorithm.
 
-void st_wake_up() {
-  // TCNT1 = 0;
-  ENABLE_STEPPER_DRIVER_INTERRUPT();
-}
-
 FORCE_INLINE unsigned short calc_timer(unsigned short step_rate) {
 
   if (step_rate > MAX_STEP_FREQUENCY) {

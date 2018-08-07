@@ -44,10 +44,6 @@ void st_set_e_position(const long &e);
 // Get current position in steps
 long st_get_position(uint8_t axis);
 float st_get_position_mm(uint8_t axis);
-// The stepper subsystem goes to sleep when it runs out of things to execute. Call this
-// to notify the subsystem that it is time to go to work.
-void st_wake_up();
-
 
 bool endstop_triggered(int axis);
 
@@ -58,5 +54,4 @@ void enable_p_top(bool enable);
 void enable_calibration_plate(bool enable);
 
 void checkStepperErrors(); //Print errors detected by the stepper
-
 void quickStop();
