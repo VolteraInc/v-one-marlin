@@ -4,7 +4,7 @@ class Stepper {
   public:
     Stepper();
 
-    bool stopped() { return m_stopped; }
+    bool stopped() const { return m_stopped; }
     void stop();
     void resume();
 

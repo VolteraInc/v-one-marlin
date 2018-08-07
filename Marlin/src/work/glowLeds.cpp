@@ -6,7 +6,7 @@ bool pending_temp_change = false;
 
 static struct {
   char r = 0;
-  char g = 0; 
+  char g = 0;
   char b = 0;
   short pace = 0;
 } s_overrideLeds;
