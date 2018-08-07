@@ -5,6 +5,7 @@
 #include "../../../stepper.h"
 
 #include "../../vone/VOne.h"
+#include "../../vone/endstops/Endstop.h"
 
 static const float s_defaultRetractDistance[] = {
   X_HOME_RETRACT_MM,
@@ -42,7 +43,7 @@ int setPosition(float x, float y, float z, float e) {
 // Set the planner position based on the stepper's position.
 // Note: Certain movements, like attempting to move past an end-stop, will leave the
 // planner out of sync with the stepper. This function corrects the planner's position.
-static void s_fixPosition(int axis) {
+static void s_resyncWithStepper(int axis) {
   current_position[axis] = st_get_position_mm(axis);
   plan_set_position(
     current_position[X_AXIS],
@@ -50,7 +51,6 @@ static void s_fixPosition(int axis) {
     current_position[Z_AXIS],
     current_position[E_AXIS]
   );
-  clear_endstop(axis);
 }
 
 static float s_maxTravelInAxis(int axis, int direction) {
@@ -270,13 +270,57 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
     return -1;
   }
 
+  // Resync with stepper position
+  clear_endstop(axis);
+  s_resyncWithStepper(axis);
+  return 0;
+}
+
+int moveToEndStop(const Endstop& endstop, float f, float maxTravel) {
+  auto& stepper = vone->stepper;
+  if (logging_enabled) {
+    log << F("Move to end-stop: ") << endstop.name << endl;
+  }
+
+  // Finish any pending moves (prevents crashes)
+  st_synchronize();
+
+
+  // Move
+  const auto axis = endstop.axis;
+  const auto direction = endstop.direction;
+  const auto confirmMoveIsSafe = !endstop.isAxisLimit;
+  const auto clampedMaxTravel = min(maxTravel, s_maxTravelInAxis(axis, direction));
+  const auto travel = direction < 0 ? -clampedMaxTravel : clampedMaxTravel;
+  const float clampedSpeed = f < 0 ? homing_feedrate[axis] : min(f, homing_feedrate[axis]);
+  if (relativeRawMoveXYZ(
+      axis == X_AXIS ? travel : 0.0f,
+      axis == Y_AXIS ? travel : 0.0f,
+      axis == Z_AXIS ? travel : 0.0f,
+      clampedSpeed,
+      confirmMoveIsSafe
+    )) {
+    return -1;
+  }
+
+  // Confirm we triggered
+  if (!stepper.endstopTriggered(endstop)) {
+    logError
+      << F("Unable to move to the ")
+      << endstop.name
+      << F(", switch did not trigger")
+      << endl;
+    return -1;
+  }
+
   // Resync with true position
-  s_fixPosition(axis);
+  stepper.resetEndstop(endstop);
+  s_resyncWithStepper(endstop.axis);
   return 0;
 }
 
 int raise() {
-  return moveToLimit(Z_AXIS, 1);
+  return moveToEndStop(vone->endstops.zMax);
 }
 
 int retractFromSwitch(int axis, int direction, float retractDistance) {
@@ -305,7 +349,6 @@ int retractFromSwitch(int axis, int direction, float retractDistance) {
   }
 
   // Confirm that the switch was released
-  // READ_PIN ?
   if (endstop_triggered(axis)) {
     logError
       << F("Unable to retract from ")

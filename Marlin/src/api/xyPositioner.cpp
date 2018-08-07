@@ -42,15 +42,26 @@ int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
   );
 }
 
-int xyPositionerTouch(tools::Tool&, int axis, int direction, float& measurement) {
+// int xyPositionerTouch(tools::Tool&, int axis, int direction, float& measurement) {
+//   // Move according to the given axis and direction until a switch is triggered
+//   const auto slow = homing_feedrate[axis] / 6;
+//   if (moveToLimit(axis, direction, slow, 6.0f)) {
+//     return -1;
+//   }
+//   measurement = current_position[axis];
+//   return 0;
+// }
+
+int xyPositionerTouch(const EndStop& endStop, float& measurement) {
   // Move according to the given axis and direction until a switch is triggered
   const auto slow = homing_feedrate[axis] / 6;
-  if (moveToLimit(axis, direction, slow, 6.0f)) {
+  if (moveToEndStop(endStop, slow, 6.0f)) {
     return -1;
   }
-  measurement = current_position[axis];
+  measurement = current_position[endStop.axis];
   return 0;
 }
+
 
 static int s_findCenter(tools::Tool& tool, long cycles, float& o_centerX, float& o_centerY) {
   if(logging_enabled) {

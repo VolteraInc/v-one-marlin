@@ -22,9 +22,11 @@
 
 #include <inttypes.h>
 
+class EndstopMonitor;
 
 // Initialize and start the stepper motor subsystem
 void st_init();
+void stepper_isr(EndstopMonitor& endStops);
 
 // Block until all buffered steps are executed
 void st_synchronize();
@@ -37,11 +39,4 @@ void st_set_e_position(const long &e);
 long st_get_position(uint8_t axis);
 float st_get_position_mm(uint8_t axis);
 
-bool endstop_triggered(int axis);
-
-bool readAndResetEndstops(bool triggered[3], long stepsWhenTriggered[3]);
-void clear_endstop(int axis);
-
-void enable_p_top(bool enable);
-void enable_calibration_plate(bool enable);
 void quickStop();

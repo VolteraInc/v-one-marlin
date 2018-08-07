@@ -1,10 +1,15 @@
 #include "Stepper.h"
 
+#include "../pins/endstops/Endstop.h"
+#include "../pins/endstops/EndstopMonitor.h"
+
 #include "../../../planner.h"
 #include "../../../stepper.h"
 #include "../../../serial.h"
 
-Stepper::Stepper() {
+Stepper::Stepper(
+  EndstopMonitor& endstopMonitor
+) : m_endstopMonitor(endstopMonitor) {
   plan_init();  // Initialize planner
   st_init();    // Initialize stepper
 }
@@ -41,4 +46,12 @@ int Stepper::add(float x, float y, float z, float e, float f) {
 
   // Success
   return 0;
+}
+
+bool Stepper::isEndstopTrippered(const Endstop& endstop) const {
+  return m_endstopMonitor.isEndstopTriggered(endstop);
+}
+
+void Stepper::resetEndstop(const Endstop& endstop) {
+  m_endstopMonitor.resetEndstop(endstop);
 }
