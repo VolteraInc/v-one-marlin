@@ -22,10 +22,9 @@ int moveToZSwitchXY(tools::Tool& tool);
 
 // XY positioner
 const float defaultXyPositionerCycles = 2;
-enum HowToMoveToZ { useConfiguredZ, usePlateBackOffForZ };
+enum HowToMoveToZ { useConfiguredZ, usePlateBackOffForZ, skipMoveInZ };
 int xyPositionerTouch(tools::Tool& tool, int axis, int direction, float& measurement);
 int xyPositionerFindCenter(tools::Tool& tool, long cycles, float& centerX, float& centerY, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
-const bool skipMoveInZ = true;
 int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
 
 // Calibration plate

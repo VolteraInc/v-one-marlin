@@ -14,6 +14,9 @@ static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveT
         relativeMove(tool, 0, 0, 2, 0)  // Retract slightly
       );
 
+    case skipMoveInZ:
+      return;
+
     default:
       logError << F("Unable to move to xy-positioner, unrecognized arguments") << endl;
       return -1;
