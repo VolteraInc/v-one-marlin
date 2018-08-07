@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pins/PinSet.h"
+#include "endstops/Endstops.h"
 #include "pins/adc/AnalogDigitalConverter.h"
 #include "bed/heater/Heater.h"
 #include "stepper/Stepper.h"
@@ -18,6 +19,7 @@ class VOne {
     );
 
     PinSet pins;
+    Endstops endstops;
     adc::AnalogDigitalConverter adc;
     Heater heater;
     Stepper stepper;

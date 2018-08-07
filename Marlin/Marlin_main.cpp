@@ -108,7 +108,7 @@ void setup() {
   );
 
   sendHomedStatusUpdate();
-  vone->pins.outputEndStopStatus();
+  vone->endstops.outputStatus();
 
   manufacturing_init();
 
