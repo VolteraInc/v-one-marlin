@@ -64,7 +64,11 @@ int runBurnInSequence(tools::NullTool& noTool) {
   return result;
 }
 
-int runCalibrateSwitchPositions(tools::Probe& probe, unsigned cycles) {
+int runCalibrateSwitches(tools::Probe& probe, unsigned cycles) {
   s_start();
-  return s_end(probe, calibrateSwitchPositions(probe, cycles));
+  return s_end(
+    probe,
+    calibrateSwitchPositions(probe, cycles) ||
+    checkBackSwitchSeparation(probe)
+  );
 }

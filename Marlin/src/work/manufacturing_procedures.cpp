@@ -11,7 +11,7 @@ void manufacturing_init() {
 
 static int s_run() {
   if (vone->toolBox.probe.attached()) {
-    return runCalibrateSwitchPositions(vone->toolBox.probe);
+    return runCalibrateSwitches(vone->toolBox.probe);
   } else if (vone->toolBox.nullTool.attached()) {
     return runBurnInSequence(vone->toolBox.nullTool);
   } else {

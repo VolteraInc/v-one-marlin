@@ -13,15 +13,16 @@ int runBurnInSequence(tools::NullTool& noTool);
 // ----------------------------------------------
 // Switch calibration
 
+int checkBackSwitchSeparation(tools::Probe& probe);
 
-// Switch position calibration
 const auto defaultSwitchPositionCalibrationCycles = 2u;
 int calibrateSwitchPositions(
   tools::Probe& probe,
   unsigned cycles = defaultSwitchPositionCalibrationCycles,
   bool storeResults = true
 );
-int runCalibrateSwitchPositions(
+
+int runCalibrateSwitches(
   tools::Probe& probe,
   unsigned cycles = defaultSwitchPositionCalibrationCycles
 );

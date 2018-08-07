@@ -1,4 +1,5 @@
 #include "../api/api.h"
+#include "../api/diagnostics/diagnostics.h"
 #include "../vone/VOne.h"
 #include "../../Marlin.h"
 #include "../utils/rawToVoltage.h"
@@ -324,6 +325,28 @@ int process_dcode(int command_code) {
       return 0; // always succeed
     }
 
+    // Algorithms - check back switch separation
+    case 109: {
+      if (
+        !vone->toolBox.dispenser.attached() &&
+        !vone->toolBox.probe.attached() &&
+        !vone->toolBox.drill.attached()
+      ) {
+        logError
+          << F("Unable to check back switches, current tool, ")
+          << tool.name()
+          << F(" is not supported for this command")
+          << endl;
+        return -1;
+      }
+
+      return (
+        tool.prepareToMove() ||
+        checkBackSwitchSeparation(tool)
+      );
+    }
+
+
     // Set rotation speed (without tool prep)
     case 110: {
       auto& drill = vone->toolBox.drill;
@@ -349,6 +372,7 @@ int process_dcode(int command_code) {
       log << F("  D105 - measure at switch -- D105 -X") << endl;
       log << F("  D106 - sample pin values (P=pin C=cycles M=milliseconds between readings) -- D106 P2 C10 M5 ") << endl;
       log << F("  D108 - measure at switch release -- D108 -Z") << endl;
+      log << F("  D109 - check location of xy-positioner's back switch -- D109") << endl;
       log << F("  D110 - set drill rotation speed -- D110 R100, no value or 1 means stop, 0 resets drill") << endl;
       log << F("") << endl;
       return 0;

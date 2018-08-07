@@ -3,6 +3,49 @@
 #include "../../../ConfigurationStore.h"
 #include "../../vone/tools/Probe.h"
 
+// Confirm the minY and xyMinY switches are far enough apart.
+// If these switches are too close it's possible we'll hit the
+// minY switch instead of the xyMinY switch
+int checkBackSwitchSeparation(tools::Tool& tool) {
+  float measurements[3];
+  static const float maxTravel = 10;
+  if (
+    raise() ||
+    moveToXyPositioner(tool) ||
+    measureAtSwitch(Y_AXIS, -1, maxTravel, measurements[0]) ||
+    measureAtSwitch(Y_AXIS, -1, maxTravel, measurements[1]) ||
+    measureAtSwitch(Y_AXIS, -1, maxTravel, measurements[2])
+  ) {
+    return -1;
+  }
+
+  log
+    << F("measurements = [")
+    << ArrayWithSize(measurements, sizeof(measurements))
+    << F("]")
+    << endl;
+
+  float tolerance = 10.000; // TODO: set to a proper value
+  if (
+    measurements[0] < tolerance ||
+    measurements[1] < tolerance ||
+    measurements[2] < tolerance
+  ) {
+    logError
+      << F("Unable to calibration switch positions, distance to from ")
+      << F("the back switch (y-min)")
+      << F(" to ")
+      << F("the xy-positioner's back switch (xy-min-y)")
+      << F(" exceeded ")
+      << FloatWithFormat(tolerance, 2)
+      << F("mm, measurements = [")
+      << ArrayWithSize(measurements, sizeof(measurements))
+      << F("]")
+      << endl;
+    return -1;
+  }
+}
+
 int calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeResults) {
   if (probe.prepareToMove(tools::PrepareToMove::Options::skipCalibrateXYZ)) {
     logError << F("Unable to calibrate positions, could not prepare probe") << endl;
