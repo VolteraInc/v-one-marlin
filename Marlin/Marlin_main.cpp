@@ -145,8 +145,9 @@ void loop() {
   periodic_output();     // will generate excessive output
 }
 
-// Stepper uses ISR(TIMER1_COMPA_vect)
-// see stepper.cpp for details
+ISR(TIMER1_COMPA_vect) {
+  vone->stepper.isr();
+}
 
 ISR(TIMER0_COMPB_vect) {
   vone->frequentInterruptibleWork();
