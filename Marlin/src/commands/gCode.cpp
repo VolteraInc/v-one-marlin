@@ -7,7 +7,7 @@
 
 #include "../api/movement/motion_control.h"
 
-#include "../vone/vone.h"
+#include "../vone/VOne.h"
 
 static float destination[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
 static float offset[3] = {0.0, 0.0, 0.0};

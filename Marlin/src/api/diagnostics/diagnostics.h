@@ -5,9 +5,13 @@ namespace tools {
   class Probe;
 }
 
+// ----------------------------------------------
 // Burn-in
 int burnInSequence(tools::NullTool& noTool, int steps = 5);
 int runBurnInSequence(tools::NullTool& noTool);
+
+// ----------------------------------------------
+// Switch calibration
 
 
 // Switch position calibration

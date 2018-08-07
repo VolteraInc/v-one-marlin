@@ -6,7 +6,7 @@
 #include "../../utils/rawToVoltage.h"
 #include "../movement/movement.h"
 
-#include "../../vone/vone.h"
+#include "../../vone/VOne.h"
 
 static unsigned s_countTriggers(unsigned maxSamples) {
   const auto startTime = millis();

@@ -97,7 +97,7 @@ void setup() {
   Config_RetrieveSettings();
   Config_RetrieveCalibration();
 
-  // Preallocate space of the VOne then use
+  // Preallocate space for the VOne then use
   // placement new to contruct the object
   static byte voneBuffer[sizeof(VOne)];
   vone = new (voneBuffer) VOne(

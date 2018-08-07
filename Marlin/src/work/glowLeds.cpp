@@ -1,5 +1,5 @@
 #include "../../Configuration.h"
-#include "../vone/Vone.h" // temperatures
+#include "../vone/VOne.h" // temperatures
 #include "work.h" // previous_millis_serial_rx HACK
 
 bool pending_temp_change = false;

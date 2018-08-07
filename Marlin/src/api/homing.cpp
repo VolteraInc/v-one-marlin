@@ -1,7 +1,7 @@
 #include "api.h"
 
 #include "../../Marlin.h"
-#include "../vone/vone.h"
+#include "../vone/VOne.h"
 #include "../../planner.h"
 #include "../../stepper.h"
 

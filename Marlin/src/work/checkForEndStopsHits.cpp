@@ -2,7 +2,7 @@
 #include "../../stepper.h"
 #include "../../planner.h"
 #include "../api/api.h"
-#include "../vone/vone.h"
+#include "../vone/VOne.h"
 #include "work.h"
 
 static void s_outputError(int axis, long stepsWhenTriggered[3]) {

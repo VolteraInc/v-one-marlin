@@ -18,8 +18,7 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef stepper_h
-#define stepper_h
+#pragma once
 
 #include <inttypes.h>
 
@@ -61,5 +60,3 @@ void enable_calibration_plate(bool enable);
 void checkStepperErrors(); //Print errors detected by the stepper
 
 void quickStop();
-
-#endif

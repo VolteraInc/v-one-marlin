@@ -104,7 +104,7 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #define INVERT_X_DIR true
 #define INVERT_Y_DIR true
 #define INVERT_Z_DIR true
-#define INVERT_E0_DIR true
+#define INVERT_E_DIR true
 
 // ENDSTOP SETTINGS:
 

@@ -5,10 +5,10 @@
 #include "processing.h"
 
 #include "../../ConfigurationStore.h"
-#include "../vone/vone.h"
+#include "../vone/VOne.h"
 
 //-------------------------------------------
-// Special commands for iNternal use
+// Special commands for internal use
 int process_icode(int command_code) {
   switch(command_code) {
 

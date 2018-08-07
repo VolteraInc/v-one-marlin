@@ -3,7 +3,8 @@
 #include "../../../Marlin.h"
 #include "../../../planner.h"
 #include "../../../stepper.h"
-#include "../../vone/Vone.h"
+
+#include "../../vone/VOne.h"
 
 static const float s_defaultRetractDistance[] = {
   X_HOME_RETRACT_MM,

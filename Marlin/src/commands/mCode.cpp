@@ -20,7 +20,7 @@ int process_mcode(int command_code) {
       enable_x();
       enable_y();
       enable_z();
-      enable_e0();
+      enable_e();
       return 0;
 
     // M18 - Release motors, or set inactivity timeout
@@ -36,7 +36,7 @@ int process_mcode(int command_code) {
         if (disableAll || code_seen('X')) disable_x();
         if (disableAll || code_seen('Y')) disable_y();
         if (disableAll || code_seen('Z')) disable_z();
-        if (disableAll || code_seen('E')) disable_e0();
+        if (disableAll || code_seen('E')) disable_e();
       }
       return 0;
 

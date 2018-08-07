@@ -1,7 +1,7 @@
 #include "../../Marlin.h"
 #include "../api/api.h"
 #include "../api/diagnostics/diagnostics.h"
-#include "../vone/vone.h"
+#include "../vone/VOne.h"
 
 static auto s_runAt = 0ul;
 

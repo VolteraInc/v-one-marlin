@@ -482,8 +482,6 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
     return;
   }
 
-  block->fan_speed = 0;
-
   // Compute direction bits for this block
   block->direction_bits = 0;
 
@@ -504,7 +502,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   if (block->steps_x != 0) { enable_x(); }
   if (block->steps_y != 0) { enable_y(); }
   if (block->steps_z != 0) { enable_z(); }
-  if (block->steps_e != 0) { enable_e0(); }
+  if (block->steps_e != 0) { enable_e(); }
 
   if (block->steps_e == 0) {
     if (feed_rate < mintravelfeedrate) { feed_rate = mintravelfeedrate; }
@@ -632,7 +630,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   double v_allowable = max_allowable_speed(-block->acceleration,MINIMUM_PLANNER_SPEED,block->millimeters);
   block->entry_speed = min(vmax_junction, v_allowable);
 
-  // log 
+  // log
   //   << F(" max entry speed") << block->max_entry_speed
   //   << F(", nominal speed ") << block->nominal_speed
   //   << F(", entrySpeed ") << block->entry_speed
@@ -669,9 +667,6 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   memcpy(position, target, sizeof(target)); // position[] = target[]
 
   planner_recalculate();
-
-  st_wake_up();
-
 }
 
 void plan_set_position(float x, float y, float z, float e) {

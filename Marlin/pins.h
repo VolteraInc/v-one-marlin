@@ -20,9 +20,9 @@
 #define Z_MIN_PIN         69
 #define Z_MAX_PIN         33
 
-#define E0_STEP_PIN        39
-#define E0_DIR_PIN         14
-#define E0_ENABLE_PIN      29
+#define E_STEP_PIN        39
+#define E_DIR_PIN         14
+#define E_ENABLE_PIN      29
 
 #define XY_MIN_X_PIN      64
 #define XY_MAX_X_PIN      60
