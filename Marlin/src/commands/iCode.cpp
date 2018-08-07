@@ -31,7 +31,7 @@ int process_icode(int command_code) {
     // Calibrate the locations of the z-switch and xy-positioner
     case 2: {
       const unsigned cycles = code_seen('C') ? code_value() : defaultSwitchPositionCalibrationCycles;
-      if (runCalibrateSwitchPositions(vone->toolBox.probe, cycles)) {
+      if (runCalibrateSwitches(vone->toolBox.probe, cycles)) {
         return -1;
       }
 
