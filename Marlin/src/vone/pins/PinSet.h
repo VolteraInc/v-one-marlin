@@ -10,7 +10,7 @@ struct PinSet {
   HeaterPin heater;
 
   PinSet(
-    int ptopDigialPin,
+    int ptopDigitalPin,
     int ptopAnalogPin,
     int bedTemperatureAnalogPin,
     int heaterDigitalPin

@@ -44,6 +44,10 @@ namespace toolDetection {
       case VoltageType::ProbeTriggered:
         return &m_toolBox.probe;
 
+      // Dispenser
+      case VoltageType::SmartDispenserMounted:
+        return &m_toolBox.smartDispenser;
+
       // Drill
       case VoltageType::DrillMounted:
         return &m_toolBox.drill;

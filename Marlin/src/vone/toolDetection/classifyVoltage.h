@@ -21,6 +21,9 @@ inline VoltageType classifyVoltage(float voltage) {
   } else if (voltage >= 3.25 && voltage <= 3.75) {
     return VoltageType::ProbeMounted;
 
+  } else if (voltage >= 4.25 && voltage <= 4.75) {
+    return VoltageType::SmartDispenserMounted;
+
   // No tool mounted, expect ~4.99
   } else if (voltage > 4.89) {
     return VoltageType::NoToolMounted;
