@@ -22,14 +22,6 @@
 
 #include <inttypes.h>
 
-// Mod by VOLTERA
-#define WRITE_Z_STEP(v) WRITE(Z_STEP_PIN, v)
-#define NORM_Z_DIR() WRITE(Z_DIR_PIN, !INVERT_Z_DIR)
-#define REV_Z_DIR() WRITE(Z_DIR_PIN, INVERT_Z_DIR)
-
-#define WRITE_E_STEP(v) WRITE(E0_STEP_PIN, v)
-#define NORM_E_DIR() WRITE(E0_DIR_PIN, !INVERT_E0_DIR)
-#define REV_E_DIR() WRITE(E0_DIR_PIN, INVERT_E0_DIR)
 
 // Initialize and start the stepper motor subsystem
 void st_init();
@@ -52,6 +44,4 @@ void clear_endstop(int axis);
 
 void enable_p_top(bool enable);
 void enable_calibration_plate(bool enable);
-
-void checkStepperErrors(); //Print errors detected by the stepper
 void quickStop();
