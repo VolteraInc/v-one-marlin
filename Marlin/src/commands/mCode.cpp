@@ -9,6 +9,7 @@
 #include "../../macros.h"
 #include "../../version.h"
 #include "../vone/VOne.h"
+#include "../vone/stepper/digipots.h"
 
 bool CooldownNoWait = true;
 bool target_direction;
