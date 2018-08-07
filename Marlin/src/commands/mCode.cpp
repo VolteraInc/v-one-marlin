@@ -122,6 +122,7 @@ int process_mcode(int command_code) {
 
         << F(" Absolute X:") << st_get_position(X_AXIS)
         << F(" Y:") << st_get_position(Y_AXIS)
+        << F(" Z:") << st_get_position(Z_AXIS)
 
         // # of moves queued in buffer
         << F(" B:") << (int)movesplanned()
@@ -440,6 +441,18 @@ int process_mcode(int command_code) {
       << endl;
     return 0;
   }
+
+  case 904: {
+    protocol << F("Stepper - DRVSTATUS") << endl;
+    protocol
+      << F("M904 X:") << trinamicGetDRVSTATUS(X_AXIS)
+      << F("  Y:") << trinamicGetDRVSTATUS(Y_AXIS)
+      << F("  Z:") << trinamicGetDRVSTATUS(Z_AXIS)
+      << F("  E:") << trinamicGetDRVSTATUS(E_AXIS)
+      << endl;
+    return 0;
+  }
+
 
     #else
     // - M906 Get all digital potentiometer values.

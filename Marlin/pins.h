@@ -7,7 +7,7 @@
 #endif
 
 #if defined TRINAMIC_DRIVERS && TRINAMIC_DRIVERS == 3 // Flow Board
-
+#error Using flowboard.
 #define X_STEP_PIN         36
 #define X_DIR_PIN          37
 #define X_ENABLE_PIN       41
@@ -57,7 +57,6 @@
 #endif
 
 #if defined TRINAMIC_DRIVERS && TRINAMIC_DRIVERS == 1 // V-One Plus control board.
-#error Using trinamic and control board.
 #define X_STEP_PIN         36
 #define X_DIR_PIN          37
 #define X_ENABLE_PIN       41

@@ -148,7 +148,7 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 
 
 // Flag to indicate trinamic drivers.
-#define TRINAMIC_DRIVERS (3)
+#define TRINAMIC_DRIVERS (1)
 #define TRINAMIC_SENSORLESS
 #define DEFAULT_PRIME_RETRACT (0.35) // How much to retract when priming.
 
@@ -173,7 +173,7 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 //// MOVEMENT SETTINGS
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
 #ifdef TRINAMIC_DRIVERS
-  #define HOMING_FEEDRATE {2800, 2800, 200 , 50}  // set the homing speeds (mm/min)
+  #define HOMING_FEEDRATE {2800, 2800, 200 , 55}  // set the homing speeds (mm/min)
   #define DEFAULT_AXIS_STEPS_PER_UNIT   {100.0,100.0,1600.0,6857.142857142858}
 
 #else

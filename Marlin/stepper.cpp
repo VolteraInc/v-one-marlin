@@ -335,7 +335,7 @@ FORCE_INLINE bool readNegY() {
 }
 
 FORCE_INLINE bool readPosY() {
-    return READ_PIN(XY_MAX_X);
+    return READ_PIN(XY_MAX_Y);
 }
 
 FORCE_INLINE bool readE() {
@@ -799,7 +799,7 @@ void trinamicInit() {
   TMC2130[X_AXIS].coolstep_min_speed(0); // TCOOLTHRS - Velocity threshold of when to turn on stallguard/coolstep feature.
   TMC2130[X_AXIS].diag1_active_high(1);
   TMC2130[X_AXIS].diag1_stall(1); // Enable DIAG0 active on motor stall
-  TMC2130[X_AXIS].sg_stall_value(30); // -64...0....64 - Tunes sensitivity.
+  TMC2130[X_AXIS].sg_stall_value(10); // -64...0....64 - Tunes sensitivity.
 
   /**************  Y AXIS ****************/
 
@@ -881,11 +881,12 @@ void trinamicInit() {
   TMC2130[E_AXIS].stealth_max_speed(E_STEALTH_MAX_SPEED); // TPWMTHRS - Upper velocity threshold for stealChop
 
   // Stallguard settings
+  //enable_e_max_endstops(true);
+  //TMC2130[E_AXIS].coolstep_min_speed(E_COOLSTEP_MIN_SPEED);
   TMC2130[E_AXIS].coolstep_min_speed(0); // TCOOLTHRS - Velocity threshold of when to turn on stallguard/coolstep feature.
   TMC2130[E_AXIS].diag1_active_high(1);
   TMC2130[E_AXIS].diag1_stall(1); // Enable DIAG0 active on motor stall
   TMC2130[E_AXIS].sg_stall_value(0); // -63...0....63 - Tunes sensitivity
-
 }
 
 // SETTERs
@@ -927,8 +928,12 @@ int trinamicGetSG(int axis) {
   return (int) TMC2130[axis].sg_stall_value();
 }
 
-int trinamicGetGStat(int axis) {
-  return (int) TMC2130[axis].GSTAT();
+uint32_t trinamicGetDRVSTATUS(int axis) {
+  return TMC2130[axis].DRVSTATUS();
+}
+
+uint8_t trinamicGetGStat(int axis) {
+  return TMC2130[axis].GSTAT();
 }
 
 #else

@@ -80,7 +80,7 @@ void quickStop();
   int trinamicGetStalled(int axis);
   int trinamicGetStallGuard(int axis);
   uint32_t trinamicGetDRVSTATUS(int axis);
-  int trinamicGetGStat(int axis);
+  uint8_t trinamicGetGStat(int axis);
 
 
 
