@@ -8,26 +8,26 @@
 
 
 static const auto isAxisLimit = true;
-Endstops::Endstops(PTopPin& toolSwitch)
-  : xMin(F("right (x-min) endstop"), X_MIN_PIN, X_AXIS, -1, isAxisLimit)
-  , yMin(F("back (y-min)"), Y_MIN_PIN, Y_AXIS, -1, isAxisLimit)
-  , zMax(F("top (z-max)"), Z_MAX_PIN, Z_AXIS, 1, isAxisLimit)
-  , zSwitch(F("z-switch (z-min)"), Z_MIN_PIN, Z_AXIS, -1)
-  , xyPositionerRight(F("xy-positioner right (xy-min-x)"), XY_MIN_X_PIN, X_AXIS, -1)
-  , xyPositionerLeft(F("xy-positioner left (xy-max-x)"), XY_MAX_X_PIN, X_AXIS, 1)
-  , xyPositionerBack(F("xy-positioner back (xy-min-y)"), XY_MIN_Y_PIN, Y_AXIS, -1)
-  , xyPositionerForward(F("xy-positioner front (xy-max-y)"), XY_MAX_Y_PIN, Y_AXIS, 1)
-  , calibrationPlate(F("calibration plate (p-bot)"), P_BOT_PIN, Z_AXIS, -1)
-  , toolSwitch(toolSwitch)
+Endstops::Endstops(PTopPin& ptop)
+  : xMin(F("right (x-min) endstop"), X_MIN_PIN, X_AXIS, -1, X_MIN_ENDSTOP_INVERTING, isAxisLimit)
+  , yMin(F("back (y-min)"), Y_MIN_PIN, Y_AXIS, -1, Y_MIN_ENDSTOP_INVERTING, isAxisLimit)
+  , zMax(F("top (z-max)"), Z_MAX_PIN, Z_AXIS, 1, Z_MAX_ENDSTOP_INVERTING, isAxisLimit)
+  , zSwitch(F("z-switch (z-min)"), Z_MIN_PIN, Z_AXIS, -1, Z_MIN_ENDSTOP_INVERTING)
+  , xyPositionerRight(F("xy-positioner right (xy-min-x)"), XY_MIN_X_PIN, X_AXIS, -1, XY_MIN_X_ENDSTOP_INVERTING)
+  , xyPositionerLeft(F("xy-positioner left (xy-max-x)"), XY_MAX_X_PIN, X_AXIS, 1, XY_MAX_X_ENDSTOP_INVERTING)
+  , xyPositionerBack(F("xy-positioner back (xy-min-y)"), XY_MIN_Y_PIN, Y_AXIS, -1, XY_MIN_Y_ENDSTOP_INVERTING)
+  , xyPositionerForward(F("xy-positioner front (xy-max-y)"), XY_MAX_Y_PIN, Y_AXIS, 1, XY_MAX_Y_ENDSTOP_INVERTING)
+  , calibrationPlate(F("calibration plate (p-bot)"), P_BOT_PIN, Z_AXIS, -1, P_BOT_ENDSTOP_INVERTING)
+  , ptop(ptop)
 {
 }
 
 static const __FlashStringHelper* s_pinStatusToString(bool isTriggered) {
   return isTriggered ? F("TRIGGERED") : F("open");
 }
-int Endstops::outputStatus() {
+int Endstops::outputStatus() const {
   bool ptopValue = false;
-  int returnValue = toolSwitch.readDigitalValue(ptopValue);
+  int returnValue = ptop.readDigitalValue(ptopValue);
 
   const auto indent = F("  ");
   log << F("Endstop status") << endl;
@@ -54,9 +54,9 @@ int Endstops::outputStatus() {
 static const __FlashStringHelper* s_deprecatedFormat(bool isTriggered) {
   return isTriggered ? F("TRIGGERED") : F("open");
 }
-int Endstops::deprecated_outputStatus() {
+int Endstops::deprecated_outputStatus() const {
   bool ptopValue = false;
-  int returnValue = toolSwitch.readDigitalValue(ptopValue);
+  int returnValue = ptop.readDigitalValue(ptopValue);
 
   // Note: this output is used in manufacturing scripts
   protocol << F("Reporting endstop status") << endl;

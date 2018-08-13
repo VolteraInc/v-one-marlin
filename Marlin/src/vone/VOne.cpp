@@ -8,8 +8,13 @@ VOne::VOne(
 )
   : pins(ptopDigialPin, ptopAnalogPin, bedTemperaturePin, heaterDigitalPin)
   , endstops(pins.ptop)
+
   , adc(pins.ptop, pins.bedTemperature)
   , heater(pins.heater, pins.bedTemperature)
+
+  , m_endstopMonitor(pins.ptop)
+  , stepper(m_endstopMonitor)
+
   , toolBox(stepper, pins.ptop)
   , toolDetector(toolBox, pins.ptop)
 {

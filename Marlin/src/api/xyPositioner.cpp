@@ -9,6 +9,7 @@ static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveT
       return moveZ(tool, XYPOS_Z_POS);
 
     case usePlateBackOffForZ:
+      confirm probe? use probe()?
       return (
         moveToLimit(Z_AXIS, -1) ||      // Lower in Z (probe switch should trigger)
         relativeMove(tool, 0, 0, 2, 0)  // Retract slightly

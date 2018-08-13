@@ -16,11 +16,10 @@ struct Endstops {
   Endstop xyPositionerForward;
   Endstop calibrationPlate;
 
-  PTopPin& toolSwitch;
+  PTopPin& ptop;
 
-  Endstops(PTopPin& toolSwitch);
 
-  int outputStatus();
-  int deprecated_outputStatus();
-
+  Endstops(PTopPin& ptop);
+  int outputStatus() const;
+  int deprecated_outputStatus() const;
 };

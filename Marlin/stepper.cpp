@@ -51,22 +51,6 @@ static char step_loops;
 static unsigned short OCR1A_nominal;
 static unsigned short step_loops_nominal;
 
-volatile long endstops_trigsteps[3]={0,0,0};
-volatile long endstops_stepsTotal,endstops_stepsDone;
-static volatile bool endstop_x_hit=false;
-static volatile bool endstop_y_hit=false;
-static volatile bool endstop_z_hit=false;
-
-static bool old_x_min_endstop=false;
-static bool old_x_max_endstop=false;
-static bool old_y_min_endstop=false;
-static bool old_y_max_endstop=false;
-static bool old_z_min_endstop=false;
-static bool old_z_max_endstop=false;
-
-static volatile bool p_top_enabled = false;
-static volatile bool calibration_plate_enabled = false;
-
 volatile long count_position[NUM_AXIS] = { 0, 0, 0, 0};
 
 //===========================================================================
@@ -145,68 +129,6 @@ asm volatile ( \
 
 #define ENABLE_STEPPER_DRIVER_INTERRUPT()  TIMSK1 |= (1<<OCIE1A)
 #define DISABLE_STEPPER_DRIVER_INTERRUPT() TIMSK1 &= ~(1<<OCIE1A)
-
-bool endstop_triggered(int axis) {
-  bool triggered = false;
-  CRITICAL_SECTION_START;
-    switch (axis) {
-      case X_AXIS: triggered = endstop_x_hit; break;
-      case Y_AXIS: triggered = endstop_y_hit; break;
-      case Z_AXIS: triggered = endstop_z_hit; break;
-    }
-  CRITICAL_SECTION_END;
-  return triggered;
-}
-
-/// Returns true if an endstop was hit
-bool readAndResetEndstops(bool triggered[3], long stepsWhenTriggered[3]) {
-  CRITICAL_SECTION_START;
-    s_endstops.
-    // Read and reset hit flags
-    triggered[ X_AXIS ] = endstop_x_hit;
-    triggered[ Y_AXIS ] = endstop_y_hit;
-    triggered[ Z_AXIS ] = endstop_z_hit;
-    endstop_x_hit = false;
-    endstop_y_hit = false;
-    endstop_z_hit = false;
-
-    // Read and reset stepper location when triggered
-    stepsWhenTriggered[ X_AXIS ] = endstops_trigsteps[ X_AXIS ];
-    stepsWhenTriggered[ Y_AXIS ] = endstops_trigsteps[ Y_AXIS ];
-    stepsWhenTriggered[ Z_AXIS ] = endstops_trigsteps[ Z_AXIS ];
-    endstops_trigsteps[ X_AXIS ] = 0;
-    endstops_trigsteps[ Y_AXIS ] = 0;
-    endstops_trigsteps[ Z_AXIS ] = 0;
-  CRITICAL_SECTION_END;
-
-  return (
-    triggered[ X_AXIS ] ||
-    triggered[ Y_AXIS ] ||
-    triggered[ Z_AXIS ]
-  );
-}
-
-void clear_endstop(int axis) {
-  CRITICAL_SECTION_START;
-    switch (axis) {
-      case X_AXIS: endstop_x_hit = false; break;
-      case Y_AXIS: endstop_y_hit = false; break;
-      case Z_AXIS: endstop_z_hit = false; break;
-    }
-  CRITICAL_SECTION_END;
-}
-
-void enable_p_top(bool enable) {
-  CRITICAL_SECTION_START;
-    p_top_enabled = enable;
-  CRITICAL_SECTION_END;
-}
-
-void enable_calibration_plate(bool enable) {
-  CRITICAL_SECTION_START;
-    calibration_plate_enabled = enable;
-  CRITICAL_SECTION_END;
-}
 
   //         __________________________
   //        /|                        |\     _________________         ^
@@ -327,39 +249,28 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
 
     // Detect end-stop hits
     // Note: only check in the direction(s) we are moving
+    bool triggeredInX = false;
+    bool triggeredInY = false;
+    bool triggeredInZ = false;
     if (current_block->steps_x > 0) {
-      if (xDir == -1) {
-        endstopMonitor.onMovingRight();
-      } else {
-        endstopMonitor.onMovingLeft();
-      }
+      endstopMonitor.onSteppingInX(xDir, count_position[X_AXIS], triggeredInX);
     }
     if (current_block->steps_y > 0) {
-      if (yDir == -1) {
-        endstopMonitor.onMovingBack();
-      } else {
-        endstopMonitor.onMovingForward();
-      }
+      endstopMonitor.onSteppingInY(yDir, count_position[Y_AXIS], triggeredInY);
     }
     if (current_block->steps_z > 0) {
-      if (zDir == -1) {
-        endstopMonitor.onMovingUp();
-      } else {
-        endstopMonitor.onMovingDown();
-      }
+      endstopMonitor.onSteppingInZ(zDir, count_position[Z_AXIS], triggeredInZ);
     }
 
-    if (endstopMonitor.triggered()) {
-      // Record the stepper position
-      // Note: allow us to output nicer errors on unexpected end stop hits
-      endstops_trigsteps[X_AXIS] = count_position[X_AXIS];
-      endstops_trigsteps[Y_AXIS] = count_position[Y_AXIS];
-      endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
-
+    if (triggeredInX || triggeredInY || triggeredInZ) {
       // Treat the block as complete
-      // Note: Ensures timing is restored and current_block is properly updated
+      // Note: Ensures timing is restored and current_block is removed
       step_events_completed = current_block->step_event_count;
 
+      // Flush any remaining moves
+      // Note: If this hit was expected then there should not be any more moves queued
+      //       If it was not then any queued moves no longer make sense
+      quickStop();
     } else {
 
       // Take multiple steps per interrupt (For high speed moves)

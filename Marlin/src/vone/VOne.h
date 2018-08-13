@@ -2,6 +2,7 @@
 
 #include "pins/PinSet.h"
 #include "endstops/Endstops.h"
+#include "endstops/EndstopMonitor.h"
 #include "pins/adc/AnalogDigitalConverter.h"
 #include "bed/heater/Heater.h"
 #include "stepper/Stepper.h"
@@ -22,7 +23,13 @@ class VOne {
     Endstops endstops;
     adc::AnalogDigitalConverter adc;
     Heater heater;
+
+  private:
+    EndstopMonitor m_endstopMonitor;
+
+  public:
     Stepper stepper;
+
     tools::ToolBox toolBox;
     toolDetection::ToolDetector toolDetector;
 

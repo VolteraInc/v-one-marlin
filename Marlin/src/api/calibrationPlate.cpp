@@ -3,16 +3,18 @@
 #include "../../Marlin.h" // Z_AXIS
 #include "../../stepper.h" // enable_calibration_plate()
 #include "../vone/tools/Probe.h"
+#include "../vone/VOne.h"
 
 static const float MinDisplacement = 0.050f;
 static const float MaxDisplacement = 0.500f;
 
 static int s_measureCalibrationPlateZ(float& plateZ, float maxTravel) {
   log << F("Measuring calibration plate") << endl;
+  auto& endstopMonitor = vone->stepper.endstopMonitor;
 
-  enable_calibration_plate(true);
+  endstopMonitor.ignoreCalibrationPlate(false);
   int returnValue = measureAtSwitch(Z_AXIS, -1, maxTravel, plateZ);
-  enable_calibration_plate(false);
+  endstopMonitor.ignoreCalibrationPlate();
 
   return returnValue;
 }

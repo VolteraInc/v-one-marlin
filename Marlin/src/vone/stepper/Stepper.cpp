@@ -1,15 +1,16 @@
 #include "Stepper.h"
 
-#include "../pins/endstops/Endstop.h"
-#include "../pins/endstops/EndstopMonitor.h"
+#include "../endstops/Endstop.h"
 
 #include "../../../planner.h"
 #include "../../../stepper.h"
 #include "../../../serial.h"
 
+#include "EndstopMonitor.h"
+
 Stepper::Stepper(
   EndstopMonitor& endstopMonitor
-) : m_endstopMonitor(endstopMonitor) {
+) : endstopMonitor(endstopMonitor) {
   plan_init();  // Initialize planner
   st_init();    // Initialize stepper
 }
@@ -48,10 +49,30 @@ int Stepper::add(float x, float y, float z, float e, float f) {
   return 0;
 }
 
-bool Stepper::isEndstopTrippered(const Endstop& endstop) const {
-  return m_endstopMonitor.isEndstopTriggered(endstop);
+bool Stepper::isEndstopTriggered(const Endstop& endstop) const {
+  return endstopMonitor.isEndstopTriggered(endstop);
 }
 
-void Stepper::resetEndstop(const Endstop& endstop) {
-  m_endstopMonitor.resetEndstop(endstop);
+bool Stepper::isEndstopTriggered(enum AxisEnum axis, int direction) const {
+  switch (axis) {
+    case X_AXIS: return endstopMonitor.isTriggeredInX();
+    case Y_AXIS: return endstopMonitor.isTriggeredInY();
+    case Z_AXIS: return endstopMonitor.isTriggeredInZ();
+  }
+}
+
+void Stepper::acknowledgeEndstopTriggered(const Endstop& endstop) {
+  endstopMonitor.acknowledgeEndstopTriggered(endstop);
+}
+
+void Stepper::acknowledgeEndstopTriggered(const Endstop& endstop) {
+  endstopMonitor.acknowledgeEndstopTriggered(endstop);
+}
+
+bool Stepper::hasUnreportedEndstopHits() const {
+
+}
+
+void Stepper::reportEndstopHits() {
+
 }

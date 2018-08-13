@@ -234,6 +234,7 @@ int relativeRawMoveXYZ(float x, float y, float z, float speed_in_mm_per_min, boo
 }
 
 int moveToLimit(int axis, int direction, float f, float maxTravel) {
+  auto& stepper = vone->stepper;
   if(logging_enabled) {
     log
       << F("Move to limit: ")
@@ -260,7 +261,7 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
   }
 
   // Confirm we triggered
-  if (!endstop_triggered(axis)) { // TODO: weak test, should check specific switches
+  if (!stepper.acknowledgeEndstopTriggered(axis, direction)) { // TODO: weak test, should check specific switches
     logError
       << F("Unable to move to ")
       << (direction < 0 ? '-' : '+')
@@ -271,13 +272,15 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
   }
 
   // Resync with stepper position
-  clear_endstop(axis);
   s_resyncWithStepper(axis);
   return 0;
 }
 
 int moveToEndStop(const Endstop& endstop, float f, float maxTravel) {
   auto& stepper = vone->stepper;
+  const auto axis = endstop.axis;
+  const auto direction = endstop.direction;
+
   if (logging_enabled) {
     log << F("Move to end-stop: ") << endstop.name << endl;
   }
@@ -285,11 +288,16 @@ int moveToEndStop(const Endstop& endstop, float f, float maxTravel) {
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
+  // Skip movement safety checks, if needed
+  const auto confirmMoveIsSafe = !(
+    // skip for axis limits becuase they are close to (or beyond) axis bounds
+    endstop.isAxisLimit ||
+
+    // skip for xy-positioner's min-y, which may be at y<0
+    (axis == Y_AXIS && direction == -1)
+  );
 
   // Move
-  const auto axis = endstop.axis;
-  const auto direction = endstop.direction;
-  const auto confirmMoveIsSafe = !endstop.isAxisLimit;
   const auto clampedMaxTravel = min(maxTravel, s_maxTravelInAxis(axis, direction));
   const auto travel = direction < 0 ? -clampedMaxTravel : clampedMaxTravel;
   const float clampedSpeed = f < 0 ? homing_feedrate[axis] : min(f, homing_feedrate[axis]);
@@ -304,18 +312,17 @@ int moveToEndStop(const Endstop& endstop, float f, float maxTravel) {
   }
 
   // Confirm we triggered
-  if (!stepper.endstopTriggered(endstop)) {
+  if (!stepper.acknowledgeEndstopTriggered(endstop)) {
     logError
-      << F("Unable to move to the ")
+      << F("Unable to move to ")
       << endstop.name
       << F(", switch did not trigger")
       << endl;
     return -1;
   }
 
-  // Resync with true position
-  stepper.resetEndstop(endstop);
-  s_resyncWithStepper(endstop.axis);
+  // Resync with stepper position
+  s_resyncWithStepper(axis);
   return 0;
 }
 
@@ -323,12 +330,12 @@ int raise() {
   return moveToEndStop(vone->endstops.zMax);
 }
 
-int retractFromSwitch(int axis, int direction, float retractDistance) {
+int retractFromSwitch(const Endstop& endstop, float retractDistance) {
+  const auto& stepper = vone->stepper;
   if (logging_enabled) {
     log
-      << F("Retract from switch: ")
-      << (direction < 0 ? '-' : '+')
-      << axis_codes[axis]
+      << F("Retract from ")
+      << endstop.name
       << endl;
   }
 
@@ -336,6 +343,8 @@ int retractFromSwitch(int axis, int direction, float retractDistance) {
   st_synchronize();
 
   // Retract slightly
+  const auto axis = endstop.axis;
+  const auto direction = endstop.direction;
   const float distance = retractDistance < 0 ? s_defaultRetractDistance[axis] : retractDistance;
   if (logging_enabled) {
     log << F("Retract by: ") << distance << endl;
@@ -349,12 +358,11 @@ int retractFromSwitch(int axis, int direction, float retractDistance) {
   }
 
   // Confirm that the switch was released
-  if (endstop_triggered(axis)) {
+  if (endstop.readTriggered()) {
     logError
       << F("Unable to retract from ")
-      << (direction < 0 ? '-' : '+')
-      << axis_codes[axis]
-      << F(" switch, switch did not release during retract movement")
+      << endstop.name
+      << F(", switch did not release during retract movement")
       << endl;
     return -1;
   }

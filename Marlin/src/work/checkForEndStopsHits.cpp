@@ -5,22 +5,21 @@
 #include "../vone/VOne.h"
 #include "work.h"
 
-static void s_outputError(const Endstop& endstop, long stepsWhenTriggered[3]) {
+static void reportEndstopHit(const Endstop& endstop, long triggeringStep) {
+  const auto axis = endstop.axis;
+  const auto position = (float)triggeringStep / axis_steps_per_unit[axis];
   logError
     << F("Unable to complete movement, ")
     << endstop.name
     << F(" triggered at position ")
-    << (float)stepsWhenTriggered[endstop.axis] / axis_steps_per_unit[endstop.axis]
+    << position
     << endl;
 }
 
 void checkForEndstopHits() {
   auto& stepper = vone->stepper;
-  bool triggered[3];
-  long stepsWhenTriggered[3];
-  stepper.stopIfEndstopTriggered();
-
-  if (!stepper.copyEndstopStatus(triggered, stepsWhenTriggered)) {
+  const auto& endstops = vone->endstops;
+  if (!stepper.hasUnreportedEndstopHits()) {
     return;
   }
 
@@ -31,25 +30,21 @@ void checkForEndstopHits() {
 
   // Stop/reset everything
   // Note: We might not need to reset all the axes, but it's more robust to do so.
-  vone->stepper.stop();
+  stepper.stop();
   setHomedState(X_AXIS, 0);
   setHomedState(Y_AXIS, 0);
   setHomedState(Z_AXIS, 0);
   vone->toolBox.currentTool().resetPreparations();
   flushSerialCommands();
 
-  // Output switch status
+  // Report Errors
+  stepper.reportEndstopHits(reportEndstopHit);
+
+  // Output current switch status (to aid with debugging)
   log
     << F("Note: the following switch statuses are read direct from ")
-    << F("the switches, if they do not match the error below then ")
-    << F("the switch may be triggering intermittently")
+    << F("the switches, if they do not match the error above then ")
+    << F("a switch may be triggering intermittently")
     << endl;
-  vone->endstops.outputStatus();
-
-  // Output Error
-  // NOTE: should generally see just one of these
-  if (triggered.xMin) {
-    s_outputError(endstops.xMin, stepsWhenTriggered);
-  }
-  ...//TODO: one for each endstop
+  endstops.outputStatus();
 }
