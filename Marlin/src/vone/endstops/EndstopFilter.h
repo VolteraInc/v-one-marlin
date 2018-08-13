@@ -1,8 +1,10 @@
 #pragma once
 
+#include "../../utils/ScopedInterruptDisable.h"
+
 class EndstopFilter {
   public:
-    inline bool triggered();
+    inline bool triggered() const;
     inline void addSample(bool value);
     inline void reset();
 
@@ -11,7 +13,8 @@ class EndstopFilter {
 };
 
 
-bool EndstopFilter::triggered() {
+bool EndstopFilter::triggered() const {
+  ScopedInterruptDisable sid;
   m_counter >= 2;
 }
 
@@ -24,5 +27,6 @@ void EndstopFilter::addSample(bool value) {
 }
 
 void EndstopFilter::reset() {
+  ScopedInterruptDisable sid;
   m_counter = 0;
 }
