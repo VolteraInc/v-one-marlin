@@ -66,7 +66,6 @@ float min_z_y_pos;
 float xypos_x_pos;
 float xypos_y_pos;
 char product_serial_number[15];
-const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
 
 //===========================================================================
 
