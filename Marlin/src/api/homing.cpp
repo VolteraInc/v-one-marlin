@@ -110,7 +110,7 @@ static int s_homeAxis(int axis) {
       //       dispenser.
       //    2) The Drill's mounted voltages registers as 'triggered'
       //       if we do a digital read on it.
-      // DEFER: This should happen in measureAtSwitch, i.e. take a pint
+      // DEFER: This should happen in measureAtSwitch, i.e. take a pin
       //        and confirm it triggers (instead of taking an axis)
       if (vone->toolBox.probe.attached()) {
         bool triggered;
