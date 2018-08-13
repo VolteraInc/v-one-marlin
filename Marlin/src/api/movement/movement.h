@@ -15,7 +15,6 @@ float getDefaultFeedrate();
 int outputMovementStatus();
 
 // Enqueue movements (do not wait for movement to finish)
-int asyncMove(tools::Tool& tool, float x, float y, float z, float e, float f);
 int asyncRelativeMove(tools::Tool& tool, float x, float y, float z, float e, float f = useDefaultFeedrate);
 
 // Absolute movement (synchronized)

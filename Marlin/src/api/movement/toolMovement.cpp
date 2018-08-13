@@ -5,13 +5,8 @@
 #include "../api.h"
 #include "../../vone/tools/Tool.h"
 
-int asyncMove(tools::Tool& tool, float x, float y, float z, float e, float f) {
-  return tool.enqueueMove(x, y, z, e, f);
-}
-
 int asyncRelativeMove(tools::Tool& tool, float x, float y, float z, float e, float speed_in_mm_per_min) {
-  return asyncMove(
-    tool,
+  return tool.enqueueMove(
     current_position[ X_AXIS ] + x,
     current_position[ Y_AXIS ] + y,
     current_position[ Z_AXIS ] + z,
@@ -41,7 +36,7 @@ int relativeMove(tools::Tool& tool, float x, float y, float z, float e, float sp
 
 
 int moveXY(tools::Tool& tool, float x, float y, float f) {
-  if (asyncMove(tool, x, y, current_position[Z_AXIS], current_position[E_AXIS], f)) {
+  if (tool.enqueueMove(x, y, current_position[Z_AXIS], current_position[E_AXIS], f)) {
     return -1;
   }
   st_synchronize();
@@ -56,7 +51,7 @@ int moveXY(tools::Tool& tool, float x, float y, float f) {
 }
 
 int moveZ(tools::Tool& tool, float z, float f) {
-  if (asyncMove(tool, current_position[X_AXIS], current_position[Y_AXIS], z, current_position[E_AXIS], f)) {
+  if (tool.enqueueMove(current_position[X_AXIS], current_position[Y_AXIS], z, current_position[E_AXIS], f)) {
     return -1;
   }
   st_synchronize();
