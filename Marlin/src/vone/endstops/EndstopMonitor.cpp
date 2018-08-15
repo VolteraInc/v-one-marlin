@@ -82,7 +82,7 @@ bool EndstopMonitor::isTriggered(enum AxisEnum axis) const {
 int EndstopMonitor::acknowledgeTriggered(const Endstop& endstop) {
   if (
     m_triggerLog.size() != 1 ||
-    m_triggerLog.front().endstop->pin != endstop.pin
+    m_triggerLog.front()->endstop->pin != endstop.pin
   ) {
     return -1;
   }
@@ -93,8 +93,8 @@ int EndstopMonitor::acknowledgeTriggered(const Endstop& endstop) {
 int EndstopMonitor::acknowledgeTriggered(enum AxisEnum axis, int direction) {
   if (
     m_triggerLog.size() != 1 ||
-    m_triggerLog.front().endstop->axis != axis ||
-    m_triggerLog.front().endstop->direction != direction
+    m_triggerLog.front()->endstop->axis != axis ||
+    m_triggerLog.front()->endstop->direction != direction
   ) {
     return -1;
   }
@@ -102,12 +102,11 @@ int EndstopMonitor::acknowledgeTriggered(enum AxisEnum axis, int direction) {
   return 0;
 }
 
-
 void EndstopMonitor::reportHits(
   void (*reportHits)(const Endstop& endstop, float triggeringPosition)
 ) {
   while(!m_triggerLog.empty()) {
-    const auto& tg = m_triggerLog.front();
+    const auto& tg = *m_triggerLog.front();
     reportHits(*tg.endstop, tg.positionInAxis);
     m_triggerLog.pop();
   }
