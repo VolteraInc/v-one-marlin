@@ -1,6 +1,7 @@
 #pragma once
 
 namespace tools {
+  class Tool;
   class NullTool;
   class Probe;
 }
@@ -13,7 +14,7 @@ int runBurnInSequence(tools::NullTool& noTool);
 // ----------------------------------------------
 // Switch calibration
 
-int checkBackSwitchSeparation(tools::Probe& probe);
+int checkBackSwitchSeparation(tools::Tool& tool);
 
 const auto defaultSwitchPositionCalibrationCycles = 2u;
 int calibrateSwitchPositions(

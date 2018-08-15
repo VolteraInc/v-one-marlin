@@ -21,7 +21,7 @@ int checkBackSwitchSeparation(tools::Tool& tool) {
 
   log
     << F("measurements = [")
-    << ArrayWithSize(measurements, sizeof(measurements))
+    << ArrayWithSize<float>(measurements, sizeof(measurements))
     << F("]")
     << endl;
 
@@ -39,11 +39,14 @@ int checkBackSwitchSeparation(tools::Tool& tool) {
       << F(" exceeded ")
       << FloatWithFormat(tolerance, 2)
       << F("mm, measurements = [")
-      << ArrayWithSize(measurements, sizeof(measurements))
+      << ArrayWithSize<float>(measurements, sizeof(measurements))
       << F("]")
       << endl;
     return -1;
   }
+
+  // Success
+  return 0;
 }
 
 int calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeResults) {
