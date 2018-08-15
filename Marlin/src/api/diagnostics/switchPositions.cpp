@@ -88,7 +88,7 @@ int calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeRes
 
   // Store positions
   if (storeResults) {
-    log << "Storing settings..." << endl;
+    log << F("Storing settings...") << endl;
     Config_StoreCalibration();
   }
 

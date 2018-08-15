@@ -55,7 +55,7 @@ bool EndstopMonitor::isTriggered(const Endstop& endstop) const {
   const auto* es = lookup(endstop);
   if (!es) {
     logError
-      << "Unable to determine if end stop triggered, unrecognized endstop provided"
+      << F("Unable to determine if end stop triggered, unrecognized endstop provided")
       << endl;
     // Treat read failures as TRIGGERED, so that motion stops
     // Note: not sure if this is the right thing to do, but it's
