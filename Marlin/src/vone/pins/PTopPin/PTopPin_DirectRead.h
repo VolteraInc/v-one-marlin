@@ -18,9 +18,7 @@ bool PTopPin::trytoSetMode_DirectRead() {
 }
 
 bool PTopPin::_readDigitalValue() {
-  // p-top needs to be inverted
-  // Note: p-top goes LOW when it triggers and is HIGH when not triggered
-  return digitalRead(_digitalPin) ^ 1;
+  return digitalRead(_digitalPin) ^ P_TOP_ENDSTOP_INVERTING;
 }
 
 int PTopPin::readDigitalValue(bool& value) {
