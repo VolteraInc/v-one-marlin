@@ -3,19 +3,21 @@
 #include "Endstop.h"
 #include "Endstops.h"
 
-
-
 EndstopMonitor::EndstopMonitor(
   Endstops& endstops
 ) : m_endstops(endstops)
-{}
+{
+  ignoreToolSwitch();
+  ignoreZSwitch();
+  ignoreXYPositionerSwitches();
+  ignoreCalibrationPlate();
+}
 
 void EndstopMonitor::ignoreToolSwitch(bool ignore) {
   m_toolSwitch.ignore(ignore);
 }
 
 void EndstopMonitor::ignoreZSwitch(bool ignore) {
-  ScopedInterruptDisable sid;
   m_zSwitch.ignore(ignore);
 }
 
