@@ -111,10 +111,3 @@ int centerTool(tools::Tool& tool) {
   setPosition(xypos_x_pos, xypos_y_pos, current_position[Z_AXIS], current_position[E_AXIS]);
   return 0;
 }
-
-int retractToolConditionally(float distance, float additionalRetractDistance) {
-  if (additionalRetractDistance == NoRetract) {
-    return 0;
-  }
-  return retractFromSwitch(Z_AXIS, -1, distance + additionalRetractDistance);
-}

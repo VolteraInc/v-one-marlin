@@ -53,6 +53,5 @@ int ensureHomedInXY(tools::Tool& tool);
 int centerTool(tools::Tool& tool);
 
 const float NoRetract = -9999.0f;
-int retractToolConditionally(float distance, float additionalRetractDistance);
 
 int confirmAttached(const char* context, tools::Tool& tool);

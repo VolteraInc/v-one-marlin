@@ -108,12 +108,16 @@ int tools::Probe::probe(
       speed,
       maxSamples, maxTouchesPerSample,
       &samplesTaken, &totalTouches
-    ) ||
-
-    // Return to a safe travel height
-    retractToolConditionally(m_probeDisplacement, additionalRetractDistance)
+    )
   ) {
     return -1;
+  }
+
+  // Return to a safe travel height (unless 'NoRetract' given)
+  if (additionalRetractDistance != NoRetract) {
+    if (retractFromSwitch(m_toolSwitch, m_probeDisplacement + additionalRetractDistance)) {
+      return -1;
+    }
   }
 
   // Move to safe height, if enabled
