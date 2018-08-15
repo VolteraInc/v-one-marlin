@@ -53,7 +53,7 @@ static void s_resyncWithStepper(AxisEnum axis) {
   );
 }
 
-static float s_maxTravelInAxis(int axis, int direction) {
+static float s_maxTravelInAxis(AxisEnum axis, int direction) {
   switch(axis) {
     case X_AXIS: return getHomedState(X_AXIS) ? X_MAX_LENGTH : X_MAX_LENGTH_BEFORE_HOMING;
     case Y_AXIS: return getHomedState(Y_AXIS) ? Y_MAX_LENGTH : Y_MAX_LENGTH_BEFORE_HOMING;
@@ -129,7 +129,7 @@ float getDefaultFeedrate() {
   );
 }
 
-static bool s_moveIsUnsafeInAxis(int axis, float value) {
+static bool s_moveIsUnsafeInAxis(AxisEnum axis, float value) {
   // Treat moves prior to homing as safe.
   // Note: We could perform some checks, but there's little value to the user
   if (!getHomedState(axis)) {

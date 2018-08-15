@@ -20,11 +20,11 @@ bool homedZ() {
   return getHomedState(Z_AXIS);
 }
 
-int getHomedState(int axis) {
+int getHomedState(AxisEnum axis) {
   return axis_homed_state[axis];
 }
 
-void setHomedState(int axis, int value) {
+void setHomedState(AxisEnum axis, int value) {
   if (axis_homed_state[axis] != value) {
     log << F("Homed ") << axis_codes[axis] << F("-axis") << endl;
 
@@ -47,7 +47,7 @@ void sendHomedStatusUpdate() {
     << endl;
 }
 
-static void axisIsAtHome(int axis) {
+static void s_axisIsAtZero(AxisEnum axis) {
   current_position[axis] = 0;
 
   plan_set_position(

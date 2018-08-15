@@ -13,7 +13,7 @@
 // and motor inactivity properly monitored
 void periodic_work();
 
-void setHomedState(int axis, int value);
+void setHomedState(AxisEnum axis, int value);
 #define enable_x() WRITE(X_ENABLE_PIN, X_ENABLE_ON)
 #define disable_x() { WRITE(X_ENABLE_PIN,!X_ENABLE_ON); setHomedState(X_AXIS, 0); }
 

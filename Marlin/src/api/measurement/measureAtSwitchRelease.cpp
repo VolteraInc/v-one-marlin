@@ -34,7 +34,7 @@ static unsigned s_countTriggers(unsigned maxSamples) {
   return count;
 }
 
-// TODO int analogMeasureAtSwitch(int axis, int direction, unsigned pin, float initialApporachSpeed, float& digitallyTriggeredAt, float& fullyTriggeredAt, float& releaseStartedAt, float& releaseCompletedAt) {
+// TODO int analogMeasureAtSwitch(AxisEnum axis, int direction, unsigned pin, float initialApporachSpeed, float& digitallyTriggeredAt, float& fullyTriggeredAt, float& releaseStartedAt, float& releaseCompletedAt) {
 //   // Might based this on measureAtSwitchRelease, but allow back off too
 //
 //   // Disable digital trigger detection
@@ -42,7 +42,7 @@ static unsigned s_countTriggers(unsigned maxSamples) {
 //   return -1;
 // }
 
-int measureAtSwitchRelease(int axis, int direction, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
+int measureAtSwitchRelease(AxisEnum axis, int direction, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
   if (logging_enabled) {
     log << F("Measure at switch retract: ") << (direction < 0 ? '-' : '+') << axis_codes[axis] << endl;
   }

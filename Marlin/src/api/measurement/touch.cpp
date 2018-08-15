@@ -2,7 +2,7 @@
 #include "../../../Marlin.h"
 
 int touch(
-  int axis,
+  AxisEnum axis,
   int direction,
   float speed,
   float maxTravel,
