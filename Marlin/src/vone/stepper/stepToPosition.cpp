@@ -27,7 +27,7 @@ float stepsToPositionInAxis(AxisEnum axis, long stepCounts[NUM_AXIS]) {
           s_stepToPositionInAxis(X_AXIS, stepCounts), calib_x_scale
         ),
         reverseScalingCompensation(
-          s_stepToPositionInAxis(X_AXIS, stepCounts), calib_y_scale
+          s_stepToPositionInAxis(Y_AXIS, stepCounts), calib_y_scale
         ),
         calib_tan_theta
       );
