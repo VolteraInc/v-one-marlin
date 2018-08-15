@@ -44,24 +44,25 @@ const Endstop* Endstops::lookup(const int pin) const {
 }
 
 static const __FlashStringHelper* s_pinStatusToString(bool isTriggered) {
-  return isTriggered ? F("TRIGGERED") : F("open");
+  return isTriggered ? F(" TRIGGERED") : F(" open");
 }
 
 void Endstops::outputStatus() const {
-  const auto indent = F("  ");
+  const auto sp = F("  ");
   log << F("Endstop status") << endl;
-  log << indent << xMin.pin << ' ' << xMin.name << s_pinStatusToString(READ_PIN(X_MIN)) << endl;
-  log << indent << yMin.pin << ' ' << yMin.name << s_pinStatusToString(READ_PIN(Y_MIN)) << endl;
-  log << indent << zMax.pin << ' ' << zMax.name << s_pinStatusToString(READ_PIN(Z_MAX)) << endl;
+  log << sp << F("status pin name") << endl;
+  log << sp << s_pinStatusToString(READ_PIN(X_MIN)) << sp << xMin.pin << sp << xMin.name << endl;
+  log << sp << s_pinStatusToString(READ_PIN(Y_MIN)) << sp << yMin.pin << sp << yMin.name  << endl;
+  log << sp << s_pinStatusToString(READ_PIN(Z_MAX)) << sp << zMax.pin << sp << zMax.name << endl;
 
-  log << indent << zSwitch.pin          << ' ' << zSwitch.name          << s_pinStatusToString(READ_PIN(Z_MIN)) << endl;
-  log << indent << calibrationPlate.pin << ' ' << calibrationPlate.name << s_pinStatusToString(READ_PIN(P_BOT)) << endl;
-  log << indent << toolSwitch.pin       << ' ' << toolSwitch.name       << s_pinStatusToString(READ_PIN(P_TOP)) << endl;
+  log << sp << s_pinStatusToString(READ_PIN(Z_MIN)) << sp << zSwitch.pin          << sp << zSwitch.name          << endl;
+  log << sp << s_pinStatusToString(READ_PIN(P_BOT)) << sp << calibrationPlate.pin << sp << calibrationPlate.name << endl;
+  log << sp << s_pinStatusToString(READ_PIN(P_TOP)) << sp << toolSwitch.pin       << sp << toolSwitch.name       << endl;
 
-  log << indent << xyPositionerRight.pin   << ' ' << xyPositionerRight.name   << s_pinStatusToString(READ_PIN(XY_MIN_X)) << endl;
-  log << indent << xyPositionerLeft.pin    << ' ' << xyPositionerLeft.name    << s_pinStatusToString(READ_PIN(XY_MAX_X)) << endl;
-  log << indent << xyPositionerBack.pin    << ' ' << xyPositionerBack.name    << s_pinStatusToString(READ_PIN(XY_MIN_Y)) << endl;
-  log << indent << xyPositionerForward.pin << ' ' << xyPositionerForward.name << s_pinStatusToString(READ_PIN(XY_MAX_Y)) << endl;
+  log << sp << s_pinStatusToString(READ_PIN(XY_MIN_X)) << sp << xyPositionerRight.pin   << sp << xyPositionerRight.name   << endl;
+  log << sp << s_pinStatusToString(READ_PIN(XY_MAX_X)) << sp << xyPositionerLeft.pin    << sp << xyPositionerLeft.name    << endl;
+  log << sp << s_pinStatusToString(READ_PIN(XY_MIN_Y)) << sp << xyPositionerBack.pin    << sp << xyPositionerBack.name    << endl;
+  log << sp << s_pinStatusToString(READ_PIN(XY_MAX_Y)) << sp << xyPositionerForward.pin << sp << xyPositionerForward.name << endl;
 }
 
 // -----------------------------------------------------------------------
