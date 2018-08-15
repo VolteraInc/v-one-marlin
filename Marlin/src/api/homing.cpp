@@ -6,10 +6,7 @@
 #include "../../planner.h"
 #include "../../stepper.h"
 
-// Sets direction of endstops when homing; 1=MAX, -1=MIN
-static const signed char home_dir[] = { -1, -1, -1 };
-
-static signed char axis_homed_state[3] = {0, 0, 0};
+static int8_t axis_homed_state[3] = {0, 0, 0};
 const float homing_feedrate[] = HOMING_FEEDRATE;
 
 
@@ -58,7 +55,7 @@ static void s_axisIsAtZero(AxisEnum axis) {
     current_position[ E_AXIS ]
   );
 
-  setHomedState(axis, home_dir[axis]);
+  setHomedState(axis, -1);
 }
 
 static int s_zeroAxis(const Endstop& endstop) {
