@@ -88,6 +88,19 @@ int EndstopMonitor::acknowledgeTriggered(const Endstop& endstop) {
   return 0;
 }
 
+int EndstopMonitor::acknowledgeTriggered(enum AxisEnum axis, int direction) {
+  if (
+    m_triggerLog.size() != 1 ||
+    m_triggerLog.front().endstop->axis != axis ||
+    m_triggerLog.front().endstop->direction != direction
+  ) {
+    return -1;
+  }
+  m_triggerLog.pop();
+  return 0;
+}
+
+
 void EndstopMonitor::reportHits(
   void (*reportHits)(const Endstop& endstop, float triggeringPosition)
 ) {
