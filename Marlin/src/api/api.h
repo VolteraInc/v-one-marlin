@@ -1,13 +1,14 @@
 #pragma once
 
+#include "movement/movement.h"
+#include "measurement/measurement.h"
+#include "probing/probing.h"
+
+class Endstop;
 namespace tools {
   class Tool;
   class Probe;
 }
-
-#include "movement/movement.h"
-#include "measurement/measurement.h"
-#include "probing/probing.h"
 
 // Homing
 bool homedXY();
@@ -23,7 +24,7 @@ int moveToZSwitchXY(tools::Tool& tool);
 // XY positioner
 const float defaultXyPositionerCycles = 2;
 enum HowToMoveToZ { useConfiguredZ, usePlateBackOffForZ, skipMoveInZ };
-int xyPositionerTouch(tools::Tool& tool, int axis, int direction, float& measurement);
+int xyPositionerTouch(const Endstop& endstop, float& measurement);
 int xyPositionerFindCenter(tools::Tool& tool, long cycles, float& centerX, float& centerY, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
 int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
 

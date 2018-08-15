@@ -1,7 +1,10 @@
 #include "api.h"
 
+#include "../../serial.h"
 #include "../../Marlin.h"
 #include "../work/work.h"
+#include "../vone/VOne.h"
+#include "../vone/endstops/Endstop.h"
 
 static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
   switch (howToMoveToZ) {
@@ -43,28 +46,20 @@ int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
   );
 }
 
-// int xyPositionerTouch(tools::Tool&, int axis, int direction, float& measurement) {
-//   // Move according to the given axis and direction until a switch is triggered
-//   const auto slow = homing_feedrate[axis] / 6;
-//   if (moveToLimit(axis, direction, slow, 6.0f)) {
-//     return -1;
-//   }
-//   measurement = current_position[axis];
-//   return 0;
-// }
-
-int xyPositionerTouch(const EndStop& endStop, float& measurement) {
+int xyPositionerTouch(const Endstop& endstop, float& measurement) {
   // Move according to the given axis and direction until a switch is triggered
+  const auto axis = endstop.axis;
   const auto slow = homing_feedrate[axis] / 6;
-  if (moveToEndStop(endStop, slow, 6.0f)) {
+  if (moveToEndStop(endstop, slow, 6.0f)) {
     return -1;
   }
-  measurement = current_position[endStop.axis];
+  measurement = current_position[axis];
   return 0;
 }
 
 
 static int s_findCenter(tools::Tool& tool, long cycles, float& o_centerX, float& o_centerY) {
+  const auto& endstops = vone->endstops;
   if(logging_enabled) {
     log << F("Find center of xy positioner") << endl;
   }
@@ -77,9 +72,9 @@ static int s_findCenter(tools::Tool& tool, long cycles, float& o_centerX, float&
   for (int i=0; i<cycles; ++i) {
     // Compute center X
     if ( moveXY(tool, centerX, centerY) // applies new centerY on 2nd iteration
-      || xyPositionerTouch(tool, X_AXIS, 1, measurement1) // measure +x
+      || xyPositionerTouch(endstops.xyPositionerLeft, measurement1) // measure +x
       || relativeMove(tool, -5.0f, 0, 0, 0)
-      || xyPositionerTouch(tool, X_AXIS, -1, measurement2)) { // measure -x
+      || xyPositionerTouch(endstops.xyPositionerRight, measurement2)) { // measure -x
       return -1;
     }
     centerX = (measurement2 + measurement1) / 2;
@@ -95,9 +90,9 @@ static int s_findCenter(tools::Tool& tool, long cycles, float& o_centerX, float&
 
     // Compute center Y
     if ( moveXY(tool, centerX, centerY) // applies new centerX
-      || xyPositionerTouch(tool, Y_AXIS, 1, measurement1) // measure +y
+      || xyPositionerTouch(endstops.xyPositionerForward, measurement1) // measure +y
       || relativeMove(tool, 0, -5.0f, 0, 0)
-      || xyPositionerTouch(tool, Y_AXIS, -1, measurement2)) { // measure -y
+      || xyPositionerTouch(endstops.xyPositionerBack, measurement2)) { // measure -y
       return -1;
     }
     centerY = (measurement2 + measurement1) / 2;

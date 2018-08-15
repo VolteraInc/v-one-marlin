@@ -37,6 +37,6 @@ void st_set_e_position(const long &e);
 
 // Get current position in steps
 long st_get_position(uint8_t axis);
-float st_get_position_mm(uint8_t axis);
+float st_get_position_mm(AxisEnum axis);
 
 void quickStop();

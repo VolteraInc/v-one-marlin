@@ -30,7 +30,7 @@ and Philipp Tiefenbacher. */
 
 #include "src/vone/VOne.h"
 #include "src/vone/stepper/digipots.h"
-#include "src/vone/stepper/EndstopMonitor.h"
+#include "src/vone/endstops/EndstopMonitor.h"
 
 //===========================================================================
 //=============================public variables  ============================
@@ -253,13 +253,13 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
     bool triggeredInY = false;
     bool triggeredInZ = false;
     if (current_block->steps_x > 0) {
-      endstopMonitor.onSteppingInX(xDir, count_position[X_AXIS], triggeredInX);
+      endstopMonitor.onSteppingInX(xDir, count_position, triggeredInX);
     }
     if (current_block->steps_y > 0) {
-      endstopMonitor.onSteppingInY(yDir, count_position[Y_AXIS], triggeredInY);
+      endstopMonitor.onSteppingInY(yDir, count_position, triggeredInY);
     }
     if (current_block->steps_z > 0) {
-      endstopMonitor.onSteppingInZ(zDir, count_position[Z_AXIS], triggeredInZ);
+      endstopMonitor.onSteppingInZ(zDir, count_position, triggeredInZ);
     }
 
     if (triggeredInX || triggeredInY || triggeredInZ) {
@@ -426,24 +426,8 @@ long st_get_position(uint8_t axis) {
   return count_pos;
 }
 
-float st_get_position_mm(uint8_t axis) {
-  // To get our actual global position in mm based on our number of steps
-  // we need to consider X and Y axis and do reverse transformations
-  float position_mm = 0.0;
-  if (axis == X_AXIS) {
-    float steps_x = st_get_position(X_AXIS);
-    position_mm = steps_x * calib_x_scale * calib_cos_theta / axis_steps_per_unit[X_AXIS];
-
-  } else if (axis == Y_AXIS) {
-    float steps_x = st_get_position(X_AXIS);
-    float steps_y = st_get_position(Y_AXIS);
-    position_mm = calib_x_scale * steps_x * sin(atan(calib_tan_theta)) / axis_steps_per_unit[X_AXIS] + calib_y_scale * steps_y / axis_steps_per_unit[Y_AXIS];
-
-  } else { // Same case for both Z and E
-    position_mm = st_get_position(axis) / axis_steps_per_unit[axis];
-  }
-
-  return position_mm;
+float st_get_position_mm(AxisEnum axis) {
+  return stepsToPositionInAxis(axis, count_position);
 }
 
 void quickStop() {

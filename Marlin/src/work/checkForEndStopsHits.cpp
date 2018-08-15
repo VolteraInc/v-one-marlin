@@ -5,13 +5,14 @@
 #include "../vone/VOne.h"
 #include "work.h"
 
-static void reportEndstopHit(const Endstop& endstop, long triggeringStep) {
+static void s_reportHit(const Endstop& endstop, float position) {
   const auto axis = endstop.axis;
-  const auto position = (float)triggeringStep / axis_steps_per_unit[axis];
   logError
     << F("Unable to complete movement, ")
     << endstop.name
-    << F(" triggered at position ")
+    << F(" triggered at ")
+    << axis_codes[axis]
+    << F("=")
     << position
     << endl;
 }
@@ -19,7 +20,7 @@ static void reportEndstopHit(const Endstop& endstop, long triggeringStep) {
 void checkForEndstopHits() {
   auto& stepper = vone->stepper;
   const auto& endstops = vone->endstops;
-  if (!stepper.hasUnreportedEndstopHits()) {
+  if (!stepper.endstopMonitor.hasUnreportedHits()) {
     return;
   }
 
@@ -38,7 +39,7 @@ void checkForEndstopHits() {
   flushSerialCommands();
 
   // Report Errors
-  stepper.reportEndstopHits(reportEndstopHit);
+  stepper.endstopMonitor.reportHits(s_reportHit);
 
   // Output current switch status (to aid with debugging)
   log

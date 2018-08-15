@@ -7,6 +7,8 @@
 #include "../../api/movement/movement.h"
 #include "../pins/PTopPin/PTopPin.h"
 #include "../toolDetection/classifyVoltage.h"
+#include "../stepper/Stepper.h"
+#include "../endstops/EndstopMonitor.h"
 
 int confirmAttachedAndNotTriggered(const char* context, tools::Probe& probe) {
   if (confirmAttached(context, probe)) {
@@ -21,14 +23,15 @@ int confirmAttachedAndNotTriggered(const char* context, tools::Probe& probe) {
   return 0;
 }
 
-tools::Probe::Probe(Stepper& stepper, PTopPin& pin)
+tools::Probe::Probe(Stepper& stepper, PTopPin& pin, const Endstop& toolSwitch)
   : Tool(stepper)
   , m_pin(pin)
+  , m_toolSwitch(toolSwitch)
 {
 }
 
 int tools::Probe::prepareToMoveImpl_Start() {
-  enable_p_top(true);
+  m_stepper.endstopMonitor.ignoreToolSwitch(false);
   return (
     raise() ||
     confirmAttachedAndNotTriggered("prepare probe", *this)
@@ -52,7 +55,7 @@ int tools::Probe::prepareToMoveImpl_CalibrateXYZ() {
 int tools::Probe::resetPreparationsImpl() {
   enableHeightSafety(false);
   setHomedState(Z_AXIS, 0);
-  enable_p_top(false);
+  m_stepper.endstopMonitor.ignoreToolSwitch();
   return 0;
 }
 

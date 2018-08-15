@@ -43,6 +43,7 @@ int setPosition(float x, float y, float z, float e) {
 // Set the planner position based on the stepper's position.
 // Note: Certain movements, like attempting to move past an end-stop, will leave the
 // planner out of sync with the stepper. This function corrects the planner's position.
+static void s_resyncWithStepper(AxisEnum axis) {
   current_position[axis] = st_get_position_mm(axis);
   plan_set_position(
     current_position[X_AXIS],
@@ -233,7 +234,7 @@ int relativeRawMoveXYZ(float x, float y, float z, float speed_in_mm_per_min, boo
 }
 
 int moveToLimit(AxisEnum axis, int direction, float f, float maxTravel) {
-  auto& stepper = vone->stepper;
+  auto& endstopMonitor = vone->stepper.endstopMonitor;
   if(logging_enabled) {
     log
       << F("Move to limit: ")
@@ -260,7 +261,7 @@ int moveToLimit(AxisEnum axis, int direction, float f, float maxTravel) {
   }
 
   // Confirm we triggered
-  if (!stepper.acknowledgeEndstopTriggered(axis, direction)) { // TODO: weak test, should check specific switches
+  if (!endstopMonitor.acknowledgeTriggered(axis, direction)) { // TODO: weak test, should check specific switches
     logError
       << F("Unable to move to ")
       << (direction < 0 ? '-' : '+')
@@ -276,7 +277,7 @@ int moveToLimit(AxisEnum axis, int direction, float f, float maxTravel) {
 }
 
 int moveToEndStop(const Endstop& endstop, float f, float maxTravel) {
-  auto& stepper = vone->stepper;
+  auto& endstopMonitor = vone->stepper.endstopMonitor;
   const auto axis = endstop.axis;
   const auto direction = endstop.direction;
 
@@ -311,7 +312,7 @@ int moveToEndStop(const Endstop& endstop, float f, float maxTravel) {
   }
 
   // Confirm we triggered
-  if (!stepper.acknowledgeEndstopTriggered(endstop)) {
+  if (!endstopMonitor.acknowledgeTriggered(endstop)) {
     logError
       << F("Unable to move to ")
       << endstop.name
@@ -330,7 +331,6 @@ int raise() {
 }
 
 int retractFromSwitch(const Endstop& endstop, float retractDistance) {
-  const auto& stepper = vone->stepper;
   if (logging_enabled) {
     log
       << F("Retract from ")
@@ -357,6 +357,10 @@ int retractFromSwitch(const Endstop& endstop, float retractDistance) {
   }
 
   // Confirm that the switch was released
+  // Note: we check the switch itself, we can not
+  //       rely on the stepper's endstop monitor
+  //       becuase it will not check switches when
+  //       moving away from them.
   if (endstop.readTriggered()) {
     logError
       << F("Unable to retract from ")

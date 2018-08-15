@@ -17,7 +17,7 @@ int asyncRelativeMove(tools::Tool& tool, float x, float y, float z, float e, flo
 }
 
 int relativeMove(tools::Tool& tool, float x, float y, float z, float e, float speed_in_mm_per_min) {
-  const auto& stepper = vone->stepper;
+  const auto& endstopMonitor = vone->stepper.endstopMonitor;
   if (asyncRelativeMove(tool, x, y, z, e, speed_in_mm_per_min)) {
     return -1;
   }
@@ -25,9 +25,9 @@ int relativeMove(tools::Tool& tool, float x, float y, float z, float e, float sp
 
   // Check for endstop hits in each axis that we moved
   if (
-    (x && stepper.isEndstopTriggered(X_AXIS)) ||
-    (y && stepper.isEndstopTriggered(Y_AXIS)) ||
-    (z && stepper.isEndstopTriggered(Z_AXIS))
+    (x && endstopMonitor.isTriggered(X_AXIS)) ||
+    (y && endstopMonitor.isTriggered(Y_AXIS)) ||
+    (z && endstopMonitor.isTriggered(Z_AXIS))
   ) {
     // relying on endstop reporting and recovery at a higher-level
     log << F("Endstop hit during relative movement") << endl;
@@ -38,14 +38,14 @@ int relativeMove(tools::Tool& tool, float x, float y, float z, float e, float sp
 
 
 int moveXY(tools::Tool& tool, float x, float y, float f) {
-  const auto& stepper = vone->stepper;
+  const auto& endstopMonitor = vone->stepper.endstopMonitor;
   if (tool.enqueueMove(x, y, current_position[Z_AXIS], current_position[E_AXIS], f)) {
     return -1;
   }
   st_synchronize();
 
   // Check for endstop hits in X or Y-axis
-  if (stepper.isEndstopTriggered(X_AXIS) || stepper.isEndstopTriggered(Y_AXIS)) {
+  if (endstopMonitor.isTriggered(X_AXIS) || endstopMonitor.isTriggered(Y_AXIS)) {
     // relying on endstop reporting and recovery at a higher-level
     log << F("Endstop hit during x,y movement") << endl;
     return -1;
@@ -54,14 +54,14 @@ int moveXY(tools::Tool& tool, float x, float y, float f) {
 }
 
 int moveZ(tools::Tool& tool, float z, float f) {
-  const auto& stepper = vone->stepper;
+  const auto& endstopMonitor = vone->stepper.endstopMonitor;
   if (tool.enqueueMove(current_position[X_AXIS], current_position[Y_AXIS], z, current_position[E_AXIS], f)) {
     return -1;
   }
   st_synchronize();
 
   // Check for an endstop hit in Z-axis
-  if (stepper.isEndstopTriggered(Z_AXIS)) {
+  if (endstopMonitor.isTriggered(Z_AXIS)) {
     // relying on endstop reporting and recovery at a higher-level
     log << F("Endstop hit during z movement") << endl;
     return -1;

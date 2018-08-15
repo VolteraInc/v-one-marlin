@@ -7,15 +7,14 @@ VOne::VOne(
   int heaterDigitalPin
 )
   : pins(ptopDigialPin, ptopAnalogPin, bedTemperaturePin, heaterDigitalPin)
-  , endstops(pins.ptop)
 
   , adc(pins.ptop, pins.bedTemperature)
   , heater(pins.heater, pins.bedTemperature)
 
-  , m_endstopMonitor(pins.ptop)
+  , m_endstopMonitor(endstops)
   , stepper(m_endstopMonitor)
 
-  , toolBox(stepper, pins.ptop)
+  , toolBox(stepper, pins.ptop, endstops.toolSwitch)
   , toolDetector(toolBox, pins.ptop)
 {
 }

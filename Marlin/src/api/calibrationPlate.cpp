@@ -11,9 +11,13 @@ static const float MaxDisplacement = 0.500f;
 static int s_measureCalibrationPlateZ(float& plateZ, float maxTravel) {
   log << F("Measuring calibration plate") << endl;
   auto& endstopMonitor = vone->stepper.endstopMonitor;
+  const auto& calibrationPlate = vone->endstops.calibrationPlate;
 
   endstopMonitor.ignoreCalibrationPlate(false);
-  int returnValue = measureAtSwitch(Z_AXIS, -1, maxTravel, plateZ);
+  int returnValue = (
+    measureAtSwitch(Z_AXIS, -1, maxTravel, plateZ) ||
+    retractFromSwitch(calibrationPlate)
+  );
   endstopMonitor.ignoreCalibrationPlate();
 
   return returnValue;
@@ -42,11 +46,6 @@ int measureProbeDisplacement(tools::Probe& probe, float& o_displacement) {
       << F("Unable to measure probe displacement, ")
       << F("the calibration plate could not be measured (measurement 1 of 2)")
       << endl;
-    return -1;
-  }
-
-  // Retract
-  if (retractFromSwitch(Z_AXIS, -1)) {  ///TODO: not needed ?
     return -1;
   }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+class Endstop;
 namespace tools {
   class Tool;
 }
@@ -36,7 +37,7 @@ int setPositionEOnly(float e);
 int setPosition(float x, float y, float z, float e);
 
 
-int retractFromSwitch(int axis, int direction, float retractDistance = useDefaultRetractDistance);
+int retractFromSwitch(const EndStop& endstop, float retractDistance = useDefaultRetractDistance);
 
 
 // TODO: use a namespace, e.g. movement::raw movement::internal
