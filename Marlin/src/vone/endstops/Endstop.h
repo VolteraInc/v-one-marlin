@@ -1,5 +1,8 @@
 #pragma once
 
+#include "../../../Axis.h"
+#include "../../../MarlinConfig.h"
+
 class __FlashStringHelper;
 
 struct Endstop {
@@ -11,23 +14,23 @@ struct Endstop {
   const bool isAxisLimit;
 
   Endstop(
-    const __FlashStringHelper* name_,
-    int pin_,
-    AxisEnum axis_,
-    int direction_,
-    bool inverted_,
-    bool isAxisLimit_ = false
-  ) : name(name_)
-    , pin(pin_)
-    , axis(axis_)
-    , direction(direction_)
-    , inverted(inverted_)
-    , isAxisLimit(isAxisLimit_)
+    const __FlashStringHelper* name,
+    int pin,
+    AxisEnum axis,
+    int direction,
+    bool inverted,
+    bool isAxisLimit = false
+  ) : name(name)
+    , pin(pin)
+    , axis(axis)
+    , direction(direction)
+    , inverted(inverted)
+    , isAxisLimit(isAxisLimit)
   {
     pinMode(pin, INPUT);
   }
 
   bool readTriggered() const {
-    return digitalRead(pin) == 1 ^ inverted;
+    return (digitalRead(pin) == 1) ^ inverted;
   }
 };

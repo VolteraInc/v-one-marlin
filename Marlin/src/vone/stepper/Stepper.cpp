@@ -1,12 +1,11 @@
 #include "Stepper.h"
 
 #include "../endstops/Endstop.h"
+#include "../endstops/EndstopMonitor.h"
 
 #include "../../../planner.h"
 #include "../../../stepper.h"
 #include "../../../serial.h"
-
-#include "EndstopMonitor.h"
 
 Stepper::Stepper(
   EndstopMonitor& endstopMonitor
@@ -47,32 +46,4 @@ int Stepper::add(float x, float y, float z, float e, float f) {
 
   // Success
   return 0;
-}
-
-bool Stepper::isEndstopTriggered(const Endstop& endstop) const {
-  return endstopMonitor.isEndstopTriggered(endstop);
-}
-
-bool Stepper::isEndstopTriggered(enum AxisEnum axis, int direction) const {
-  switch (axis) {
-    case X_AXIS: return endstopMonitor.isTriggeredInX();
-    case Y_AXIS: return endstopMonitor.isTriggeredInY();
-    case Z_AXIS: return endstopMonitor.isTriggeredInZ();
-  }
-}
-
-void Stepper::acknowledgeEndstopTriggered(const Endstop& endstop) {
-  endstopMonitor.acknowledgeEndstopTriggered(endstop);
-}
-
-void Stepper::acknowledgeEndstopTriggered(const Endstop& endstop) {
-  endstopMonitor.acknowledgeEndstopTriggered(endstop);
-}
-
-bool Stepper::hasUnreportedEndstopHits() const {
-
-}
-
-void Stepper::reportEndstopHits() {
-
 }

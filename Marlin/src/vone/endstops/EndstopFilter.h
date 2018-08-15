@@ -4,29 +4,45 @@
 
 class EndstopFilter {
   public:
+    inline void ignore(bool ignoreTriggers);
     inline bool triggered() const;
     inline void addSample(bool value);
     inline void reset();
 
   private:
-    int m_counter = 0;
+    static const int TriggerCountThreshold = 2;
+    int m_triggerCount = 0;
+    bool m_ignoreTriggers = false;
+
+    bool _triggered() const {
+      return m_triggerCount >= TriggerCountThreshold;
+    }
+
 };
 
+void EndstopFilter::ignore(bool ignoreTriggers) {
+  ScopedInterruptDisable sid;
+  m_ignoreTriggers = ignoreTriggers;
+}
 
 bool EndstopFilter::triggered() const {
   ScopedInterruptDisable sid;
-  m_counter >= 2;
+  return !m_ignoreTriggers && _triggered();
 }
 
 void EndstopFilter::addSample(bool value) {
+  ScopedInterruptDisable sid;
   if (value) {
-    ++m_counter;
+    // Increment the counter, but prevent overflow
+    if (!_triggered()) {
+      ++m_triggerCount;
+    }
   } else {
-    m_counter = 0;
+    m_triggerCount = 0;
   }
 }
 
 void EndstopFilter::reset() {
   ScopedInterruptDisable sid;
-  m_counter = 0;
+  m_triggerCount = 0;
 }

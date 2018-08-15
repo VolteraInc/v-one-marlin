@@ -5,21 +5,20 @@
 class PTopPin;
 
 struct Endstops {
-  Endstop xMin;
-  Endstop yMin;
-  Endstop zMax;
-  Endstop zSwitch;
+  const Endstop xMin;
+  const Endstop yMin;
+  const Endstop zMax;
+  const Endstop zSwitch;
 
-  Endstop xyPositionerBack;
-  Endstop xyPositionerLeft;
-  Endstop xyPositionerRight;
-  Endstop xyPositionerForward;
-  Endstop calibrationPlate;
+  const Endstop xyPositionerLeft;
+  const Endstop xyPositionerRight;
+  const Endstop xyPositionerBack;
+  const Endstop xyPositionerForward;
+  const Endstop calibrationPlate;
 
-  PTopPin& ptop;
+  const Endstop toolSwitch;
 
-
-  Endstops(PTopPin& ptop);
-  int outputStatus() const;
-  int deprecated_outputStatus() const;
+  Endstops();
+  void outputStatus() const;
+  void deprecated_outputStatus() const;
 };

@@ -4,10 +4,13 @@
 #include "../../utils/ScopedInterruptDisable.h"
 #include "../../utils/ScopedInterruptDisable.h"
 #include "../pins/PTopPin/PTopPin.h"
+#include "Endstops.h"
 #include "EndstopFilter.h"
+#include "TriggerEventLog.h"
 
 class Endstop;
-class Endstops;
+
+float stepsToPositionInAxis(AxisEnum axis, volatile long stepCounts[NUM_AXIS]);
 
 class EndstopMonitor {
   public:
@@ -16,26 +19,23 @@ class EndstopMonitor {
     void ignoreToolSwitch(bool ignore = true);
     void ignoreZSwitch(bool ignore = true);
     void ignoreXYPositionerSwitches(bool ignore = true);
+    void ignoreCalibrationPlate(bool ignore = true);
 
-    bool isEndstopTriggered(const Endstop& endstop) const;
-    bool isEndstopTriggered(enum AxisEnum axis, int direction) const;
-    void acknowledgeEndstopTriggered(const Endstop& endstop);
-    void acknowledgeEndstopTriggered(enum AxisEnum axis, int direction);
+    bool isTriggered(const Endstop& endstop) const;
+    bool isTriggered(enum AxisEnum axis) const;
+    int acknowledgeTriggered(const Endstop& endstop);
+    int acknowledgeTriggered(enum AxisEnum axis, int direction);
 
-    inline bool hasUnreportedEndstopHits() const;
-    void reportEndstopHits(void (*reportHit)(const Endstop& endstop, long triggeringStep));
+    inline bool hasUnreportedHits() const;
+    void reportHits(void (*reportHit)(const Endstop& endstop, float triggeringPosition));
 
     // Step handlers
-    inline void onSteppingInX(int direction, long currentStep, bool& triggered);
-    inline void onSteppingInY(int direction, long currentStep, bool& triggered);
-    inline void onSteppingInZ(int direction, long currentStep, bool& triggered);
+    inline void onSteppingInX(int direction, volatile long stepCounts[NUM_AXIS], bool& triggered);
+    inline void onSteppingInY(int direction, volatile long stepCounts[NUM_AXIS], bool& triggered);
+    inline void onSteppingInZ(int direction, volatile long stepCounts[NUM_AXIS], bool& triggered);
 
   private:
-    volatile bool m_ignoreToolSwitch = true;
-    volatile bool m_ignoreZSwitch = true;
-    volatile bool m_ignoreXYPositionerSwitches = true;
-
-    volatile bool m_hasUnreportedEndstopHits = false;
+    TriggerEventLog m_triggerLog;
     volatile long m_triggeringStep;
 
     Endstops& m_endstops;
@@ -46,53 +46,59 @@ class EndstopMonitor {
 
     EndstopFilter m_zSwitch;
 
-    EndstopFilter m_xyMinX;
-    EndstopFilter m_xyMaxX;
-    EndstopFilter m_xyMinY;
-    EndstopFilter m_xyMaxY;
-
+    EndstopFilter m_xyPositionerLeft;
+    EndstopFilter m_xyPositionerRight;
+    EndstopFilter m_xyPositionerForward;
+    EndstopFilter m_xyPositionerBack;
     EndstopFilter m_calibrationPlate;
 
     EndstopFilter m_toolSwitch;
 
-    EndstopFilter* lookup(const Endstop& endstop);
+    const EndstopFilter* lookup(const Endstop& endstop) const;
 
     // ------------------------------------------
     // X-axis
 
     // Left
     inline void resetLeftEndstops() {
-      m_xyMaxX.reset();
+      m_xyPositionerLeft.reset();
     }
 
-    inline void updateLeftEndstops() {
-      m_xyMaxX.addSample(READ_PIN(XY_MAX_X));
+    inline void updateEndstop(
+      EndstopFilter& filter,
+      bool value,
+      const Endstop& endstop,
+      volatile long stepCounts[NUM_AXIS]
+    ) {
+      filter.addSample(value);
+      if (filter.triggered()) {
+        m_triggerLog.push(endstop, stepsToPositionInAxis(endstop.axis, stepCounts));
+      }
     }
 
-    inline bool isTriggeredLeft() {
+    inline void updateLeftEndstops(volatile long stepCounts[NUM_AXIS]) {
+      updateEndstop(m_xyPositionerLeft, READ_PIN(XY_MAX_X), m_endstops.xyPositionerLeft, stepCounts);
+    }
+
+    inline bool isTriggeredLeft() const {
       ScopedInterruptDisable sid;
-      return (
-        (!m_ignoreXYPositionerSwitches && m_xyMaxX.triggered())
-      );
+      return m_xyPositionerLeft.triggered();
     }
 
     // Right
     inline void resetRightEndstops() {
       m_xMin.reset();
-      m_xyMinX.reset();
+      m_xyPositionerRight.reset();
     }
 
-    inline void updateRightEndstops() {
-      m_xMin.addSample(READ_PIN(X_MIN));
-      m_xyMinX.addSample(READ_PIN(XY_MIN_X))
+    inline void updateRightEndstops(volatile long stepCounts[NUM_AXIS]) {
+      updateEndstop(m_xMin, READ_PIN(X_MIN), m_endstops.xMin, stepCounts);
+      updateEndstop(m_xyPositionerRight, READ_PIN(XY_MIN_X), m_endstops.xyPositionerRight, stepCounts);
     }
 
-    inline bool isTriggeredRight() {
+    inline bool isTriggeredRight() const {
       ScopedInterruptDisable sid;
-      return (
-        m_xMin.triggered() ||
-        (!m_ignoreXYPositionerSwitches && m_xyMinX.triggered())
-      );
+      return m_xMin.triggered() || m_xyPositionerRight.triggered();
     }
 
     // ------------------------------------------
@@ -100,37 +106,32 @@ class EndstopMonitor {
 
     // Forward
     inline void resetForwardEndstops() {
-      m_xyMaxY.reset();
+      m_xyPositionerForward.reset();
     }
 
-    inline void updateForwardEndstops() {
-      m_xyMaxY.addSample(READ_PIN(XY_MAX_Y));
+    inline void updateForwardEndstops(volatile long stepCounts[NUM_AXIS]) {
+      updateEndstop(m_xyPositionerForward, READ_PIN(XY_MAX_Y), m_endstops.xyPositionerForward, stepCounts);
     }
 
-    inline bool isTriggeredForward() {
+    inline bool isTriggeredForward() const {
       ScopedInterruptDisable sid;
-      return (
-        (!m_ignoreXYPositionerSwitches && m_xyMaxY.triggered())
-      );
+      return m_xyPositionerForward.triggered();
     }
 
     // Back
     inline void resetBackEndstops() {
       m_yMin.reset();
-      m_xyMinY.reset();
+      m_xyPositionerBack.reset();
     }
 
-    inline void updateBackEndstops() {
-      m_yMin.addSample(READ_PIN(X_MIN));
-      m_xyMinY.addSample(READ_PIN(XY_MIN_Y))
+    inline void updateBackEndstops(volatile long stepCounts[NUM_AXIS]) {
+      updateEndstop(m_yMin, READ_PIN(Y_MIN), m_endstops.yMin, stepCounts);
+      updateEndstop(m_xyPositionerBack, READ_PIN(XY_MIN_Y), m_endstops.xyPositionerBack, stepCounts);
     }
 
-    inline bool isTriggeredBack() {
+    inline bool isTriggeredBack() const {
       ScopedInterruptDisable sid;
-      return (
-        m_yMin.triggered() ||
-        (!m_ignoreXYPositionerSwitches && m_xyMinY.triggered())
-      );
+      return m_yMin.triggered() || m_xyPositionerBack.triggered();
     }
 
     // ------------------------------------------
@@ -141,11 +142,11 @@ class EndstopMonitor {
       m_zMax.reset();
     }
 
-    inline void updateUpEndstops() {
-      m_zMax.addSample(READ_PIN(XY_MAX_Y));
+    inline void updateUpEndstops(volatile long stepCounts[NUM_AXIS]) {
+      updateEndstop(m_zMax, READ_PIN(Z_MAX), m_endstops.zMax, stepCounts);
     }
 
-    inline bool isTriggeredUp() {
+    inline bool isTriggeredUp() const {
       return m_zMax.triggered();
     }
 
@@ -156,93 +157,64 @@ class EndstopMonitor {
       m_toolSwitch.reset();
     }
 
-    inline void updateDownEndstops() {
-      // Update down endstops
-      m_zSwitch.addSample(READ_PIN(Z_MIN));
-      m_calibrationPlate.addSample(READ_PIN(P_BOT));
-
-      if (m_ignoreToolSwitch) {
-        m_toolSwitch.reset();
-      } else {
-        bool value = false;
-        if (m_endstops.ptop.readDigitalValue(value)) {
-          // Treat read failures as TRIGGERED, so that motion stops
-          // Note: not sure if this is the right thing to do, but it's
-          // safer than allowing motion to continue. Also, if reads are
-          // failing there is a deeper bug
-          value = true;
-        }
-        m_toolSwitch.addSample(value);
-      }
+    inline void updateDownEndstops(volatile long stepCounts[NUM_AXIS]) {
+      updateEndstop(m_zSwitch, READ_PIN(Z_MIN), m_endstops.zSwitch, stepCounts);
+      updateEndstop(m_calibrationPlate, READ_PIN(P_BOT), m_endstops.calibrationPlate, stepCounts);
+      updateEndstop(m_toolSwitch, READ_PIN(P_TOP), m_endstops.toolSwitch, stepCounts);
     }
 
-    inline bool isTriggeredDown() {
+    inline bool isTriggeredDown() const {
       return (
-        (!m_ignoreZSwitch && m_zSwitch.triggered()) ||
-        (!m_ignoreXYPositionerSwitches && m_calibrationPlate.triggered()) ||
-        (!m_ignoreToolSwitch && m_toolSwitch.triggered())
+        m_zSwitch.triggered() ||
+        m_calibrationPlate.triggered() ||
+        m_toolSwitch.triggered()
       );
     }
 };
 
-bool EndstopMonitor::hasUnreportedEndstopHits() const {
+bool EndstopMonitor::hasUnreportedHits() const {
   ScopedInterruptDisable sid;
-  return m_hasUnreportedEndstopHits;
+  return !m_triggerLog.empty();
 }
 
-void EndstopMonitor::onSteppingInX(int direction, long currentStep, bool& triggered) {
+void EndstopMonitor::onSteppingInX(int direction, volatile long stepCounts[NUM_AXIS], bool& triggered) {
   if (direction == -1) {
     // Stepping Right
     resetLeftEndstops();
-    updateRightEndstops();
+    updateRightEndstops(stepCounts);
     triggered = isTriggeredRight();
   } else {
     // Stepping Left
     resetRightEndstops();
-    updateLeftEndstops();
+    updateLeftEndstops(stepCounts);
     triggered = isTriggeredLeft();
-  }
-
-  if (triggered && !m_hasUnreportedEndstopHits) {
-    m_hasUnreportedEndstopHits = true;
-    m_triggeringStep[X_AXIS] = currentStep;
   }
 }
 
-void EndstopMonitor::onSteppingInY(int direction, long currentStep, bool& triggered) {
+void EndstopMonitor::onSteppingInY(int direction, volatile long stepCounts[NUM_AXIS], bool& triggered) {
   if (direction == -1) {
     // Stepping Back
     resetForwardEndstops();
-    updateBackEndstops()
+    updateBackEndstops(stepCounts);
     triggered = isTriggeredBack();
   } else {
     // Stepping Forward
     resetBackEndstops();
-    updateForwardEndstops()
+    updateForwardEndstops(stepCounts);
     triggered = isTriggeredForward();
-  }
-
-  if (triggered) {
-    m_triggeringStep[Y_AXIS] = currentStep;
-    m_hasUnreportedEndstopHits = true;
   }
 }
 
-void EndstopMonitor::onSteppingInZ(int direction, long currentStep, bool& triggered) {
+void EndstopMonitor::onSteppingInZ(int direction, volatile long stepCounts[NUM_AXIS], bool& triggered) {
   if (direction == -1) {
     // Stepping Down
     resetUpEndstops();
-    updateDownEndstops()
+    updateDownEndstops(stepCounts);
     triggered = isTriggeredDown();
   } else {
     // Stepping Up
     resetDownEndstops();
-    updateUpEndstops()
+    updateUpEndstops(stepCounts);
     triggered = isTriggeredUp();
-  }
-
-  if (triggered) {
-    m_triggeringStep[Z_AXIS] = currentStep;
-    m_hasUnreportedEndstopHits = true;
   }
 }
