@@ -169,17 +169,24 @@ int moveToZSwitchXY(tools::Tool& tool) {
   return moveXY(tool, min_z_x_pos, min_z_y_pos);
 }
 
-int homeZ(tools::Tool& tool) {
-
-  // Home Z to the z-switch
-  if (
-    moveToZSwitchXY(tool) ||
-    s_zeroAxis(vone->endstops.zSwitch)
-  ) {
+static int s_homeZToZSwitch(tools::Tool& tool) {
+  if (moveToZSwitchXY(tool)) {
     return -1;
   }
 
-  // Raise and set the max-z soft limit
+  vone->stepper.endstopMonitor.ignoreZSwitch(false);
+  int returnValue = s_zeroAxis(vone->endstops.zSwitch);
+  vone->stepper.endstopMonitor.ignoreZSwitch();
+  return returnValue;
+}
+
+int homeZ(tools::Tool& tool) {
+  // Home Z to the z-switch
+  if (s_homeZToZSwitch(tool)) {
+    return -1;
+  }
+
+  // Determine the max-z soft limit
   // Note: the point of contact can vary slightly, so we add some fudge to make to max tolerant
   const float fudge = 0.5; // mm
   if(raise()) {
