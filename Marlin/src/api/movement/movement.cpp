@@ -288,15 +288,6 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
-  // Skip movement safety checks, if needed
-  const auto confirmMoveIsSafe = !(
-    // skip for axis limits becuase they are close to (or beyond) axis bounds
-    endstop.isAxisLimit ||
-
-    // skip for xy-positioner's min-y, which may be at y<0
-    (axis == Y_AXIS && direction == -1)
-  );
-
   // Move
   const auto clampedMaxTravel = min(maxTravel, s_maxTravelInAxis(axis, direction));
   const auto travel = direction < 0 ? -clampedMaxTravel : clampedMaxTravel;
@@ -306,7 +297,7 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
       axis == Y_AXIS ? travel : 0.0f,
       axis == Z_AXIS ? travel : 0.0f,
       clampedSpeed,
-      confirmMoveIsSafe
+      skipMovementSafetyCheck
     )) {
     return -1;
   }
