@@ -199,6 +199,8 @@ int process_gcode(int command_code) {
     // G24 - Test the zMIN endstop trigger position
     // move to impossible position, and report where limit switch triggered.
     case 24: {
+      vone->stepper.endstopMonitor.ignoreZSwitch(false);
+
       feedrate = homing_feedrate[Z_AXIS]/(6);
       // move down until you find the bed
       float zPosition = -10;
@@ -209,6 +211,8 @@ int process_gcode(int command_code) {
       current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
       plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
       protocol << F("Z: ") << (current_position[Z_AXIS] * 1000) << endl;
+
+      vone->stepper.endstopMonitor.ignoreZSwitch();
     }
     return 0;
 
