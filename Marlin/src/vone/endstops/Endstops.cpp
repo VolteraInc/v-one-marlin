@@ -9,7 +9,7 @@
 
 static const auto isAxisLimit = true;
 Endstops::Endstops()
-  : xMin(F("right (x-min) endstop"), X_MIN_PIN, X_AXIS, -1, X_MIN_ENDSTOP_INVERTING, isAxisLimit)
+  : xMin(F("right (x-min)"), X_MIN_PIN, X_AXIS, -1, X_MIN_ENDSTOP_INVERTING, isAxisLimit)
   , yMin(F("back (y-min)"), Y_MIN_PIN, Y_AXIS, -1, Y_MIN_ENDSTOP_INVERTING, isAxisLimit)
   , zMax(F("top (z-max)"), Z_MAX_PIN, Z_AXIS, 1, Z_MAX_ENDSTOP_INVERTING, isAxisLimit)
   , zSwitch(F("z-switch (z-min)"), Z_MIN_PIN, Z_AXIS, -1, Z_MIN_ENDSTOP_INVERTING)
@@ -22,24 +22,46 @@ Endstops::Endstops()
 {
 }
 
+const Endstop* Endstops::lookup(const int pin) const {
+  switch (pin) {
+    case X_MIN_PIN: return &xMin;
+    case Y_MIN_PIN: return &yMin;
+    case Z_MAX_PIN: return &zMax;
+
+    case Z_MIN_PIN: return &zSwitch;
+
+    case XY_MIN_X_PIN: return &xyPositionerRight;
+    case XY_MAX_X_PIN: return &xyPositionerLeft;
+    case XY_MIN_Y_PIN: return &xyPositionerBack;
+    case XY_MAX_Y_PIN: return &xyPositionerForward;
+
+    case P_BOT_PIN: return &calibrationPlate;
+
+    case P_TOP_PIN: return &toolSwitch;
+    default:
+      return nullptr;
+  }
+}
+
 static const __FlashStringHelper* s_pinStatusToString(bool isTriggered) {
   return isTriggered ? F("TRIGGERED") : F("open");
 }
+
 void Endstops::outputStatus() const {
   const auto indent = F("  ");
   log << F("Endstop status") << endl;
-  log << indent << xMin.name << s_pinStatusToString(READ_PIN(X_MIN)) << endl;
-  log << indent << yMin.name << s_pinStatusToString(READ_PIN(Y_MIN)) << endl;
+  log << indent << xMin.pin << ' ' << xMin.name << s_pinStatusToString(READ_PIN(X_MIN)) << endl;
+  log << indent << yMin.pin << ' ' << yMin.name << s_pinStatusToString(READ_PIN(Y_MIN)) << endl;
+  log << indent << zMax.pin << ' ' << zMax.name << s_pinStatusToString(READ_PIN(Z_MAX)) << endl;
 
-  log << indent << zSwitch.name << s_pinStatusToString(READ_PIN(Z_MIN)) << endl;
-  log << indent << zMax.name << s_pinStatusToString(READ_PIN(Z_MAX)) << endl;
-  log << indent << calibrationPlate.name << s_pinStatusToString(READ_PIN(P_BOT)) << endl;
-  log << indent << toolSwitch.name << s_pinStatusToString(READ_PIN(P_TOP)) << endl;
+  log << indent << zSwitch.pin          << ' ' << zSwitch.name          << s_pinStatusToString(READ_PIN(Z_MIN)) << endl;
+  log << indent << calibrationPlate.pin << ' ' << calibrationPlate.name << s_pinStatusToString(READ_PIN(P_BOT)) << endl;
+  log << indent << toolSwitch.pin       << ' ' << toolSwitch.name       << s_pinStatusToString(READ_PIN(P_TOP)) << endl;
 
-  log << indent << xyPositionerRight.name << s_pinStatusToString(READ_PIN(XY_MIN_X)) << endl;
-  log << indent << xyPositionerLeft.name << s_pinStatusToString(READ_PIN(XY_MAX_X)) << endl;
-  log << indent << xyPositionerBack.name << s_pinStatusToString(READ_PIN(XY_MIN_Y)) << endl;
-  log << indent << xyPositionerForward.name << s_pinStatusToString(READ_PIN(XY_MAX_Y)) << endl;
+  log << indent << xyPositionerRight.pin   << ' ' << xyPositionerRight.name   << s_pinStatusToString(READ_PIN(XY_MIN_X)) << endl;
+  log << indent << xyPositionerLeft.pin    << ' ' << xyPositionerLeft.name    << s_pinStatusToString(READ_PIN(XY_MAX_X)) << endl;
+  log << indent << xyPositionerBack.pin    << ' ' << xyPositionerBack.name    << s_pinStatusToString(READ_PIN(XY_MIN_Y)) << endl;
+  log << indent << xyPositionerForward.pin << ' ' << xyPositionerForward.name << s_pinStatusToString(READ_PIN(XY_MAX_Y)) << endl;
 }
 
 // -----------------------------------------------------------------------

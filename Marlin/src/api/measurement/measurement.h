@@ -1,6 +1,9 @@
 #pragma once
 
 #include "../../../MarlinConfig.h"
+#include "../../../Axis.h"
+
+class Endstop;
 
 int touch(
   AxisEnum axis, int direction,
@@ -36,5 +39,5 @@ bool trailingStabilityCheck(
 );
 
 const auto DefaultMeasureAtSwitchReleaseDelay = 0u;
-int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement);
+int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement);
 int measureAtSwitchRelease(AxisEnum axis, int direction, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms = DefaultMeasureAtSwitchReleaseDelay);

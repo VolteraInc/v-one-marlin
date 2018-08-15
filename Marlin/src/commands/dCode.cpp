@@ -246,25 +246,28 @@ int process_dcode(int command_code) {
         return -1;
       }
 
+      if (!code_seen('P')) {
+        log << F("No pin provided") << endl;
+        return 0;
+      }
+
+      const int pin = code_value();
+      const auto* endstop = vone->endstops.lookup(pin);
+      if (!endstop) {
+        log << F("Unknown pin provided: ") << pin << endl;
+        return 0;
+      }
+
       const int cycles = code_seen('C') ? code_value() : 1;
       for (int i = 0; i < cycles; ++i) {
         float measurement;
-        const int axis = (
-          code_seen('X') ? X_AXIS : (
-            code_seen('Y') ? Y_AXIS : (
-              code_seen('Z') ? Z_AXIS : Z_AXIS
-            )
-          )
-        );
-        const int direction = code_prefix() == '-' ? -1 : 1;
-        const int returnValue = measureAtSwitch(axis, direction, useDefaultMaxTravel, measurement);
+        const int returnValue = measureAtSwitch(*endstop, useDefaultMaxTravel, measurement);
 
         // Output
         log
           << F("measureAtSwitch")
           << F(" returnValue:") << returnValue
-          << F(" axis:") << axis_codes[axis]
-          << F(" direction:") << direction
+          << F(" switch:") << endstop->name
           << F(" measurement:") << measurement
           << endl;
       }

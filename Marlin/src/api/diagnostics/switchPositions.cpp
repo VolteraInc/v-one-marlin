@@ -1,6 +1,7 @@
 #include "../../api/api.h"
 #include "../../../Marlin.h"
 #include "../../../ConfigurationStore.h"
+#include "../../vone/VOne.h"
 #include "../../vone/tools/Probe.h"
 
 // Confirm the minY and xyMinY switches are far enough apart.
@@ -9,12 +10,13 @@
 int checkBackSwitchSeparation(tools::Tool& tool) {
   float measurements[3];
   static const float maxTravel = 10;
+  const auto& xyPositionerBack = vone->endstops.xyPositionerBack;
   if (
     raise() ||
     moveToXyPositioner(tool) ||
-    measureAtSwitch(Y_AXIS, -1, maxTravel, measurements[0]) ||
-    measureAtSwitch(Y_AXIS, -1, maxTravel, measurements[1]) ||
-    measureAtSwitch(Y_AXIS, -1, maxTravel, measurements[2])
+    measureAtSwitch(xyPositionerBack, maxTravel, measurements[0]) ||
+    measureAtSwitch(xyPositionerBack, maxTravel, measurements[1]) ||
+    measureAtSwitch(xyPositionerBack, maxTravel, measurements[2])
   ) {
     return -1;
   }

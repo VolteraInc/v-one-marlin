@@ -19,6 +19,9 @@ struct Endstops {
   const Endstop toolSwitch;
 
   Endstops();
+
+  const Endstop* lookup(const int pin) const;
+
   void outputStatus() const;
   void deprecated_outputStatus() const;
 };

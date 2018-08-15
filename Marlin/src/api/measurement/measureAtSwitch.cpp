@@ -3,41 +3,42 @@
 #include "../../../Marlin.h"
 #include "../../../stepper.h"
 #include "../movement/movement.h"
+#include "../../vone/endstops/Endstop.h"
 
-int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement) {
+int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement) {
+  const auto axis = endstop.axis;
   log
     << F("Measure at switch: ")
-    << (direction < 0 ? '-' : '+') << axis_codes[axis]
+    << endstop.name
     << endl;
 
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
   // Move to limit
-  if (moveToLimit(axis, direction, useDefaultFeedrate, maxTravel) != 0) {
+  if (moveToEndstop(endstop, useDefaultFeedrate, maxTravel) != 0) {
     logError
       << F("Unable to measure at ")
-      << (direction < 0 ? '-' : '+') << axis_codes[axis]
-      << F(" switch, switch did not trigger during initial approach")
+      << endstop.name
+      << F(", switch did not trigger during initial approach")
       << endl;
     return -1;
   }
   const float triggerPos = current_position[axis];
 
   // Retract slightly
-  if (retractFromSwitch(axis, direction)) {
+  if (retractFromSwitch(endstop)) {
     return -1;
   }
-  const float retractDistance = abs(current_position[axis] - triggerPos);
-
-  // TODO: Confirm switch released
+  const float retractPos = current_position[axis];
+  const float retractDistance = abs(retractPos - triggerPos);
 
   // Approach again, slowly
   // NOTE: this gives us a more accurate reading
   const auto slow = homing_feedrate[axis] / 6;
-  if (moveToLimit(axis, direction, slow, 2 * retractDistance)) {
+  if (moveToEndstop(endstop, slow, 2 * retractDistance)) {
     logError
-      << F("Unable to measure at ") << (direction < 0 ? '-' : '+') << axis_codes[axis]
+      << F("Unable to measure at ") << endstop.name
       << F(" switch, switch did not trigger during second approach")
       << endl;
     return -1;

@@ -2,6 +2,7 @@
 
 #include "../../Marlin.h"
 #include "../vone/VOne.h"
+#include "../vone/endstops/Endstop.h"
 #include "../../planner.h"
 #include "../../stepper.h"
 
@@ -60,9 +61,11 @@ static void s_axisIsAtZero(AxisEnum axis) {
   setHomedState(axis, home_dir[axis]);
 }
 
-static int s_homeAxis(AxisEnum axis) {
+static int s_zeroAxis(const Endstop& endstop) {
   int returnValue = -1;
-  log << F("home axis:") << axis_codes[axis] << endl;
+  const auto axis = endstop.axis;
+
+  log << F("zero axis:") << axis_codes[axis] << endl;
 
   // Finish any pending moves (prevents crashes)
   st_synchronize();
@@ -86,62 +89,30 @@ static int s_homeAxis(AxisEnum axis) {
   // Note: we use measureAtSwitch so that we contact the switch accurately
   // TODO: use measureAtSwitchRelease for homing?
   float measurement;
-  if (measureAtSwitch(axis, home_dir[axis], useDefaultMaxTravel, measurement)) {
+  if (measureAtSwitch(endstop, useDefaultMaxTravel, measurement)) {
     goto DONE;
   }
 
+  // For X and Y we move away from switch slightly
+  // Note: Otherwise we will not be able to go to 0,0 without
+  //       hitting a limit switch (and messing up our position)
   switch(axis) {
     case X_AXIS:
     case Y_AXIS:
-      // Move slightly away from switch
-      // Note: Otherwise we will not be able to go to 0,0 without
-      // hitting a limit switch (and messing up our position)
-      log << F("Retracting from axis limit switch") << endl;
-      if (retractFromSwitch(axis, home_dir[axis], HOMING_XY_OFFSET)) {
+      log << F("Retracting from ") << endstop.name << endl;
+      if (retractFromSwitch(endstop, HOMING_XY_OFFSET)) {
         goto DONE;
       }
+    break;
 
-    case Z_AXIS:
-      // Confirm probe not triggered
-      // NOTE:
-      //    1) if the probe triggers before the z-switch, it suggests
-      //       that excessive force is needed to trigger the z-switch
-      //       which could result in broken nozzle when we home the
-      //       dispenser.
-      //    2) The Drill's mounted voltages registers as 'triggered'
-      //       if we do a digital read on it.
-      // DEFER: This should happen in measureAtSwitch, i.e. take a pin
-      //        and confirm it triggers (instead of taking an axis)
-      if (vone->toolBox.probe.attached()) {
-        bool triggered;
-        if (vone->pins.ptop.readDigitalValue(triggered)) {
-          logError
-            << F("Unable to zero Z-axis, ")
-            << F("could not read the state of the probe's contact sensor")
-            << endl;
-          goto DONE;
-        }
-
-        if (triggered) {
-          logError
-            << F("Unable to zero Z-axis, ")
-            << F("probe tip triggered before the z-switch")
-            << endl;
-          goto DONE;
-        }
-      }
-
-      case E_AXIS:
-        logError
-          << F("Unable to zero E-axis, ")
-          << F("operation not supported")
-          << endl;
-        goto DONE;
+    default:
+    break;
   }
 
-  // Set current position as home
-  axisIsAtHome(axis);
+  // Set current position as zero
+  s_axisIsAtZero(axis);
 
+  // Success
   returnValue = 0;
 
 DONE:
@@ -153,13 +124,13 @@ int rawHome(tools::Tool& tool, bool homingX, bool homingY, bool homingZ) {
   // Homing Y first moves the print head out of the way, which
   // which allows the user to access the board/bed sooner
   if (homingY) {
-    if (s_homeAxis(Y_AXIS)) {
+    if (s_zeroAxis(vone->endstops.yMin)) {
       return -1;
     }
   }
 
   if (homingX) {
-    if (s_homeAxis(X_AXIS)) {
+    if (s_zeroAxis(vone->endstops.xMin)) {
       return -1;
     }
   }
@@ -206,7 +177,7 @@ int homeZ(tools::Tool& tool) {
   // Home Z to the z-switch
   if (
     moveToZSwitchXY(tool) ||
-    s_homeAxis(Z_AXIS)
+    s_zeroAxis(vone->endstops.zSwitch)
   ) {
     return -1;
   }

@@ -15,7 +15,7 @@ static int s_measureCalibrationPlateZ(float& plateZ, float maxTravel) {
 
   endstopMonitor.ignoreCalibrationPlate(false);
   int returnValue = (
-    measureAtSwitch(Z_AXIS, -1, maxTravel, plateZ) ||
+    measureAtSwitch(calibrationPlate, maxTravel, plateZ) ||
     retractFromSwitch(calibrationPlate)
   );
   endstopMonitor.ignoreCalibrationPlate();
@@ -51,10 +51,12 @@ int measureProbeDisplacement(tools::Probe& probe, float& o_displacement) {
 
   // Probe the calibration plate
   // Note: we do not use the standard probe function here because
-  // it would subtract the previously measured displacement (if one exists)
+  // it would include the previously measured displacement (if one exists)
+  // TODO: we should use probe() and just remove the displacement
   log << F("Measuring the triggering positon of the probe") << endl;
   float probeContactZ;
-  if(measureAtSwitch(Z_AXIS, -1, MaxDisplacement + Z_HOME_RETRACT_MM, probeContactZ)) {
+  const auto& toolSwitch = vone->endstops.toolSwitch;
+  if(measureAtSwitch(toolSwitch, MaxDisplacement + Z_HOME_RETRACT_MM, probeContactZ)) {
     logError
       << F("Unable to measure probe displacement, ")
       << F("the triggering positon of the probe could not be measured (measurement 2 of 2)")
