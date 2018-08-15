@@ -261,7 +261,7 @@ int moveToLimit(AxisEnum axis, int direction, float f, float maxTravel) {
   }
 
   // Confirm we triggered
-  if (!endstopMonitor.acknowledgeTriggered(axis, direction)) { // TODO: weak test, should check specific switches
+  if (endstopMonitor.acknowledgeTriggered(axis, direction)) {
     logError
       << F("Unable to move to ")
       << (direction < 0 ? '-' : '+')
@@ -303,7 +303,7 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   }
 
   // Confirm we triggered
-  if (!endstopMonitor.acknowledgeTriggered(endstop)) {
+  if (endstopMonitor.acknowledgeTriggered(endstop)) {
     logError
       << F("Unable to move to ")
       << endstop.name
