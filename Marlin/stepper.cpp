@@ -399,7 +399,7 @@ void st_synchronize() {
     periodic_work();
   }
   if (logging_enabled) {
-    log << F("synchonized") << endl;
+    log << F("synchronized") << endl;
   }
 }
 
