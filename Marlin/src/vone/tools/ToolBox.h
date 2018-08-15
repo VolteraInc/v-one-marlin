@@ -17,7 +17,7 @@ class ToolBox {
     Dispenser dispenser;
     Drill drill;
 
-    ToolBox(Stepper& stepper, PTopPin& pin, Endstop& toolSwitch)
+    ToolBox(Stepper& stepper, PTopPin& pin, const Endstop& toolSwitch)
       : nullTool(stepper)
       , probe(stepper, pin, toolSwitch)
       , dispenser(stepper)

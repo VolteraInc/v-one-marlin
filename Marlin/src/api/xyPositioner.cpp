@@ -50,7 +50,7 @@ int xyPositionerTouch(const Endstop& endstop, float& measurement) {
   // Move according to the given axis and direction until a switch is triggered
   const auto axis = endstop.axis;
   const auto slow = homing_feedrate[axis] / 6;
-  if (moveToEndStop(endstop, slow, 6.0f)) {
+  if (moveToEndstop(endstop, slow, 6.0f)) {
     return -1;
   }
   measurement = current_position[axis];

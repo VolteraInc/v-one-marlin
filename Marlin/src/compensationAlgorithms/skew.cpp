@@ -5,10 +5,10 @@ void applySkewCompensation(float& x, float& y, float cosTheta, float tanTheta) {
   x = x / cosTheta;
 }
 
-float reverseSkewConpensationInX(float x, float cosTheta) {
+float reverseSkewCompensationInX(float x, float cosTheta) {
   return x * cosTheta;
 }
 
-float reverseSkewConpensationInY(float x, float y, float tanTheta) {
+float reverseSkewCompensationInY(float x, float y, float tanTheta) {
   return y + x * sin(atan(tanTheta));
 }

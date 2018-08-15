@@ -276,7 +276,7 @@ int moveToLimit(AxisEnum axis, int direction, float f, float maxTravel) {
   return 0;
 }
 
-int moveToEndStop(const Endstop& endstop, float f, float maxTravel) {
+int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   auto& endstopMonitor = vone->stepper.endstopMonitor;
   const auto axis = endstop.axis;
   const auto direction = endstop.direction;
@@ -327,7 +327,7 @@ int moveToEndStop(const Endstop& endstop, float f, float maxTravel) {
 }
 
 int raise() {
-  return moveToEndStop(vone->endstops.zMax);
+  return moveToEndstop(vone->endstops.zMax);
 }
 
 int retractFromSwitch(const Endstop& endstop, float retractDistance) {

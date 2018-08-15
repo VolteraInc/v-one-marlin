@@ -28,7 +28,7 @@ int relativeMove(tools::Tool& tool, float x, float y, float z, float e, float f 
 
 // Move until switch hit
 int moveToLimit(AxisEnum axis, int direction, float f = useDefaultFeedrate, float maxTravel = useDefaultMaxTravel);
-int moveToEndStop(const Endstop& endstop, float f = useDefaultFeedrate, float maxTravel = useDefaultMaxTravel);
+int moveToEndstop(const Endstop& endstop, float f = useDefaultFeedrate, float maxTravel = useDefaultMaxTravel);
 int raise();
 
 
@@ -37,7 +37,7 @@ int setPositionEOnly(float e);
 int setPosition(float x, float y, float z, float e);
 
 
-int retractFromSwitch(const EndStop& endstop, float retractDistance = useDefaultRetractDistance);
+int retractFromSwitch(const Endstop& endstop, float retractDistance = useDefaultRetractDistance);
 
 
 // TODO: use a namespace, e.g. movement::raw movement::internal

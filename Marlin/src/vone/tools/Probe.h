@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include "Tool.h"
 
-class EndStop;
+class Endstop;
 class PTopPin;
 
 namespace tools {
