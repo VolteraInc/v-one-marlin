@@ -46,14 +46,23 @@ int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
 }
 
 int xyPositionerTouch(const Endstop& endstop, float& measurement) {
-  // Move according to the given axis and direction until a switch is triggered
+  int returnValue = -1;
+  auto& endstopMonitor = vone->stepper.endstopMonitor;
+  endstopMonitor.ignoreXYPositionerSwitches(false);
+
   const auto axis = endstop.axis;
   const auto slow = homing_feedrate[axis] / 6;
   if (moveToEndstop(endstop, slow, 6.0f)) {
-    return -1;
+    goto DONE;
   }
+
+  // Success
   measurement = current_position[axis];
-  return 0;
+  returnValue = 0;
+
+DONE:
+  endstopMonitor.ignoreXYPositionerSwitches();
+  return returnValue;
 }
 
 
