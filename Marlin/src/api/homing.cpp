@@ -60,7 +60,7 @@ static void axisIsAtHome(int axis) {
   setHomedState(axis, home_dir[axis]);
 }
 
-static int s_homeAxis(int axis) {
+static int s_homeAxis(AxisEnum axis) {
   int returnValue = -1;
   log << F("home axis:") << axis_codes[axis] << endl;
 
@@ -130,6 +130,13 @@ static int s_homeAxis(int axis) {
           goto DONE;
         }
       }
+
+      case E_AXIS:
+        logError
+          << F("Unable to zero E-axis, ")
+          << F("operation not supported")
+          << endl;
+        goto DONE;
   }
 
   // Set current position as home

@@ -6,6 +6,7 @@ namespace tools {
 
 #include "Point2d.h"
 #include "Point3d.h"
+#include "../../../Axis.h"
 
 const int useDefaultFeedrate = -1;
 const float useDefaultMaxTravel = 9999.9f;
@@ -25,7 +26,7 @@ int moveZ(tools::Tool& tool, float z, float f = useDefaultFeedrate);
 int relativeMove(tools::Tool& tool, float x, float y, float z, float e, float f = useDefaultFeedrate);
 
 // Move until switch hit
-int moveToLimit(int axis, int direction, float f = useDefaultFeedrate, float maxTravel = useDefaultMaxTravel);
+int moveToLimit(AxisEnum axis, int direction, float f = useDefaultFeedrate, float maxTravel = useDefaultMaxTravel);
 int moveToEndStop(const Endstop& endstop, float f = useDefaultFeedrate, float maxTravel = useDefaultMaxTravel);
 int raise();
 

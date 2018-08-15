@@ -43,7 +43,6 @@ int setPosition(float x, float y, float z, float e) {
 // Set the planner position based on the stepper's position.
 // Note: Certain movements, like attempting to move past an end-stop, will leave the
 // planner out of sync with the stepper. This function corrects the planner's position.
-static void s_resyncWithStepper(int axis) {
   current_position[axis] = st_get_position_mm(axis);
   plan_set_position(
     current_position[X_AXIS],
@@ -233,7 +232,7 @@ int relativeRawMoveXYZ(float x, float y, float z, float speed_in_mm_per_min, boo
   return 0;
 }
 
-int moveToLimit(int axis, int direction, float f, float maxTravel) {
+int moveToLimit(AxisEnum axis, int direction, float f, float maxTravel) {
   auto& stepper = vone->stepper;
   if(logging_enabled) {
     log
