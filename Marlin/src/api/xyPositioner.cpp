@@ -78,41 +78,39 @@ static int s_findCenter(tools::Tool& tool, long cycles, float& o_centerX, float&
   auto centerX = xypos_x_pos;
   auto centerY = xypos_y_pos;
   for (int i=0; i<cycles; ++i) {
-    // Compute center X
+    // Measure left and right
     if ( moveXY(tool, centerX, centerY) // applies new centerY on 2nd iteration
       || xyPositionerTouch(endstops.xyPositionerLeft, measurement1) // measure +x
       || relativeMove(tool, -5.0f, 0, 0, 0)
       || xyPositionerTouch(endstops.xyPositionerRight, measurement2)) { // measure -x
       return -1;
     }
+
+    // Compute X center
     centerX = (measurement2 + measurement1) / 2;
+    log
+      << F("xyPositionerCenterX")
+      << F(" m1:") << measurement1
+      << F(" m2:") << measurement2
+      << F(" x:") << centerX
+      << endl;
 
-    if (logging_enabled){
-      log
-        << F("xyPositionerCenterX")
-        << F(" m1:") << measurement1
-        << F(" m2:") << measurement2
-        << F(" x:") << centerX
-        << endl;
-    }
-
-    // Compute center Y
+    // Measure forward and back
     if ( moveXY(tool, centerX, centerY) // applies new centerX
       || xyPositionerTouch(endstops.xyPositionerForward, measurement1) // measure +y
       || relativeMove(tool, 0, -5.0f, 0, 0)
       || xyPositionerTouch(endstops.xyPositionerBack, measurement2)) { // measure -y
       return -1;
     }
-    centerY = (measurement2 + measurement1) / 2;
 
-    if (logging_enabled){
-      log
-        << F("xyPositionerCenterY")
-        << F(" m1:") << measurement1
-        << F(" m2:") << measurement2
-        << F(" y:") << centerY
-        << endl;
-    }
+    // Compute Y center
+    centerY = (measurement2 + measurement1) / 2;
+    log
+      << F("xyPositionerCenterY")
+      << F(" m1:") << measurement1
+      << F(" m2:") << measurement2
+      << F(" y:") << centerY
+      << endl;
 
     // Each cycle takes a non-trivial amount of time so reset the inactivity timer
     refresh_cmd_timeout();
