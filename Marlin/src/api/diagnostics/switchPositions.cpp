@@ -8,22 +8,25 @@
 // If these switches are too close it's possible we'll hit the
 // minY switch instead of the xyMinY switch
 int checkBackSwitchSeparation(tools::Tool& tool) {
-  float measurements[3];
-  static const float maxTravel = 10;
+  static const size_t NUM_MEASUREMENTS = 3;
+  float measurements[NUM_MEASUREMENTS] = { 0, 0, 0 };
   const auto& xyPositionerBack = vone->endstops.xyPositionerBack;
   if (
     raise() ||
     moveToXyPositioner(tool) ||
-    measureAtSwitch(xyPositionerBack, maxTravel, measurements[0]) ||
-    measureAtSwitch(xyPositionerBack, maxTravel, measurements[1]) ||
-    measureAtSwitch(xyPositionerBack, maxTravel, measurements[2])
+    xyPositionerTouch(xyPositionerBack, measurements[0]) ||
+    retractFromSwitch(xyPositionerBack, 1) ||
+    xyPositionerTouch(xyPositionerBack, measurements[1]) ||
+    retractFromSwitch(xyPositionerBack, 1) ||
+    xyPositionerTouch(xyPositionerBack, measurements[2]) ||
+    retractFromSwitch(xyPositionerBack, 1) ||
   ) {
     return -1;
   }
 
   log
     << F("measurements = [")
-    << ArrayWithSize<float>(measurements, sizeof(measurements))
+    << ArrayWithSize<float>(measurements, NUM_MEASUREMENTS)
     << F("]")
     << endl;
 
@@ -34,14 +37,14 @@ int checkBackSwitchSeparation(tools::Tool& tool) {
     measurements[2] < tolerance
   ) {
     logError
-      << F("Unable to calibration switch positions, distance to from ")
+      << F("Unable complete back switch separation check, distance from ")
       << F("the back switch (y-min)")
       << F(" to ")
       << F("the xy-positioner's back switch (xy-min-y)")
-      << F(" exceeded ")
+      << F(" was less than ")
       << FloatWithFormat(tolerance, 2)
       << F("mm, measurements = [")
-      << ArrayWithSize<float>(measurements, sizeof(measurements))
+      << ArrayWithSize<float>(measurements, NUM_MEASUREMENTS)
       << F("]")
       << endl;
     return -1;
