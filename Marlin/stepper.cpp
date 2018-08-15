@@ -293,18 +293,18 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
 
         counter_z += current_block->steps_z;
         if (counter_z > 0) {
-          WRITE(Z_STEP_PIN, !INVERT_Z_STEP_PIN)
+          WRITE(Z_STEP_PIN, !INVERT_Z_STEP_PIN);
           counter_z -= current_block->step_event_count;
           count_position[Z_AXIS] += zDir;
-          WRITE(Z_STEP_PIN, INVERT_Z_STEP_PIN)
+          WRITE(Z_STEP_PIN, INVERT_Z_STEP_PIN);
         }
 
         counter_e += current_block->steps_e;
         if (counter_e > 0) {
-          WRITE(E_STEP_PIN, !INVERT_E_STEP_PIN)
+          WRITE(E_STEP_PIN, !INVERT_E_STEP_PIN);
           counter_e -= current_block->step_event_count;
           count_position[E_AXIS] += eDir;
-          WRITE(E_STEP_PIN, INVERT_E_STEP_PIN)
+          WRITE(E_STEP_PIN, INVERT_E_STEP_PIN);
         }
 
         step_events_completed += 1;
@@ -404,26 +404,21 @@ void st_synchronize() {
 }
 
 void st_set_position(const long& x, const long& y, const long& z, const long& e) {
-  CRITICAL_SECTION_START;
-    count_position[X_AXIS] = x;
-    count_position[Y_AXIS] = y;
-    count_position[Z_AXIS] = z;
-    count_position[E_AXIS] = e;
-  CRITICAL_SECTION_END;
+  ScopedInterruptDisable sid;
+  count_position[X_AXIS] = x;
+  count_position[Y_AXIS] = y;
+  count_position[Z_AXIS] = z;
+  count_position[E_AXIS] = e;
 }
 
 void st_set_e_position(const long& e) {
-  CRITICAL_SECTION_START;
-    count_position[E_AXIS] = e;
-  CRITICAL_SECTION_END;
+  ScopedInterruptDisable sid;
+  count_position[E_AXIS] = e;
 }
 
-long st_get_position(uint8_t axis) {
-  long count_pos;
-  CRITICAL_SECTION_START;
-    count_pos = count_position[axis];
-  CRITICAL_SECTION_END;
-  return count_pos;
+long st_get_position(AxisEnum axis) {
+  ScopedInterruptDisable sid;
+  return count_position[axis];
 }
 
 float st_get_position_mm(AxisEnum axis) {
