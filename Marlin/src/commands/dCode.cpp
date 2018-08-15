@@ -299,25 +299,29 @@ int process_dcode(int command_code) {
         return -1;
       }
 
-      const int axis = (
-        code_seen('X') ? X_AXIS : (
-          code_seen('Y') ? Y_AXIS : (
-            code_seen('Z') ? Z_AXIS : Z_AXIS
-          )
-        )
-      );
-      const int direction = code_prefix() == '-' ? -1 : 1;
+      if (!code_seen('P')) {
+        log << F("No pin provided") << endl;
+        return 0;
+      }
+
+      const int pin = code_value();
+      const auto* endstop = vone->endstops.lookup(pin);
+      if (!endstop) {
+        log << F("Unknown pin provided: ") << pin << endl;
+        return 0;
+      }
+
+      auto axis = endstop->axis;
       auto delay = code_seen('M') ? code_value() : DefaultMeasureAtSwitchReleaseDelay;
       auto startPosition = current_position[axis];
       auto releaseStartedAt = startPosition;
       auto releaseCompletedAt = startPosition;
-      auto returnValue = measureAtSwitchRelease(axis, direction, releaseStartedAt, releaseCompletedAt, delay);
+      auto returnValue = measureAtSwitchRelease(*endstop, releaseStartedAt, releaseCompletedAt, delay);
 
       // Output
       log
         << F("measureAtSwitchRelease")
-        << F(", axis:") << axis_codes[axis]
-        << F(", direction:") << direction
+        << F(", switch:") << endstop->name
         << F(", delay:") << delay
         << F(", returnValue:") << returnValue
         << F(", releaseStartedAt:") << releaseStartedAt

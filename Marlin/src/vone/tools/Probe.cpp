@@ -102,11 +102,12 @@ int tools::Probe::probe(
     // Get close to surface using a fast-touch
     // Note: could make this conditional on probe speed,
     // but I'd rather not have the extra code path
-    fastTouch() ||
+    fastTouch(m_toolSwitch) ||
 
     // Measure
     multiMultiTouch(
       "probe",
+      m_toolSwitch,
       rawMeasurement,
       speed,
       maxSamples, maxTouchesPerSample,
