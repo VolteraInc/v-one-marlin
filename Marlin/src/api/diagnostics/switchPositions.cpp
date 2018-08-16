@@ -19,7 +19,7 @@ int checkBackSwitchSeparation(tools::Tool& tool) {
     xyPositionerTouch(xyPositionerBack, measurements[1]) ||
     retractFromSwitch(xyPositionerBack, 1) ||
     xyPositionerTouch(xyPositionerBack, measurements[2]) ||
-    retractFromSwitch(xyPositionerBack, 1) ||
+    retractFromSwitch(xyPositionerBack, 1)
   ) {
     return -1;
   }
