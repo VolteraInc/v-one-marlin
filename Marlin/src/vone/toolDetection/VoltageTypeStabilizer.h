@@ -21,7 +21,7 @@ class VoltageTypeStabilizer {
           VoltageType type;
           float voltage;
 
-          friend MarlinSerial& operator<<(MarlinSerial& os, const Sample& smp);  
+          friend MarlinSerial& operator<<(MarlinSerial& os, const Sample& smp);
         };
 
         unsigned int size() const { return m_size; }
@@ -53,7 +53,7 @@ class VoltageTypeStabilizer {
           return idx == 0 ? MAX_SAMPLES - 1 : idx - 1;
         }
 
-        friend MarlinSerial& operator<<(MarlinSerial& obj, const VoltageLog& vl);  
+        friend MarlinSerial& operator<<(MarlinSerial& obj, const VoltageLog& vl);
     };
 
   private:
@@ -71,7 +71,7 @@ inline MarlinSerial& operator<<(MarlinSerial &obj, const toolDetection::VoltageT
 }
 
 inline MarlinSerial& operator<<(MarlinSerial &obj, const toolDetection::VoltageTypeStabilizer::VoltageLog::Sample& smp) {
-  obj 
+  obj
     << F("(") << smp.time
     << F(", ") << toString(smp.type)
     << F(", ") << smp.voltage
@@ -80,4 +80,3 @@ inline MarlinSerial& operator<<(MarlinSerial &obj, const toolDetection::VoltageT
 }
 
 }
-
