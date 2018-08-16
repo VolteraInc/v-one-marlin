@@ -30,7 +30,25 @@ int checkBackSwitchSeparation(tools::Tool& tool) {
     << F("]")
     << endl;
 
-  float tolerance = 10.000; // TODO: set to a proper value
+  // Measurements from 12 units
+  //   .490
+  //   .810
+  //   .830
+  //   .360
+  //   .770
+  //   .350
+  //   .090  .050  .060
+  //   .070  .050
+  //   .470
+  //  1.400 1.360
+  //   .800
+  //  1.040
+  //
+  // From this data the max variation was 0.040
+  // For safety I'm choosing 0.350, which passes most
+  // of the tested units, and will plenty of mearsurement
+  // variability
+  float tolerance = 0.350; // TODO: set to a proper value
   if (
     measurements[0] < tolerance ||
     measurements[1] < tolerance ||
