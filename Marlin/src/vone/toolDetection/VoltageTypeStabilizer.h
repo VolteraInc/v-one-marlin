@@ -39,7 +39,7 @@ class VoltageTypeStabilizer {
         MarlinSerial& output() const;
 
       private:
-        static const unsigned int MAX_SAMPLES = 30;
+        static const unsigned int MAX_SAMPLES = 20;
         Sample m_samples[MAX_SAMPLES];
         unsigned int m_size = 0;
         unsigned int m_frontIdx = 0;
@@ -65,15 +65,22 @@ class VoltageTypeStabilizer {
     void setStable(bool stable);
 };
 
-inline MarlinSerial& operator<<(MarlinSerial &obj, const toolDetection::VoltageTypeStabilizer::VoltageLog& vl) {
-  obj << ArrayWithSize<toolDetection::VoltageTypeStabilizer::VoltageLog::Sample>(vl.m_samples, vl.size());
+inline MarlinSerial& operator<<(MarlinSerial &obj, const toolDetection::VoltageTypeStabilizer::VoltageLog& voltageLog) {
+  using VoltageLog = toolDetection::VoltageTypeStabilizer::VoltageLog;
+  using FormatArray = ArrayWithSize<VoltageLog::Sample>;
+  const auto& samples = voltageLog.m_samples;
+  const auto frontIdx = voltageLog.m_frontIdx;
+  obj
+    << FormatArray(&samples[frontIdx], VoltageLog::MAX_SAMPLES - frontIdx)
+    << F(", ")
+    << FormatArray(&samples[0], frontIdx);
   return obj;
 }
 
 inline MarlinSerial& operator<<(MarlinSerial &obj, const toolDetection::VoltageTypeStabilizer::VoltageLog::Sample& smp) {
   obj
     << F("(") << smp.time
-    << F(", ") << toString(smp.type)
+    << F(",") << toString(smp.type)
     << F(", ") << smp.voltage
     << F(")");
   return obj;
