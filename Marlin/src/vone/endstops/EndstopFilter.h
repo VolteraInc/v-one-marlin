@@ -4,7 +4,8 @@
 
 class EndstopFilter {
   public:
-    inline void ignore(bool ignoreTriggers);
+    inline void ignore(bool ignoreTriggers = true);
+    inline bool ignored() const;
     inline bool triggered() const;
     inline void addSample(bool value);
     inline void reset();
@@ -23,6 +24,11 @@ class EndstopFilter {
 void EndstopFilter::ignore(bool ignoreTriggers) {
   ScopedInterruptDisable sid;
   m_ignoreTriggers = ignoreTriggers;
+}
+
+bool EndstopFilter::ignored() const {
+  ScopedInterruptDisable sid;
+  return m_ignoreTriggers;
 }
 
 bool EndstopFilter::triggered() const {

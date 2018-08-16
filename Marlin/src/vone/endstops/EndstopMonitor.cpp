@@ -7,29 +7,14 @@ EndstopMonitor::EndstopMonitor(
   Endstops& endstops
 ) : m_endstops(endstops)
 {
-  ignoreToolSwitch();
-  ignoreZSwitch();
-  ignoreXYPositionerSwitches();
-  ignoreCalibrationPlate();
-}
+  m_toolSwitch.ignore();
+  m_zSwitch.ignore();
+  m_calibrationPlate.ignore();
 
-void EndstopMonitor::ignoreToolSwitch(bool ignore) {
-  m_toolSwitch.ignore(ignore);
-}
-
-void EndstopMonitor::ignoreZSwitch(bool ignore) {
-  m_zSwitch.ignore(ignore);
-}
-
-void EndstopMonitor::ignoreXYPositionerSwitches(bool ignore) {
-  m_xyPositionerRight.ignore(ignore);
-  m_xyPositionerLeft.ignore(ignore);
-  m_xyPositionerBack.ignore(ignore);
-  m_xyPositionerForward.ignore(ignore);
-}
-
-void EndstopMonitor::ignoreCalibrationPlate(bool ignore) {
-  m_calibrationPlate.ignore(ignore);
+  m_xyPositionerRight.ignore();
+  m_xyPositionerLeft.ignore();
+  m_xyPositionerBack.ignore();
+  m_xyPositionerForward.ignore();
 }
 
 const EndstopFilter* EndstopMonitor::lookup(const Endstop& endstop) const {
@@ -49,8 +34,40 @@ const EndstopFilter* EndstopMonitor::lookup(const Endstop& endstop) const {
 
     case P_TOP_PIN: return &m_toolSwitch;
     default:
+      logError
+        << F("Unable to access endstop with pin ")
+        << endstop.pin
+        << endl;
       return nullptr;
   }
+}
+
+EndstopFilter* EndstopMonitor::lookup(const Endstop& endstop) {
+  // Implement a non-const version of lookup using the const version
+  // ref https://stackoverflow.com/questions/123758/how-do-i-remove-code-duplication-between-similar-const-and-non-const-member-func
+  const auto& cThis = *this;
+  return const_cast<EndstopFilter*>(cThis.lookup(endstop));
+}
+
+void EndstopMonitor::ignore(const Endstop& endstop, bool ignore) {
+  auto filter = lookup(endstop);
+  if (!filter) {
+    return;
+  }
+  filter->ignore(ignore);
+
+  log
+    << endstop.name
+    << (ignore ? F(" disabled") : F(" enabled"))
+    << endl;
+}
+
+bool EndstopMonitor::ignoring(const Endstop& endstop) const {
+  auto filter = lookup(endstop);
+  if (!filter) {
+    return true;
+  }
+  return filter->ignored();
 }
 
 bool EndstopMonitor::isTriggered(const Endstop& endstop) const {

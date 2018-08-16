@@ -9,17 +9,14 @@
 #include "TriggerEventLog.h"
 
 class Endstop;
-
 float stepsToPositionInAxis(AxisEnum axis, volatile long stepCounts[NUM_AXIS]);
 
 class EndstopMonitor {
   public:
     EndstopMonitor(Endstops& endstops);
 
-    void ignoreToolSwitch(bool ignore = true);
-    void ignoreZSwitch(bool ignore = true);
-    void ignoreXYPositionerSwitches(bool ignore = true);
-    void ignoreCalibrationPlate(bool ignore = true);
+    void ignore(const Endstop& endstop, bool ignore = true);
+    bool ignoring(const Endstop& endstop) const;
 
     bool isTriggered(const Endstop& endstop) const;
     bool isTriggered(enum AxisEnum axis) const;
@@ -55,6 +52,7 @@ class EndstopMonitor {
     EndstopFilter m_toolSwitch;
 
     const EndstopFilter* lookup(const Endstop& endstop) const;
+    EndstopFilter* lookup(const Endstop& endstop);
 
     // ------------------------------------------
     // X-axis

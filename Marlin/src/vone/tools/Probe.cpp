@@ -31,7 +31,7 @@ tools::Probe::Probe(Stepper& stepper, PTopPin& pin, const Endstop& toolSwitch)
 }
 
 int tools::Probe::prepareToMoveImpl_Start() {
-  m_stepper.endstopMonitor.ignoreToolSwitch(false);
+  m_stepper.endstopMonitor.ignore(m_toolSwitch, false);
   return (
     raise() ||
     confirmAttachedAndNotTriggered("prepare probe", *this)
@@ -55,7 +55,7 @@ int tools::Probe::prepareToMoveImpl_CalibrateXYZ() {
 int tools::Probe::resetPreparationsImpl() {
   enableHeightSafety(false);
   setHomedState(Z_AXIS, 0);
-  m_stepper.endstopMonitor.ignoreToolSwitch();
+  m_stepper.endstopMonitor.ignore(m_toolSwitch);
   return 0;
 }
 

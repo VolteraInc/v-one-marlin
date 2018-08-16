@@ -6,6 +6,7 @@
 
 #include "../../vone/VOne.h"
 #include "../../vone/endstops/Endstop.h"
+#include "../../vone/endstops/ScopedEndstopEnable.h"
 
 static const float s_defaultRetractDistance[] = {
   X_HOME_RETRACT_MM,
@@ -287,6 +288,9 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
 
   // Finish any pending moves (prevents crashes)
   st_synchronize();
+
+  // Enable endstop, if necessaey
+  ScopedEndstopEnable scopedEnable(endstopMonitor, endstop);
 
   // Move
   const auto clampedMaxTravel = min(maxTravel, s_maxTravelInAxis(axis, direction));

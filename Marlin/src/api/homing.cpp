@@ -169,20 +169,12 @@ int moveToZSwitchXY(tools::Tool& tool) {
   return moveXY(tool, min_z_x_pos, min_z_y_pos);
 }
 
-static int s_homeZToZSwitch(tools::Tool& tool) {
-  if (moveToZSwitchXY(tool)) {
-    return -1;
-  }
-
-  vone->stepper.endstopMonitor.ignoreZSwitch(false);
-  int returnValue = s_zeroAxis(vone->endstops.zSwitch);
-  vone->stepper.endstopMonitor.ignoreZSwitch();
-  return returnValue;
-}
-
 int homeZ(tools::Tool& tool) {
   // Home Z to the z-switch
-  if (s_homeZToZSwitch(tool)) {
+  if (
+    moveToZSwitchXY(tool) ||
+    s_zeroAxis(vone->endstops.zSwitch)
+  ) {
     return -1;
   }
 
