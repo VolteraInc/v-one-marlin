@@ -39,7 +39,7 @@ class VoltageTypeStabilizer {
         MarlinSerial& output() const;
 
       private:
-        static const unsigned int MAX_SAMPLES = 12;
+        static const unsigned int MAX_SAMPLES = 30;
         Sample m_samples[MAX_SAMPLES];
         unsigned int m_size = 0;
         unsigned int m_frontIdx = 0;
