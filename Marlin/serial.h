@@ -21,7 +21,7 @@ inline MarlinSerial& operator<<(MarlinSerial &obj, const __FlashStringHelper* ar
 
 
 template<typename T>
-struct ArrayWithSize { 
+struct ArrayWithSize {
   const T* arr;
   size_t size;
   ArrayWithSize(const T a[], unsigned int n) : arr(a), size(n) {}
@@ -37,13 +37,13 @@ inline MarlinSerial& operator<<(MarlinSerial &obj, ArrayWithSize<T> a) {
   return obj;
 }
 
-struct FloatWithFormat { 
+struct FloatWithFormat {
   float value;
   unsigned int digits;
   FloatWithFormat(float v, unsigned int d) : value(v), digits(d) {}
 };
 inline MarlinSerial& operator<<(MarlinSerial &obj, const FloatWithFormat& st) {
-  obj.print(st.value, st.digits);  
+  obj.print(st.value, st.digits);
   return obj;
 }
 
