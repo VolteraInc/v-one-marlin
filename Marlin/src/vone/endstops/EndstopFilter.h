@@ -12,13 +12,12 @@ class EndstopFilter {
 
   private:
     static const int TriggerCountThreshold = 2;
-    int m_triggerCount = 0;
-    bool m_ignoreTriggers = false;
+    volatile int m_triggerCount = 0;
+    volatile bool m_ignoreTriggers = false;
 
     bool _triggered() const {
       return m_triggerCount >= TriggerCountThreshold;
     }
-
 };
 
 void EndstopFilter::ignore(bool ignoreTriggers) {
