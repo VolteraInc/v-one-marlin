@@ -360,6 +360,10 @@ int process_dcode(int command_code) {
       return drill.setRotationSpeed(code_seen('R') ? code_value() : 0.0f);
     }
 
+    // Algorithms - check extents (i.e. volume)
+    case 111: {
+      return checkExtents(tool);
+    }
 
     //-------------------------------------------
     // List Commands
@@ -381,6 +385,7 @@ int process_dcode(int command_code) {
       log << F("  D108 - measure at switch release -- D108 -Z") << endl;
       log << F("  D109 - check location of xy-positioner's back switch -- D109") << endl;
       log << F("  D110 - set drill rotation speed -- D110 R100, no value or 1 means stop, 0 resets drill") << endl;
+      log << F("  D111 - check extents of volume in X and Y -- D111 or D111 T0.001, to override default tolerance") << endl;
       log << F("") << endl;
       return 0;
   }

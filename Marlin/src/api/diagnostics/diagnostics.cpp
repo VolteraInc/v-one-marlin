@@ -69,6 +69,7 @@ int runCalibrateSwitches(tools::Probe& probe, unsigned cycles) {
   return s_end(
     probe,
     calibrateSwitchPositions(probe, cycles) ||
-    checkBackSwitchSeparation(probe)
+    checkBackSwitchSeparation(probe) ||
+    checkExtents(probe)
   );
 }
