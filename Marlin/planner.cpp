@@ -392,12 +392,14 @@ static void s_applyCompensationAlgorithms(float& x, float& y, float& z, float& e
   if (skew_adjustments_enabled) {
     applySkewCompensation(x, y, calib_cos_theta, calib_tan_theta);
   } else {
-    log
-      << F("Skipping skew compensation for ") << x
-      << F(",") << y
-      << F(",") << z
-      << F(",") << e
-      << endl;
+    if (logging_enabled) {
+      log
+        << F("Skipping skew compensation for ") << x
+        << F(",") << y
+        << F(",") << z
+        << F(",") << e
+        << endl;
+    }
   }
 
   // Axis scaling compensation
@@ -670,13 +672,15 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
 }
 
 void plan_set_position(float x, float y, float z, float e) {
-  log
-    << F("Resetting planner position to")
-    << F(" X:") << x
-    << F(" Y:") << y
-    << F(" Z:") << z
-    << F(" E:") << e
-    << endl;
+  if (logging_enabled) {
+    log
+      << F("Resetting planner position to")
+      << F(" X:") << x
+      << F(" Y:") << y
+      << F(" Z:") << z
+      << F(" E:") << e
+      << endl;
+  }
 
   // Apply compensation algorithms to compute the new position in steps
   // Note: we don't need to apply backlash compensation because we are not moving
