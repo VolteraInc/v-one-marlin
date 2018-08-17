@@ -101,24 +101,24 @@ void Config_StoreSettings() {
 
 void Config_PrintSettings() {
   log << F("Steps per unit:") << endl;
-  log << F("  M92 X") << axis_steps_per_unit[0]
-      << F(" Y") << axis_steps_per_unit[1]
-      << F(" Z") << axis_steps_per_unit[2]
-      << F(" E") << axis_steps_per_unit[3]
+  log << F("  M92 X") << axis_steps_per_unit[X_AXIS]
+      << F(" Y") << axis_steps_per_unit[Y_AXIS]
+      << F(" Z") << axis_steps_per_unit[Z_AXIS]
+      << F(" E") << axis_steps_per_unit[E_AXIS]
       << endl;
 
   log << F("Maximum feedrates (mm/s):") << endl;
-  log << F("  M203 X") << max_feedrate[0]
-      << F(" Y") << max_feedrate[1]
-      << F(" Z") << max_feedrate[2]
-      << F(" E") << max_feedrate[3]
+  log << F("  M203 X") << max_feedrate[X_AXIS]
+      << F(" Y") << max_feedrate[Y_AXIS]
+      << F(" Z") << max_feedrate[Z_AXIS]
+      << F(" E") << max_feedrate[E_AXIS]
       << endl;
 
   log << F("Maximum Acceleration (mm/s2):") << endl;
-  log << F("  M201 X" ) << max_acceleration_units_per_sq_second[0]
-      << F(" Y") << max_acceleration_units_per_sq_second[1]
-      << F(" Z") << max_acceleration_units_per_sq_second[2]
-      << F(" E") << max_acceleration_units_per_sq_second[3]
+  log << F("  M201 X" ) << max_acceleration_units_per_sq_second[X_AXIS]
+      << F(" Y") << max_acceleration_units_per_sq_second[Y_AXIS]
+      << F(" Z") << max_acceleration_units_per_sq_second[Z_AXIS]
+      << F(" E") << max_acceleration_units_per_sq_second[E_AXIS]
       << endl;
 
   log << F("Acceleration: S=acceleration, T=retract acceleration") << endl;
