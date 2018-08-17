@@ -124,8 +124,8 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 // Distance to retract from X,Y switches when homing
 #define HOMING_XY_OFFSET 1
 
-// Travel limits after homing
-#define X_MAX_POS 129
+// Extents (min and max reachable positions, after homing)
+#define X_MAX_POS 128
 #define X_MIN_POS 0
 #define Y_MAX_POS 157
 #define Y_MIN_POS 0

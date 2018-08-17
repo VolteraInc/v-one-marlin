@@ -56,9 +56,9 @@ static void s_resyncWithStepper(AxisEnum axis) {
 
 static float s_maxTravelInAxis(AxisEnum axis, int direction) {
   switch(axis) {
-    case X_AXIS: return getHomedState(X_AXIS) ? X_MAX_LENGTH : X_MAX_LENGTH_BEFORE_HOMING;
-    case Y_AXIS: return getHomedState(Y_AXIS) ? Y_MAX_LENGTH : Y_MAX_LENGTH_BEFORE_HOMING;
-    case Z_AXIS: return getHomedState(Z_AXIS) ? Z_MAX_LENGTH : (direction < 0 ? Z_MAX_TRAVEL_DOWN_BEFORE_HOMING : Z_MAX_TRAVEL_UP_BEFORE_HOMING);
+    case X_AXIS: return getHomedState(X_AXIS) ? X_MAX_LENGTH + 1 : X_MAX_LENGTH_BEFORE_HOMING;
+    case Y_AXIS: return getHomedState(Y_AXIS) ? Y_MAX_LENGTH + 1 : Y_MAX_LENGTH_BEFORE_HOMING;
+    case Z_AXIS: return getHomedState(Z_AXIS) ? Z_MAX_LENGTH + 1 : (direction < 0 ? Z_MAX_TRAVEL_DOWN_BEFORE_HOMING : Z_MAX_TRAVEL_UP_BEFORE_HOMING);
     default:
       logError
         << F("Unable to determine max travel distance for axis, axis ") << axis
