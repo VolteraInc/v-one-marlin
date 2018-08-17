@@ -36,7 +36,6 @@ void checkForEndstopHits() {
   setHomedState(Y_AXIS, 0);
   setHomedState(Z_AXIS, 0);
   vone->toolBox.currentTool().resetPreparations();
-  flushSerialCommands();
 
   // Report Errors
   stepper.endstopMonitor.reportHits(s_reportHit);
@@ -48,4 +47,8 @@ void checkForEndstopHits() {
     << F("a switch may be triggering intermittently")
     << endl;
   endstops.outputStatus();
+
+  // Flush inbound commands
+  // Note: will conditionally request a resend
+  flushSerialCommands();
 }

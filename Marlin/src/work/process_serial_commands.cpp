@@ -107,8 +107,8 @@ inline const char* parse(
   return newCommandStart;
 }
 
+static uint16_t s_expectedLineNumber = 1;
 static void read_commands() {
-  static uint16_t s_expectedLineNumber = 0;
   static char s_buffer[MAX_CMD_SIZE];
   static auto s_tooLong = false;
 
@@ -179,18 +179,23 @@ void flushSerialCommands() {
   // Note: might have a partial message there
   s_bufferIndex = 0;
 
-  // Flush for a little while
-  // Note:
-  //   1) There is a race between the app and this attempt to flush, so give
-  //      the app some extra time to send. This also allows data that is
-  //      in transit to arrive and be flushed.
-  //   2) We flush repeatedly just in case the app is sending a long message
-  for (auto cnt = 10; cnt--;) {
-    delay(100); // 100ms x 10 times --> at least 1 second of flushing
-    MYSERIAL.flush();
-  }
+  // Wait then flush
+  // Note: There is a race between the app and this attempt to flush, so give
+  //       the app some extra time to send. This also allows data that is
+  //       in transit to arrive and be flushed.
+  delay(1000);
+  const auto numAvailable = MYSERIAL.available();
+  MYSERIAL.flush();
+  log << F("Flushed ") << numAvailable << (" bytes ") << endl;
 
-  log << F("Flush complete") << endl;
+  if (numAvailable > 0) {
+    s_requestResend(
+      s_expectedLineNumber,
+      F("Flushed serial buffer"),
+      "<unknown>"
+    );
+    ++s_expectedLineNumber;
+  }
 }
 
 
