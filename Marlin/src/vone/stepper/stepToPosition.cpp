@@ -4,10 +4,8 @@
 #include "../../../MarlinConfig.h"
 #include "../../compensationAlgorithms/api.h"
 #include "../../utils/ScopedInterruptDisable.h"
+#include "../../api/movement/movement.h" // mm to steps
 
-static float s_stepToPositionInAxis(AxisEnum axis, long stepCounts[NUM_AXIS]) {
-  return stepCounts[axis] / axis_steps_per_unit[axis];
-}
 
 float stepsToPositionInAxis(AxisEnum axis, long stepCounts[NUM_AXIS]) {
   // Need to apply scaling and skew compenstion in reverse
@@ -16,7 +14,7 @@ float stepsToPositionInAxis(AxisEnum axis, long stepCounts[NUM_AXIS]) {
     case X_AXIS:
       return reverseSkewCompensationInX(
         reverseScalingCompensation(
-          s_stepToPositionInAxis(X_AXIS, stepCounts), calib_x_scale
+          stepsToMillimeters(stepCounts[X_AXIS], X_AXIS), calib_x_scale
         ),
         calib_cos_theta
       );
@@ -24,10 +22,10 @@ float stepsToPositionInAxis(AxisEnum axis, long stepCounts[NUM_AXIS]) {
     case Y_AXIS: {
       return reverseSkewCompensationInY(
         reverseScalingCompensation(
-          s_stepToPositionInAxis(X_AXIS, stepCounts), calib_x_scale
+          stepsToMillimeters(stepCounts[X_AXIS], X_AXIS), calib_x_scale
         ),
         reverseScalingCompensation(
-          s_stepToPositionInAxis(Y_AXIS, stepCounts), calib_y_scale
+          stepsToMillimeters(stepCounts[Y_AXIS], Y_AXIS), calib_y_scale
         ),
         calib_tan_theta
       );
@@ -35,7 +33,7 @@ float stepsToPositionInAxis(AxisEnum axis, long stepCounts[NUM_AXIS]) {
 
     case Z_AXIS:
     case E_AXIS:
-      return stepCounts[axis] / axis_steps_per_unit[axis];
+      return stepsToMillimeters(stepCounts[axis], axis);
   }
   return 0;
 }

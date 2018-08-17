@@ -57,10 +57,10 @@ int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, floa
 
   // Note: 1mm should be more than enough for a release
   const auto maxTravel = 1u;
-  const auto maxSteps = maxTravel * axis_steps_per_unit[axis];
+  const auto maxSteps = millimetersToSteps(maxTravel, axis);
   const auto numSamples = 20u;
   bool releaseStarted = false;
-  const float distance = 1 / axis_steps_per_unit[axis];
+  const float distance = stepsToMillimeters(1, axis);
   for (auto i = 0u; i < maxSteps; ++i) {
     // Examine triggered status
     const auto count = s_countTriggers(endstop, numSamples);

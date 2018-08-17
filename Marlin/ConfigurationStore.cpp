@@ -2,6 +2,7 @@
 #include "Marlin.h" // e.g. product_serial_number
 
 #include "planner.h"
+#include "src/api/movement/movement.h"
 #include "ConfigurationStore.h"
 
 void _EEPROM_writeData(int &pos, uint8_t* value, uint8_t size) {

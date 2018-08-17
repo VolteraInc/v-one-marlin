@@ -31,7 +31,6 @@ int moveToLimit(AxisEnum axis, int direction, float f = useDefaultFeedrate, floa
 int moveToEndstop(const Endstop& endstop, float f = useDefaultFeedrate, float maxTravel = useDefaultMaxTravel);
 int raise();
 
-
 // Set planner position
 int setPositionEOnly(float e);
 int setPosition(float x, float y, float z, float e);
@@ -56,3 +55,8 @@ int centerTool(tools::Tool& tool);
 const float NoRetract = -9999.0f;
 
 int confirmAttached(const char* context, tools::Tool& tool);
+
+// step/millimeter conversion
+extern float axis_steps_per_unit[4];
+float stepsToMillimeters(long step, AxisEnum axis);
+long millimetersToSteps(float mm, AxisEnum axis);
