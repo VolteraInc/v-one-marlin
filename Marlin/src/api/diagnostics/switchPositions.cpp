@@ -25,7 +25,7 @@ int checkBackSwitchSeparation(tools::Tool& tool) {
   }
 
   log
-    << F("measurements = [")
+    << F("check back switch separation measurements = [")
     << ArrayWithSize<float>(measurements, NUM_MEASUREMENTS)
     << F("]")
     << endl;
