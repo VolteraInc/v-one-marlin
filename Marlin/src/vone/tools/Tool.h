@@ -23,8 +23,8 @@ class Tool {
     bool attached() const { return m_attached; }
     bool detached() const { return !m_attached; }
 
-    int resetPreparations();
     int prepareToMove(PrepareToMove::Option option = PrepareToMove::Option::none);
+    int resetPreparations();
     bool prepared() const { return m_prepare_Completed; }
 
     virtual int enqueueMove(float x, float y, float z, float e, float f) = 0;
