@@ -1,7 +1,76 @@
 #include "../../api/api.h"
 #include "../../../Marlin.h"
 #include "../../../ConfigurationStore.h"
+#include "../../vone/VOne.h"
 #include "../../vone/tools/Probe.h"
+
+// Confirm the minY and xyMinY switches are far enough apart.
+// If these switches are too close it's possible we'll hit the
+// minY switch instead of the xyMinY switch
+int checkBackSwitchSeparation(tools::Tool& tool) {
+  static const size_t NUM_MEASUREMENTS = 3;
+  float measurements[NUM_MEASUREMENTS] = { 0, 0, 0 };
+  const auto& xyPositionerBack = vone->endstops.xyPositionerBack;
+  if (
+    raise() ||
+    moveToXyPositioner(tool) ||
+    xyPositionerTouch(xyPositionerBack, measurements[0]) ||
+    retractFromSwitch(xyPositionerBack, 1) ||
+    xyPositionerTouch(xyPositionerBack, measurements[1]) ||
+    retractFromSwitch(xyPositionerBack, 1) ||
+    xyPositionerTouch(xyPositionerBack, measurements[2]) ||
+    retractFromSwitch(xyPositionerBack, 1)
+  ) {
+    return -1;
+  }
+
+  log
+    << F("check back switch separation measurements = [")
+    << ArrayWithSize<float>(measurements, NUM_MEASUREMENTS)
+    << F("]")
+    << endl;
+
+  // Measurements from 12 units
+  //   .490
+  //   .810
+  //   .830
+  //   .360
+  //   .770
+  //   .350
+  //   .090  .050  .060
+  //   .070  .050
+  //   .470
+  //  1.400 1.360
+  //   .800
+  //  1.040
+  //
+  // From this data the max variation was 0.040
+  // For safety I'm choosing 0.350, which passes most
+  // of the tested units, and will plenty of mearsurement
+  // variability
+  float tolerance = 0.350; // TODO: set to a proper value
+  if (
+    measurements[0] < tolerance ||
+    measurements[1] < tolerance ||
+    measurements[2] < tolerance
+  ) {
+    logError
+      << F("Unable complete back switch separation check, distance from ")
+      << F("the back switch (y-min)")
+      << F(" to ")
+      << F("the xy-positioner's back switch (xy-min-y)")
+      << F(" was less than ")
+      << FloatWithFormat(tolerance, 2)
+      << F("mm, measurements = [")
+      << ArrayWithSize<float>(measurements, NUM_MEASUREMENTS)
+      << F("]")
+      << endl;
+    return -1;
+  }
+
+  // Success
+  return 0;
+}
 
 int calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeResults) {
   if (probe.prepareToMove(tools::PrepareToMove::Options::skipCalibrateXYZ)) {
@@ -40,7 +109,7 @@ int calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeRes
 
   // Store positions
   if (storeResults) {
-    log << "Storing settings..." << endl;
+    log << F("Storing settings...") << endl;
     Config_StoreCalibration();
   }
 

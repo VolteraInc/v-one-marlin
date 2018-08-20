@@ -18,22 +18,16 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef stepper_h
-#define stepper_h
+#pragma once
 
 #include <inttypes.h>
+#include "Axis.h"
 
-// Mod by VOLTERA
-#define WRITE_Z_STEP(v) WRITE(Z_STEP_PIN, v)
-#define NORM_Z_DIR() WRITE(Z_DIR_PIN, !INVERT_Z_DIR)
-#define REV_Z_DIR() WRITE(Z_DIR_PIN, INVERT_Z_DIR)
-
-#define WRITE_E_STEP(v) WRITE(E0_STEP_PIN, v)
-#define NORM_E_DIR() WRITE(E0_DIR_PIN, !INVERT_E0_DIR)
-#define REV_E_DIR() WRITE(E0_DIR_PIN, INVERT_E0_DIR)
+class EndstopMonitor;
 
 // Initialize and start the stepper motor subsystem
 void st_init();
+void stepper_isr(EndstopMonitor& endStops);
 
 // Block until all buffered steps are executed
 void st_synchronize();
@@ -43,29 +37,7 @@ void st_set_position(const long &x, const long &y, const long &z, const long &e)
 void st_set_e_position(const long &e);
 
 // Get current position in steps
-long st_get_position(uint8_t axis);
-float st_get_position_mm(uint8_t axis);
-// The stepper subsystem goes to sleep when it runs out of things to execute. Call this
-// to notify the subsystem that it is time to go to work.
-void st_wake_up();
-
-
-bool endstop_triggered(int axis);
-
-bool readAndResetEndstops(bool triggered[3], long stepsWhenTriggered[3]);
-void clear_endstop(int axis);
-
-void enable_p_top(bool enable);
-void enable_calibration_plate(bool enable);
-
-void checkStepperErrors(); //Print errors detected by the stepper
+long st_get_position(AxisEnum axis);
+float st_get_position_mm(AxisEnum axis);
 
 void quickStop();
-
-void digiPotInit();
-void digiPotSetCurrent(uint8_t axis, uint8_t current);
-uint8_t digiPotGetCurrent(uint8_t axis);
-void digiPotWrite(uint8_t address, uint8_t value);
-uint8_t digiPotRead(uint8_t address);
-
-#endif

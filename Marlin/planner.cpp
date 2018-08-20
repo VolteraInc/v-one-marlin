@@ -55,6 +55,7 @@
 #include "planner.h"
 #include "stepper.h"
 #include "src/compensationAlgorithms/api.h"
+#include "src/api/movement/movement.h" // mm to steps
 #include "macros.h"
 
 //===========================================================================
@@ -63,7 +64,6 @@
 
 unsigned long minsegmenttime;
 float max_feedrate[4]; // set the max speeds
-float axis_steps_per_unit[4];
 unsigned long max_acceleration_units_per_sq_second[4]; // Use M201 to override by software
 float minimumfeedrate;
 float acceleration;         // Normal acceleration mm/s^2  THIS IS THE DEFAULT ACCELERATION for all moves. M204 SXXXX
@@ -392,12 +392,14 @@ static void s_applyCompensationAlgorithms(float& x, float& y, float& z, float& e
   if (skew_adjustments_enabled) {
     applySkewCompensation(x, y, calib_cos_theta, calib_tan_theta);
   } else {
-    log
-      << F("Skipping skew compensation for ") << x
-      << F(",") << y
-      << F(",") << z
-      << F(",") << e
-      << endl;
+    if (logging_enabled) {
+      log
+        << F("Skipping skew compensation for ") << x
+        << F(",") << y
+        << F(",") << z
+        << F(",") << e
+        << endl;
+    }
   }
 
   // Axis scaling compensation
@@ -405,10 +407,10 @@ static void s_applyCompensationAlgorithms(float& x, float& y, float& z, float& e
 }
 
 static void s_convertMMToSteps(float x, float y, float z, float e, long steps[]) {
-  steps[ X_AXIS ] = lround(x * axis_steps_per_unit[ X_AXIS ]);
-  steps[ Y_AXIS ] = lround(y * axis_steps_per_unit[ Y_AXIS ]);
-  steps[ Z_AXIS ] = lround(z * axis_steps_per_unit[ Z_AXIS ]);
-  steps[ E_AXIS ] = lround(e * axis_steps_per_unit[ E_AXIS ]);
+  steps[ X_AXIS ] = millimetersToSteps(x, X_AXIS);
+  steps[ Y_AXIS ] = millimetersToSteps(y, Y_AXIS);
+  steps[ Z_AXIS ] = millimetersToSteps(z, Z_AXIS);
+  steps[ E_AXIS ] = millimetersToSteps(e, E_AXIS);
 }
 
 static void s_applyBacklashCompensation(long& xSteps, long& ySteps) {
@@ -416,7 +418,7 @@ static void s_applyBacklashCompensation(long& xSteps, long& ySteps) {
   auto directionX = sign(xSteps);
   if ( directionX != 0 && s_prevMoveDirectionX != directionX) {
     s_prevMoveDirectionX = directionX;
-    auto stepOffsetX = calib_x_backlash * axis_steps_per_unit[ X_AXIS ];
+    auto stepOffsetX = millimetersToSteps(calib_x_backlash, X_AXIS);
     xSteps = applyBacklashCompensation("x", directionX, xSteps, stepOffsetX);
   }
 
@@ -424,7 +426,7 @@ static void s_applyBacklashCompensation(long& xSteps, long& ySteps) {
   auto directionY = sign(ySteps);
   if (directionY != 0 && s_prevMoveDirectionY != directionY) {
     s_prevMoveDirectionY = directionY;
-    auto stepOffsetY = calib_y_backlash * axis_steps_per_unit[ Y_AXIS ];
+    auto stepOffsetY = millimetersToSteps(calib_y_backlash, Y_AXIS);
     ySteps = applyBacklashCompensation("y", directionY, ySteps, stepOffsetY);
   }
 }
@@ -482,8 +484,6 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
     return;
   }
 
-  block->fan_speed = 0;
-
   // Compute direction bits for this block
   block->direction_bits = 0;
 
@@ -504,7 +504,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   if (block->steps_x != 0) { enable_x(); }
   if (block->steps_y != 0) { enable_y(); }
   if (block->steps_z != 0) { enable_z(); }
-  if (block->steps_e != 0) { enable_e0(); }
+  if (block->steps_e != 0) { enable_e(); }
 
   if (block->steps_e == 0) {
     if (feed_rate < mintravelfeedrate) { feed_rate = mintravelfeedrate; }
@@ -514,10 +514,10 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
 
   // Delta_mm is the mm that our axis will actually move to meet the global coordinates.
   float delta_mm[4];
-  delta_mm[X_AXIS] = steps_x_signed / axis_steps_per_unit[X_AXIS];
-  delta_mm[Y_AXIS] = steps_y_signed / axis_steps_per_unit[Y_AXIS];
-  delta_mm[Z_AXIS] = steps_z_signed / axis_steps_per_unit[Z_AXIS];
-  delta_mm[E_AXIS] = (steps_e_signed / axis_steps_per_unit[E_AXIS]) * volumetric_multiplier * extrudemultiply / 100.0;
+  delta_mm[X_AXIS] = stepsToMillimeters(steps_x_signed, X_AXIS);
+  delta_mm[Y_AXIS] = stepsToMillimeters(steps_y_signed, Y_AXIS);
+  delta_mm[Z_AXIS] = stepsToMillimeters(steps_z_signed, Z_AXIS);
+  delta_mm[E_AXIS] = stepsToMillimeters(steps_e_signed, E_AXIS) * volumetric_multiplier * extrudemultiply / 100.0;
 
   if ( block->steps_x <=dropsegments && block->steps_y <=dropsegments && block->steps_z <=dropsegments )
   {
@@ -632,7 +632,7 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   double v_allowable = max_allowable_speed(-block->acceleration,MINIMUM_PLANNER_SPEED,block->millimeters);
   block->entry_speed = min(vmax_junction, v_allowable);
 
-  // log 
+  // log
   //   << F(" max entry speed") << block->max_entry_speed
   //   << F(", nominal speed ") << block->nominal_speed
   //   << F(", entrySpeed ") << block->entry_speed
@@ -669,19 +669,18 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   memcpy(position, target, sizeof(target)); // position[] = target[]
 
   planner_recalculate();
-
-  st_wake_up();
-
 }
 
 void plan_set_position(float x, float y, float z, float e) {
-  log
-    << F("Resetting planner position to")
-    << F(" X:") << x
-    << F(" Y:") << y
-    << F(" Z:") << z
-    << F(" E:") << e
-    << endl;
+  if (logging_enabled) {
+    log
+      << F("Resetting planner position to")
+      << F(" X:") << x
+      << F(" Y:") << y
+      << F(" Z:") << z
+      << F(" E:") << e
+      << endl;
+  }
 
   // Apply compensation algorithms to compute the new position in steps
   // Note: we don't need to apply backlash compensation because we are not moving
@@ -699,7 +698,7 @@ void plan_set_position(float x, float y, float z, float e) {
 
 void plan_set_e_position(float e) {
   log << F("Resetting planner's E position to E:") << e << endl;
-  position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]);
+  position[E_AXIS] = millimetersToSteps(e, E_AXIS);
   st_set_e_position(position[E_AXIS]);
 }
 
@@ -709,7 +708,8 @@ uint8_t movesplanned() {
 
 // Calculate the steps/s^2 acceleration rates, based on the mm/s^s
 void reset_acceleration_rates() {
-	for (auto i = 0u; i < NUM_AXIS; ++i)  {
-    axis_steps_per_sqr_second[i] = max_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];
-  }
+  axis_steps_per_sqr_second[X_AXIS] = millimetersToSteps(max_acceleration_units_per_sq_second[X_AXIS], X_AXIS);
+  axis_steps_per_sqr_second[Y_AXIS] = millimetersToSteps(max_acceleration_units_per_sq_second[Y_AXIS], Y_AXIS);
+  axis_steps_per_sqr_second[Z_AXIS] = millimetersToSteps(max_acceleration_units_per_sq_second[Z_AXIS], Z_AXIS);
+  axis_steps_per_sqr_second[E_AXIS] = millimetersToSteps(max_acceleration_units_per_sq_second[E_AXIS], E_AXIS);
 }

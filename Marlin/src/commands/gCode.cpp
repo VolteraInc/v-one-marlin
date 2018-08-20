@@ -7,7 +7,8 @@
 
 #include "../api/movement/motion_control.h"
 
-#include "../vone/vone.h"
+#include "../vone/VOne.h"
+#include "../vone/endstops/ScopedEndstopEnable.h"
 
 static float destination[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
 static float offset[3] = {0.0, 0.0, 0.0};
@@ -155,7 +156,7 @@ int process_gcode(int command_code) {
     // G18: XYPositioner Y1 - Move in +Y until a switch is triggered
     case 18: {
       float measurement;
-      if ( xyPositionerTouch(vone->toolBox.probe, Y_AXIS, 1, measurement)
+      if ( xyPositionerTouch(vone->endstops.xyPositionerForward, measurement)
         || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
         return -1;
       }
@@ -166,7 +167,7 @@ int process_gcode(int command_code) {
     // G19: XYPositioner Y2 - Move in -Y until a switch is triggered
     case 19: {
       float measurement;
-      if ( xyPositionerTouch(vone->toolBox.probe, Y_AXIS, -1, measurement)
+      if ( xyPositionerTouch(vone->endstops.xyPositionerBack, measurement)
         || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
         return -1;
       }
@@ -177,7 +178,7 @@ int process_gcode(int command_code) {
     // G20: XYPositioner X1 - Move in +X until a switch is triggered
     case 20: {
       float measurement;
-      if ( xyPositionerTouch(vone->toolBox.probe, X_AXIS, 1, measurement)
+      if ( xyPositionerTouch(vone->endstops.xyPositionerLeft, measurement)
         || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
         return -1;
       }
@@ -188,7 +189,7 @@ int process_gcode(int command_code) {
     // G21: XYPositioner X2 - Move in -X until switch triggered
     case 21: {
       float measurement;
-      if ( xyPositionerTouch(vone->toolBox.probe, X_AXIS, -1, measurement)
+      if ( xyPositionerTouch(vone->endstops.xyPositionerRight, measurement)
         || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
           return -1;
       }
@@ -199,6 +200,10 @@ int process_gcode(int command_code) {
     // G24 - Test the zMIN endstop trigger position
     // move to impossible position, and report where limit switch triggered.
     case 24: {
+      auto& endstopMonitor = vone->stepper.endstopMonitor;
+      const auto& zSwitch = vone->endstops.zSwitch;
+      ScopedEndstopEnable scopedEnable(endstopMonitor, zSwitch);
+
       feedrate = homing_feedrate[Z_AXIS]/(6);
       // move down until you find the bed
       float zPosition = -10;

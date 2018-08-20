@@ -1,9 +1,9 @@
 #include "../api.h"
 #include "../../../Marlin.h"
+#include "../../vone/endstops/Endstop.h"
 
 int touch(
-  int axis,
-  int direction,
+  const Endstop& endstop,
   float speed,
   float maxTravel,
   float& approach,
@@ -12,13 +12,13 @@ int touch(
 ) {
   const auto startTime = millis();
 
-  if (moveToLimit(axis, direction, speed, maxTravel)) {
+  if (moveToEndstop(endstop, speed, maxTravel)) {
     return -1;
   }
 
-  approach = current_position[axis];
+  approach = current_position[endstop.axis];
 
-  if (measureAtSwitchRelease(axis, direction, releaseStart, releaseEnd)) {
+  if (measureAtSwitchRelease(endstop, releaseStart, releaseEnd)) {
     return -1;
   }
 
@@ -30,11 +30,11 @@ int touch(
   return 0;
 }
 
-int fastTouch() {
+int fastTouch(const Endstop& endstop) {
   const auto startTime = millis();
   float approach, releaseStart, releaseEnd;
   if (touch(
-    Z_AXIS, -1,
+    endstop,
     useDefaultFeedrate, useDefaultMaxTravel,
     approach, releaseStart, releaseEnd
   )) {
@@ -44,7 +44,7 @@ int fastTouch() {
   if (logging_enabled) {
     const auto duration = millis() - startTime;
     log
-      << F("fastTouch ")
+      << F("fastTouch ") << endstop.name
       << F("approach: ") << approach
       << F(", releaseStart: ") << releaseStart
       << F(", releaseEnd: ") << releaseEnd

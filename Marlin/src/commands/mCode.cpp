@@ -9,6 +9,7 @@
 #include "../../macros.h"
 #include "../../version.h"
 #include "../vone/VOne.h"
+#include "../vone/stepper/digipots.h"
 
 bool CooldownNoWait = true;
 bool target_direction;
@@ -20,7 +21,7 @@ int process_mcode(int command_code) {
       enable_x();
       enable_y();
       enable_z();
-      enable_e0();
+      enable_e();
       return 0;
 
     // M18 - Release motors, or set inactivity timeout
@@ -36,7 +37,7 @@ int process_mcode(int command_code) {
         if (disableAll || code_seen('X')) disable_x();
         if (disableAll || code_seen('Y')) disable_y();
         if (disableAll || code_seen('Z')) disable_z();
-        if (disableAll || code_seen('E')) disable_e0();
+        if (disableAll || code_seen('E')) disable_e();
       }
       return 0;
 
@@ -139,7 +140,8 @@ int process_mcode(int command_code) {
 
     // M119 - Output Endstop status to serial port
     case 119:
-      return vone->pins.deprecated_OutputEndStopStatus();
+      vone->endstops.deprecated_outputStatus();
+      return 0;
 
     // M122 - We let the planner know where we are
     case 122: {

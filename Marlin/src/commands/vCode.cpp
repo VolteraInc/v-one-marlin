@@ -128,7 +128,7 @@ int process_vcode(int command_code) {
       }
 
       // Output position
-      protocol 
+      protocol
         << F("probeMeasurement")
         << F(" x:") << current_position[X_AXIS]
         << F(" y:") << current_position[Y_AXIS]
@@ -255,15 +255,15 @@ int process_vcode(int command_code) {
 
       protocol << F("{ \"probeHoleMeasurement\": { \"measurements\": [");
       for (auto idx = 0u; idx < numMeasurements; ++idx) {
-        protocol 
+        protocol
           << (idx != 0 ? F(", ") : F(""))
           << F("{ \"x\":") << measurements[idx].x
           << F(", \"y\":") << measurements[idx].y
           << F(", \"z\":") << measurements[idx].z
           << F(" }");
       }
-      protocol 
-        << F("] } }") 
+      protocol
+        << F("] } }")
         << endl;
       return 0;
     }

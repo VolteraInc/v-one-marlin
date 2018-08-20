@@ -7,6 +7,8 @@
 #include "../../api/movement/movement.h"
 #include "../pins/PTopPin/PTopPin.h"
 #include "../toolDetection/classifyVoltage.h"
+#include "../stepper/Stepper.h"
+#include "../endstops/EndstopMonitor.h"
 
 int confirmAttachedAndNotTriggered(const char* context, tools::Probe& probe) {
   if (confirmAttached(context, probe)) {
@@ -21,14 +23,15 @@ int confirmAttachedAndNotTriggered(const char* context, tools::Probe& probe) {
   return 0;
 }
 
-tools::Probe::Probe(Stepper& stepper, PTopPin& pin)
+tools::Probe::Probe(Stepper& stepper, PTopPin& pin, const Endstop& toolSwitch)
   : Tool(stepper)
   , m_pin(pin)
+  , m_toolSwitch(toolSwitch)
 {
 }
 
 int tools::Probe::prepareToMoveImpl_Start() {
-  enable_p_top(true);
+  m_stepper.endstopMonitor.ignore(m_toolSwitch, false);
   return (
     raise() ||
     confirmAttachedAndNotTriggered("prepare probe", *this)
@@ -52,7 +55,7 @@ int tools::Probe::prepareToMoveImpl_CalibrateXYZ() {
 int tools::Probe::resetPreparationsImpl() {
   enableHeightSafety(false);
   setHomedState(Z_AXIS, 0);
-  enable_p_top(false);
+  m_stepper.endstopMonitor.ignore(m_toolSwitch);
   return 0;
 }
 
@@ -99,21 +102,26 @@ int tools::Probe::probe(
     // Get close to surface using a fast-touch
     // Note: could make this conditional on probe speed,
     // but I'd rather not have the extra code path
-    fastTouch() ||
+    fastTouch(m_toolSwitch) ||
 
     // Measure
     multiMultiTouch(
       "probe",
+      m_toolSwitch,
       rawMeasurement,
       speed,
       maxSamples, maxTouchesPerSample,
       &samplesTaken, &totalTouches
-    ) ||
-
-    // Return to a safe travel height
-    retractToolConditionally(m_probeDisplacement, additionalRetractDistance)
+    )
   ) {
     return -1;
+  }
+
+  // Return to a safe travel height (unless 'NoRetract' given)
+  if (additionalRetractDistance != NoRetract) {
+    if (retractFromSwitch(m_toolSwitch, m_probeDisplacement + additionalRetractDistance)) {
+      return -1;
+    }
   }
 
   // Move to safe height, if enabled

@@ -83,6 +83,7 @@
 const bool X_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool P_BOT_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
+const bool P_TOP_ENDSTOP_INVERTING = true;
 
 const bool Y_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
@@ -104,7 +105,7 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #define INVERT_X_DIR true
 #define INVERT_Y_DIR true
 #define INVERT_Z_DIR true
-#define INVERT_E0_DIR true
+#define INVERT_E_DIR true
 
 // ENDSTOP SETTINGS:
 
@@ -123,8 +124,8 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 // Distance to retract from X,Y switches when homing
 #define HOMING_XY_OFFSET 1
 
-// Travel limits after homing
-#define X_MAX_POS 129
+// Extents (min and max reachable positions, after homing)
+#define X_MAX_POS 128
 #define X_MIN_POS 0
 #define Y_MAX_POS 157
 #define Y_MIN_POS 0

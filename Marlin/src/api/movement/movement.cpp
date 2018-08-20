@@ -3,7 +3,10 @@
 #include "../../../Marlin.h"
 #include "../../../planner.h"
 #include "../../../stepper.h"
-#include "../../vone/Vone.h"
+
+#include "../../vone/VOne.h"
+#include "../../vone/endstops/Endstop.h"
+#include "../../vone/endstops/ScopedEndstopEnable.h"
 
 static const float s_defaultRetractDistance[] = {
   X_HOME_RETRACT_MM,
@@ -41,7 +44,7 @@ int setPosition(float x, float y, float z, float e) {
 // Set the planner position based on the stepper's position.
 // Note: Certain movements, like attempting to move past an end-stop, will leave the
 // planner out of sync with the stepper. This function corrects the planner's position.
-static void s_fixPosition(int axis) {
+static void s_resyncWithStepper(AxisEnum axis) {
   current_position[axis] = st_get_position_mm(axis);
   plan_set_position(
     current_position[X_AXIS],
@@ -49,14 +52,13 @@ static void s_fixPosition(int axis) {
     current_position[Z_AXIS],
     current_position[E_AXIS]
   );
-  clear_endstop(axis);
 }
 
-static float s_maxTravelInAxis(int axis, int direction) {
+static float s_maxTravelInAxis(AxisEnum axis, int direction) {
   switch(axis) {
-    case X_AXIS: return getHomedState(X_AXIS) ? X_MAX_LENGTH : X_MAX_LENGTH_BEFORE_HOMING;
-    case Y_AXIS: return getHomedState(Y_AXIS) ? Y_MAX_LENGTH : Y_MAX_LENGTH_BEFORE_HOMING;
-    case Z_AXIS: return getHomedState(Z_AXIS) ? Z_MAX_LENGTH : (direction < 0 ? Z_MAX_TRAVEL_DOWN_BEFORE_HOMING : Z_MAX_TRAVEL_UP_BEFORE_HOMING);
+    case X_AXIS: return getHomedState(X_AXIS) ? X_MAX_LENGTH + 1 : X_MAX_LENGTH_BEFORE_HOMING;
+    case Y_AXIS: return getHomedState(Y_AXIS) ? Y_MAX_LENGTH + 1 : Y_MAX_LENGTH_BEFORE_HOMING;
+    case Z_AXIS: return getHomedState(Z_AXIS) ? Z_MAX_LENGTH + 1 : (direction < 0 ? Z_MAX_TRAVEL_DOWN_BEFORE_HOMING : Z_MAX_TRAVEL_UP_BEFORE_HOMING);
     default:
       logError
         << F("Unable to determine max travel distance for axis, axis ") << axis
@@ -128,7 +130,7 @@ float getDefaultFeedrate() {
   );
 }
 
-static bool s_moveIsUnsafeInAxis(int axis, float value) {
+static bool s_moveIsUnsafeInAxis(AxisEnum axis, float value) {
   // Treat moves prior to homing as safe.
   // Note: We could perform some checks, but there's little value to the user
   if (!getHomedState(axis)) {
@@ -232,7 +234,8 @@ int relativeRawMoveXYZ(float x, float y, float z, float speed_in_mm_per_min, boo
   return 0;
 }
 
-int moveToLimit(int axis, int direction, float f, float maxTravel) {
+int moveToLimit(AxisEnum axis, int direction, float f, float maxTravel) {
+  auto& endstopMonitor = vone->stepper.endstopMonitor;
   if(logging_enabled) {
     log
       << F("Move to limit: ")
@@ -259,7 +262,7 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
   }
 
   // Confirm we triggered
-  if (!endstop_triggered(axis)) { // TODO: weak test, should check specific switches
+  if (endstopMonitor.acknowledgeTriggered(axis, direction)) {
     logError
       << F("Unable to move to ")
       << (direction < 0 ? '-' : '+')
@@ -269,21 +272,64 @@ int moveToLimit(int axis, int direction, float f, float maxTravel) {
     return -1;
   }
 
-  // Resync with true position
-  s_fixPosition(axis);
+  // Resync with stepper position
+  s_resyncWithStepper(axis);
+  return 0;
+}
+
+int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
+  auto& endstopMonitor = vone->stepper.endstopMonitor;
+  const auto axis = endstop.axis;
+  const auto direction = endstop.direction;
+
+  if (logging_enabled) {
+    log << F("Move to end-stop: ") << endstop.name << endl;
+  }
+
+  // Finish any pending moves (prevents crashes)
+  st_synchronize();
+
+  // Enable endstop, if necessaey
+  ScopedEndstopEnable scopedEnable(endstopMonitor, endstop);
+
+  // Move
+  const auto clampedMaxTravel = min(maxTravel, s_maxTravelInAxis(axis, direction));
+  const auto travel = direction < 0 ? -clampedMaxTravel : clampedMaxTravel;
+  const float clampedSpeed = f < 0 ? homing_feedrate[axis] : min(f, homing_feedrate[axis]);
+  if (relativeRawMoveXYZ(
+      axis == X_AXIS ? travel : 0.0f,
+      axis == Y_AXIS ? travel : 0.0f,
+      axis == Z_AXIS ? travel : 0.0f,
+      clampedSpeed,
+      skipMovementSafetyCheck
+    )) {
+    return -1;
+  }
+
+  // Confirm we triggered
+  if (endstopMonitor.acknowledgeTriggered(endstop)) {
+    logError
+      << F("Unable to move to ")
+      << endstop.name
+      << F(", switch did not trigger")
+      << endl;
+    return -1;
+  }
+
+  // Resync with stepper position
+  s_resyncWithStepper(axis);
   return 0;
 }
 
 int raise() {
-  return moveToLimit(Z_AXIS, 1);
+  return moveToEndstop(vone->endstops.zMax);
 }
 
-int retractFromSwitch(int axis, int direction, float retractDistance) {
+int retractFromSwitch(const Endstop& endstop, float retractDistance) {
   if (logging_enabled) {
     log
-      << F("Retract from switch: ")
-      << (direction < 0 ? '-' : '+')
-      << axis_codes[axis]
+      << F("Retract from ")
+      << endstop.name
       << endl;
   }
 
@@ -291,6 +337,8 @@ int retractFromSwitch(int axis, int direction, float retractDistance) {
   st_synchronize();
 
   // Retract slightly
+  const auto axis = endstop.axis;
+  const auto direction = endstop.direction;
   const float distance = retractDistance < 0 ? s_defaultRetractDistance[axis] : retractDistance;
   if (logging_enabled) {
     log << F("Retract by: ") << distance << endl;
@@ -304,13 +352,15 @@ int retractFromSwitch(int axis, int direction, float retractDistance) {
   }
 
   // Confirm that the switch was released
-  // READ_PIN ?
-  if (endstop_triggered(axis)) {
+  // Note: we check the switch itself, we can not
+  //       rely on the stepper's endstop monitor
+  //       becuase it will not check switches when
+  //       moving away from them.
+  if (endstop.readTriggered()) {
     logError
       << F("Unable to retract from ")
-      << (direction < 0 ? '-' : '+')
-      << axis_codes[axis]
-      << F(" switch, switch did not release during retract movement")
+      << endstop.name
+      << F(", switch did not release during retract movement")
       << endl;
     return -1;
   }

@@ -6,6 +6,7 @@
 
 int multiMultiTouch(
   const char* context,
+  const Endstop& endstop,
   float& result,
   float speed,
   unsigned maxSamples, unsigned maxTouchesPerSample,
@@ -30,6 +31,7 @@ int multiMultiTouch(
     // Measure using multiTouch
     if (multiTouch(
       "measure using multi-touch",
+      endstop,
       samples[i],
       speed,
       maxTouchesPerSample,

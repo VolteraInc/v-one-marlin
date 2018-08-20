@@ -66,7 +66,6 @@ float min_z_y_pos;
 float xypos_x_pos;
 float xypos_y_pos;
 char product_serial_number[15];
-const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
 
 //===========================================================================
 
@@ -97,7 +96,7 @@ void setup() {
   Config_RetrieveSettings();
   Config_RetrieveCalibration();
 
-  // Preallocate space of the VOne then use
+  // Preallocate space for the VOne then use
   // placement new to contruct the object
   static byte voneBuffer[sizeof(VOne)];
   vone = new (voneBuffer) VOne(
@@ -108,7 +107,7 @@ void setup() {
   );
 
   sendHomedStatusUpdate();
-  vone->pins.outputEndStopStatus();
+  vone->endstops.outputStatus();
 
   manufacturing_init();
 
@@ -145,8 +144,9 @@ void loop() {
   periodic_output();     // will generate excessive output
 }
 
-// Stepper uses ISR(TIMER1_COMPA_vect)
-// see stepper.cpp for details
+ISR(TIMER1_COMPA_vect) {
+  vone->stepper.isr();
+}
 
 ISR(TIMER0_COMPB_vect) {
   vone->frequentInterruptibleWork();

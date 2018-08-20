@@ -1,10 +1,15 @@
 #include "Stepper.h"
 
+#include "../endstops/Endstop.h"
+#include "../endstops/EndstopMonitor.h"
+
 #include "../../../planner.h"
 #include "../../../stepper.h"
 #include "../../../serial.h"
 
-Stepper::Stepper() {
+Stepper::Stepper(
+  EndstopMonitor& endstopMonitor
+) : endstopMonitor(endstopMonitor) {
   plan_init();  // Initialize planner
   st_init();    // Initialize stepper
 }

@@ -1,17 +1,21 @@
 #pragma once
 
 #include "../../../MarlinConfig.h"
+#include "../../../Axis.h"
+
+class Endstop;
 
 int touch(
-  int axis, int direction,
+  const Endstop& endstop,
   float speed, float maxTravel,
   float& approach, float& releaseStart, float& releaseEnd
 );
 
-int fastTouch();
+int fastTouch(const Endstop& endstop);
 
 int multiTouch(
   const char* context,
+  const Endstop& endstop,
   float& measurement,
   float speed,
   unsigned numTouches,
@@ -20,6 +24,7 @@ int multiTouch(
 
 int multiMultiTouch(
   const char* context,
+  const Endstop& endstop,
   float& result,
   float speed,
   unsigned maxSamples, unsigned maxTouchesPerSample,
@@ -36,5 +41,5 @@ bool trailingStabilityCheck(
 );
 
 const auto DefaultMeasureAtSwitchReleaseDelay = 0u;
-int measureAtSwitch(int axis, int direction, float maxTravel, float& measurement);
-int measureAtSwitchRelease(int axis, int direction, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms = DefaultMeasureAtSwitchReleaseDelay);
+int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement);
+int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms = DefaultMeasureAtSwitchReleaseDelay);

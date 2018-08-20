@@ -3,15 +3,11 @@
 #include "../../../stepper.h"
 
 #include "../api.h"
+#include "../../vone/VOne.h"
 #include "../../vone/tools/Tool.h"
 
-int asyncMove(tools::Tool& tool, float x, float y, float z, float e, float f) {
-  return tool.enqueueMove(x, y, z, e, f);
-}
-
 int asyncRelativeMove(tools::Tool& tool, float x, float y, float z, float e, float speed_in_mm_per_min) {
-  return asyncMove(
-    tool,
+  return tool.enqueueMove(
     current_position[ X_AXIS ] + x,
     current_position[ Y_AXIS ] + y,
     current_position[ Z_AXIS ] + z,
@@ -21,6 +17,7 @@ int asyncRelativeMove(tools::Tool& tool, float x, float y, float z, float e, flo
 }
 
 int relativeMove(tools::Tool& tool, float x, float y, float z, float e, float speed_in_mm_per_min) {
+  const auto& endstopMonitor = vone->stepper.endstopMonitor;
   if (asyncRelativeMove(tool, x, y, z, e, speed_in_mm_per_min)) {
     return -1;
   }
@@ -28,9 +25,9 @@ int relativeMove(tools::Tool& tool, float x, float y, float z, float e, float sp
 
   // Check for endstop hits in each axis that we moved
   if (
-    (x && endstop_triggered(X_AXIS)) ||
-    (y && endstop_triggered(Y_AXIS)) ||
-    (z && endstop_triggered(Z_AXIS))
+    (x && endstopMonitor.isTriggered(X_AXIS)) ||
+    (y && endstopMonitor.isTriggered(Y_AXIS)) ||
+    (z && endstopMonitor.isTriggered(Z_AXIS))
   ) {
     // relying on endstop reporting and recovery at a higher-level
     log << F("Endstop hit during relative movement") << endl;
@@ -41,13 +38,14 @@ int relativeMove(tools::Tool& tool, float x, float y, float z, float e, float sp
 
 
 int moveXY(tools::Tool& tool, float x, float y, float f) {
-  if (asyncMove(tool, x, y, current_position[Z_AXIS], current_position[E_AXIS], f)) {
+  const auto& endstopMonitor = vone->stepper.endstopMonitor;
+  if (tool.enqueueMove(x, y, current_position[Z_AXIS], current_position[E_AXIS], f)) {
     return -1;
   }
   st_synchronize();
 
   // Check for endstop hits in X or Y-axis
-  if (endstop_triggered(X_AXIS) || endstop_triggered(Y_AXIS)) {
+  if (endstopMonitor.isTriggered(X_AXIS) || endstopMonitor.isTriggered(Y_AXIS)) {
     // relying on endstop reporting and recovery at a higher-level
     log << F("Endstop hit during x,y movement") << endl;
     return -1;
@@ -56,13 +54,14 @@ int moveXY(tools::Tool& tool, float x, float y, float f) {
 }
 
 int moveZ(tools::Tool& tool, float z, float f) {
-  if (asyncMove(tool, current_position[X_AXIS], current_position[Y_AXIS], z, current_position[E_AXIS], f)) {
+  const auto& endstopMonitor = vone->stepper.endstopMonitor;
+  if (tool.enqueueMove(current_position[X_AXIS], current_position[Y_AXIS], z, current_position[E_AXIS], f)) {
     return -1;
   }
   st_synchronize();
 
   // Check for an endstop hit in Z-axis
-  if (endstop_triggered(Z_AXIS)) {
+  if (endstopMonitor.isTriggered(Z_AXIS)) {
     // relying on endstop reporting and recovery at a higher-level
     log << F("Endstop hit during z movement") << endl;
     return -1;
@@ -111,11 +110,4 @@ int centerTool(tools::Tool& tool) {
   // Overwrite the current position with constant position.
   setPosition(xypos_x_pos, xypos_y_pos, current_position[Z_AXIS], current_position[E_AXIS]);
   return 0;
-}
-
-int retractToolConditionally(float distance, float additionalRetractDistance) {
-  if (additionalRetractDistance == NoRetract) {
-    return 0;
-  }
-  return retractFromSwitch(Z_AXIS, -1, distance + additionalRetractDistance);
 }

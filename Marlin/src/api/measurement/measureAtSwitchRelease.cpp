@@ -6,12 +6,22 @@
 #include "../../utils/rawToVoltage.h"
 #include "../movement/movement.h"
 
-#include "../../vone/vone.h"
+#include "../../vone/VOne.h"
 
-static unsigned s_countTriggers(unsigned maxSamples) {
+static unsigned s_countTriggers(const Endstop& endstop, unsigned maxSamples) {
   const auto startTime = millis();
   auto count = 0u;
   float voltages[maxSamples];
+
+  if (endstop.pin != P_TOP_PIN) {
+    logWarning
+      << F("Sampling voltage of ")
+      << endstop.name
+      << F(" is not supported, returning 0")
+      << endl;
+    return 0;
+  }
+
   for (auto i = 0u; i < maxSamples; ++i) {
     // HACK: use probe function since we only use this function for probing right now.
     // if we ever use it for other axes we can figure out a solution then
@@ -34,31 +44,26 @@ static unsigned s_countTriggers(unsigned maxSamples) {
   return count;
 }
 
-// TODO int analogMeasureAtSwitch(int axis, int direction, unsigned pin, float initialApporachSpeed, float& digitallyTriggeredAt, float& fullyTriggeredAt, float& releaseStartedAt, float& releaseCompletedAt) {
-//   // Might based this on measureAtSwitchRelease, but allow back off too
-//
-//   // Disable digital trigger detection
-//
-//   return -1;
-// }
-
-int measureAtSwitchRelease(int axis, int direction, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
+int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
   if (logging_enabled) {
-    log << F("Measure at switch retract: ") << (direction < 0 ? '-' : '+') << axis_codes[axis] << endl;
+    log << F("Measure at switch release: ") << endstop.name << endl;
   }
+
+  const auto axis = endstop.axis;
+  const auto direction = endstop.direction;
 
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
   // Note: 1mm should be more than enough for a release
   const auto maxTravel = 1u;
-  const auto maxSteps = maxTravel * axis_steps_per_unit[axis];
+  const auto maxSteps = millimetersToSteps(maxTravel, axis);
   const auto numSamples = 20u;
   bool releaseStarted = false;
-  const float distance = 1 / axis_steps_per_unit[axis];
+  const float distance = stepsToMillimeters(1, axis);
   for (auto i = 0u; i < maxSteps; ++i) {
     // Examine triggered status
-    const auto count = s_countTriggers(numSamples);
+    const auto count = s_countTriggers(endstop, numSamples);
     if (count < numSamples) {
       // Set release start position, if we haven't already
       if (!releaseStarted) {
@@ -94,8 +99,8 @@ int measureAtSwitchRelease(int axis, int direction, float& releaseStartedAt, flo
 
   logError
     << F("Unable to measure at release of ")
-    << (direction < 0 ? '-' : '+') << axis_codes[axis]
-    << F(" switch, switch did not release after ") << maxTravel
+    << endstop.name
+    << F(", switch did not release after ") << maxTravel
     << F("mm of travel")
     << endl;
 

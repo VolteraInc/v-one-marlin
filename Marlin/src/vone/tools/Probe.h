@@ -2,13 +2,14 @@
 #include <Arduino.h>
 #include "Tool.h"
 
+class Endstop;
 class PTopPin;
 
 namespace tools {
 
 class Probe : public Tool {
   public:
-    Probe(Stepper& stepper, PTopPin& pin);
+    Probe(Stepper& stepper, PTopPin& pin, const Endstop& toolSwitch);
 
     // Retract constants
     // Note: Retract enough to ensure we don't crash when
@@ -45,6 +46,7 @@ class Probe : public Tool {
   private:
     float m_probeDisplacement = 0.0f;
     PTopPin& m_pin;
+    const Endstop& m_toolSwitch;
     bool m_heightSafetyEnabled = false;
     unsigned int m_numHeightSamples = 0u;
     float m_maxSampledHeight = -INFINITY;

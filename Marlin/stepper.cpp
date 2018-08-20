@@ -27,9 +27,10 @@ and Philipp Tiefenbacher. */
 #include "Configuration.h"
 #include "planner.h"
 #include "speed_lookuptable.h"
-#include <SPI.h>
 
 #include "src/vone/VOne.h"
+#include "src/vone/stepper/digipots.h"
+#include "src/vone/endstops/EndstopMonitor.h"
 
 //===========================================================================
 //=============================public variables  ============================
@@ -39,9 +40,6 @@ block_t *current_block;  // A pointer to the block currently being traced
 //===========================================================================
 //=============================private variables ============================
 //===========================================================================
-
-// Variables used by The Stepper Driver Interrupt
-static unsigned char out_bits;        // The next stepping-bits to be output
 
 // Counter variables for the bresenham line tracer
 static long counter_x, counter_y, counter_z, counter_e;
@@ -53,24 +51,7 @@ static char step_loops;
 static unsigned short OCR1A_nominal;
 static unsigned short step_loops_nominal;
 
-volatile long endstops_trigsteps[3]={0,0,0};
-volatile long endstops_stepsTotal,endstops_stepsDone;
-static volatile bool endstop_x_hit=false;
-static volatile bool endstop_y_hit=false;
-static volatile bool endstop_z_hit=false;
-
-static bool old_x_min_endstop=false;
-static bool old_x_max_endstop=false;
-static bool old_y_min_endstop=false;
-static bool old_y_max_endstop=false;
-static bool old_z_min_endstop=false;
-static bool old_z_max_endstop=false;
-
-static volatile bool p_top_enabled = false;
-static volatile bool calibration_plate_enabled = false;
-
 volatile long count_position[NUM_AXIS] = { 0, 0, 0, 0};
-volatile signed char count_direction[NUM_AXIS] = { 1, 1, 1, 1};
 
 //===========================================================================
 //=============================functions         ============================
@@ -149,67 +130,6 @@ asm volatile ( \
 #define ENABLE_STEPPER_DRIVER_INTERRUPT()  TIMSK1 |= (1<<OCIE1A)
 #define DISABLE_STEPPER_DRIVER_INTERRUPT() TIMSK1 &= ~(1<<OCIE1A)
 
-bool endstop_triggered(int axis) {
-  bool triggered = false;
-  CRITICAL_SECTION_START;
-    switch (axis) {
-      case X_AXIS: triggered = endstop_x_hit; break;
-      case Y_AXIS: triggered = endstop_y_hit; break;
-      case Z_AXIS: triggered = endstop_z_hit; break;
-    }
-  CRITICAL_SECTION_END;
-  return triggered;
-}
-
-/// Returns true if an endstop was hit
-bool readAndResetEndstops(bool triggered[3], long stepsWhenTriggered[3]) {
-  CRITICAL_SECTION_START;
-    // Read and reset hit flags
-    triggered[ X_AXIS ] = endstop_x_hit;
-    triggered[ Y_AXIS ] = endstop_y_hit;
-    triggered[ Z_AXIS ] = endstop_z_hit;
-    endstop_x_hit = false;
-    endstop_y_hit = false;
-    endstop_z_hit = false;
-
-    // Read and reset stepper location when triggered
-    stepsWhenTriggered[ X_AXIS ] = endstops_trigsteps[ X_AXIS ];
-    stepsWhenTriggered[ Y_AXIS ] = endstops_trigsteps[ Y_AXIS ];
-    stepsWhenTriggered[ Z_AXIS ] = endstops_trigsteps[ Z_AXIS ];
-    endstops_trigsteps[ X_AXIS ] = 0;
-    endstops_trigsteps[ Y_AXIS ] = 0;
-    endstops_trigsteps[ Z_AXIS ] = 0;
-  CRITICAL_SECTION_END;
-
-  return (
-    triggered[ X_AXIS ] ||
-    triggered[ Y_AXIS ] ||
-    triggered[ Z_AXIS ]
-  );
-}
-
-void clear_endstop(int axis) {
-  CRITICAL_SECTION_START;
-    switch (axis) {
-      case X_AXIS: endstop_x_hit = false; break;
-      case Y_AXIS: endstop_y_hit = false; break;
-      case Z_AXIS: endstop_z_hit = false; break;
-    }
-  CRITICAL_SECTION_END;
-}
-
-void enable_p_top(bool enable) {
-  CRITICAL_SECTION_START;
-    p_top_enabled = enable;
-  CRITICAL_SECTION_END;
-}
-
-void enable_calibration_plate(bool enable) {
-  CRITICAL_SECTION_START;
-    calibration_plate_enabled = enable;
-  CRITICAL_SECTION_END;
-}
-
   //         __________________________
   //        /|                        |\     _________________         ^
   //       / |                        | \   /|               |\        |
@@ -225,11 +145,6 @@ void enable_calibration_plate(bool enable) {
   //  first block->accelerate_until step_events_completed, then keeps going at constant speed until
   //  step_events_completed reaches block->decelerate_after after which it decelerates until the trapezoid generator is reset.
   //  The slope of acceleration is calculated with the leib ramp alghorithm.
-
-void st_wake_up() {
-  // TCNT1 = 0;
-  ENABLE_STEPPER_DRIVER_INTERRUPT();
-}
 
 FORCE_INLINE unsigned short calc_timer(unsigned short step_rate) {
 
@@ -295,7 +210,11 @@ FORCE_INLINE void trapezoid_generator_reset() {
 
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse.
 // It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately.
-ISR(TIMER1_COMPA_vect) {
+void stepper_isr(EndstopMonitor& endstopMonitor) {
+  static signed char xDir = 1;
+  static signed char yDir = 1;
+  static signed char zDir = 1;
+  static signed char eDir = 1;
 
   // If there is no current block, attempt to pop one from the buffer
   if (current_block == NULL) {
@@ -309,177 +228,93 @@ ISR(TIMER1_COMPA_vect) {
       counter_z = counter_x;
       counter_e = counter_x;
       step_events_completed = 0;
+
+      // Set the direction
+      const auto direction_bits = current_block->direction_bits;
+      xDir = TEST(direction_bits, X_AXIS) ? -1 : 1;
+      yDir = TEST(direction_bits, Y_AXIS) ? -1 : 1;
+      zDir = TEST(direction_bits, Z_AXIS) ? -1 : 1;
+      eDir = TEST(direction_bits, E_AXIS) ? -1 : 1;
+
+      WRITE(X_DIR_PIN, xDir == -1 ? INVERT_X_DIR : !INVERT_X_DIR);
+      WRITE(Y_DIR_PIN, yDir == -1 ? INVERT_Y_DIR : !INVERT_Y_DIR);
+      WRITE(Z_DIR_PIN, zDir == -1 ? INVERT_Z_DIR : !INVERT_Z_DIR);
+      WRITE(E_DIR_PIN, eDir == -1 ? INVERT_E_DIR : !INVERT_E_DIR);
     } else {
       OCR1A = 2000; // 1kHz.
     }
   }
 
   if (current_block != NULL) {
-    // Set directions TO DO This should be done once during init of trapezoid. Endstops -> interrupt
-    out_bits = current_block->direction_bits;
 
-    // Set the direction bits
-    if ((out_bits & (1<<X_AXIS)) != 0) {
-      WRITE(X_DIR_PIN, INVERT_X_DIR);
-      count_direction[X_AXIS] = -1;
+    // Detect end-stop hits
+    // Note: only check in the direction(s) we are moving
+    bool triggeredInX = false;
+    bool triggeredInY = false;
+    bool triggeredInZ = false;
+    if (current_block->steps_x > 0) {
+      endstopMonitor.onSteppingInX(xDir, count_position, triggeredInX);
+    }
+    if (current_block->steps_y > 0) {
+      endstopMonitor.onSteppingInY(yDir, count_position, triggeredInY);
+    }
+    if (current_block->steps_z > 0) {
+      endstopMonitor.onSteppingInZ(zDir, count_position, triggeredInZ);
+    }
+
+    if (triggeredInX || triggeredInY || triggeredInZ) {
+      // Treat the block as complete
+      // Note: Ensures timing is restored and current_block is removed
+      step_events_completed = current_block->step_event_count;
+
+      // Flush any remaining moves
+      // Note: If this hit was expected then there should not be any more moves queued
+      //       If it was not then any queued moves no longer make sense
+      quickStop();
     } else {
-      WRITE(X_DIR_PIN, !INVERT_X_DIR);
-      count_direction[X_AXIS] = 1;
-    }
-    if ((out_bits & (1<<Y_AXIS)) != 0) {
-      WRITE(Y_DIR_PIN, INVERT_Y_DIR);
-      count_direction[Y_AXIS] = -1;
-    } else {
-      WRITE(Y_DIR_PIN, !INVERT_Y_DIR);
-      count_direction[Y_AXIS] = 1;
-    }
 
-    // Set direction to check limit switches / endstops.
-    // Note: adjustments made here to monitor the correct XY-positioner limit switches
-    if ((out_bits & (1<<X_AXIS)) != 0) {   // stepping along -X axis
-      bool x_min_endstop = READ_PIN(X_MIN) || READ_PIN(XY_MIN_X); // X- direction, also monitors XY_min_X
-      if (x_min_endstop && old_x_min_endstop && (current_block->steps_x > 0)) {
-        endstops_trigsteps[X_AXIS] = count_position[X_AXIS];
-        endstop_x_hit = true;
-        step_events_completed = current_block->step_event_count;
-      }
-      old_x_min_endstop = x_min_endstop;
-    } else { // +direction
-      bool x_max_endstop = READ_PIN(XY_MAX_X); // X+ direction, also monitors XY_max_X
-      if (x_max_endstop && old_x_max_endstop && (current_block->steps_x > 0)){
-        endstops_trigsteps[X_AXIS] = count_position[X_AXIS];
-        endstop_x_hit = true;
-        step_events_completed = current_block->step_event_count;
-      }
-      old_x_max_endstop = x_max_endstop;
-    }
+      // Take multiple steps per interrupt (For high speed moves)
+      for (int8_t i = 0; i < step_loops; i++) {
+        counter_x += current_block->steps_x;
+        if (counter_x > 0) {
+          WRITE(X_STEP_PIN, !INVERT_X_STEP_PIN);
+          counter_x -= current_block->step_event_count;
+          count_position[X_AXIS] += xDir;
+          WRITE(X_STEP_PIN, INVERT_X_STEP_PIN);
+        }
 
-    if ((out_bits & (1<<Y_AXIS)) != 0) {   // -direction
-      bool y_min_endstop = READ_PIN(Y_MIN) || READ_PIN(XY_MIN_Y); // Y- direction, also monitors XY_min_Y
-      if (y_min_endstop && old_y_min_endstop && (current_block->steps_y > 0)) {
-        endstops_trigsteps[Y_AXIS] = count_position[Y_AXIS];
-        endstop_y_hit = true;
-        step_events_completed = current_block->step_event_count;
-      }
-      old_y_min_endstop = y_min_endstop;
-    } else { // +direction
-      bool y_max_endstop = READ_PIN(XY_MAX_Y);
-      if (y_max_endstop && old_y_max_endstop && (current_block->steps_y > 0)){
-        endstops_trigsteps[Y_AXIS] = count_position[Y_AXIS];
-        endstop_y_hit = true;
-        step_events_completed = current_block->step_event_count;
-      }
-      old_y_max_endstop = y_max_endstop;
-    }
+        counter_y += current_block->steps_y;
+        if (counter_y > 0) {
+          WRITE(Y_STEP_PIN, !INVERT_Y_STEP_PIN);
+          counter_y -= current_block->step_event_count;
+          count_position[Y_AXIS] += yDir;
+          WRITE(Y_STEP_PIN, INVERT_Y_STEP_PIN);
+        }
 
-    if ((out_bits & (1<<Z_AXIS)) != 0) { // -direction
-      REV_Z_DIR();
-      count_direction[Z_AXIS] = -1;
+        counter_z += current_block->steps_z;
+        if (counter_z > 0) {
+          WRITE(Z_STEP_PIN, !INVERT_Z_STEP_PIN);
+          counter_z -= current_block->step_event_count;
+          count_position[Z_AXIS] += zDir;
+          WRITE(Z_STEP_PIN, INVERT_Z_STEP_PIN);
+        }
 
-      bool p_top = false;
-      if (p_top_enabled) {
-        if (vone->pins.ptop.readDigitalValue(p_top)) {
-          // Treat read failures as TRIGGERED, so that motion stops
-          // Note: not sure if this is the right thing to do, but it's
-          // safer than allowing motion to continue. Also, if reads are
-          // failing there is a bug
-          p_top = true;
+        counter_e += current_block->steps_e;
+        if (counter_e > 0) {
+          WRITE(E_STEP_PIN, !INVERT_E_STEP_PIN);
+          counter_e -= current_block->step_event_count;
+          count_position[E_AXIS] += eDir;
+          WRITE(E_STEP_PIN, INVERT_E_STEP_PIN);
+        }
+
+        step_events_completed += 1;
+        if (step_events_completed >= current_block->step_event_count) {
+          break;
         }
       }
-
-      bool z_min = READ_PIN(Z_MIN);
-      bool p_bot = calibration_plate_enabled ? READ_PIN(P_BOT) : false;
-
-      bool z_min_endstop = z_min || p_top || p_bot;
-      if (z_min_endstop) {
-        // a[idx++] = count_position[Z_AXIS];
-        if (z_min_endstop && old_z_min_endstop && (current_block->steps_z > 0)) {
-          endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
-          endstop_z_hit = true;
-          step_events_completed = current_block->step_event_count;
-
-          // log 
-          //   << "z_min" << z_min
-          //   << " calibration_plate_enabled" << calibration_plate_enabled
-          //   << " p_bot" << p_bot
-          //   << " p_top_enabled" << p_top_enabled
-          //   << " p_top" << p_top
-          //   << endl;
-
-          // for (unsigned int i = 0; i < 5; ++i) {
-          //   log << "a[" << i << "] = " << a[i] << ", " << endl;
-          //   a[i] = 0;
-          // }
-          // idx = 0;
-        }
-      }
-      old_z_min_endstop = z_min_endstop;
-
-    } else { // +direction
-      NORM_Z_DIR();
-      count_direction[Z_AXIS] = 1;
-
-      bool z_max_endstop = READ_PIN(Z_MAX);
-      if (z_max_endstop && old_z_max_endstop && (current_block->steps_z > 0)) {
-        endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
-        endstop_z_hit = true;
-        step_events_completed = current_block->step_event_count;
-
-        // log 
-        //   << "z_max_endstop" << z_max_endstop
-        //   << endl;
-      }
-      old_z_max_endstop = z_max_endstop;
     }
 
-    if ((out_bits & (1<<E_AXIS)) != 0) {  // -direction
-      REV_E_DIR();
-      count_direction[E_AXIS] = -1;
-    } else { // +direction
-      NORM_E_DIR();
-      count_direction[E_AXIS] = 1;
-    }
-
-    for (int8_t i = 0; i < step_loops; i++) { // Take multiple steps per interrupt (For high speed moves)
-      counter_x += current_block->steps_x;
-      if (counter_x > 0) {
-        WRITE(X_STEP_PIN, !INVERT_X_STEP_PIN);
-        counter_x -= current_block->step_event_count;
-        count_position[X_AXIS]+=count_direction[X_AXIS];
-        WRITE(X_STEP_PIN, INVERT_X_STEP_PIN);
-      }
-
-      counter_y += current_block->steps_y;
-      if (counter_y > 0) {
-        WRITE(Y_STEP_PIN, !INVERT_Y_STEP_PIN);
-        counter_y -= current_block->step_event_count;
-        count_position[Y_AXIS]+=count_direction[Y_AXIS];
-        WRITE(Y_STEP_PIN, INVERT_Y_STEP_PIN);
-      }
-
-      counter_z += current_block->steps_z;
-      if (counter_z > 0) {
-        WRITE_Z_STEP(!INVERT_Z_STEP_PIN);
-        counter_z -= current_block->step_event_count;
-        count_position[Z_AXIS]+=count_direction[Z_AXIS];
-        WRITE_Z_STEP(INVERT_Z_STEP_PIN);
-      }
-
-      counter_e += current_block->steps_e;
-      if (counter_e > 0) {
-        WRITE_E_STEP(!INVERT_E_STEP_PIN);
-        counter_e -= current_block->step_event_count;
-        count_position[E_AXIS]+=count_direction[E_AXIS];
-        WRITE_E_STEP(INVERT_E_STEP_PIN);
-      }
-
-      step_events_completed += 1;
-      if (step_events_completed >= current_block->step_event_count) {
-        break;
-      }
-    }
-
-    // Calculare new timer value
+    // Calculate new timer value
     unsigned short timer;
     unsigned short step_rate;
     if (step_events_completed <= (unsigned long int)current_block->accelerate_until) {
@@ -536,59 +371,6 @@ void st_init() {
   // Initialize Digipot Motor Current
   digiPotInit();
 
-  // Initialize Dir Pins
-  SET_OUTPUT(X_DIR_PIN);
-  SET_OUTPUT(Y_DIR_PIN);
-  SET_OUTPUT(Z_DIR_PIN);
-  SET_OUTPUT(E0_DIR_PIN);
-
-  // Initialize Enable Pins - steppers default to disabled.
-  SET_OUTPUT(X_ENABLE_PIN);  if (!X_ENABLE_ON) { WRITE(X_ENABLE_PIN,  HIGH); }
-  SET_OUTPUT(Y_ENABLE_PIN);  if (!Y_ENABLE_ON) { WRITE(Y_ENABLE_PIN,  HIGH); }
-  SET_OUTPUT(Z_ENABLE_PIN);  if (!Z_ENABLE_ON) { WRITE(Z_ENABLE_PIN,  HIGH); }
-  SET_OUTPUT(E0_ENABLE_PIN); if (!E_ENABLE_ON) { WRITE(E0_ENABLE_PIN, HIGH); }
-
-  // Endstops and pullups
-  SET_INPUT(X_MIN_PIN);
-  SET_INPUT(Y_MIN_PIN);
-  SET_INPUT(Z_MIN_PIN);
-
-  SET_INPUT(P_BOT_PIN);
-
-  SET_INPUT(Z_MAX_PIN);
-
-  SET_INPUT(XY_MIN_X_PIN);
-  SET_INPUT(XY_MAX_X_PIN);
-  SET_INPUT(XY_MIN_Y_PIN);
-  SET_INPUT(XY_MAX_Y_PIN);
-
-  // LED Pins
-  SET_OUTPUT(LED_RED_PIN);
-  WRITE(LED_RED_PIN, LOW);
-
-  SET_OUTPUT(LED_GREEN_PIN);
-  WRITE(LED_GREEN_PIN, LOW);
-
-  SET_OUTPUT(LED_BLUE_PIN);
-  WRITE(LED_BLUE_PIN, LOW);
-
-  // Initialize Step Pins
-  SET_OUTPUT(X_STEP_PIN);
-  WRITE(X_STEP_PIN, INVERT_X_STEP_PIN);
-  disable_x();
-
-  SET_OUTPUT(Y_STEP_PIN);
-  WRITE(Y_STEP_PIN, INVERT_Y_STEP_PIN);
-  disable_y();
-
-  SET_OUTPUT(Z_STEP_PIN);
-  WRITE(Z_STEP_PIN, INVERT_Z_STEP_PIN);
-  disable_z();
-
-  SET_OUTPUT(E0_STEP_PIN);
-  WRITE(E0_STEP_PIN, INVERT_E_STEP_PIN);
-  disable_e0();
-
   // waveform generation = 0100 = CTC
   TCCR1B &= ~(1<<WGM13);
   TCCR1B |=  (1<<WGM12);
@@ -617,51 +399,30 @@ void st_synchronize() {
     periodic_work();
   }
   if (logging_enabled) {
-    log << F("synchonized") << endl;
+    log << F("synchronized") << endl;
   }
 }
 
 void st_set_position(const long& x, const long& y, const long& z, const long& e) {
-  CRITICAL_SECTION_START;
-    count_position[X_AXIS] = x;
-    count_position[Y_AXIS] = y;
-    count_position[Z_AXIS] = z;
-    count_position[E_AXIS] = e;
-  CRITICAL_SECTION_END;
+  ScopedInterruptDisable sid;
+  count_position[X_AXIS] = x;
+  count_position[Y_AXIS] = y;
+  count_position[Z_AXIS] = z;
+  count_position[E_AXIS] = e;
 }
 
 void st_set_e_position(const long& e) {
-  CRITICAL_SECTION_START;
-    count_position[E_AXIS] = e;
-  CRITICAL_SECTION_END;
+  ScopedInterruptDisable sid;
+  count_position[E_AXIS] = e;
 }
 
-long st_get_position(uint8_t axis) {
-  long count_pos;
-  CRITICAL_SECTION_START;
-    count_pos = count_position[axis];
-  CRITICAL_SECTION_END;
-  return count_pos;
+long st_get_position(AxisEnum axis) {
+  ScopedInterruptDisable sid;
+  return count_position[axis];
 }
 
-float st_get_position_mm(uint8_t axis) {
-  // To get our actual global position in mm based on our number of steps
-  // we need to consider X and Y axis and do reverse transformations
-  float position_mm = 0.0;
-  if (axis == X_AXIS) {
-    float steps_x = st_get_position(X_AXIS);
-    position_mm = steps_x * calib_x_scale * calib_cos_theta / axis_steps_per_unit[X_AXIS];
-
-  } else if (axis == Y_AXIS) {
-    float steps_x = st_get_position(X_AXIS);
-    float steps_y = st_get_position(Y_AXIS);
-    position_mm = calib_x_scale * steps_x * sin(atan(calib_tan_theta)) / axis_steps_per_unit[X_AXIS] + calib_y_scale * steps_y / axis_steps_per_unit[Y_AXIS];
-
-  } else { // Same case for both Z and E
-    position_mm = st_get_position(axis) / axis_steps_per_unit[axis];
-  }
-
-  return position_mm;
+float st_get_position_mm(AxisEnum axis) {
+  return stepsToPositionInAxis(axis, count_position);
 }
 
 void quickStop() {
@@ -671,52 +432,4 @@ void quickStop() {
   }
   current_block = NULL;
   ENABLE_STEPPER_DRIVER_INTERRUPT();
-}
-
-void digiPotInit() { //Initialize Digipot Motor Current
-  const uint8_t digipot_motor_current[] = DIGIPOT_MOTOR_CURRENT;
-  SPI.begin();
-  pinMode(DIGIPOTSS_PIN, OUTPUT);
-
-    // Cycle the SS pin - make sure digiPot initializes correctly.
-  digitalWrite(DIGIPOTSS_PIN,LOW);
-  digitalWrite(DIGIPOTSS_PIN,HIGH);
-
-  for (int i = 0; i < 4; ++i) {
-    digiPotSetCurrent(i, digipot_motor_current[i]);
-  }
-}
-
-void digiPotSetCurrent(uint8_t axis, uint8_t current) {
-  const uint8_t digipot_addrs[] = DIGIPOT_ADDRESS;
-  digiPotWrite(digipot_addrs[axis], current);
-}
-
-uint8_t digiPotGetCurrent(uint8_t axis) {
-  const uint8_t digipot_addrs[] = DIGIPOT_ADDRESS;
-  return digiPotRead(digipot_addrs[axis]);
-}
-
-// Refer to http://ww1.microchip.com/downloads/en/DeviceDoc/22242A.pdf
-// To get understanding of write/read codes and addresses.
-
-void digiPotWrite(uint8_t address, uint8_t value) {
-  address = address + 0x00; // 0x00 adds 'write' code. (no action here...)
-  SPI.beginTransaction(SPISettings(3000000, MSBFIRST, SPI_MODE0));
-  digitalWrite(DIGIPOTSS_PIN,LOW); // take the SS pin low to select the chip
-  SPI.transfer(address); //  send in the address and value via SPI:
-  SPI.transfer(value);
-  digitalWrite(DIGIPOTSS_PIN,HIGH); // take the SS pin high to de-select the chip:
-  SPI.endTransaction();
-}
-
-uint8_t digiPotRead(uint8_t address) {
-  address =  address + 0x0C; // 0x0C adds 'read' code.
-  SPI.beginTransaction(SPISettings(3000000, MSBFIRST, SPI_MODE0));
-  digitalWrite(DIGIPOTSS_PIN,LOW); // take the SS pin low to select the chip
-  SPI.transfer(address);
-  uint8_t val = SPI.transfer(0x00); // Send dummy to clock in value.:
-  digitalWrite(DIGIPOTSS_PIN,HIGH); // take the SS pin high to de-select the chip:
-  SPI.endTransaction();
-  return val;
 }

@@ -7,12 +7,13 @@
 #include "serial.h"
 #include "fastio.h"
 #include "pins.h"
+#include "Axis.h"
 
 // Code that blocks/spins/waits should call this so that things like heating
 // and motor inactivity properly monitored
 void periodic_work();
 
-void setHomedState(int axis, int value);
+void setHomedState(AxisEnum axis, int value);
 #define enable_x() WRITE(X_ENABLE_PIN, X_ENABLE_ON)
 #define disable_x() { WRITE(X_ENABLE_PIN,!X_ENABLE_ON); setHomedState(X_AXIS, 0); }
 
@@ -22,10 +23,8 @@ void setHomedState(int axis, int value);
 #define enable_z() WRITE(Z_ENABLE_PIN, Z_ENABLE_ON)
 #define disable_z() { WRITE(Z_ENABLE_PIN,!Z_ENABLE_ON); setHomedState(Z_AXIS, 0); }
 
-#define enable_e0() WRITE(E0_ENABLE_PIN, E_ENABLE_ON)
-#define disable_e0() WRITE(E0_ENABLE_PIN,!E_ENABLE_ON)
-
-enum AxisEnum {X_AXIS=0, Y_AXIS=1, Z_AXIS=2, E_AXIS=3};
+#define enable_e() WRITE(E_ENABLE_PIN, E_ENABLE_ON)
+#define disable_e() WRITE(E_ENABLE_PIN,!E_ENABLE_ON)
 
 extern const float homing_feedrate[];
 extern bool axis_relative_modes[];
@@ -42,7 +41,6 @@ extern float min_z_y_pos;
 extern float xypos_x_pos;
 extern float xypos_y_pos;
 
-extern const char axis_codes[NUM_AXIS];
 
 
 void setStepperInactiveDuration(unsigned long duration);

@@ -18,6 +18,7 @@
 
 int multiTouch(
   const char* context,
+  const Endstop& endstop,
   float& result,
   float speed,
   unsigned maxTouches,
@@ -41,7 +42,7 @@ int multiTouch(
   for (auto i = 0u; i < maxTouches; ++i) {
     // Measure
     if (touch(
-      Z_AXIS, -1,
+      endstop,
       speed, maxDownwardTravel,
       approaches[i], releaseStarts[i], releaseEnds[i]
     )) {

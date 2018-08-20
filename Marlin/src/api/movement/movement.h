@@ -1,11 +1,13 @@
 #pragma once
 
+class Endstop;
 namespace tools {
   class Tool;
 }
 
 #include "Point2d.h"
 #include "Point3d.h"
+#include "../../../Axis.h"
 
 const int useDefaultFeedrate = -1;
 const float useDefaultMaxTravel = 9999.9f;
@@ -15,7 +17,6 @@ float getDefaultFeedrate();
 int outputMovementStatus();
 
 // Enqueue movements (do not wait for movement to finish)
-int asyncMove(tools::Tool& tool, float x, float y, float z, float e, float f);
 int asyncRelativeMove(tools::Tool& tool, float x, float y, float z, float e, float f = useDefaultFeedrate);
 
 // Absolute movement (synchronized)
@@ -26,16 +27,16 @@ int moveZ(tools::Tool& tool, float z, float f = useDefaultFeedrate);
 int relativeMove(tools::Tool& tool, float x, float y, float z, float e, float f = useDefaultFeedrate);
 
 // Move until switch hit
-int moveToLimit(int axis, int direction, float f = useDefaultFeedrate, float maxTravel = useDefaultMaxTravel);
+int moveToLimit(AxisEnum axis, int direction, float f = useDefaultFeedrate, float maxTravel = useDefaultMaxTravel);
+int moveToEndstop(const Endstop& endstop, float f = useDefaultFeedrate, float maxTravel = useDefaultMaxTravel);
 int raise();
-
 
 // Set planner position
 int setPositionEOnly(float e);
 int setPosition(float x, float y, float z, float e);
 
 
-int retractFromSwitch(int axis, int direction, float retractDistance = useDefaultRetractDistance);
+int retractFromSwitch(const Endstop& endstop, float retractDistance = useDefaultRetractDistance);
 
 
 // TODO: use a namespace, e.g. movement::raw movement::internal
@@ -52,6 +53,10 @@ int ensureHomedInXY(tools::Tool& tool);
 int centerTool(tools::Tool& tool);
 
 const float NoRetract = -9999.0f;
-int retractToolConditionally(float distance, float additionalRetractDistance);
 
 int confirmAttached(const char* context, tools::Tool& tool);
+
+// step/millimeter conversion
+extern float axis_steps_per_unit[4];
+float stepsToMillimeters(long step, AxisEnum axis);
+long millimetersToSteps(float mm, AxisEnum axis);

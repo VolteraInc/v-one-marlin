@@ -1,13 +1,14 @@
 #pragma once
 
+#include "movement/movement.h"
+#include "measurement/measurement.h"
+#include "probing/probing.h"
+
+class Endstop;
 namespace tools {
   class Tool;
   class Probe;
 }
-
-#include "movement/movement.h"
-#include "measurement/measurement.h"
-#include "probing/probing.h"
 
 // Homing
 bool homedXY();
@@ -15,17 +16,16 @@ int homeXY(tools::Tool& tool);
 int homeZ(tools::Tool& tool);
 bool homedZ();
 int rawHome(tools::Tool& tool, bool homeX = true, bool homeY = true, bool homeZ = true);
-int getHomedState(int axis);
-void setHomedState(int axis, int value);
+int getHomedState(AxisEnum axis);
+void setHomedState(AxisEnum axis, int value);
 void sendHomedStatusUpdate();
 int moveToZSwitchXY(tools::Tool& tool);
 
 // XY positioner
 const float defaultXyPositionerCycles = 2;
-enum HowToMoveToZ { useConfiguredZ, usePlateBackOffForZ };
-int xyPositionerTouch(tools::Tool& tool, int axis, int direction, float& measurement);
+enum HowToMoveToZ { useConfiguredZ, usePlateBackOffForZ, skipMoveInZ };
+int xyPositionerTouch(const Endstop& endstop, float& measurement);
 int xyPositionerFindCenter(tools::Tool& tool, long cycles, float& centerX, float& centerY, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
-const bool skipMoveInZ = true;
 int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
 
 // Calibration plate

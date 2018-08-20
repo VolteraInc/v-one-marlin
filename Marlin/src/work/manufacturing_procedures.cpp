@@ -1,7 +1,7 @@
 #include "../../Marlin.h"
 #include "../api/api.h"
 #include "../api/diagnostics/diagnostics.h"
-#include "../vone/vone.h"
+#include "../vone/VOne.h"
 
 static auto s_runAt = 0ul;
 
@@ -11,7 +11,7 @@ void manufacturing_init() {
 
 static int s_run() {
   if (vone->toolBox.probe.attached()) {
-    return runCalibrateSwitchPositions(vone->toolBox.probe);
+    return runCalibrateSwitches(vone->toolBox.probe);
   } else if (vone->toolBox.nullTool.attached()) {
     return runBurnInSequence(vone->toolBox.nullTool);
   } else {

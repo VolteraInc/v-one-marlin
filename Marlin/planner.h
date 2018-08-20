@@ -40,7 +40,6 @@ typedef struct {
   long decelerate_after;                    // The index of the step event on which to start decelerating
   long acceleration_rate;                   // The acceleration rate used for acceleration calculation
   unsigned char direction_bits;             // The direction bit set for this block (refers to *_DIRECTION_BIT in config.h)
-  unsigned char active_extruder;            // Selects the active extruder
 
   // Fields used by the motion planner to manage acceleration
 //  float speed_x, speed_y, speed_z, speed_e;        // Nominal mm/sec for each axis
@@ -57,7 +56,6 @@ typedef struct {
   unsigned long initial_rate;                        // The jerk-adjusted step rate at start of block
   unsigned long final_rate;                          // The minimal rate at exit
   unsigned long acceleration_st;                     // acceleration steps/sec^2
-  unsigned long fan_speed;
   volatile char busy;
 } block_t;
 
@@ -80,7 +78,6 @@ uint8_t movesplanned(); //return the nr of buffered moves
 
 extern unsigned long minsegmenttime;
 extern float max_feedrate[4]; // set the max speeds
-extern float axis_steps_per_unit[4];
 extern unsigned long max_acceleration_units_per_sq_second[4]; // Use M201 to override by software
 extern float minimumfeedrate;
 extern float acceleration;         // Normal acceleration mm/s^2  THIS IS THE DEFAULT ACCELERATION for all moves. M204 SXXXX

@@ -3,18 +3,18 @@
 #include "../../Marlin.h" // Z_AXIS
 #include "../../stepper.h" // enable_calibration_plate()
 #include "../vone/tools/Probe.h"
+#include "../vone/VOne.h"
 
 static const float MinDisplacement = 0.050f;
 static const float MaxDisplacement = 0.500f;
 
 static int s_measureCalibrationPlateZ(float& plateZ, float maxTravel) {
   log << F("Measuring calibration plate") << endl;
-
-  enable_calibration_plate(true);
-  int returnValue = measureAtSwitch(Z_AXIS, -1, maxTravel, plateZ);
-  enable_calibration_plate(false);
-
-  return returnValue;
+  const auto& calibrationPlate = vone->endstops.calibrationPlate;
+  return (
+    measureAtSwitch(calibrationPlate, maxTravel, plateZ) ||
+    retractFromSwitch(calibrationPlate)
+  );
 }
 
 int measureProbeDisplacement(tools::Probe& probe, float& o_displacement) {
@@ -43,17 +43,14 @@ int measureProbeDisplacement(tools::Probe& probe, float& o_displacement) {
     return -1;
   }
 
-  // Retract
-  if (retractFromSwitch(Z_AXIS, -1)) {  ///TODO: not needed ?
-    return -1;
-  }
-
   // Probe the calibration plate
   // Note: we do not use the standard probe function here because
-  // it would subtract the previously measured displacement (if one exists)
+  // it would include the previously measured displacement (if one exists)
+  // TODO: we should use probe() and just remove the displacement
   log << F("Measuring the triggering positon of the probe") << endl;
   float probeContactZ;
-  if(measureAtSwitch(Z_AXIS, -1, MaxDisplacement + Z_HOME_RETRACT_MM, probeContactZ)) {
+  const auto& toolSwitch = vone->endstops.toolSwitch;
+  if(measureAtSwitch(toolSwitch, MaxDisplacement + Z_HOME_RETRACT_MM, probeContactZ)) {
     logError
       << F("Unable to measure probe displacement, ")
       << F("the triggering positon of the probe could not be measured (measurement 2 of 2)")

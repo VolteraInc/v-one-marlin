@@ -1,4 +1,5 @@
 #include "../api/api.h"
+#include "../api/diagnostics/diagnostics.h"
 #include "../vone/VOne.h"
 #include "../../Marlin.h"
 #include "../utils/rawToVoltage.h"
@@ -143,8 +144,8 @@ int process_dcode(int command_code) {
         << endl;
       return 0;
 
-    case 2: 
-      vone->pins.outputEndStopStatus();
+    case 2:
+      vone->endstops.outputStatus();
       return 0;
 
     case 5: {
@@ -245,25 +246,28 @@ int process_dcode(int command_code) {
         return -1;
       }
 
+      if (!code_seen('P')) {
+        log << F("No pin provided") << endl;
+        return 0;
+      }
+
+      const int pin = code_value();
+      const auto* endstop = vone->endstops.lookup(pin);
+      if (!endstop) {
+        log << F("Unknown pin provided: ") << pin << endl;
+        return 0;
+      }
+
       const int cycles = code_seen('C') ? code_value() : 1;
       for (int i = 0; i < cycles; ++i) {
         float measurement;
-        const int axis = (
-          code_seen('X') ? X_AXIS : (
-            code_seen('Y') ? Y_AXIS : (
-              code_seen('Z') ? Z_AXIS : Z_AXIS
-            )
-          )
-        );
-        const int direction = code_prefix() == '-' ? -1 : 1;
-        const int returnValue = measureAtSwitch(axis, direction, useDefaultMaxTravel, measurement);
+        const int returnValue = measureAtSwitch(*endstop, useDefaultMaxTravel, measurement);
 
         // Output
         log
           << F("measureAtSwitch")
           << F(" returnValue:") << returnValue
-          << F(" axis:") << axis_codes[axis]
-          << F(" direction:") << direction
+          << F(" switch:") << endstop->name
           << F(" measurement:") << measurement
           << endl;
       }
@@ -295,25 +299,29 @@ int process_dcode(int command_code) {
         return -1;
       }
 
-      const int axis = (
-        code_seen('X') ? X_AXIS : (
-          code_seen('Y') ? Y_AXIS : (
-            code_seen('Z') ? Z_AXIS : Z_AXIS
-          )
-        )
-      );
-      const int direction = code_prefix() == '-' ? -1 : 1;
+      if (!code_seen('P')) {
+        log << F("No pin provided") << endl;
+        return 0;
+      }
+
+      const int pin = code_value();
+      const auto* endstop = vone->endstops.lookup(pin);
+      if (!endstop) {
+        log << F("Unknown pin provided: ") << pin << endl;
+        return 0;
+      }
+
+      auto axis = endstop->axis;
       auto delay = code_seen('M') ? code_value() : DefaultMeasureAtSwitchReleaseDelay;
       auto startPosition = current_position[axis];
       auto releaseStartedAt = startPosition;
       auto releaseCompletedAt = startPosition;
-      auto returnValue = measureAtSwitchRelease(axis, direction, releaseStartedAt, releaseCompletedAt, delay);
+      auto returnValue = measureAtSwitchRelease(*endstop, releaseStartedAt, releaseCompletedAt, delay);
 
       // Output
       log
         << F("measureAtSwitchRelease")
-        << F(", axis:") << axis_codes[axis]
-        << F(", direction:") << direction
+        << F(", switch:") << endstop->name
         << F(", delay:") << delay
         << F(", returnValue:") << returnValue
         << F(", releaseStartedAt:") << releaseStartedAt
@@ -324,12 +332,39 @@ int process_dcode(int command_code) {
       return 0; // always succeed
     }
 
+    // Algorithms - check back switch separation
+    case 109: {
+      if (
+        !vone->toolBox.dispenser.attached() &&
+        !vone->toolBox.probe.attached() &&
+        !vone->toolBox.drill.attached()
+      ) {
+        logError
+          << F("Unable to check back switches, current tool, ")
+          << tool.name()
+          << F(" is not supported for this command")
+          << endl;
+        return -1;
+      }
+
+      return (
+        tool.prepareToMove() ||
+        checkBackSwitchSeparation(tool)
+      );
+    }
+
+
     // Set rotation speed (without tool prep)
     case 110: {
       auto& drill = vone->toolBox.drill;
       return drill.setRotationSpeed(code_seen('R') ? code_value() : 0.0f);
     }
 
+    // Algorithms - check extents (i.e. volume)
+    case 111: {
+      const auto tolerance = code_seen('T') ? code_value() : CheckExtents::useDefaultTolerance;
+      return checkExtents(tool, tolerance);
+    }
 
     //-------------------------------------------
     // List Commands
@@ -346,10 +381,12 @@ int process_dcode(int command_code) {
       log << F("  D102 - Home -- D102 or D102 XY") << endl;
       log << F("  D103 - xy positioner -- D103 or D103 M (move-only)") << endl;
       log << F("  D104 - measure probe displacement") << endl;
-      log << F("  D105 - measure at switch -- D105 -X") << endl;
+      log << F("  D105 - measure at switch -- D105 P62") << endl;
       log << F("  D106 - sample pin values (P=pin C=cycles M=milliseconds between readings) -- D106 P2 C10 M5 ") << endl;
       log << F("  D108 - measure at switch release -- D108 -Z") << endl;
+      log << F("  D109 - check location of xy-positioner's back switch -- D109") << endl;
       log << F("  D110 - set drill rotation speed -- D110 R100, no value or 1 means stop, 0 resets drill") << endl;
+      log << F("  D111 - check extents of volume in X and Y -- D111 or D111 T0.001, to override default tolerance") << endl;
       log << F("") << endl;
       return 0;
   }
