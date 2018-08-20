@@ -11,11 +11,11 @@ static int s_checkMeasurements(
   float tolerance
 ) {
   if (tolerance < 0) {
-    // Use 1 step by default
+    // Use 1 step by default + 1um to handle numerial error
     // Note: 1 step should be 10um
-    tolerance = stepsToMillimeters(1, endstop.axis) + 0.000001;
+    tolerance = stepsToMillimeters(1, endstop.axis) + 0.001;
   }
-  const auto delta = abs(measurement2 - measurement1);
+  const auto delta = fabs(measurement2 - measurement1);
 
   // Log data
   log
@@ -27,12 +27,12 @@ static int s_checkMeasurements(
 
   // Check measurements
   if (delta > tolerance) {
-    const auto deltaInSteps = stepsToMillimeters(delta, endstop.axis);
+    const auto deltaInSteps = millimetersToSteps(delta, endstop.axis);
     logError
       << F("Unable to complete check of ") << context
       << F(", measurements = [") << measurement1 << F(", ") << measurement2 << F("] ")
-      << F("differ by ") << deltaInSteps << F(" steps (") << delta*1000 << F("um) ")
-      << F("which is more than the ") << tolerance*1000 << F("um tolerance")
+      << F("differ by ") << delta << F("mm (~") << deltaInSteps << F("steps) ")
+      << F("which is more than the ") << tolerance << F("mm tolerance")
       << endl;
 
     // Failure means we hit a physical limit which
@@ -61,6 +61,7 @@ static int s_checkExtent(
   float measurement1;
   float measurement2;
   return (
+    raise() ||
     tool.prepareToMove() ||
 
     // Measure at min_pos
