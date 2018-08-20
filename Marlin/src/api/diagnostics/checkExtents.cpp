@@ -61,8 +61,8 @@ static int s_checkExtent(
   float measurement1;
   float measurement2;
   return (
-    raise() ||
     tool.prepareToMove() ||
+    raise() ||
 
     // Measure at min_pos
     moveXY(tool, min_pos[X_AXIS], min_pos[Y_AXIS]) ||
