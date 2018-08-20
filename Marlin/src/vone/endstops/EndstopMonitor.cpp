@@ -56,10 +56,12 @@ void EndstopMonitor::ignore(const Endstop& endstop, bool ignore) {
   }
   filter->ignore(ignore);
 
-  log
-    << endstop.name
-    << (ignore ? F(" disabled") : F(" enabled"))
-    << endl;
+  if (logging_enabled) {
+    log
+      << endstop.name
+      << (ignore ? F(" disabled") : F(" enabled"))
+      << endl;
+  }
 }
 
 bool EndstopMonitor::ignoring(const Endstop& endstop) const {
