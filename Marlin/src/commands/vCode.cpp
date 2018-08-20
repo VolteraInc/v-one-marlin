@@ -9,7 +9,7 @@
 int prepareTool(tools::Tool& tool, bool xyzMoves, bool eMoves) {
   // Note: Doing a full prepare for an E-only move would be unexpected
   if (eMoves && !xyzMoves) {
-    return tool.prepareToMove(tools::PrepareToMove::Options::eOnly);
+    return tool.prepareToMove(tools::PrepareToMove::Option::eOnly);
   } else {
     return tool.prepareToMove();
   }

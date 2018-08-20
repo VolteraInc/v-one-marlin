@@ -18,13 +18,13 @@ void tools::Tool::detach() {
   resetPreparations();
 }
 
-int tools::Tool::prepareToMove(tools::PrepareToMove::Options options) {
-  using Options = tools::PrepareToMove::Options;
+int tools::Tool::prepareToMove(tools::PrepareToMove::Option option) {
+  using Option = tools::PrepareToMove::Option;
   if (
     m_prepare_Completed ||
-    (options == Options::startOnly && m_prepare_Started) ||
-    (options == Options::eOnly && m_prepare_Started) ||
-    (options == Options::skipCalibrateXYZ && m_prepare_HomedXY)
+    (option == Option::startOnly && m_prepare_Started) ||
+    (option == Option::eOnly && m_prepare_Started) ||
+    (option == Option::skipCalibrateXYZ && m_prepare_HomedXY)
   ) {
     return 0;
   }
@@ -43,11 +43,11 @@ int tools::Tool::prepareToMove(tools::PrepareToMove::Options options) {
   m_prepare_Started = true;
 
   // Return if that's all we need
-  if (options == Options::startOnly) {
+  if (option == Option::startOnly) {
     log << F("Preparing tool -- completed start-only prepare") << endl;
     return 0;
   }
-  if (options == Options::eOnly) {
+  if (option == Option::eOnly) {
     log << F("Preparing tool -- completed e-only prepare") << endl;
     return 0;
   }
@@ -59,7 +59,7 @@ int tools::Tool::prepareToMove(tools::PrepareToMove::Options options) {
   m_prepare_HomedXY = true;
 
   // Calibrate XYZ
-  if (options == Options::skipCalibrateXYZ) {
+  if (option == Option::skipCalibrateXYZ) {
     log << F("Preparing tool -- skipping xyz-calibration") << endl;
     return 0;
   }

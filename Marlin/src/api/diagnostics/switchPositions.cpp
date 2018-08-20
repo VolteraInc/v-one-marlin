@@ -73,7 +73,7 @@ int checkBackSwitchSeparation(tools::Tool& tool) {
 }
 
 int calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeResults) {
-  if (probe.prepareToMove(tools::PrepareToMove::Options::skipCalibrateXYZ)) {
+  if (probe.prepareToMove(tools::PrepareToMove::Option::skipCalibrateXYZ)) {
     logError << F("Unable to calibrate positions, could not prepare probe") << endl;
     return -1;
   }

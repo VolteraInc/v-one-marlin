@@ -4,11 +4,11 @@ class Stepper;
 namespace tools {
 
 namespace PrepareToMove {
-  enum class Options {
+  enum class Option {
     startOnly,
     eOnly,
     skipCalibrateXYZ,
-    None
+    none
   };
 }
 
@@ -23,8 +23,8 @@ class Tool {
     bool attached() const { return m_attached; }
     bool detached() const { return !m_attached; }
 
-    int prepareToMove(PrepareToMove::Options options = PrepareToMove::Options::None);
     int resetPreparations();
+    int prepareToMove(PrepareToMove::Option option = PrepareToMove::Option::none);
     bool prepared() const { return m_prepare_Completed; }
 
     virtual int enqueueMove(float x, float y, float z, float e, float f) = 0;
