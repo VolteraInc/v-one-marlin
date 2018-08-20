@@ -362,7 +362,8 @@ int process_dcode(int command_code) {
 
     // Algorithms - check extents (i.e. volume)
     case 111: {
-      return checkExtents(tool);
+      const auto tolerance = code_seen('T') ? code_value() : CheckExtents::useDefaultTolerance;
+      return checkExtents(tool, tolerance);
     }
 
     //-------------------------------------------
