@@ -89,7 +89,7 @@ int checkExtents(tools::Tool& tool, float tolerance) {
   Point2d frontLeft  = { max_pos[X_AXIS], max_pos[Y_AXIS] };
   Point2d frontRight = { min_pos[X_AXIS], max_pos[Y_AXIS] };
 
-  return (
+  int returnValue = (
     // x-axis extents
     s_checkExtent(F("X-axis extent - across back" ), tool, vone->endstops.xMin,  backRight,   backLeft, tolerance) ||
     s_checkExtent(F("X-axis extent - across front"), tool, vone->endstops.xMin, frontRight, frontLeft, tolerance) ||
@@ -104,12 +104,17 @@ int checkExtents(tools::Tool& tool, float tolerance) {
 
     // Diagonal to front right
     s_checkExtent(F("X-axis extent - diagonal to front right"), tool, vone->endstops.xMin, backLeft, frontRight, tolerance) ||
-    s_checkExtent(F("Y-axis extent - diagonal to front right"), tool, vone->endstops.yMin, backLeft, frontRight, tolerance) ||
+    s_checkExtent(F("Y-axis extent - diagonal to front right"), tool, vone->endstops.yMin, backLeft, frontRight, tolerance)
+  );
 
-
-    // Note: Touching switches and resycning with the stepper
-    //       can introduce a small error, we don't want that
-    //       error impacting any commands run after this one.
-    tool.resetPreparations()
+  // Note: Touching switches and resycning with the stepper
+  //       can introduce a small error, we don't want that
+  //       error impacting any commands run after this one.
+  setHomedState(X_AXIS, 0);
+  setHomedState(Y_AXIS, 0);
+  setHomedState(Z_AXIS, 0);
+  return (
+    tool.resetPreparations() ||
+    returnValue
   );
 }
