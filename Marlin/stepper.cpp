@@ -39,6 +39,20 @@ block_t *current_block;  // A pointer to the block currently being traced
 
 volatile unsigned long g_maxStepperDurationMicros = 0;
 
+volatile unsigned long g_max_blk_gotBlock = 0;
+
+volatile unsigned long g_max_es_checkedEndstopsAndTriggered = 0;
+volatile unsigned long g_max_es_checkedEndstopsAndNoTriggers = 0;
+
+volatile unsigned long g_max_stp_finishedTriggeredBranch = 0;
+volatile unsigned long g_max_stp_finishedSteppingBranch = 0;
+
+volatile unsigned long g_max_acc_endOfAccelBranch = 0;
+volatile unsigned long g_max_acc_endOfDecelBranch = 0;
+volatile unsigned long g_max_acc_endOfPlateauBranch = 0;
+
+volatile unsigned long g_max_endblock_blockRemoved = 0;
+
 //===========================================================================
 //=============================private variables ============================
 //===========================================================================
@@ -207,13 +221,17 @@ FORCE_INLINE void trapezoid_generator_reset() {
   OCR1A = acceleration_time;
 }
 
-// int idx = 0;
-// unsigned int a[5] = {0};
+#define UPDATE_TIMER(st, mx) \
+    elapsed = micros() - st; \
+    if (elapsed > mx) { \
+      mx = elapsed; \
+    }
 
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse.
 // It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately.
 void stepper_isr(EndstopMonitor& endstopMonitor) {
   const auto start = micros();
+  unsigned long elapsed;
 
   static signed char xDir = 1;
   static signed char yDir = 1;
@@ -222,6 +240,7 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
 
   // If there is no current block, attempt to pop one from the buffer
   if (!current_block) {
+    const auto blk_start = micros();
     // Anything in the buffer?
     current_block = plan_get_current_block();
 
@@ -249,8 +268,12 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
     WRITE(Y_DIR_PIN, yDir == -1 ? INVERT_Y_DIR : !INVERT_Y_DIR);
     WRITE(Z_DIR_PIN, zDir == -1 ? INVERT_Z_DIR : !INVERT_Z_DIR);
     WRITE(E_DIR_PIN, eDir == -1 ? INVERT_E_DIR : !INVERT_E_DIR);
+
+    UPDATE_TIMER(blk_start, g_max_blk_gotBlock);
   }
 
+
+  const auto es_start =  micros();
   // Detect end-stop hits
   // Note: only check in the direction(s) we are moving
   bool triggeredInX = false;
@@ -266,7 +289,11 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
     endstopMonitor.onSteppingInZ(zDir, count_position, triggeredInZ);
   }
 
+  const auto stp_start = micros();
+
   if (triggeredInX || triggeredInY || triggeredInZ) {
+    UPDATE_TIMER(es_start, g_max_es_checkedEndstopsAndTriggered);
+
     // Treat the block as complete
     // Note: Ensures timing is restored and current_block is removed
     step_events_completed = current_block->step_event_count;
@@ -275,7 +302,10 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
     // Note: If this hit was expected then there should not be any more moves queued
     //       If it was not then any queued moves no longer make sense
     quickStop();
+
+    UPDATE_TIMER(stp_start, g_max_stp_finishedTriggeredBranch);
   } else {
+    UPDATE_TIMER(es_start, g_max_es_checkedEndstopsAndNoTriggers);
 
     // Take multiple steps per interrupt (For high speed moves)
     for (int8_t i = 0; i < step_loops; i++) {
@@ -316,7 +346,11 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
         break;
       }
     }
+
+    UPDATE_TIMER(stp_start, g_max_stp_finishedSteppingBranch);
   }
+
+  const auto acc_start = micros();
 
   // Calculate new timer value
   unsigned short timer;
@@ -338,6 +372,8 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
     OCR1A = timer;
     acceleration_time += timer;
 
+    UPDATE_TIMER(acc_start, g_max_acc_endOfAccelBranch);
+
   } else if (step_events_completed > (unsigned long int)current_block->decelerate_after) {
     MultiU24X24toH16(step_rate, deceleration_time, current_block->acceleration_rate);
     // step_rate = deceleration_time * current_block->acceleration_rate >> 24
@@ -357,30 +393,79 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
     OCR1A = timer;
     deceleration_time += timer;
 
+    UPDATE_TIMER(acc_start, g_max_acc_endOfDecelBranch);
+
   } else {
     OCR1A = OCR1A_nominal;
     // ensure we're running at the correct step rate, even if we just came off an acceleration
     step_loops = step_loops_nominal;
+
+    UPDATE_TIMER(acc_start, g_max_acc_endOfPlateauBranch);
   }
+
+  const auto endblock_start = micros();
 
   // If current block is finished, reset pointer
   if (step_events_completed >= current_block->step_event_count) {
     current_block = nullptr;
     plan_discard_current_block();
+    UPDATE_TIMER(endblock_start, g_max_endblock_blockRemoved);
   }
 
-  const auto elapsed = micros() - start;
-  if (elapsed > g_maxStepperDurationMicros) {
-    g_maxStepperDurationMicros = elapsed;
-  }
+  UPDATE_TIMER(start, g_maxStepperDurationMicros);
 }
 
+static void rpt(const __FlashStringHelper* name, unsigned long& prev, unsigned long cur) {
+  if (cur != prev) {
+    prev = cur;
+    log << F("Max ") << name << F(" duration increased to: ") << cur << F("us") << endl;
+  }
+}
 void stepperPeriodicReport() {
-  static auto prevDuration = g_maxStepperDurationMicros;
-  const auto curDuration = g_maxStepperDurationMicros;
-  if (curDuration != prevDuration) {
-    prevDuration = curDuration;
-    log << F("Max stepper_isr duration increased to: ") << curDuration << F("us") << endl;
+  {
+    static auto prev = g_maxStepperDurationMicros;
+    rpt(F("stepper_isr"), prev, g_maxStepperDurationMicros);
+  }
+
+  {
+    static auto prev = g_max_blk_gotBlock;
+    rpt(F("blk_gotBlock"), prev, g_max_blk_gotBlock);
+  }
+
+  {
+    static auto prev = g_max_es_checkedEndstopsAndTriggered;
+    rpt(F("es_checkedEndstopsAndTriggered"), prev, g_max_es_checkedEndstopsAndTriggered);
+  }
+  {
+    static auto prev = g_max_es_checkedEndstopsAndNoTriggers;
+    rpt(F("es_checkedEndstopsAndNoTriggers"), prev, g_max_es_checkedEndstopsAndNoTriggers);
+  }
+
+  {
+    static auto prev = g_max_stp_finishedTriggeredBranch;
+    rpt(F("stp_finishedTriggeredBranch"), prev, g_max_stp_finishedTriggeredBranch);
+  }
+  {
+    static auto prev = g_max_stp_finishedSteppingBranch;
+    rpt(F("stp_finishedSteppingBranch"), prev, g_max_stp_finishedSteppingBranch);
+  }
+
+  {
+    static auto prev = g_max_acc_endOfAccelBranch;
+    rpt(F("acc_endOfAccelBranch"), prev, g_max_acc_endOfAccelBranch);
+  }
+  {
+    static auto prev = g_max_acc_endOfDecelBranch;
+    rpt(F("acc_endOfDecelBranch"), prev, g_max_acc_endOfDecelBranch);
+  }
+    {
+    static auto prev = g_max_acc_endOfPlateauBranch;
+    rpt(F("acc_endOfPlateauBranch"), prev, g_max_acc_endOfPlateauBranch);
+  }
+
+  {
+    static auto prev = g_max_endblock_blockRemoved;
+    rpt(F("endblock_blockRemoved"), prev, g_max_endblock_blockRemoved);
   }
 }
 
