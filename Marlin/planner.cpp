@@ -507,9 +507,13 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   if (block->steps_e != 0) { enable_e(); }
 
   if (block->steps_e == 0) {
-    if (feed_rate < mintravelfeedrate) { feed_rate = mintravelfeedrate; }
+    if (feed_rate < mintravelfeedrate) {
+      feed_rate = mintravelfeedrate;
+    }
   } else {
-    if (feed_rate < minimumfeedrate) { feed_rate = minimumfeedrate; }
+    if (feed_rate < minimumfeedrate) {
+      feed_rate = minimumfeedrate;
+    }
   }
 
   // Delta_mm is the mm that our axis will actually move to meet the global coordinates.
@@ -519,20 +523,25 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   delta_mm[Z_AXIS] = stepsToMillimeters(steps_z_signed, Z_AXIS);
   delta_mm[E_AXIS] = stepsToMillimeters(steps_e_signed, E_AXIS) * volumetric_multiplier * extrudemultiply / 100.0;
 
-  if ( block->steps_x <=dropsegments && block->steps_y <=dropsegments && block->steps_z <=dropsegments )
-  {
+  if (
+    block->steps_x <= dropsegments &&
+    block->steps_y <= dropsegments &&
+    block->steps_z <= dropsegments
+  ) {
     block->millimeters = fabs(delta_mm[E_AXIS]);
-  }
-  else
-  {
-    block->millimeters = sqrt(square(delta_mm[X_AXIS]) + square(delta_mm[Y_AXIS]) + square(delta_mm[Z_AXIS]));
+  } else {
+    block->millimeters = sqrt(
+      square(delta_mm[X_AXIS]) +
+      square(delta_mm[Y_AXIS]) +
+      square(delta_mm[Z_AXIS])
+    );
   }
   float inverse_millimeters = 1.0/block->millimeters;  // Inverse millimeters to remove multiple divides
 
     // Calculate speed in mm/second for each axis. No divide by zero due to previous checks.
   float inverse_second = feed_rate * inverse_millimeters;
 
-  int moves_queued=(block_buffer_head-block_buffer_tail + BLOCK_BUFFER_SIZE) & (BLOCK_BUFFER_SIZE - 1);
+  int moves_queued = (block_buffer_head - block_buffer_tail + BLOCK_BUFFER_SIZE) & (BLOCK_BUFFER_SIZE - 1);
 
   block->nominal_speed = block->millimeters * inverse_second; // (mm/sec) Always > 0
   block->nominal_rate = ceil(block->step_event_count * inverse_second); // (step/sec) Always > 0
