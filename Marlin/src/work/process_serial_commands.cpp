@@ -18,7 +18,7 @@ inline const char* skipWhitespace(const char* ptr) {
   return ptr;
 }
 
-void s_requestResend(
+static void s_requestResend(
   unsigned long expectedLineNumber,
   const __FlashStringHelper* pgmReason,
   const char* msg
@@ -65,14 +65,14 @@ inline const char* parse(
     return commandStart;
   }
 
+  const auto fnRequestResend = [expectedLineNumber, msg](const __FlashStringHelper* pgmReason) {
+    s_requestResend(expectedLineNumber, pgmReason, msg);
+  };
+
   // static auto fakeResend = false;
   // fakeResend = !fakeResend;
   // if (fakeResend) {
-  //   s_requestResend(
-  //     expectedLineNumber,
-  //     PSTR("Fake resend"),
-  //     msg
-  //   );
+  //   fnRequestResend(F("Fake resend"));
   //   return nullptr;
   // }
 
@@ -88,26 +88,26 @@ inline const char* parse(
   }
 
   // Validate the checksum
-  const auto msgChecksum = strtol(star + 1, nullptr, 10);
-  const auto computedChecksum = checksum(commandStart, star);
+  if (!star) {
+    fnRequestResend(F("Missing checksum"));
+    return nullptr;
+  }
+  const auto msgChecksum = strtol(star + 1, nullptr, 16);
+  const auto computedChecksum = crc8(commandStart, star - msg);
   if (msgChecksum != computedChecksum) {
-    s_requestResend(
-      expectedLineNumber,
-      F("Bad checksum"),
-      msg
-    );
+    fnRequestResend(F("Bad checksum"));
     return nullptr;
   }
 
   // Check line number
   const char* newCommandStart = nullptr;
   const auto lineNumber = strtol(commandStart + 1, const_cast<char**>(&newCommandStart), 10);
+  if (*commandStart != lineNumberChar) {
+    fnRequestResend(F("Missing line number"));
+    return nullptr;
+  }
   if (lineNumber != expectedLineNumber) {
-    s_requestResend(
-      expectedLineNumber,
-      F("Line number does not match expected value"),
-      msg
-    );
+    fnRequestResend(F("Line number does not match expected value"));
     return nullptr;
   }
 
