@@ -11,11 +11,11 @@ inline byte checksum(const char* start, const char* end) {
   }
   return checksum;
 }
-
-inline void skipWhitespace(const char** ptr) {
-  while (**ptr == ' ') {
-    ++(*ptr);
+inline const char* skipWhitespace(const char* ptr) {
+  while (*ptr == ' ') {
+    ++ptr;
   }
+  return ptr;
 }
 
 void s_requestResend(
@@ -48,8 +48,7 @@ inline const char* parse(
   }
 
   // skip any leading spaces
-  const char* commandStart = msg;
-  skipWhitespace(&commandStart);
+  const char* commandStart = skipWhitespace(msg);
 
   // Return if no line number included
   if (*commandStart != 'N') {
@@ -102,9 +101,8 @@ inline const char* parse(
     return nullptr;
   }
 
-  // Command is valid
-  skipWhitespace(&newCommandStart);
-  return newCommandStart;
+  // Command is valid, skip spaces and return
+  return skipWhitespace(newCommandStart);
 }
 
 static uint16_t s_expectedLineNumber = 1;
