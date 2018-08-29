@@ -217,153 +217,152 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
   static signed char eDir = 1;
 
   // If there is no current block, attempt to pop one from the buffer
-  if (current_block == NULL) {
+  if (!current_block) {
     // Anything in the buffer?
     current_block = plan_get_current_block();
-    if (current_block != NULL) {
-      current_block->busy = true;
-      trapezoid_generator_reset();
-      counter_x = -(current_block->step_event_count >> 1);
-      counter_y = counter_x;
-      counter_z = counter_x;
-      counter_e = counter_x;
-      step_events_completed = 0;
 
-      // Set the direction
-      const auto direction_bits = current_block->direction_bits;
-      xDir = TEST(direction_bits, X_AXIS) ? -1 : 1;
-      yDir = TEST(direction_bits, Y_AXIS) ? -1 : 1;
-      zDir = TEST(direction_bits, Z_AXIS) ? -1 : 1;
-      eDir = TEST(direction_bits, E_AXIS) ? -1 : 1;
-
-      WRITE(X_DIR_PIN, xDir == -1 ? INVERT_X_DIR : !INVERT_X_DIR);
-      WRITE(Y_DIR_PIN, yDir == -1 ? INVERT_Y_DIR : !INVERT_Y_DIR);
-      WRITE(Z_DIR_PIN, zDir == -1 ? INVERT_Z_DIR : !INVERT_Z_DIR);
-      WRITE(E_DIR_PIN, eDir == -1 ? INVERT_E_DIR : !INVERT_E_DIR);
-    } else {
+    if (!current_block) {
       OCR1A = 2000; // 1kHz.
+      return;
+    }
+
+    current_block->busy = true;
+    trapezoid_generator_reset();
+    counter_x = -(current_block->step_event_count >> 1);
+    counter_y = counter_x;
+    counter_z = counter_x;
+    counter_e = counter_x;
+    step_events_completed = 0;
+
+    // Set the direction
+    const auto direction_bits = current_block->direction_bits;
+    xDir = TEST(direction_bits, X_AXIS) ? -1 : 1;
+    yDir = TEST(direction_bits, Y_AXIS) ? -1 : 1;
+    zDir = TEST(direction_bits, Z_AXIS) ? -1 : 1;
+    eDir = TEST(direction_bits, E_AXIS) ? -1 : 1;
+
+    WRITE(X_DIR_PIN, xDir == -1 ? INVERT_X_DIR : !INVERT_X_DIR);
+    WRITE(Y_DIR_PIN, yDir == -1 ? INVERT_Y_DIR : !INVERT_Y_DIR);
+    WRITE(Z_DIR_PIN, zDir == -1 ? INVERT_Z_DIR : !INVERT_Z_DIR);
+    WRITE(E_DIR_PIN, eDir == -1 ? INVERT_E_DIR : !INVERT_E_DIR);
+  }
+
+  // Detect end-stop hits
+  // Note: only check in the direction(s) we are moving
+  bool triggeredInX = false;
+  bool triggeredInY = false;
+  bool triggeredInZ = false;
+  if (current_block->steps_x > 0) {
+    endstopMonitor.onSteppingInX(xDir, count_position, triggeredInX);
+  }
+  if (current_block->steps_y > 0) {
+    endstopMonitor.onSteppingInY(yDir, count_position, triggeredInY);
+  }
+  if (current_block->steps_z > 0) {
+    endstopMonitor.onSteppingInZ(zDir, count_position, triggeredInZ);
+  }
+
+  if (triggeredInX || triggeredInY || triggeredInZ) {
+    // Treat the block as complete
+    // Note: Ensures timing is restored and current_block is removed
+    step_events_completed = current_block->step_event_count;
+
+    // Flush any remaining moves
+    // Note: If this hit was expected then there should not be any more moves queued
+    //       If it was not then any queued moves no longer make sense
+    quickStop();
+  } else {
+
+    // Take multiple steps per interrupt (For high speed moves)
+    for (int8_t i = 0; i < step_loops; i++) {
+      counter_x += current_block->steps_x;
+      if (counter_x > 0) {
+        WRITE(X_STEP_PIN, !INVERT_X_STEP_PIN);
+        counter_x -= current_block->step_event_count;
+        count_position[X_AXIS] += xDir;
+        WRITE(X_STEP_PIN, INVERT_X_STEP_PIN);
+      }
+
+      counter_y += current_block->steps_y;
+      if (counter_y > 0) {
+        WRITE(Y_STEP_PIN, !INVERT_Y_STEP_PIN);
+        counter_y -= current_block->step_event_count;
+        count_position[Y_AXIS] += yDir;
+        WRITE(Y_STEP_PIN, INVERT_Y_STEP_PIN);
+      }
+
+      counter_z += current_block->steps_z;
+      if (counter_z > 0) {
+        WRITE(Z_STEP_PIN, !INVERT_Z_STEP_PIN);
+        counter_z -= current_block->step_event_count;
+        count_position[Z_AXIS] += zDir;
+        WRITE(Z_STEP_PIN, INVERT_Z_STEP_PIN);
+      }
+
+      counter_e += current_block->steps_e;
+      if (counter_e > 0) {
+        WRITE(E_STEP_PIN, !INVERT_E_STEP_PIN);
+        counter_e -= current_block->step_event_count;
+        count_position[E_AXIS] += eDir;
+        WRITE(E_STEP_PIN, INVERT_E_STEP_PIN);
+      }
+
+      step_events_completed += 1;
+      if (step_events_completed >= current_block->step_event_count) {
+        break;
+      }
     }
   }
 
-  if (current_block != NULL) {
+  // Calculate new timer value
+  unsigned short timer;
+  unsigned short step_rate;
+  if (step_events_completed <= (unsigned long int)current_block->accelerate_until) {
 
-    // Detect end-stop hits
-    // Note: only check in the direction(s) we are moving
-    bool triggeredInX = false;
-    bool triggeredInY = false;
-    bool triggeredInZ = false;
-    if (current_block->steps_x > 0) {
-      endstopMonitor.onSteppingInX(xDir, count_position, triggeredInX);
-    }
-    if (current_block->steps_y > 0) {
-      endstopMonitor.onSteppingInY(yDir, count_position, triggeredInY);
-    }
-    if (current_block->steps_z > 0) {
-      endstopMonitor.onSteppingInZ(zDir, count_position, triggeredInZ);
+    MultiU24X24toH16(acc_step_rate, acceleration_time, current_block->acceleration_rate);
+    //acc_step_ = deceleration_time * current_block->acceleration_rate >> 24
+
+    acc_step_rate += current_block->initial_rate;
+
+    // upper limit
+    if (acc_step_rate > current_block->nominal_rate) {
+      acc_step_rate = current_block->nominal_rate;
     }
 
-    if (triggeredInX || triggeredInY || triggeredInZ) {
-      // Treat the block as complete
-      // Note: Ensures timing is restored and current_block is removed
-      step_events_completed = current_block->step_event_count;
+    // step_rate to timer interval
+    timer = calc_timer(acc_step_rate);
+    OCR1A = timer;
+    acceleration_time += timer;
 
-      // Flush any remaining moves
-      // Note: If this hit was expected then there should not be any more moves queued
-      //       If it was not then any queued moves no longer make sense
-      quickStop();
+  } else if (step_events_completed > (unsigned long int)current_block->decelerate_after) {
+    MultiU24X24toH16(step_rate, deceleration_time, current_block->acceleration_rate);
+    // step_rate = deceleration_time * current_block->acceleration_rate >> 24
+    if (step_rate > acc_step_rate) { // Check step_rate stays positive
+      step_rate = current_block->final_rate;
     } else {
-
-      // Take multiple steps per interrupt (For high speed moves)
-      for (int8_t i = 0; i < step_loops; i++) {
-        counter_x += current_block->steps_x;
-        if (counter_x > 0) {
-          WRITE(X_STEP_PIN, !INVERT_X_STEP_PIN);
-          counter_x -= current_block->step_event_count;
-          count_position[X_AXIS] += xDir;
-          WRITE(X_STEP_PIN, INVERT_X_STEP_PIN);
-        }
-
-        counter_y += current_block->steps_y;
-        if (counter_y > 0) {
-          WRITE(Y_STEP_PIN, !INVERT_Y_STEP_PIN);
-          counter_y -= current_block->step_event_count;
-          count_position[Y_AXIS] += yDir;
-          WRITE(Y_STEP_PIN, INVERT_Y_STEP_PIN);
-        }
-
-        counter_z += current_block->steps_z;
-        if (counter_z > 0) {
-          WRITE(Z_STEP_PIN, !INVERT_Z_STEP_PIN);
-          counter_z -= current_block->step_event_count;
-          count_position[Z_AXIS] += zDir;
-          WRITE(Z_STEP_PIN, INVERT_Z_STEP_PIN);
-        }
-
-        counter_e += current_block->steps_e;
-        if (counter_e > 0) {
-          WRITE(E_STEP_PIN, !INVERT_E_STEP_PIN);
-          counter_e -= current_block->step_event_count;
-          count_position[E_AXIS] += eDir;
-          WRITE(E_STEP_PIN, INVERT_E_STEP_PIN);
-        }
-
-        step_events_completed += 1;
-        if (step_events_completed >= current_block->step_event_count) {
-          break;
-        }
-      }
+      step_rate = acc_step_rate - step_rate; // Decelerate from aceleration end point.
     }
 
-    // Calculate new timer value
-    unsigned short timer;
-    unsigned short step_rate;
-    if (step_events_completed <= (unsigned long int)current_block->accelerate_until) {
-
-      MultiU24X24toH16(acc_step_rate, acceleration_time, current_block->acceleration_rate);
-      //acc_step_ = deceleration_time * current_block->acceleration_rate >> 24
-
-      acc_step_rate += current_block->initial_rate;
-
-      // upper limit
-      if (acc_step_rate > current_block->nominal_rate) {
-        acc_step_rate = current_block->nominal_rate;
-      }
-
-      // step_rate to timer interval
-      timer = calc_timer(acc_step_rate);
-      OCR1A = timer;
-      acceleration_time += timer;
-
-    } else if (step_events_completed > (unsigned long int)current_block->decelerate_after) {
-      MultiU24X24toH16(step_rate, deceleration_time, current_block->acceleration_rate);
-      // step_rate = deceleration_time * current_block->acceleration_rate >> 24
-      if (step_rate > acc_step_rate) { // Check step_rate stays positive
-        step_rate = current_block->final_rate;
-      } else {
-        step_rate = acc_step_rate - step_rate; // Decelerate from aceleration end point.
-      }
-
-      // lower limit
-      if (step_rate < current_block->final_rate) {
-        step_rate = current_block->final_rate;
-      }
-
-      // step_rate to timer interval
-      timer = calc_timer(step_rate);
-      OCR1A = timer;
-      deceleration_time += timer;
-
-    } else {
-      OCR1A = OCR1A_nominal;
-      // ensure we're running at the correct step rate, even if we just came off an acceleration
-      step_loops = step_loops_nominal;
+    // lower limit
+    if (step_rate < current_block->final_rate) {
+      step_rate = current_block->final_rate;
     }
 
-    // If current block is finished, reset pointer
-    if (step_events_completed >= current_block->step_event_count) {
-      current_block = NULL;
-      plan_discard_current_block();
-    }
+    // step_rate to timer interval
+    timer = calc_timer(step_rate);
+    OCR1A = timer;
+    deceleration_time += timer;
+
+  } else {
+    OCR1A = OCR1A_nominal;
+    // ensure we're running at the correct step rate, even if we just came off an acceleration
+    step_loops = step_loops_nominal;
+  }
+
+  // If current block is finished, reset pointer
+  if (step_events_completed >= current_block->step_event_count) {
+    current_block = nullptr;
+    plan_discard_current_block();
   }
 }
 
