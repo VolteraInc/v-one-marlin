@@ -73,13 +73,9 @@ int tools::Tool::prepareToMove(tools::PrepareToMove::Option option) {
 }
 
 int tools::Tool::resetPreparations() {
-  if (prepared()) {
-    m_prepare_Started = false;
-    m_prepare_HomedXY = false;
-    m_prepare_Completed = false;
-
-    log << F("Reset tool preparations") << endl;
-    return resetPreparationsImpl();
-  }
-  return 0;
+  log << F("Reset tool preparations") << endl;
+  m_prepare_Started = false;
+  m_prepare_HomedXY = false;
+  m_prepare_Completed = false;
+  return resetPreparationsImpl();
 }
