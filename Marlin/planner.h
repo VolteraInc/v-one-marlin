@@ -113,7 +113,6 @@ FORCE_INLINE block_t* plan_get_current_block() {
     return nullptr;
   }
   block_t *block = &block_buffer[block_buffer_tail];
-  block->busy = true;
   return block;
 }
 
