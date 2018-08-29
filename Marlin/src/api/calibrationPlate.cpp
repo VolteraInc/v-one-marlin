@@ -53,7 +53,7 @@ int measureProbeDisplacement(tools::Probe& probe, float& o_displacement) {
   if(measureAtSwitch(toolSwitch, MaxDisplacement + Z_HOME_RETRACT_MM, probeContactZ)) {
     logError
       << F("Unable to measure probe displacement, ")
-      << F("the triggering positon of the probe could not be measured (measurement 2 of 2)")
+      << F("the triggering position of the probe could not be measured (measurement 2 of 2)")
       << endl;
     return -1;
   }

@@ -72,7 +72,7 @@ inline MarlinSerial& operator<<(MarlinSerial &obj, const toolDetection::VoltageT
   const auto frontIdx = voltageLog.m_frontIdx;
   obj
     << FormatArray(&samples[frontIdx], VoltageLog::MAX_SAMPLES - frontIdx)
-    << F(", ")
+    << F(",")
     << FormatArray(&samples[0], frontIdx);
   return obj;
 }
@@ -81,7 +81,7 @@ inline MarlinSerial& operator<<(MarlinSerial &obj, const toolDetection::VoltageT
   obj
     << F("(") << smp.time
     << F(",") << toString(smp.type)
-    << F(", ") << smp.voltage
+    << F(",") << smp.voltage
     << F(")");
   return obj;
 }

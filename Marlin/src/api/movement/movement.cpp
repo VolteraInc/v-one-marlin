@@ -289,7 +289,7 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
-  // Enable endstop, if necessaey
+  // Enable endstop, if necessary
   ScopedEndstopEnable scopedEnable(endstopMonitor, endstop);
 
   // Move
