@@ -47,11 +47,21 @@ inline const char* parse(
     return nullptr;
   }
 
-  // skip any leading spaces
+  // Locate message validation characters
   const char* commandStart = skipWhitespace(msg);
+  const char* star = strchr(commandStart, '*');
 
-  // Return if no line number included
-  if (*commandStart != 'N') {
+  // Detect 'raw input' mode
+  // Note: useful for debugging and allows printer to accept g-code directly
+  static const char lineNumberChar = 'N';
+  if (*commandStart != lineNumberChar && !star) {
+    static bool s_warned = false;
+    if (!s_warned) {
+      logWarning
+        << F("Command is missing message validation fields, assuming raw input mode (i.e. bypassing message validation)")
+        << endl;
+      s_warned = true;
+    }
     return commandStart;
   }
 
