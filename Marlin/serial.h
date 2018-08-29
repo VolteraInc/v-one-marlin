@@ -62,3 +62,28 @@ inline MarlinSerial& logWarning() { return MYSERIAL << F("warning: "); }
 
 inline MarlinSerial& logError() { return MYSERIAL << F("error: "); }
 #define logError logError()
+
+namespace logging {
+  inline static const __FlashStringHelper* openBrace() { return F("{ "); }
+  inline static const __FlashStringHelper* closeBrace() { return F(" }"); }
+
+  inline static const __FlashStringHelper* endString() { return F("\""); }
+  inline static const __FlashStringHelper* endStringComma() { return F("\", "); }
+
+  inline static const __FlashStringHelper* errorName() { return F("\"name\": \""); }
+  inline static const __FlashStringHelper* errorContext() { return F("\"context\": \""); }
+  inline static const __FlashStringHelper* errorReason() { return F("\"reason\": \""); }
+}
+
+inline MarlinSerial& reportError_(const __FlashStringHelper* name, const __FlashStringHelper* context) {
+  using namespace logging;
+  return logError
+    << openBrace()
+    << errorName() << name << endStringComma()
+    << errorContext() << context << endStringComma()
+    << errorReason();
+}
+#define reportError(name, context, reason) \
+   do { \
+    reportError_(name, context) reason << logging::endString() << logging::closeBrace() << endl; \
+  } while(0)
