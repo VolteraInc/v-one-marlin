@@ -1,16 +1,10 @@
 #include "../../serial.h"
 #include "../commands/processing.h"
 #include "work.h"
+#include "../utils/crc8.h"
 
 static int s_bufferIndex = 0;
 
-inline byte checksum(const char* start, const char* end) {
-  byte checksum = 0;
-  while (start != end) {
-    checksum ^= *(start++);
-  }
-  return checksum;
-}
 inline const char* skipWhitespace(const char* ptr) {
   while (*ptr == ' ') {
     ++ptr;
@@ -76,14 +70,32 @@ inline const char* parse(
   //   return nullptr;
   // }
 
-  // Confirm checksum present
-  const char* star = strchr(commandStart, '*');
-  if (!star) {
-    s_requestResend(
-      expectedLineNumber,
-      F("Missing checksum"),
-      msg
-    );
+  // Check for missing characters
+  // Note:
+  //    1) Missing characters is a more specific problem than a crc failure.
+  //       So we check for that first. This also makes a crc failure more
+  //       meaningful (e.g. it's something other than a missing character).
+  //    2) We include the crc characters in the length, so that we can
+  //       treat a missing crc character as a 'missing character'
+  //       (not a just crc error)
+  const char* comma = star ? strchr(star, ',') : nullptr;
+  if (!comma) {
+    fnRequestResend(F("Missing message length"));
+    return nullptr;
+  }
+  const auto expectedLength = strtol(comma + 1, nullptr, 10);
+  const auto actuallength = (comma - msg);
+  if (expectedLength != actuallength) {
+    // Log the expected vs actual lengths (for debugging)
+    log
+      << F("Missing characters detected, expected != actual, ")
+      << expectedLength << " != " << actuallength << ", "
+      << F("message=")
+      << msg
+      << endl;
+
+    // Request resent
+    fnRequestResend(F("Missing characters"));
     return nullptr;
   }
 
@@ -100,6 +112,10 @@ inline const char* parse(
   }
 
   // Check line number
+  // Note: A crc error is more specific than an line number error, so we
+  //       check crc before this point. As such, a line number error is
+  //       much more likely to point to the client and printer falling
+  //       out of sync.
   const char* newCommandStart = nullptr;
   const auto lineNumber = strtol(commandStart + 1, const_cast<char**>(&newCommandStart), 10);
   if (*commandStart != lineNumberChar) {
