@@ -38,6 +38,7 @@ and Philipp Tiefenbacher. */
 block_t *current_block;  // A pointer to the block currently being traced
 
 volatile unsigned long g_maxStepperDurationMicros = 0;
+volatile unsigned long g_maxStepperDurationMicros_NoTriggers = 0;
 
 volatile unsigned long g_max_blk_gotBlock = 0;
 
@@ -413,6 +414,11 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
   }
 
   UPDATE_TIMER(start, g_maxStepperDurationMicros);
+
+  if (!triggeredInX && !triggeredInY && !triggeredInZ) {
+    UPDATE_TIMER(start, g_maxStepperDurationMicros_NoTriggers);
+  }
+
 }
 
 static void rpt(const __FlashStringHelper* name, unsigned long& prev, unsigned long cur) {
@@ -425,6 +431,10 @@ void stepperPeriodicReport() {
   {
     static auto prev = g_maxStepperDurationMicros;
     rpt(F("stepper_isr"), prev, g_maxStepperDurationMicros);
+  }
+  {
+    static auto prev = g_maxStepperDurationMicros_NoTriggers;
+    rpt(F("stepper_isr_no_triggers"), prev, g_maxStepperDurationMicros_NoTriggers);
   }
 
   {
