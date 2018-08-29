@@ -47,3 +47,8 @@ int Stepper::add(float x, float y, float z, float e, float f) {
   // Success
   return 0;
 }
+
+unsigned long Stepper::maxStepperDurationMicros() {
+  ScopedInterruptDisable sid; //TODO: ScopedStepperInterruptDisable
+  return m_maxStepperDurationMicros;
+}

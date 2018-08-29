@@ -24,7 +24,7 @@ int moveToZSwitchXY(tools::Tool& tool);
 // XY positioner
 const float defaultXyPositionerCycles = 2;
 enum HowToMoveToZ { useConfiguredZ, usePlateBackOffForZ, skipMoveInZ };
-int xyPositionerTouch(const Endstop& endstop, float& measurement);
+int xyPositionerTouch(tools::Tool& tool, const Endstop& endstop, float& measurement);
 int xyPositionerFindCenter(tools::Tool& tool, long cycles, float& centerX, float& centerY, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
 int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
 

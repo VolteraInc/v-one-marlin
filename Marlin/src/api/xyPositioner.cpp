@@ -45,11 +45,55 @@ int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
   );
 }
 
-int xyPositionerTouch(const Endstop& endstop, float& measurement) {
+int xyPositionerTouch(tools::Tool& tool, const Endstop& endstop, float& measurement) {
+  static bool s_haveReportedBackSwitchVsYMinError = false;
   const auto axis = endstop.axis;
   const auto slow = homing_feedrate[axis] / 6;
-  if (moveToEndstop(endstop, slow, 6.0f)) {
-    return -1;
+  auto& endstopMonitor = vone->stepper.endstopMonitor;
+  const auto& yMin = vone->endstops.yMin;
+  const auto& xyPositionerBack = vone->endstops.xyPositionerBack;
+  const bool isBackSwitch = &endstop == &xyPositionerBack;
+
+  // Fallback to previous behaviour after reporting
+  if (
+    isBackSwitch &&
+    s_haveReportedBackSwitchVsYMinError
+  ) {
+    // Use older 'moveToLimit' function which does not
+    // differentiate between yMin and xyPositionerBack
+    // This will also user to continue using the system
+    // rather than needing to revert to a previous version
+    if (moveToLimit(axis, endstop.direction, slow, 6.0f)) {
+      return -1;
+    }
+  } else {
+    if (moveToEndstop(endstop, slow, 6.0f)) {
+      if (
+        isBackSwitch &&
+        !endstopMonitor.isTriggered(xyPositionerBack) &&
+        endstopMonitor.isTriggered(yMin)
+      ) {
+        reportError(
+          F("xyPositioner-yMinHitBeforeBack"),
+          F("calibrate the tool"),
+          << F("the ") << tool.name() << F(" hit ")
+          << F("the ") << yMin.name << F(" switch before reaching ")
+          << F("the ") << xyPositionerBack.name << F(" switch.")
+        );
+
+          // << "This may result alignment issues and reduced accuracy. "
+          // << "If you have not already, please contact support, so we can resolve this issue. "
+          // << "In the meantime, you can repeat your last action and continue using the printer as is. "
+          // << "This message will not be shown again until the printer is restarted."
+
+        // Acknowledge that yMin is triggered, otherwise we'll
+        // report another error after this (i.e. unexpected end
+        // stop hit), which will probably confuse the user
+        endstopMonitor.acknowledgeTriggered(yMin);
+      }
+
+      return -1;
+    }
   }
 
   // Success
@@ -72,9 +116,9 @@ static int s_findCenter(tools::Tool& tool, long cycles, float& o_centerX, float&
   for (int i=0; i<cycles; ++i) {
     // Measure left and right
     if ( moveXY(tool, centerX, centerY) // applies new centerY on 2nd iteration
-      || xyPositionerTouch(endstops.xyPositionerLeft, measurement1) // measure +x
+      || xyPositionerTouch(tool, endstops.xyPositionerLeft, measurement1) // measure +x
       || relativeMove(tool, -5.0f, 0, 0, 0)
-      || xyPositionerTouch(endstops.xyPositionerRight, measurement2)) { // measure -x
+      || xyPositionerTouch(tool, endstops.xyPositionerRight, measurement2)) { // measure -x
       return -1;
     }
 
@@ -89,9 +133,9 @@ static int s_findCenter(tools::Tool& tool, long cycles, float& o_centerX, float&
 
     // Measure forward and back
     if ( moveXY(tool, centerX, centerY) // applies new centerX
-      || xyPositionerTouch(endstops.xyPositionerForward, measurement1) // measure +y
+      || xyPositionerTouch(tool, endstops.xyPositionerForward, measurement1) // measure +y
       || relativeMove(tool, 0, -5.0f, 0, 0)
-      || xyPositionerTouch(endstops.xyPositionerBack, measurement2)) { // measure -y
+      || xyPositionerTouch(tool, endstops.xyPositionerBack, measurement2)) { // measure -y
       return -1;
     }
 

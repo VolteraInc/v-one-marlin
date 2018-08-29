@@ -156,7 +156,7 @@ int process_gcode(int command_code) {
     // G18: XYPositioner Y1 - Move in +Y until a switch is triggered
     case 18: {
       float measurement;
-      if ( xyPositionerTouch(vone->endstops.xyPositionerForward, measurement)
+      if ( xyPositionerTouch(vone->toolBox.currentTool(), vone->endstops.xyPositionerForward, measurement)
         || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
         return -1;
       }
@@ -167,7 +167,7 @@ int process_gcode(int command_code) {
     // G19: XYPositioner Y2 - Move in -Y until a switch is triggered
     case 19: {
       float measurement;
-      if ( xyPositionerTouch(vone->endstops.xyPositionerBack, measurement)
+      if ( xyPositionerTouch(vone->toolBox.currentTool(), vone->endstops.xyPositionerBack, measurement)
         || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
         return -1;
       }
@@ -178,7 +178,7 @@ int process_gcode(int command_code) {
     // G20: XYPositioner X1 - Move in +X until a switch is triggered
     case 20: {
       float measurement;
-      if ( xyPositionerTouch(vone->endstops.xyPositionerLeft, measurement)
+      if ( xyPositionerTouch(vone->toolBox.currentTool(), vone->endstops.xyPositionerLeft, measurement)
         || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
         return -1;
       }
@@ -189,7 +189,7 @@ int process_gcode(int command_code) {
     // G21: XYPositioner X2 - Move in -X until switch triggered
     case 21: {
       float measurement;
-      if ( xyPositionerTouch(vone->endstops.xyPositionerRight, measurement)
+      if ( xyPositionerTouch(vone->toolBox.currentTool(), vone->endstops.xyPositionerRight, measurement)
         || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
           return -1;
       }

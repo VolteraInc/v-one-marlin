@@ -37,6 +37,8 @@ and Philipp Tiefenbacher. */
 //===========================================================================
 block_t *current_block;  // A pointer to the block currently being traced
 
+volatile unsigned long g_maxStepperDurationMicros = 0;
+
 //===========================================================================
 //=============================private variables ============================
 //===========================================================================
@@ -211,6 +213,8 @@ FORCE_INLINE void trapezoid_generator_reset() {
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse.
 // It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately.
 void stepper_isr(EndstopMonitor& endstopMonitor) {
+  const auto start = micros();
+
   static signed char xDir = 1;
   static signed char yDir = 1;
   static signed char zDir = 1;
@@ -363,6 +367,20 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
   if (step_events_completed >= current_block->step_event_count) {
     current_block = nullptr;
     plan_discard_current_block();
+  }
+
+  const auto elapsed = micros() - start;
+  if (elapsed > g_maxStepperDurationMicros) {
+    g_maxStepperDurationMicros = elapsed;
+  }
+}
+
+void stepperPeriodicReport() {
+  static auto prevDuration = g_maxStepperDurationMicros;
+  const auto curDuration = g_maxStepperDurationMicros;
+  if (curDuration != prevDuration) {
+    prevDuration = curDuration;
+    log << F("Max stepper_isr duration increased to: ") << curDuration << F("us") << endl;
   }
 }
 

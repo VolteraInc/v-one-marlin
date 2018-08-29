@@ -98,8 +98,37 @@ static unsigned long s_stabilityThreshold(VoltageType type) {
     case VoltageType::ProbeMounted:
     case VoltageType::DrillMounted:
     default:
-      return 30;
+      return 50;
   }
+
+// 617772,Probe Mounted, 3.471680
+// 617790,Probe Mounted, 3.471680
+// 617812,Probe Mounted, 3.471680
+// 617831,Probe Mounted, 3.471680
+// 617851,Probe Mounted, 3.476562
+// 617872,Probe Mounted, 3.471680
+// 617892,Probe Mounted, 3.471680
+// 617911,Probe Mounted, 3.471680
+// 617931,Probe Mounted, 3.471680
+// 617952,Probe Mounted, 3.471680
+// 617972,Probe Mounted, 3.471680
+// 617991,Drill Resetting, 0.336914
+// 618011,Unknown, 0.131836
+// 618032,Triggered, 0.000000
+// 618052,Unknown, 0.092773
+// 618071,Unknown, 0.708008
+// 618091,Unknown, 0.800781
+// 618112,Drill Mounted, 1.210937
+// 618132,Drill Mounted, 1.269531   // I suspect some intermittent contect here
+// 618152,Drill Mounted, 1.401367
+//  ...prob unknowns...
+// 618210,Probe Mounted, 3.291016
+// 618230,Probe Mounted, 3.393555
+// 618251,Probe Mounted, 3.437500
+
+// TODO: 1) move voltage classification to tools ... then we shouldn't see.
+//          unless we miss the detach, and the new tool is suddenly present
+//       2) increase timespan for now?
 }
 
 void toolDetection::VoltageTypeStabilizer::add(unsigned long time, float voltage) {

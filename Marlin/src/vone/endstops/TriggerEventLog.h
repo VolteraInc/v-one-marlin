@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../../macros.h"
 #include "../../../serial.h"
 #include "../endstops/Endstop.h"
 
@@ -19,19 +20,19 @@ struct TriggerEvent {
 
 class TriggerEventLog {
   public:
-    inline unsigned int size() const {
+    FORCE_INLINE unsigned int size() const {
       ScopedInterruptDisable sid;
       return m_size;
     }
 
-    inline bool empty() const { return size() == 0; }
-    inline bool full() const { return size() == MAX_ENTRIES; }
+    FORCE_INLINE bool empty() const { return size() == 0; }
+    FORCE_INLINE bool full() const { return size() == MAX_ENTRIES; }
 
-    inline const TriggerEvent* front() const { return empty() ? nullptr : &m_log[m_frontIdx]; }
-    inline const TriggerEvent* back() const { return empty() ? nullptr : &m_log[m_backIdx]; }
+    FORCE_INLINE const TriggerEvent* front() const { return empty() ? nullptr : &m_log[m_frontIdx]; }
+    FORCE_INLINE const TriggerEvent* back() const { return empty() ? nullptr : &m_log[m_backIdx]; }
 
-    inline void push(const Endstop& endstop, float positionInAxis);
-    inline void pop();
+    FORCE_INLINE void push(const Endstop& endstop, float positionInAxis);
+    FORCE_INLINE void pop();
 
   private:
     static const unsigned int MAX_ENTRIES = 10;
@@ -40,7 +41,7 @@ class TriggerEventLog {
     unsigned int m_frontIdx = 0;
     unsigned int m_backIdx = MAX_ENTRIES - 1;
 
-    static inline unsigned int increment(unsigned int idx) {
+    static FORCE_INLINE unsigned int increment(unsigned int idx) {
       return idx == MAX_ENTRIES - 1 ? 0 : idx + 1;
     }
 };

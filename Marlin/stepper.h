@@ -22,6 +22,7 @@
 
 #include <inttypes.h>
 #include "Axis.h"
+#include "macros.h"
 
 class EndstopMonitor;
 

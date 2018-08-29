@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../../MarlinConfig.h"
 #include "../../../stepper.h"
 
 class Endstop;
@@ -20,10 +21,20 @@ class Stepper {
 
     inline void isr();
 
+    unsigned long maxStepperDurationMicros();
+
   private:
     volatile bool m_stopped = false;
+    volatile unsigned long m_maxStepperDurationMicros = 0;
 };
 
 void Stepper::isr() {
+  const auto start = micros();
+
   stepper_isr(endstopMonitor);
+
+  const auto elapsed = micros() - start;
+  if (elapsed > m_maxStepperDurationMicros) {
+    m_maxStepperDurationMicros = elapsed;
+  }
 }
