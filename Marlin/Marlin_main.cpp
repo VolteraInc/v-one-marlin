@@ -79,11 +79,11 @@ void setup() {
   // Check startup - does nothing if bootloader sets MCUSR to 0
   byte mcu = MCUSR;
   if (mcu) {
-    if(mcu & 1) log << F("PowerUp") << endl;
-    if(mcu & 2) log << F(" External Reset") << endl;
-    if(mcu & 4) log << F(" Brown out Reset") << endl;
-    if(mcu & 8) log << F(" Watchdog Reset") << endl;
-    if(mcu & 32) log << F(" Software Reset") << endl;
+    if(mcu & 1) log << F("MCU: PowerUp") << endl;
+    if(mcu & 2) log << F("MCU: External Reset") << endl;
+    if(mcu & 4) log << F("MCU: Brown out Reset") << endl;
+    if(mcu & 8) log << F("MCU: Watchdog Reset") << endl;
+    if(mcu & 32) log << F("MCU: Software Reset") << endl;
   }
   MCUSR = 0;
 
