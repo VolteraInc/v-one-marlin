@@ -10,6 +10,13 @@
 #include "tools/ToolBox.h"
 #include "toolDetection/ToolDetector.h"
 
+// DEFER: ideally these would live in the cpp file,
+//        but slicing up stepper_isr into h-files is
+//        too much work for right now
+#define ENABLE_TEMPERATURE_INTERRUPT()  SBI(TIMSK0, OCIE0B)
+#define DISABLE_TEMPERATURE_INTERRUPT() CBI(TIMSK0, OCIE0B)
+#define TEMPERATURE_ISR_ENABLED()      TEST(TIMSK0, OCIE0B)
+
 class VOne {
   public:
     VOne(
@@ -33,45 +40,5 @@ class VOne {
     tools::ToolBox toolBox;
     toolDetection::ToolDetector toolDetector;
 
-    // Perform work that must happen frequently but can be
-    // interrupted (briefly) by time critical work like
-    // serial character reads and the stepper.
-    // Note: work done in the main loop can be delayed delayed by
-    //       10s, 30s or longer. It depends on how long it takes
-    //       to process the current command.
-    inline void frequentInterruptibleWork() {
-      // Allow other interrupts
-      CBI(TIMSK0, OCIE0B);
-      sei();
-
-      // Updated ADC values are needed by heater and toolDetector
-      adc.frequentInterruptibleWork();
-
-      // Heater management
-      // Note: Delaying heater updates (even for a few seconds) could
-      //       result in several degrees of overshoot
-      // TODO: temperature profiles should be processed here
-      //       otherwise the next step in the profile can be delayed
-      //       by command processing
-      heater.frequentInterruptibleWork();
-
-      // Tool Detection
-      // Note: Delaying tool detach detection (even for a few seconds) could
-      //       result in damage, i.e. a tool crash, broken drill bit, etc
-      // Note: Voltage readings will start around 0 because we hold
-      //       voltage low on boot (to reset the attached tool).
-      //       To avoid this weirdness we ignore voltage readings
-      //       until after 1000ms. This value was determined by observtion,
-      //       (500ms was not enough, 600ms was close). This value depends
-      //       on how much work is being performed during system setup
-      const auto now = millis();
-      if (now > 1000) {
-        toolDetector.frequentInterruptibleWork();
-      }
-
-      // Restore interrupt settings
-      // DEFER: is this needed ?
-      SBI(TIMSK0, OCIE0B);
-    }
-
+    void frequentInterruptibleWork();
 };

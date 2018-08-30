@@ -140,8 +140,9 @@ asm volatile ( \
   "r26" , "r27" \
   )
 
-#define ENABLE_STEPPER_DRIVER_INTERRUPT()  TIMSK1 |= (1<<OCIE1A)
-#define DISABLE_STEPPER_DRIVER_INTERRUPT() TIMSK1 &= ~(1<<OCIE1A)
+#define ENABLE_STEPPER_DRIVER_INTERRUPT()  SBI(TIMSK1, OCIE1A)
+#define DISABLE_STEPPER_DRIVER_INTERRUPT() CBI(TIMSK1, OCIE1A)
+#define STEPPER_ISR_ENABLED()             TEST(TIMSK1, OCIE1A)
 
   //         __________________________
   //        /|                        |\     _________________         ^
@@ -479,6 +480,36 @@ void stepperPeriodicReport() {
     static auto prev = g_max_endblock_blockRemoved;
     rpt(F("endblock_blockRemoved"), prev, g_max_endblock_blockRemoved);
   }
+}
+
+// DEFER: Slice up stepper_isr() and move to h-files
+//        hard part is untangling use of shared static
+//        variables. Keep latest version of Marlin
+//        in mind though, it's quite different, so
+//        we might want to move toward that.
+//        Ideally this ISR would live in VOne.cpp
+ISR(TIMER1_COMPA_vect) {
+  //  On AVR there is no hardware prioritization and preemption of
+  //  interrupts, so this emulates it. The UART has first priority
+  //  (otherwise, characters will be lost due to UART overflow).
+  //  Then: Stepper, Endstops, Temperature, and -finally- all others.
+  //
+  //  This ISR needs to run with as little preemption as possible, so
+  //  the Temperature ISR is disabled here. Now only the UART, Endstops,
+  //  and Arduino-defined interrupts can preempt.
+  const bool temp_isr_was_enabled = TEMPERATURE_ISR_ENABLED();
+  DISABLE_TEMPERATURE_INTERRUPT();
+  DISABLE_STEPPER_DRIVER_INTERRUPT();
+  sei();
+
+  static auto& s_endStopMonitor = vone->stepper.endstopMonitor;
+  stepper_isr(s_endStopMonitor);
+
+  // Disable global interrupts and reenable this ISR
+  cli();
+  ENABLE_STEPPER_DRIVER_INTERRUPT();
+  // Reenable the temperature ISR (if it was enabled)
+  if (temp_isr_was_enabled) ENABLE_TEMPERATURE_INTERRUPT();
 }
 
 void st_init() {

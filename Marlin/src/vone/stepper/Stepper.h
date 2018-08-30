@@ -1,11 +1,9 @@
 #pragma once
 
 #include "../../../MarlinConfig.h"
-#include "../../../stepper.h"
 
 class Endstop;
 class EndstopMonitor;
-
 
 class Stepper {
   public:
@@ -19,22 +17,14 @@ class Stepper {
 
     int add(float x, float y, float z, float e, float f);
 
-    inline void isr();
-
     unsigned long maxStepperDurationMicros();
+
+    // DEFER: Ideally the stepper isr would be defined in this file
+    //        but carving stepper_isr() into multiple h-files +
+    //        classes to hold shared variables is too much work for
+    //        right now
 
   private:
     volatile bool m_stopped = false;
     volatile unsigned long m_maxStepperDurationMicros = 0;
 };
-
-void Stepper::isr() {
-  const auto start = micros();
-
-  stepper_isr(endstopMonitor);
-
-  const auto elapsed = micros() - start;
-  if (elapsed > m_maxStepperDurationMicros) {
-    m_maxStepperDurationMicros = elapsed;
-  }
-}

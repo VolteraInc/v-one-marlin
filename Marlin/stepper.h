@@ -24,11 +24,8 @@
 #include "Axis.h"
 #include "macros.h"
 
-class EndstopMonitor;
-
 // Initialize and start the stepper motor subsystem
 void st_init();
-void stepper_isr(EndstopMonitor& endStops);
 
 // Block until all buffered steps are executed
 void st_synchronize();

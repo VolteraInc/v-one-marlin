@@ -17,4 +17,56 @@ VOne::VOne(
   , toolBox(stepper, pins.ptop, endstops.toolSwitch)
   , toolDetector(toolBox, pins.ptop)
 {
+  // Configure calling frequency of TIMER0_COMPB_vect
+  // NOTE: Timer 0 is used by millis() so don't change the prescaler
+  OCR0B = 128;
+  ENABLE_TEMPERATURE_INTERRUPT();
+}
+
+// Perform work that must happen frequently but can be
+// interrupted (briefly) by time critical work like
+// serial character reads and the stepper.
+// Note: work done in the main loop can be delayed delayed by
+//       10s, 30s or longer. It depends on how long it takes
+//       to process the current command.
+void VOne::frequentInterruptibleWork() {
+
+  // Updated ADC values are needed by heater and toolDetector
+  adc.frequentInterruptibleWork();
+
+  // Heater management
+  // Note: Delaying heater updates (even for a few seconds) could
+  //       result in several degrees of overshoot
+  // TODO: temperature profiles should be processed here
+  //       otherwise the next step in the profile can be delayed
+  //       by command processing
+  heater.frequentInterruptibleWork();
+
+  // Tool Detection
+  // Note: Delaying tool detach detection (even for a few seconds) could
+  //       result in damage, i.e. a tool crash, broken drill bit, etc
+  // Note: Voltage readings will start around 0 because we hold
+  //       voltage low on boot (to reset the attached tool).
+  //       To avoid this weirdness we ignore voltage readings
+  //       until after 1000ms. This value was determined by observtion,
+  //       (500ms was not enough, 600ms was close). This value depends
+  //       on how much work is being performed during system setup
+  const auto now = millis();
+  if (now > 1000) {
+    toolDetector.frequentInterruptibleWork();
+  }
+}
+
+// See stepper.cpp for TIMER1_COMPA_vect
+
+ISR(TIMER0_COMPB_vect) {
+  // Allow other interrupts
+  DISABLE_TEMPERATURE_INTERRUPT();
+  sei();
+
+  vone->frequentInterruptibleWork();
+
+  // Restore interrupt settings
+  cli();
+  ENABLE_TEMPERATURE_INTERRUPT();
 }

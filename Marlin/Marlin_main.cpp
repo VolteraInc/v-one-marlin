@@ -111,11 +111,6 @@ void setup() {
 
   manufacturing_init();
 
-  // Configure calling frequency of TIMER0_COMPB_vect
-  // NOTE: Timer 0 is used by millis() so don't change the prescaler
-  OCR0B = 128;
-  SBI(TIMSK0, OCIE0B);
-
   sei();
 
   protocol << F("--ready--") << endl;
@@ -142,12 +137,4 @@ void loop() {
 
   reportBufferEmpty();   // not important enough to monitor
   periodic_output();     // will generate excessive output
-}
-
-ISR(TIMER1_COMPA_vect) {
-  vone->stepper.isr();
-}
-
-ISR(TIMER0_COMPB_vect) {
-  vone->frequentInterruptibleWork();
 }
