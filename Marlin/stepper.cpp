@@ -243,7 +243,7 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
 
   // If there is no current block, attempt to pop one from the buffer
   if (!current_block) {
-    const auto blk_start = micros();
+    // const auto blk_start = micros();
     // Anything in the buffer?
     current_block = plan_get_current_block();
 
@@ -272,7 +272,7 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
     WRITE(Z_DIR_PIN, zDir == -1 ? INVERT_Z_DIR : !INVERT_Z_DIR);
     WRITE(E_DIR_PIN, eDir == -1 ? INVERT_E_DIR : !INVERT_E_DIR);
 
-    UPDATE_TIMER(blk_start, g_max_blk_gotBlock);
+    // UPDATE_TIMER(blk_start, g_max_blk_gotBlock);
   }
 
 
@@ -292,10 +292,9 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
     endstopMonitor.onSteppingInZ(zDir, count_position, triggeredInZ);
   }
 
-  const auto stp_start = micros();
-
   if (triggeredInX || triggeredInY || triggeredInZ) {
     UPDATE_TIMER(es_start, g_max_es_checkedEndstopsAndTriggered);
+    // const auto stp_start = micros();
 
     // Treat the block as complete
     // Note: Ensures timing is restored and current_block is removed
@@ -306,9 +305,11 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
     //       If it was not then any queued moves no longer make sense
     quickStop();
 
-    UPDATE_TIMER(stp_start, g_max_stp_finishedTriggeredBranch);
+    // UPDATE_TIMER(stp_start, g_max_stp_finishedTriggeredBranch);
   } else {
     UPDATE_TIMER(es_start, g_max_es_checkedEndstopsAndNoTriggers);
+
+    // const auto stp_start = micros();
 
     // Take multiple steps per interrupt (For high speed moves)
     for (int8_t i = 0; i < step_loops; i++) {
@@ -350,10 +351,10 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
       }
     }
 
-    UPDATE_TIMER(stp_start, g_max_stp_finishedSteppingBranch);
+    // UPDATE_TIMER(stp_start, g_max_stp_finishedSteppingBranch);
   }
 
-  const auto acc_start = micros();
+  // const auto acc_start = micros();
 
   // Calculate new timer value
   if (step_events_completed <= (unsigned long int)current_block->accelerate_until) {
@@ -373,7 +374,7 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
     OCR1A = timer;
     acceleration_time += timer;
 
-    UPDATE_TIMER(acc_start, g_max_acc_endOfAccelBranch);
+    // UPDATE_TIMER(acc_start, g_max_acc_endOfAccelBranch);
 
   } else if (step_events_completed > (unsigned long int)current_block->decelerate_after) {
     unsigned short step_rate;
@@ -395,26 +396,26 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
     OCR1A = timer;
     deceleration_time += timer;
 
-    UPDATE_TIMER(acc_start, g_max_acc_endOfDecelBranch);
+    // UPDATE_TIMER(acc_start, g_max_acc_endOfDecelBranch);
 
   } else {
     OCR1A = OCR1A_nominal;
     // ensure we're running at the correct step rate, even if we just came off an acceleration
     step_loops = step_loops_nominal;
 
-    UPDATE_TIMER(acc_start, g_max_acc_endOfPlateauBranch);
+    // UPDATE_TIMER(acc_start, g_max_acc_endOfPlateauBranch);
   }
 
-  const auto endblock_start = micros();
+  // const auto endblock_start = micros();
 
   // If current block is finished, reset pointer
   if (step_events_completed >= current_block->step_event_count) {
     current_block = nullptr;
     plan_discard_current_block();
-    UPDATE_TIMER(endblock_start, g_max_endblock_blockRemoved);
+    // UPDATE_TIMER(endblock_start, g_max_endblock_blockRemoved);
   }
 
-  UPDATE_TIMER(start, g_maxStepperDurationMicros);
+  // UPDATE_TIMER(start, g_maxStepperDurationMicros);
 
   if (!triggeredInX && !triggeredInY && !triggeredInZ) {
     UPDATE_TIMER(start, g_maxStepperDurationMicros_NoTriggers);
