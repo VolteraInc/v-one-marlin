@@ -58,10 +58,6 @@ volatile unsigned long g_max_endblock_blockRemoved = 0;
 //=============================private variables ============================
 //===========================================================================
 
-// Counter variables for the bresenham line tracer
-static long counter_x, counter_y, counter_z, counter_e;
-
-volatile static unsigned long step_events_completed; // The number of step events executed in the current block
 static long acceleration_time, deceleration_time;
 static unsigned short acc_step_rate; // needed for deccelaration start point
 static char step_loops;
@@ -239,6 +235,12 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
   static signed char zDir = 1;
   static signed char eDir = 1;
 
+  // The number of step events executed in the current block
+  static unsigned long step_events_completed = 0;
+
+  // Counter variables for the bresenham line tracer
+  static long counter_x, counter_y, counter_z, counter_e;
+
   // If there is no current block, attempt to pop one from the buffer
   if (!current_block) {
     const auto blk_start = micros();
@@ -354,8 +356,6 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
   const auto acc_start = micros();
 
   // Calculate new timer value
-  unsigned short timer;
-  unsigned short step_rate;
   if (step_events_completed <= (unsigned long int)current_block->accelerate_until) {
 
     MultiU24X24toH16(acc_step_rate, acceleration_time, current_block->acceleration_rate);
@@ -369,13 +369,14 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
     }
 
     // step_rate to timer interval
-    timer = calc_timer(acc_step_rate);
+    const auto timer = calc_timer(acc_step_rate);
     OCR1A = timer;
     acceleration_time += timer;
 
     UPDATE_TIMER(acc_start, g_max_acc_endOfAccelBranch);
 
   } else if (step_events_completed > (unsigned long int)current_block->decelerate_after) {
+    unsigned short step_rate;
     MultiU24X24toH16(step_rate, deceleration_time, current_block->acceleration_rate);
     // step_rate = deceleration_time * current_block->acceleration_rate >> 24
     if (step_rate > acc_step_rate) { // Check step_rate stays positive
@@ -390,7 +391,7 @@ void stepper_isr(EndstopMonitor& endstopMonitor) {
     }
 
     // step_rate to timer interval
-    timer = calc_timer(step_rate);
+    const auto timer = calc_timer(step_rate);
     OCR1A = timer;
     deceleration_time += timer;
 
