@@ -502,8 +502,7 @@ ISR(TIMER1_COMPA_vect) {
   DISABLE_STEPPER_DRIVER_INTERRUPT();
   sei();
 
-  static auto& s_endStopMonitor = vone->stepper.endstopMonitor;
-  stepper_isr(s_endStopMonitor);
+  stepper_isr(vone->stepper.endstopMonitor);
 
   // Disable global interrupts and reenable this ISR
   cli();
