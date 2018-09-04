@@ -227,7 +227,7 @@ FORCE_INLINE void trapezoid_generator_reset() {
 
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse.
 // It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately.
-void stepper_isr(EndstopMonitor& endstopMonitor) {
+FORCE_INLINE void stepper_isr(EndstopMonitor& endstopMonitor) {
   const auto start = micros();
   unsigned long elapsed;
 

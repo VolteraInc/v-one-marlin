@@ -1,21 +1,22 @@
 #pragma once
 
+#include "../../../macros.h"
 #include "../../utils/ScopedInterruptDisable.h"
 
 class EndstopFilter {
   public:
-    inline void ignore(bool ignoreTriggers = true);
-    inline bool ignored() const;
-    inline bool triggered() const;
-    inline void addSample(int value);
-    inline void reset();
+    FORCE_INLINE void ignore(bool ignoreTriggers = true);
+    FORCE_INLINE bool ignored() const;
+    FORCE_INLINE bool triggered() const;
+    FORCE_INLINE void addSample(int value);
+    FORCE_INLINE void reset();
 
   private:
     static const unsigned int TriggerCountThreshold = 2;
     volatile unsigned int m_triggerCount = 0;
     volatile bool m_ignored = false;
 
-    bool _triggered() const {
+    FORCE_INLINE bool _triggered() const {
       return m_triggerCount >= TriggerCountThreshold;
     }
 };
