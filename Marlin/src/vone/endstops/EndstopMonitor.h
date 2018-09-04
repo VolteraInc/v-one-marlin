@@ -64,7 +64,7 @@ class EndstopMonitor {
 
     FORCE_INLINE void updateEndstop(
       EndstopFilter& filter,
-      bool value,
+      int value,
       const Endstop& endstop,
       volatile long stepCounts[NUM_AXIS]
     ) {
