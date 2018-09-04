@@ -277,39 +277,7 @@ FORCE_INLINE void stepper_isr(EndstopMonitor& endstopMonitor) {
   }
 
 
-  const auto es_start =  micros();
-  // Detect end-stop hits
-  // Note: only check in the direction(s) we are moving
-  bool triggeredInX = false;
-  bool triggeredInY = false;
-  bool triggeredInZ = false;
-  if (current_block->steps_x > 0) {
-    endstopMonitor.onSteppingInX(xDir, count_position, triggeredInX);
-  }
-  if (current_block->steps_y > 0) {
-    endstopMonitor.onSteppingInY(yDir, count_position, triggeredInY);
-  }
-  if (current_block->steps_z > 0) {
-    endstopMonitor.onSteppingInZ(zDir, count_position, triggeredInZ);
-  }
-
-  if (triggeredInX || triggeredInY || triggeredInZ) {
-    UPDATE_TIMER(es_start, g_max_es_checkedEndstopsAndTriggered);
-    // const auto stp_start = micros();
-
-    // Treat the block as complete
-    // Note: Ensures timing is restored and current_block is removed
-    step_events_completed = current_block->step_event_count;
-
-    // Flush any remaining moves
-    // Note: If this hit was expected then there should not be any more moves queued
-    //       If it was not then any queued moves no longer make sense
-    quickStop();
-
-    // UPDATE_TIMER(stp_start, g_max_stp_finishedTriggeredBranch);
-  } else {
-    UPDATE_TIMER(es_start, g_max_es_checkedEndstopsAndNoTriggers);
-
+  {
     // const auto stp_start = micros();
 
     // Take multiple steps per interrupt (For high speed moves)
@@ -353,6 +321,40 @@ FORCE_INLINE void stepper_isr(EndstopMonitor& endstopMonitor) {
     }
 
     // UPDATE_TIMER(stp_start, g_max_stp_finishedSteppingBranch);
+  }
+
+  const auto es_start =  micros();
+  // Detect end-stop hits
+  // Note: only check in the direction(s) we are moving
+  bool triggeredInX = false;
+  bool triggeredInY = false;
+  bool triggeredInZ = false;
+  if (current_block->steps_x > 0) {
+    endstopMonitor.onSteppingInX(xDir, count_position, triggeredInX);
+  }
+  if (current_block->steps_y > 0) {
+    endstopMonitor.onSteppingInY(yDir, count_position, triggeredInY);
+  }
+  if (current_block->steps_z > 0) {
+    endstopMonitor.onSteppingInZ(zDir, count_position, triggeredInZ);
+  }
+
+  if (triggeredInX || triggeredInY || triggeredInZ) {
+    UPDATE_TIMER(es_start, g_max_es_checkedEndstopsAndTriggered);
+    // const auto stp_start = micros();
+
+    // Treat the block as complete
+    // Note: Ensures timing is restored and current_block is removed
+    step_events_completed = current_block->step_event_count;
+
+    // Flush any remaining moves
+    // Note: If this hit was expected then there should not be any more moves queued
+    //       If it was not then any queued moves no longer make sense
+    quickStop();
+
+    // UPDATE_TIMER(stp_start, g_max_stp_finishedTriggeredBranch);
+  } else {
+    UPDATE_TIMER(es_start, g_max_es_checkedEndstopsAndNoTriggers);
   }
 
   // const auto acc_start = micros();
