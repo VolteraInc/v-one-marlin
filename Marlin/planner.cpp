@@ -380,7 +380,7 @@ void plan_init() {
   previous_nominal_speed = 0.0;
 }
 
-int sign(float value) {
+inline int sign(float value) {
   return value == 0 ? 0 : (value > 0 ? 1 : -1);
 }
 
