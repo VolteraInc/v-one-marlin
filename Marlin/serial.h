@@ -17,6 +17,7 @@ inline MarlinSerial& operator<<(MarlinSerial &obj,        double arg) { obj.prin
 inline MarlinSerial& operator<<(MarlinSerial &obj,          char arg) { obj.print(arg); return obj; }
 inline MarlinSerial& operator<<(MarlinSerial &obj,   const char* arg) { obj.print(arg); return obj; }
 
+class __FlashStringHelper;
 inline MarlinSerial& operator<<(MarlinSerial &obj, const __FlashStringHelper* arg) { obj.print(arg); return obj; }
 
 
