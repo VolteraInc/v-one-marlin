@@ -35,7 +35,8 @@ and Philipp Tiefenbacher. */
 //===========================================================================
 //=============================private variables ============================
 //===========================================================================
-static volatile block_t *current_block = nullptr;  // A pointer to the block currently being traced
+
+static volatile bool s_stopRequested = false;
 
 static long acceleration_time, deceleration_time;
 static unsigned short acc_step_rate; // needed for deccelaration start point
@@ -203,6 +204,17 @@ ISR(TIMER1_COMPA_vect) {
   const auto isr_start = micros();
   auto& stepper = vone->stepper;
   static uint8_t step_loops = 1;
+  static block_t *current_block = nullptr;
+
+  // --------------------------------------------
+  // Check for stop request
+  if (s_stopRequested) {
+    s_stopRequested = false;
+    while (blocks_queued()) {
+      plan_discard_current_block();
+    }
+    current_block = nullptr;
+  }
 
   // --------------------------------------------
   // Move, if we already have a block
@@ -341,10 +353,6 @@ float st_get_position_mm(AxisEnum axis) {
 }
 
 void quickStop() {
-  DISABLE_STEPPER_DRIVER_INTERRUPT();
-  while (blocks_queued()) {
-    plan_discard_current_block();
-  }
-  current_block = NULL;
-  ENABLE_STEPPER_DRIVER_INTERRUPT();
+  ScopedInterruptDisable sid;
+  s_stopRequested = true;
 }
