@@ -20,6 +20,7 @@ class EndstopMonitor {
 
     bool isTriggered(const Endstop& endstop) const;
     bool isTriggered(enum AxisEnum axis) const;
+    bool isTriggered(enum AxisEnum axis, int direction) const;
     int acknowledgeTriggered(const Endstop& endstop);
     int acknowledgeTriggered(enum AxisEnum axis, int direction);
 

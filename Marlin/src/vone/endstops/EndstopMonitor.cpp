@@ -98,6 +98,16 @@ bool EndstopMonitor::isTriggered(enum AxisEnum axis) const {
   return false;
 }
 
+bool EndstopMonitor::isTriggered(enum AxisEnum axis, int direction) const {
+  switch (axis) {
+    case X_AXIS: return direction == -1 ? isTriggeredRight() : isTriggeredLeft();
+    case Y_AXIS: return direction == -1 ? isTriggeredBack() : isTriggeredForward();
+    case Z_AXIS: return direction == -1 ? isTriggeredDown() : isTriggeredUp();
+    case E_AXIS: return false;
+  }
+  return false;
+}
+
 int EndstopMonitor::acknowledgeTriggered(const Endstop& endstop) {
   if (
     m_triggerLog.size() != 1 ||

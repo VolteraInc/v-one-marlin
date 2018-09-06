@@ -247,6 +247,11 @@ int moveToLimit(AxisEnum axis, int direction, float f, float maxTravel) {
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
+  // Check if already triggered
+  if (endstopMonitor.isTriggered(axis, direction)) {
+    return 0;
+  }
+
   // Move
   const auto clampedMaxTravel = min(maxTravel, s_maxTravelInAxis(axis, direction));
   const auto travel = direction < 0 ? -clampedMaxTravel : clampedMaxTravel;
@@ -288,6 +293,11 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
 
   // Finish any pending moves (prevents crashes)
   st_synchronize();
+
+  // Check if already triggered
+  if (endstop.readTriggered()) {
+    return 0;
+  }
 
   // Enable endstop, if necessary
   ScopedEndstopEnable scopedEnable(endstopMonitor, endstop);
