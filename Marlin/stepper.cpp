@@ -239,7 +239,7 @@ ISR(TIMER1_COMPA_vect) {
   const bool temp_isr_was_enabled = TEMPERATURE_ISR_ENABLED();
   DISABLE_TEMPERATURE_INTERRUPT();
   DISABLE_STEPPER_DRIVER_INTERRUPT();
-  stepper.maxInterruptsAllowed.update(micros() - isr_start);
+  stepper.maxInterruptsAllowed.update(micros() - isr_start); // should be less than 40us, or we risk missing a character
   sei();
 
   // --------------------------------------------
