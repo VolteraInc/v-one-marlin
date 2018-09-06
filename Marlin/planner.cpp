@@ -566,6 +566,17 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
     }
   }
 
+  // log
+  //   << " x=" << x
+  //   << " y=" << y
+  //   << " z=" << z
+  //   << " nr=" << block->nominal_rate
+  //   << "steps/s sf=" << speed_factor
+  //   << " sec=" << block->step_event_count
+  //   << " " << block->millimeters
+  //   << "mm f=" << feed_rate
+  //   << endl;
+
   // Correct the speed
   if (speed_factor < 1.0) {
     for (auto i = 0u; i < 4; ++i) {
