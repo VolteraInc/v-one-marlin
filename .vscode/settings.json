@@ -2,6 +2,8 @@
   "files.associations": {
     "limits": "cpp",
     "type_traits": "cpp",
-    "cstddef": "cpp"
+    "cstddef": "cpp",
+    "__config": "cpp",
+    "__nullptr": "cpp"
   }
 }
