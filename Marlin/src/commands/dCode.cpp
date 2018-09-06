@@ -145,7 +145,7 @@ int process_dcode(int command_code) {
       return 0;
 
     case 2:
-      vone->endstops.outputStatus();
+      vone->outputStatus();
       return 0;
 
     case 5: {
@@ -373,7 +373,7 @@ int process_dcode(int command_code) {
       log << F("  For manual debugging. subject to change") << endl;
       log << F("General Commands") << endl;
       log << F("  D1 - Toggle logging ON/OFF (default: OFF)") << endl;
-      log << F("  D2 - Output switch status") << endl;
+      log << F("  D2 - Output status, including switches and stats") << endl;
       log << F("  D5 - stepper stop/resume -- D5 E1 to resume, E0 to stop, no args for status") << endl;
       log << F("") << endl;
       log << F("Algorithms") << endl;

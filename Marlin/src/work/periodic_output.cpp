@@ -11,17 +11,6 @@ static void outputBedTemperatureUpdate(float current, float target, float timeRe
     << endl;
 }
 
-static void s_stepperPeriodicReport() {
-  static auto prevDuration = vone->stepper.maxStepperDurationMicros();
-  const auto curDuration = vone->stepper.maxStepperDurationMicros();
-  if (curDuration != prevDuration) {
-    prevDuration = curDuration;
-    log << F("Max stepper duration increased to: ") << curDuration << F("us") << endl;
-  }
-}
-
-void stepperPeriodicReport();
-
 void periodic_output() {
   // Run periodically
   static unsigned long nextCheckAt = 0;
@@ -71,6 +60,5 @@ void periodic_output() {
       prev.temperature.target = target;
   }
 
-  s_stepperPeriodicReport();
-  stepperPeriodicReport();
+  vone->stepper.periodicReport();
 }

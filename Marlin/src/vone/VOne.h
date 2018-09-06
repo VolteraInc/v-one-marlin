@@ -41,4 +41,5 @@ class VOne {
     toolDetection::ToolDetector toolDetector;
 
     void frequentInterruptibleWork();
+    void outputStatus();
 };

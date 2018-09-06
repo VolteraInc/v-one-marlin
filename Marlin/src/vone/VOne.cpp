@@ -57,6 +57,11 @@ void VOne::frequentInterruptibleWork() {
   }
 }
 
+void VOne::outputStatus() {
+  endstops.outputStatus();
+  stepper.outputStatus();
+}
+
 // See stepper.cpp for TIMER1_COMPA_vect
 
 ISR(TIMER0_COMPB_vect) {
