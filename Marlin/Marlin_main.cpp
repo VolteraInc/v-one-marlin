@@ -87,8 +87,6 @@ void setup() {
   }
   MCUSR = 0;
 
-  log << F("Free Memory: ") << freeMemory() << endl;
-  log << F("PlannerBufferBytes: ") << (int)sizeof(block_t)*BLOCK_BUFFER_SIZE << endl;
 
   protocol << F("firmwareVersionReport: ") << VERSION_STRING << endl;
 

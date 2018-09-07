@@ -1,5 +1,7 @@
 #include "VOne.h"
 
+#include "../libraries/MemoryFree/MemoryFree.h"
+
 VOne::VOne(
   int ptopDigialPin,
   int ptopAnalogPin,
@@ -16,11 +18,21 @@ VOne::VOne(
 
   , toolBox(stepper, pins.ptop, endstops.toolSwitch)
   , toolDetector(toolBox, pins.ptop)
+
+  , m_memoryUsage(F("memory usage"), F(" bytes"), 8192)
 {
   // Configure calling frequency of TIMER0_COMPB_vect
   // NOTE: Timer 0 is used by millis() so don't change the prescaler
   OCR0B = 128;
   ENABLE_TEMPERATURE_INTERRUPT();
+}
+
+void VOne::updateStats() {
+  const auto now = millis();
+  if (now > m_nextStatsCheckAt) {
+    m_nextStatsCheckAt = now + 1000;
+    m_memoryUsage.updateIfLower(freeMemory());
+  }
 }
 
 // Perform work that must happen frequently but can be
@@ -55,11 +67,19 @@ void VOne::frequentInterruptibleWork() {
   if (now > 1000) {
     toolDetector.frequentInterruptibleWork();
   }
+
+  updateStats();
 }
 
 void VOne::outputStatus() {
+  m_memoryUsage.outputStatus();
   endstops.outputStatus();
   stepper.outputStatus();
+}
+
+void VOne::periodicReport() {
+  m_memoryUsage.reportIfChanged();
+  vone->stepper.periodicReport();
 }
 
 // See stepper.cpp for TIMER1_COMPA_vect

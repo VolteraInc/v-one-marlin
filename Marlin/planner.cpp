@@ -370,6 +370,12 @@ void planner_recalculate() {
 }
 
 void plan_init() {
+  log
+    << F("Motion buffer size: ")
+    << BLOCK_BUFFER_SIZE << F(" moves ")
+    << F("(") << sizeof(block_buffer) << F(" bytes)")
+    << endl;
+
   block_buffer_head = 0;
   block_buffer_tail = 0;
   memset(position, 0, sizeof(position)); // clear position

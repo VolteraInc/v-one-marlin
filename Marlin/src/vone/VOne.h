@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../utils/HighwaterReporter.h"
+
 #include "pins/PinSet.h"
 #include "endstops/Endstops.h"
 #include "endstops/EndstopMonitor.h"
@@ -42,4 +44,12 @@ class VOne {
 
     void frequentInterruptibleWork();
     void outputStatus();
+    void periodicReport();
+
+  private:
+    unsigned long m_nextStatsCheckAt = 0;
+    HighwaterReporter m_memoryUsage;
+
+    void updateStats();
+
 };

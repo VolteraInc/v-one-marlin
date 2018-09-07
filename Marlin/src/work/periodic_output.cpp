@@ -60,5 +60,5 @@ void periodic_output() {
       prev.temperature.target = target;
   }
 
-  vone->stepper.periodicReport();
+  vone->periodicReport();
 }
