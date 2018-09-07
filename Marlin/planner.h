@@ -56,7 +56,7 @@ typedef struct {
   unsigned long initial_rate;                        // The jerk-adjusted step rate at start of block
   unsigned long final_rate;                          // The minimal rate at exit
   unsigned long acceleration_st;                     // acceleration steps/sec^2
-  volatile char busy;
+  volatile bool busy;
 } block_t;
 
 // Initialize the motion plan subsystem
