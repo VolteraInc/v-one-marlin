@@ -5,6 +5,7 @@
 #include "../work/work.h"
 #include "../vone/VOne.h"
 #include "../vone/endstops/Endstop.h"
+#include "../vone/endstops/ScopedEndstopEnable.h"
 
 static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
   switch (howToMoveToZ) {
@@ -46,53 +47,38 @@ int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
 }
 
 int xyPositionerTouch(tools::Tool& tool, const Endstop& endstop, float& measurement) {
-  static bool s_haveReportedBackSwitchVsYMinError = false;
   const auto axis = endstop.axis;
   const auto slow = homing_feedrate[axis] / 6;
   auto& endstopMonitor = vone->stepper.endstopMonitor;
   const auto& yMin = vone->endstops.yMin;
   const auto& xyPositionerBack = vone->endstops.xyPositionerBack;
-  const bool isBackSwitch = &endstop == &xyPositionerBack;
 
-  // Fallback to previous behaviour after reporting
-  if (
-    isBackSwitch &&
-    s_haveReportedBackSwitchVsYMinError
-  ) {
-    // Use older 'moveToLimit' function which does not
-    // differentiate between yMin and xyPositionerBack
-    // This will also user to continue using the system
-    // rather than needing to revert to a previous version
-    if (moveToLimit(axis, endstop.direction, slow, 6.0f)) {
+  if (&endstop != &xyPositionerBack) {
+    if (moveToEndstop(endstop, slow, 6.0f)) {
       return -1;
     }
   } else {
-    if (moveToEndstop(endstop, slow, 6.0f)) {
-      if (
-        isBackSwitch &&
-        !endstopMonitor.isTriggered(xyPositionerBack) &&
-        endstopMonitor.isTriggered(yMin)
-      ) {
-        reportError(
-          F("xyPositioner-yMinHitBeforeBack"),
-          F("calibrate the tool"),
-          << F("the ") << tool.name() << F(" hit ")
-          << F("the ") << yMin.name << F(" switch before reaching ")
-          << F("the ") << xyPositionerBack.name << F(" switch.")
-        );
+    // Enable xyBack
+    // Note: moveToEndstop will do this automatically,
+    //       but moveToLimit does not
+    ScopedEndstopEnable scopedEnable(endstopMonitor, endstop);
 
-          // << "This may result alignment issues and reduced accuracy. "
-          // << "If you have not already, please contact support, so we can resolve this issue. "
-          // << "In the meantime, you can repeat your last action and continue using the printer as is. "
-          // << "This message will not be shown again until the printer is restarted."
-
-        // Acknowledge that yMin is triggered, otherwise we'll
-        // report another error after this (i.e. unexpected end
-        // stop hit), which will probably confuse the user
-        endstopMonitor.acknowledgeTriggered(yMin);
-      }
-
+    // Note: 'moveToLimit' does not differentiate between switches
+    if (moveToLimit(axis, endstop.direction, slow, 6.0f)) {
       return -1;
+    }
+
+    // Warn if yMin triggered instead of xyBack
+    // Note: eventually this will be made an error
+    if (
+      !endstopMonitor.isTriggered(xyPositionerBack) &&
+      endstopMonitor.isTriggered(yMin)
+    ) {
+      logWarning
+        << F("The ") << yMin.name << F(" switch triggered before reaching ")
+        << F("the ") << xyPositionerBack.name << F(" switch -- ")
+        << F("the current tool is a ") << tool.name()
+        << endl;
     }
   }
 
