@@ -13,9 +13,9 @@ Stepper::Stepper(
   , maxStepsComplete(F("stepper isr finished first set of steps"), F("us"))
   , maxInterruptsAllowed(F("stepper isr allowing serial interrupts"), F("us"))
   , maxCompletedWithoutTriggers(F("stepper isr completed without triggering"), F("us"))
-  , maxCompletedWithoutTriggersTics(F("stepper isr completed without triggering"), F("tics"), 200)
+  , maxCompletedWithoutTriggersTics(F("stepper isr completed without triggering"), F(" tics"), 200)
   , maxStepRate(F("stepper step rate"), F("steps/s"))
-  , maxStepTiming(F("stepper step timing"), F("tics"), 1000000UL)
+  , maxStepTiming(F("stepper step timing"), F(" tics"), 1000000UL)
 {
   plan_init();  // Initialize planner
   st_init();    // Initialize stepper
