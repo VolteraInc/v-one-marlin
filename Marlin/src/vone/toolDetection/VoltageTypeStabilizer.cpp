@@ -58,19 +58,19 @@ void toolDetection::VoltageTypeStabilizer::setStable(bool stable) {
   }
   m_stable = stable;
 
-  // Log voltages when we stabilized
+  // Log voltages when we stabilize
   if (m_stable) {
     auto delta = millis() - m_unstableTime;
-    if (delta > 1000) {
-      logWarning << F("Voltage type was unstable for ") << delta << F("ms") << endl;
-    }
-
     log
       << F("Voltage type stabilized in ") << delta
       << F("ms, voltages = [")
       << m_voltages
       << F("]")
       << endl;
+
+    if (delta > 1000) {
+      logWarning << F("Voltage type was unstable for ") << delta << F("ms") << endl;
+    }
   } else {
     m_unstableTime = millis();
   }
