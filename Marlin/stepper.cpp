@@ -793,7 +793,7 @@ void trinamicInit() {
   TMC2130[X_AXIS].stealth_freq(1);
   TMC2130[X_AXIS].stealth_amplitude(255); //0...255
   TMC2130[X_AXIS].stealth_gradient(4); // 1...15
-  TMC2130[X_AXIS].stealth_max_speed(0); // TPWMTHRS - Upper velocity threshold for stealChop //250
+  TMC2130[X_AXIS].stealth_max_speed(XY_STEALTH_MAX_SPEED); // TPWMTHRS - Upper velocity threshold for stealChop //250
 
   // Stallguard settings
   TMC2130[X_AXIS].coolstep_min_speed(XY_COOLSTEP_MIN_SPEED); // TCOOLTHRS - Velocity threshold of when to turn on stallguard/coolstep feature.
@@ -852,6 +852,7 @@ void trinamicInit() {
   TMC2130[Z_AXIS].stealth_amplitude(255); //0...255
   TMC2130[Z_AXIS].stealth_gradient(4); // 1...15
   TMC2130[Z_AXIS].stealth_max_speed(0); // TPWMTHRS - Upper velocity threshold for stealChop
+
 
   /**************  E AXIS ****************/
   // From Trinamic Development board - good speed is: 6000 pps.
