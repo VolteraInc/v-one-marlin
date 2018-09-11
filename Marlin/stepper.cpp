@@ -67,12 +67,12 @@ static volatile bool endstop_y_hit=false;
 static volatile bool endstop_z_hit=false;
 static volatile bool endstop_e_hit=false;
 
-// static bool old_x_min_endstop=false;
-// static bool old_x_max_endstop=false;
-// static bool old_y_min_endstop=false;
-// static bool old_y_max_endstop=false;
+//static bool old_x_min_endstop=false;
+//static bool old_x_max_endstop=false;
+//static bool old_y_min_endstop=false;
+//static bool old_y_max_endstop=false;
 static bool old_z_min_endstop=false;
-// static bool old_z_max_endstop=false;
+static bool old_z_max_endstop=false;
 
 static volatile bool p_top_enabled = false;
 static volatile bool calibration_plate_enabled = false;
@@ -474,12 +474,12 @@ ISR(TIMER1_COMPA_vect) {
       count_direction[Z_AXIS] = 1;
 
       bool z_max_endstop = READ_PIN(Z_MAX);
-      if (z_max_endstop  && (current_block->steps_z > 0)) {
+      if (z_max_endstop && old_z_max_endstop && (current_block->steps_z > 0)) {
         endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
         endstop_z_hit = true;
         step_events_completed = current_block->step_event_count;
       }
-      //old_z_max_endstop = z_max_endstop;
+      old_z_max_endstop = z_max_endstop;
     }
 
     if ((out_bits & (1<<E_AXIS)) != 0) {  // -direction
@@ -796,10 +796,10 @@ void trinamicInit() {
   TMC2130[X_AXIS].stealth_max_speed(0); // TPWMTHRS - Upper velocity threshold for stealChop //250
 
   // Stallguard settings
-  TMC2130[X_AXIS].coolstep_min_speed(0); // TCOOLTHRS - Velocity threshold of when to turn on stallguard/coolstep feature.
+  TMC2130[X_AXIS].coolstep_min_speed(XY_COOLSTEP_MIN_SPEED); // TCOOLTHRS - Velocity threshold of when to turn on stallguard/coolstep feature.
   TMC2130[X_AXIS].diag1_active_high(1);
   TMC2130[X_AXIS].diag1_stall(1); // Enable DIAG0 active on motor stall
-  TMC2130[X_AXIS].sg_stall_value(10); // -64...0....64 - Tunes sensitivity.
+  TMC2130[X_AXIS].sg_stall_value(30); // -64...0....64 - Tunes sensitivity.
 
   /**************  Y AXIS ****************/
 
@@ -822,13 +822,13 @@ void trinamicInit() {
   TMC2130[Y_AXIS].stealth_freq(1);
   TMC2130[Y_AXIS].stealth_amplitude(255); //0...255
   TMC2130[Y_AXIS].stealth_gradient(4); // 1...15
-  TMC2130[Y_AXIS].stealth_max_speed(0); // TPWMTHRS - Upper velocity threshold for stealChop  //250
+  TMC2130[Y_AXIS].stealth_max_speed(XY_STEALTH_MAX_SPEED); // TPWMTHRS - Upper velocity threshold for stealChop  //250
 
   // Stallguard settings
-  TMC2130[Y_AXIS].coolstep_min_speed(0); // TCOOLTHRS - Velocity threshold of when to turn on stallguard/coolstep feature.
+  TMC2130[Y_AXIS].coolstep_min_speed(XY_COOLSTEP_MIN_SPEED); // TCOOLTHRS - Velocity threshold of when to turn on stallguard/coolstep feature.
   TMC2130[Y_AXIS].diag1_active_high(1);
   TMC2130[Y_AXIS].diag1_stall(1); // Enable DIAG0 active on motor stall
-  TMC2130[Y_AXIS].sg_stall_value(0); // -64...0....64 - Tunes sensitivity
+  TMC2130[Y_AXIS].sg_stall_value(10); // -64...0....64 - Tunes sensitivity
 
   /**************  Z AXIS ****************/
 
@@ -852,7 +852,6 @@ void trinamicInit() {
   TMC2130[Z_AXIS].stealth_amplitude(255); //0...255
   TMC2130[Z_AXIS].stealth_gradient(4); // 1...15
   TMC2130[Z_AXIS].stealth_max_speed(0); // TPWMTHRS - Upper velocity threshold for stealChop
-
 
   /**************  E AXIS ****************/
   // From Trinamic Development board - good speed is: 6000 pps.

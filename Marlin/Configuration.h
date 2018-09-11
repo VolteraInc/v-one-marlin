@@ -1,5 +1,8 @@
 #pragma once
 
+#define TRINAMIC_DRIVERS (1) // Flag to indicate trinamic drivers.
+#define TRINAMIC_SENSORLESS // Flag to use sensorless homing.
+#define DEFAULT_PRIME_RETRACT (0.35) // How much to retract when priming.
 
 // Default Calibration offsets for the Voltera V-One
 #define XYPOS_X_POS       (32.098)  // average computed from 77 calibrations in July 2017
@@ -146,12 +149,6 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #define E_MAX_LENGTH (20)
 //============================= Bed Auto Leveling ===========================
 
-
-// Flag to indicate trinamic drivers.
-#define TRINAMIC_DRIVERS (1)
-#define TRINAMIC_SENSORLESS
-#define DEFAULT_PRIME_RETRACT (0.35) // How much to retract when priming.
-
 // default settings
 
 /* Stepping
@@ -174,7 +171,7 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
 #ifdef TRINAMIC_DRIVERS
   #define HOMING_FEEDRATE {2800, 2800, 200 , 55}  // set the homing speeds (mm/min)
-  #define DEFAULT_AXIS_STEPS_PER_UNIT   {100.0,100.0,1600.0,6857.142857142858}
+  #define DEFAULT_AXIS_STEPS_PER_UNIT   {100.0, 100.0, 1600.0, 6857.142857142858}
 
 #else
   #define HOMING_FEEDRATE {1200, 1200, 200 , 0} // set the homing speeds (mm/min)

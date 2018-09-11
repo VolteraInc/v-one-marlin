@@ -56,7 +56,7 @@
 
 #endif
 
-#if defined TRINAMIC_DRIVERS && TRINAMIC_DRIVERS == 1 // V-One Plus control board.
+#if defined TRINAMIC_DRIVERS && TRINAMIC_DRIVERS == 1 // V-One with Trinamic Drivers (Batch 6+)
 #define X_STEP_PIN         36
 #define X_DIR_PIN          37
 #define X_ENABLE_PIN       41

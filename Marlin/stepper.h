@@ -60,7 +60,7 @@ void quickStop();
 
 #ifdef TRINAMIC_DRIVERS
 
-  #define XY_STEALTH_MAX_SPEED (300)
+  #define XY_STEALTH_MAX_SPEED (220) // 300
   #define XY_COOLSTEP_MIN_SPEED (186)
   #define E_STEALTH_MAX_SPEED (400)
   #define E_COOLSTEP_MIN_SPEED (160)

@@ -45,6 +45,13 @@ int process_vcode(int command_code) {
           return -1;
         }
 
+        // Try smart dispenser first.
+        auto& smartDispenser = vone->toolBox.smartDispenser;
+        if(smartDispenser.attached()){
+          return smartDispenser.enqueueDispense(x, y, z, e, f);
+        }
+
+        // Fallback to dispenser.
         auto& dispenser = vone->toolBox.dispenser;
         if (confirmAttached("apply D option to movement command", dispenser)) {
           return -1;
@@ -128,7 +135,7 @@ int process_vcode(int command_code) {
       }
 
       // Output position
-      protocol 
+      protocol
         << F("probeMeasurement")
         << F(" x:") << current_position[X_AXIS]
         << F(" y:") << current_position[Y_AXIS]
@@ -192,6 +199,14 @@ int process_vcode(int command_code) {
     // Set dispense height
     // Note: Change will be applied to next movement
     case 102: {
+
+      // Try smart dispenser first.
+      auto& smartDispenser = vone->toolBox.smartDispenser;
+      if(smartDispenser.attached()) {
+        return smartDispenser.setDispenseHeight(code_seen('Z') ? code_value() : 0.0f);
+      }
+
+      // Fall back to normal dispenser.
       auto& dispenser = vone->toolBox.dispenser;
       return (
         confirmAttached("set dispensing height", dispenser) ||
@@ -255,15 +270,15 @@ int process_vcode(int command_code) {
 
       protocol << F("{ \"probeHoleMeasurement\": { \"measurements\": [");
       for (auto idx = 0u; idx < numMeasurements; ++idx) {
-        protocol 
+        protocol
           << (idx != 0 ? F(", ") : F(""))
           << F("{ \"x\":") << measurements[idx].x
           << F(", \"y\":") << measurements[idx].y
           << F(", \"z\":") << measurements[idx].z
           << F(" }");
       }
-      protocol 
-        << F("] } }") 
+      protocol
+        << F("] } }")
         << endl;
       return 0;
     }

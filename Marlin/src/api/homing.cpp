@@ -96,12 +96,7 @@ static int s_homeAxis(int axis) {
         max_acceleration_units_per_sq_second[ X_AXIS ] = 700;
         max_acceleration_units_per_sq_second[ Y_AXIS ] = 700;
         reset_acceleration_rates();
-        trinamicSetStealthMaxSpeed(X_AXIS, XY_STEALTH_MAX_SPEED);
-        trinamicSetStealthMaxSpeed(Y_AXIS, XY_STEALTH_MAX_SPEED);
-        trinamicSetCoolstepMinSpeed(X_AXIS, XY_COOLSTEP_MIN_SPEED);
-        trinamicSetCoolstepMinSpeed(Y_AXIS, XY_COOLSTEP_MIN_SPEED);
-
-
+        
         // Move in +X and +Y a bit to create space. So we can reach sensorless homing speeds.
         if (retractFromSwitch(axis, home_dir[axis], HOMING_XY_OFFSET * 3)) {
           logError
@@ -176,12 +171,6 @@ DONE:
     max_acceleration_units_per_sq_second[ X_AXIS ] = acc_x;
     max_acceleration_units_per_sq_second[ Y_AXIS ] = acc_y;
     reset_acceleration_rates();
-
-    // Disable Stallguard, Enable Stealthchop for the full motion.
-    trinamicSetStealthMaxSpeed(X_AXIS, 0);
-    trinamicSetStealthMaxSpeed(Y_AXIS, 0);
-    trinamicSetCoolstepMinSpeed(X_AXIS, 0);
-    trinamicSetCoolstepMinSpeed(Y_AXIS, 0);
   #endif
 
   plan_enable_skew_adjustment(true);
