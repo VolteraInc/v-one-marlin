@@ -4,7 +4,6 @@
 #include "pins/adc/AnalogDigitalConverter.h"
 #include "bed/heater/Heater.h"
 #include "stepper/Stepper.h"
-//#include "flowSensor/flowSensor.h"
 
 #include "tools/ToolBox.h"
 #include "toolDetection/ToolDetector.h"
@@ -24,7 +23,6 @@ class VOne {
     Stepper stepper;
     tools::ToolBox toolBox;
     toolDetection::ToolDetector toolDetector;
-    //FlowSensor flowSensor;
 
     // Perform work that must happen frequently but can be
     // interrupted (briefly) by time critical work like
@@ -63,7 +61,6 @@ class VOne {
         //log << flowSensor.pCompensated << endl;
       }
 
-      //flowSensor.periodic_work();
 
       // Restore interrupt settings
       // DEFER: is this needed ?

@@ -1,6 +1,5 @@
 #include "../../Marlin.h"
 #include "../../planner.h"
-#include "../../stepper.h"
 #include "../api/api.h"
 #include "../../macros.h"
 #include "../../temperature_profile.h"
@@ -33,7 +32,6 @@ void manage_inactivity() {
     return;
   }
   nextCheckAt = now + 1000;
-
 
   if((now - previous_millis_active_cmd) > stepper_inactive_time && stepper_inactive_time) {
     if(!blocks_queued()) {
