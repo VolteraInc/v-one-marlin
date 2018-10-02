@@ -32,36 +32,10 @@ static int s_end(tools::Tool& tool, int result) {
 
 int runBurnInSequence(tools::NullTool& noTool) {
   s_start();
-
-  // Override speed settings
-  // NOTE: using acceleration hides a problem in the y-axis mechanical system on some units
-  //       so when we run burn-in we use the settings we had before enabling acceleration.
-  log << F("Overriding feedrate and acceleration settings for burn-in") << endl;
-  const auto maxFX = max_feedrate[ X_AXIS ];
-  const auto maxFY = max_feedrate[ Y_AXIS ];
-  const auto maxAX = max_acceleration_units_per_sq_second[ X_AXIS ];
-  const auto maxAY = max_acceleration_units_per_sq_second[ Y_AXIS ];
-  const auto maxA = acceleration;
-  max_feedrate[ X_AXIS ] = 7500.0/60.0;
-  max_feedrate[ Y_AXIS ] = 7500.0/60.0;
-  max_acceleration_units_per_sq_second[ X_AXIS ] = 700;
-  max_acceleration_units_per_sq_second[ Y_AXIS ] = 700;
-  acceleration = 1000;
-  reset_acceleration_rates();
-
-  // Run burn-in
-  auto result = s_end(noTool, burnInSequence(noTool));
-
-  // Restore speed settings
-  log << F("Restoring feedrate and acceleration settings") << endl;
-  max_feedrate[ X_AXIS ] = maxFX;
-  max_feedrate[ Y_AXIS ] = maxFY;
-  max_acceleration_units_per_sq_second[ X_AXIS ] = maxAX;
-  max_acceleration_units_per_sq_second[ Y_AXIS ] = maxAY;
-  acceleration = maxA;
-  reset_acceleration_rates();
-
-  return result;
+  return s_end(
+    noTool,
+    burnInSequence(noTool)
+  );
 }
 
 int runCalibrateSwitches(tools::Probe& probe, unsigned cycles) {
