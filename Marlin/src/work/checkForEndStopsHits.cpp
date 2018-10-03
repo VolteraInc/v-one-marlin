@@ -31,7 +31,7 @@ void checkForEndstopHits() {
 
   // Stop/reset everything
   // Note: We might not need to reset all the axes, but it's more robust to do so.
-  stepper.stop();
+  stepper.stop(F("limit switch triggered unexpectedly"));
   setHomedState(X_AXIS, 0);
   setHomedState(Y_AXIS, 0);
   setHomedState(Z_AXIS, 0);

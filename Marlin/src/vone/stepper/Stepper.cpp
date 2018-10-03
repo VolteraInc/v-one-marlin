@@ -21,20 +21,35 @@ Stepper::Stepper(
   st_init();    // Initialize stepper
 }
 
-void Stepper::stop() {
-  m_stopped = true;
+void Stepper::stop(const __FlashStringHelper* reason) {
+  ScopedInterruptDisable sid;
+  m_stopReason = reason;
   quickStop();
 }
 
 void Stepper::resume() {
-  m_stopped = false;
+  ScopedInterruptDisable sid;
+  m_stopReason = nullptr;
+}
+
+const __FlashStringHelper* Stepper::stopReason() const {
+  ScopedInterruptDisable sid;
+  return m_stopReason;
+}
+
+bool Stepper::stopped() const {
+  return stopReason() != nullptr;
 }
 
 int Stepper::add(float x, float y, float z, float e, float f) {
 
   // Check if we are stopped
-  if (m_stopped) {
-    logError << F("Unable to add movement to stepper, stepper has been stopped") << endl;
+  const auto rejectReason = stopReason();
+  if (rejectReason) {
+    logError
+      << F("Unable to perform movement, ")
+      << rejectReason
+      << endl;
     return -1;
   }
 
@@ -45,9 +60,13 @@ int Stepper::add(float x, float y, float z, float e, float f) {
   // (which is the case for tool detached), while normal execution was in
   // plan_buffer_line(). So, we check again, and remove the point we just
   // added, if necessary.
-  if (m_stopped) {
+  const auto revertReason = stopReason();
+  if (revertReason) {
     quickStop();
-    logError << F("Unable to add movement to stepper, stepper was stopped") << endl;
+    logError
+      << F("Unable to perform movement, ")
+      << revertReason
+      << endl;
     return -1;
   }
 

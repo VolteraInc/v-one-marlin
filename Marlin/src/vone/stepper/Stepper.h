@@ -12,8 +12,8 @@ class Stepper {
 
     EndstopMonitor& endstopMonitor;
 
-    bool stopped() const { return m_stopped; }
-    void stop();
+    bool stopped() const;
+    void stop(const __FlashStringHelper* reason);
     void resume();
 
     int add(float x, float y, float z, float e, float f);
@@ -34,5 +34,7 @@ class Stepper {
     void outputStatus();
 
   private:
-    volatile bool m_stopped = false;
+    const __FlashStringHelper* volatile m_stopReason = nullptr;
+
+    const __FlashStringHelper* stopReason() const;
 };

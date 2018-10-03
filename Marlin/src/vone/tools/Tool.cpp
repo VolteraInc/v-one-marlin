@@ -14,7 +14,7 @@ void tools::Tool::attach() {
 
 void tools::Tool::detach() {
   m_attached = false;
-  m_stepper.stop();
+  m_stepper.stop(F("tool detached"));
   resetPreparations();
 }
 

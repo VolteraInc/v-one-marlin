@@ -157,7 +157,7 @@ int process_dcode(int command_code) {
           vone->stepper.resume();
         } else {
           log << F("Stopping stepper") << endl;
-          vone->stepper.stop();
+          vone->stepper.stop(F("movement explicitly stopped by D5 command"));
         }
       }
 
