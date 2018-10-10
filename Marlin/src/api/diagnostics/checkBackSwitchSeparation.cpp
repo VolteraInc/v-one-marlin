@@ -75,7 +75,7 @@ int checkBackSwitchSeparation(tools::Tool& tool) {
       << ArrayWithSize<float>(distances, NUM_MEASUREMENTS)
       << F("]")
       << endl;
-    return -1;
+    goto DONE;
   }
 
   // Success
