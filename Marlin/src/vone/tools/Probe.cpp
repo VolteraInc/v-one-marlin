@@ -208,3 +208,46 @@ void tools::Probe::outputStatus() const {
     log << F("  height safety: OFF") << endl;
   }
 }
+
+VoltageType tools::Probe::classifyVoltage(
+  const VoltageLog& log,
+  unsigned long time,
+  float voltage,
+  bool& looksConnected
+) {
+  looksConnected = false;
+
+  // Probe - Triggered, expect ~0.07
+  if (voltage < 0.08) {
+    looksConnected = true;
+    return VoltageType::ProbeTriggered;
+
+  // Below lower bound of 'probe mounted' range
+  } else if (voltage < 3.25) {
+
+    // Voltage should be rising
+    if (voltage - voltageLog.front().voltage < 0.1) {
+      return VoltageType::ProbeVoltageRising;
+    }
+
+    // Possible that the sample was recorded jsut after triggered
+    // so we don't see a trigger voltage. Also possible that
+    // the probe is triggering intermittently.
+    // Note: We only classify the first occurence of a decrease as
+    //       a MISS, after that we should see the voltage rise.
+    //       It is possible, but unlikely, that subsequent samples
+    //       would both be misses. If that happens, classifying
+    //       the second miss as UNKNOWN should not hurt.
+    if (voltageLog.front().type != VoltageType::ProbeMissedTrigger) {
+      return VoltageType::ProbeMissedTrigger;
+    }
+
+  // Probe, expect ~3.47
+  } else if (voltage <= 3.75) {
+
+    looksConnected = voltageLog.durationNear(voltage) > 50;
+    return VoltageType::ProbeMounted;
+  }
+
+  return tool_classifyVoltage(voltage);
+}

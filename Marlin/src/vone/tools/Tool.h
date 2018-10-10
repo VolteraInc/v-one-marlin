@@ -3,6 +3,9 @@
 class Stepper;
 namespace tools {
 
+class VoltageLog;
+class VoltageType;
+
 namespace PrepareToMove {
   enum class Option {
     startOnly,
@@ -29,8 +32,27 @@ class Tool {
 
     virtual int enqueueMove(float x, float y, float z, float e, float f) = 0;
 
+    // virtual bool checkIfConnected(
+    //   const VoltageLog& voltageLog,
+    //   unsigned long time,
+    //   float voltage,
+    //   VoltageType& type
+    // ) = 0;
+
+    virtual bool classifyVoltage(
+      const VoltageLog& voltageLog,
+      unsigned long time,
+      float voltage
+    ) = 0;
+
   protected:
     Stepper& m_stepper;
+
+    bool baseClassifyVoltage(
+      const VoltageLog& voltageLog,
+      unsigned long time,
+      float voltage
+    );
 
   private:
     bool m_prepare_Started = false;

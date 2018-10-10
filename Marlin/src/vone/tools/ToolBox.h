@@ -29,8 +29,13 @@ class ToolBox {
     Tool& currentTool() { return *m_currentTool; }
     void setTool(Tool* tool);
 
+    void frequentInterruptibleWork();
+
   private:
     Tool* volatile m_currentTool = nullptr;
+    unsigned long m_nextCheckAt = 0;
+
+    Tool& determineTool(unsigned long time, float voltage);
 };
 
 }

@@ -85,11 +85,14 @@ void VOne::periodicReport() {
 // See stepper.cpp for TIMER1_COMPA_vect
 
 ISR(TIMER0_COMPB_vect) {
+
   // Allow other interrupts
   DISABLE_TEMPERATURE_INTERRUPT();
   sei();
 
+  logging::inISR = true;
   vone->frequentInterruptibleWork();
+  logging::inISR = false;
 
   // Restore interrupt settings
   cli();

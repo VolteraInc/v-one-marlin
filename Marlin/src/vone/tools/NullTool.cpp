@@ -32,3 +32,11 @@ int tools::NullTool::enqueueMove(float x, float y, float z, float e, float f) {
   //       but some refactoring is needed to do that.
   return asyncRawMove(x, y, z, e, f);
 }
+
+virtual bool tools::NullTool::classifyVoltage(
+  const VoltageLog& voltageLog,
+  unsigned long time,
+  float voltage
+) {
+  return baseClassifyVoltage(voltageLog, time, voltage);
+}

@@ -79,3 +79,46 @@ int tools::Tool::resetPreparations() {
   m_prepare_Completed = false;
   return resetPreparationsImpl();
 }
+
+
+bool tools::Tool::baseCheckIfConnected(
+  const VoltageLog& voltageLog,
+  unsigned long time,
+  float voltage,
+  VoltageType& o_type
+) {
+  // No tool mounted, expect ~4.99
+  if (voltage > 4.89) {
+    o_type = VoltageType::NoToolMounted;
+    return false;
+  }
+
+  // Voltage is stable, but was not recognized by subclass
+  if (voltageLog.durationNear(voltage, 0.15) > 50) {
+    o_type = VoltageType::NoToolMounted;
+    return false;
+  }
+
+  // Unknown
+  o_type = VoltageType::Unknown;
+  return true;
+}
+
+VoltageType tools::Tool::classifyVoltage(
+  const VoltageLog& voltageLog,
+  unsigned long time,
+  float voltage,
+) {
+  // No tool mounted, expect ~4.99
+  if (voltage > 4.89) {
+    return VoltageType::NoToolMounted;
+  }
+
+  // Voltage is stable, but was not recognized by subclass
+  if (voltageLog.durationNear(voltage, 0.15) > 50) {
+    return VoltageType::NoToolMounted;
+  }
+
+  // Unknown
+  return VoltageType::Unknown;
+}

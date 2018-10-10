@@ -164,3 +164,29 @@ void toolDetection::VoltageTypeStabilizer::add(unsigned long time, float voltage
     setStable(true);
   }
 }
+
+
+VoltageType dispense_classifyVoltage(const VoltageLog& log, float voltage) {
+  // No tool mounted, expect ~4.99
+  if (attached() && voltage > 4.89) {
+    return VoltageType::Dispenser;
+  }
+
+  // Unknown
+  return tool_classifyVoltage(voltage);
+}
+
+
+
+VoltageType drill_classifyVoltage(const VoltageLog& log, float voltage) {
+  // Drill - Resetting, expect 0.39 ~ 0.43
+  if (voltage >= 0.29 && voltage <= 0.53) {
+    return VoltageType::DrillResetting;
+
+  // Drill, expect 1.31 ~ 1.34
+  } else if (voltage >= 1.21 && voltage <= 1.44) {
+    return VoltageType::DrillMounted;
+  }
+
+  return tool_classifyVoltage(voltage);
+}

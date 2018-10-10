@@ -10,11 +10,11 @@ inline VoltageType classifyVoltage(float voltage) {
     return VoltageType::ProbeTriggered;
 
   // Drill - Resetting, expect 0.39 ~ 0.43
-} else if (voltage >= 0.29 && voltage <= 0.53) {
+  } else if (voltage >= 0.29 && voltage <= 0.53) {
     return VoltageType::DrillResetting;
 
   // Drill, expect 1.31 ~ 1.34
-} else if (voltage >= 1.21 && voltage <= 1.44) {
+  } else if (voltage >= 1.21 && voltage <= 1.44) {
     return VoltageType::DrillMounted;
 
   // Probe, expect ~3.47
