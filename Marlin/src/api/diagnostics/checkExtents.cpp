@@ -11,9 +11,12 @@ static int s_checkMeasurements(
   float tolerance
 ) {
   if (tolerance < 0) {
-    // Use 1 step by default + 1um to handle numerial error
-    // Note: 1 step should be 10um
-    tolerance = stepsToMillimeters(1, endstop.axis) + 0.001;
+    // Use 2 steps by default + 1um to handle numerial error
+    // Notes:
+    //     1) 1 step should be 10um
+    //     2) it's possible that a single step does not move
+    //        the motor, so we allow 2 steps
+    tolerance = stepsToMillimeters(2, endstop.axis) + 0.001;
   }
   const auto delta = fabs(measurement2 - measurement1);
 
