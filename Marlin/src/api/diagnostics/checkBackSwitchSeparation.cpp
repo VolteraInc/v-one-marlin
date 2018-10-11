@@ -38,9 +38,9 @@ static int s_checkBackSwitchSeparation(tools::Tool& tool) {
     s_measure(xyPositionerBack, measurements.xyBack, NUM_MEASUREMENTS) ||
 
     // Exit the xy-positioner
-    // Note: we move to center first rather than raising while still
-    //      in contact with xyPositionerBack
-    moveToXyPositioner(tool) ||
+    // Note: retract from the switch first rather than raising while still
+    //       in contact with xyPositionerBack
+    retractFromSwitch(xyPositionerBack) ||
     raise() ||
 
     // Measure yMin
