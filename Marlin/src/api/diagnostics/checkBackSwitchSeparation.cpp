@@ -18,8 +18,7 @@ int s_measure(const Endstop& endstop, float measurements[], unsigned int numMeas
 // Confirm the minY and xyMinY switches are far enough apart.
 // If these switches are too close it's possible we'll hit the
 // minY switch instead of the xyMinY switch
-int checkBackSwitchSeparation(tools::Tool& tool) {
-  int returnValue = -1;
+static int s_checkBackSwitchSeparation(tools::Tool& tool) {
   const auto& xyPositionerBack = vone->endstops.xyPositionerBack;
   const auto& yMin = vone->endstops.yMin;
 
@@ -38,11 +37,23 @@ int checkBackSwitchSeparation(tools::Tool& tool) {
     moveToXyPositioner(tool) ||
     s_measure(xyPositionerBack, measurements.xyBack, NUM_MEASUREMENTS) ||
 
-    // Measure yMin
+    // Exit the xy-positioner
+    // Note: we move to center first rather than raising while still
+    //      in contact with xyPositionerBack
+    moveToXyPositioner(tool) ||
     raise() ||
-    s_measure(yMin, measurements.yMin, NUM_MEASUREMENTS)
+
+    // Measure yMin
+    s_measure(yMin, measurements.yMin, NUM_MEASUREMENTS) ||
+
+    // Go home
+    // Note: rather than staying in contact with the yMin switch.
+    //       Also, we force re-homing at the end of this test, so
+    //       going there now should have little effect on the next
+    //       operation
+    moveXY(tool, 0, 0)
   ) {
-    goto DONE;
+    return -1;
   }
 
   // Compute distances
@@ -75,13 +86,16 @@ int checkBackSwitchSeparation(tools::Tool& tool) {
       << ArrayWithSize<float>(distances, NUM_MEASUREMENTS)
       << F("]")
       << endl;
-    goto DONE;
+    return -1;
   }
 
   // Success
-  returnValue = 0;
+  return 0;
+}
 
-DONE:
+int checkBackSwitchSeparation(tools::Tool& tool) {
+  int returnValue = s_checkBackSwitchSeparation(tool);
+
   // Note: Touching switches and resycning with the stepper
   //       can introduce a small error, we don't want that
   //       error impacting any commands run after this one.
