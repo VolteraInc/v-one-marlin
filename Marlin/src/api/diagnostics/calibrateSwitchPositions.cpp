@@ -3,7 +3,7 @@
 #include "../../../ConfigurationStore.h"
 #include "../../vone/tools/Probe.h"
 
-int calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeResults) {
+static int s_calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeResults) {
   if (probe.prepareToMove(tools::PrepareToMove::Option::skipCalibrateXYZ)) {
     logError << F("Unable to calibrate positions, could not prepare probe") << endl;
     return -1;
@@ -46,4 +46,16 @@ int calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeRes
 
   // Success
   return 0;
+}
+
+int calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeResults) {
+  int returnValue = s_calibrateSwitchPositions(probe, cycles, storeResults);
+
+  return (
+    // Force a normal prepare to be performed by the next operation
+    // Note: rather than leave the tool in a weird state
+    probe.resetPreparations() ||
+
+    returnValue
+  );
 }
