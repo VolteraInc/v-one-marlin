@@ -347,10 +347,7 @@ int process_dcode(int command_code) {
         return -1;
       }
 
-      return (
-        tool.prepareToMove() ||
-        checkBackSwitchSeparation(tool)
-      );
+      return checkBackSwitchSeparation(tool);
     }
 
 

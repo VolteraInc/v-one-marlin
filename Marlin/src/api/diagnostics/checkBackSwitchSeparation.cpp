@@ -31,6 +31,7 @@ static int s_checkBackSwitchSeparation(tools::Tool& tool) {
   } measurements;
 
   if (
+    tool.prepareToMove() ||
     raise() ||
 
     // Measure xyPositionerBack
