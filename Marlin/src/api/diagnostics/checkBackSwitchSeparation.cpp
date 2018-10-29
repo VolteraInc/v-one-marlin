@@ -47,12 +47,13 @@ static int s_checkBackSwitchSeparation(tools::Tool& tool) {
     // Measure yMin
     s_measure(yMin, measurements.yMin, NUM_MEASUREMENTS) ||
 
-    // Go home
-    // Note: rather than staying in contact with the yMin switch.
-    //       Also, we force re-homing at the end of this test, so
-    //       going there now should have little effect on the next
-    //       operation
-    moveXY(tool, 0, 0)
+    // Retract from yMin, rather than staying in contact with it
+    // Note: We could go home here (we use to) but this would
+    //       leave the carriage in the home position if the
+    //       separation test fails. Whereas, staying near the
+    //       xy-positioner helps to indicate which test failed
+    //       (in the i2 sequence).
+    retractFromSwitch(yMin)
   ) {
     return -1;
   }
