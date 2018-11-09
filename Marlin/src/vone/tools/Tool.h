@@ -33,9 +33,9 @@ class Tool {
     Stepper& m_stepper;
 
   private:
-    bool m_prepare_Started = false;
-    bool m_prepare_HomedXY = false;
-    bool m_prepare_Completed = false;
+    volatile bool m_prepare_Started = false;
+    volatile bool m_prepare_HomedXY = false;
+    volatile bool m_prepare_Completed = false;
 
     volatile bool m_attached = false;
 
