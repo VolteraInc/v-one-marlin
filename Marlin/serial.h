@@ -8,6 +8,28 @@
 extern bool logging_enabled;
 extern const char endl[];
 
+namespace logging {
+  extern bool inISR;
+
+  inline const __FlashStringHelper* isrPrefix() {
+    if (inISR) {
+      return F("~~~");
+    } else {
+      return F("");
+    }
+  }
+
+  inline static const __FlashStringHelper* openBrace() { return F("{ "); }
+  inline static const __FlashStringHelper* closeBrace() { return F(" }"); }
+
+  inline static const __FlashStringHelper* endString() { return F("\""); }
+  inline static const __FlashStringHelper* endStringComma() { return F("\", "); }
+
+  inline static const __FlashStringHelper* errorName() { return F("\"name\": \""); }
+  inline static const __FlashStringHelper* errorContext() { return F("\"context\": \""); }
+  inline static const __FlashStringHelper* errorReason() { return F("\"reason\": \""); }
+}
+
 inline MarlinSerial& operator<<(MarlinSerial &obj, unsigned long arg) { obj.print(arg); return obj; }
 inline MarlinSerial& operator<<(MarlinSerial &obj, unsigned  int arg) { obj.print(arg); return obj; }
 inline MarlinSerial& operator<<(MarlinSerial &obj,          long arg) { obj.print(arg); return obj; }
@@ -52,29 +74,25 @@ inline MarlinSerial& operator<<(MarlinSerial &obj, const FloatWithFormat& st) {
 inline MarlinSerial& protocol() { return MYSERIAL; }
 #define protocol protocol()
 
-inline MarlinSerial& log() { return MYSERIAL << F("log: "); }
+inline MarlinSerial& log() {
+  return MYSERIAL << logging::isrPrefix() << F("log: ");
+}
 #define log log()
 
-inline MarlinSerial& logNotice() { return MYSERIAL << F("notice: "); }
+inline MarlinSerial& logNotice() {
+  return MYSERIAL << logging::isrPrefix() << F("notice: ");
+}
 #define logNotice logNotice()
 
-inline MarlinSerial& logWarning() { return MYSERIAL << F("warning: "); }
+inline MarlinSerial& logWarning() {
+  return MYSERIAL << logging::isrPrefix() << F("warning: ");
+}
 #define logWarning logWarning()
 
-inline MarlinSerial& logError() { return MYSERIAL << F("error: "); }
-#define logError logError()
-
-namespace logging {
-  inline static const __FlashStringHelper* openBrace() { return F("{ "); }
-  inline static const __FlashStringHelper* closeBrace() { return F(" }"); }
-
-  inline static const __FlashStringHelper* endString() { return F("\""); }
-  inline static const __FlashStringHelper* endStringComma() { return F("\", "); }
-
-  inline static const __FlashStringHelper* errorName() { return F("\"name\": \""); }
-  inline static const __FlashStringHelper* errorContext() { return F("\"context\": \""); }
-  inline static const __FlashStringHelper* errorReason() { return F("\"reason\": \""); }
+inline MarlinSerial& logError() {
+  return MYSERIAL << logging::isrPrefix() << F("error: ");
 }
+#define logError logError()
 
 inline MarlinSerial& reportError_(const __FlashStringHelper* name, const __FlashStringHelper* context) {
   using namespace logging;
