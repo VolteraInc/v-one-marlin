@@ -89,7 +89,9 @@ ISR(TIMER0_COMPB_vect) {
   DISABLE_TEMPERATURE_INTERRUPT();
   sei();
 
+  logging::inISR = true;
   vone->frequentInterruptibleWork();
+  logging::inISR = false;
 
   // Restore interrupt settings
   cli();
