@@ -60,6 +60,7 @@ class VoltageTypeStabilizer {
     VoltageLog m_voltages;
     bool m_stable = false;
     unsigned long m_unstableTime = 0;
+    unsigned long m_startOfSuppressionInterval = 0;
     VoltageType m_type = VoltageType::Unknown;
 
     void setStable(bool stable);

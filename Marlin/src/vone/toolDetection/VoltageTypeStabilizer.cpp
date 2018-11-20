@@ -72,6 +72,12 @@ void toolDetection::VoltageTypeStabilizer::setStable(bool stable) {
       logWarning << F("Voltage type was unstable for ") << delta << F("ms") << endl;
     }
   } else {
+    log
+      << F("m_stable is false at ") << millis()
+      << F(", voltages = [")
+      << m_voltages
+      << F("]")
+      << endl;
     m_unstableTime = millis();
   }
 }
@@ -90,7 +96,7 @@ static unsigned long s_stabilityThreshold(VoltageType type) {
     case VoltageType::ProbeTriggered:
     case VoltageType::DrillResetting:
     case VoltageType::Unknown:
-      return 200;
+      return 400;
 
     // Note: it takes about 60ms to climb from 'Triggered' to 'Not Mounted'
     //       (i.e. the entire range). So, seeing the same type for 30ms is
@@ -146,10 +152,47 @@ void toolDetection::VoltageTypeStabilizer::add(unsigned long time, float voltage
   auto type = classifyVoltage(voltage);
   m_voltages.push(time, type, voltage);
 
-  // If type has changed, mark as unstable
+  // If current type has changed compared to m_type, then:
+  // - In regular mode, we declare that voltage is now unstable.
+  // - In the suppression interval, we pretend that voltage is stable and we purposely don't update m_type.
   if (m_type != type) {
-    setStable(false);
-    m_type = type;
+    if (m_startOfSuppressionInterval == 0) {
+      if (
+        // (type == VoltageType::ProbeTriggered) ||
+        (m_type == VoltageType::ProbeMounted && voltage < 1.2)
+      ) {
+        // The suppression interval begins.
+        log
+          << F("Suppression interval begins at ") << time
+          << F(". m_unstableTime = ") << m_unstableTime
+          << F(". Voltages = [") << m_voltages
+          << endl;
+        m_startOfSuppressionInterval = time;
+      } else {
+        // Regular mode.
+        log
+          << F("Regular mode: saved m_type is ") << toString(m_type)
+          << F(". latest type is ") << toString(type)
+          << F(". m_stable is ") << m_stable
+          << endl;
+        setStable(false);
+        m_type = type;
+      }
+    }
+  }
+
+  if (m_startOfSuppressionInterval != 0) {
+    // Check whether the suppresion interval has expired.
+    if (time - m_startOfSuppressionInterval > 220) {
+      unsigned long interval_ms = time - m_startOfSuppressionInterval;
+      log
+        << F("Suppression interval ends at ") << time
+        << F(". Duration = ") << interval_ms
+        << F("ms. Voltages = [") << m_voltages
+        << F("]")
+        << endl;
+      m_startOfSuppressionInterval = 0;
+    }
   }
 
   // If we are stable, leave
