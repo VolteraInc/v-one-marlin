@@ -5,6 +5,9 @@ static void outputToolUpdate(const char* type) {
   protocol
     << F("toolUpdate type:") << type
     << endl;
+  log
+    << F("toolUpdate type:") << type << F(" at ") << millis()
+    << endl;
 }
 
 void tools::ToolBox::setTool(tools::Tool *tool) {

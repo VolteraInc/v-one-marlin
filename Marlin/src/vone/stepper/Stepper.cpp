@@ -47,7 +47,7 @@ int Stepper::add(float x, float y, float z, float e, float f) {
   const auto rejectReason = stopReason();
   if (rejectReason) {
     logError
-      << F("Unable to perform movement, ")
+      << F("Unable to perform movement at ") << millis() << F(", ")
       << rejectReason
       << endl;
     return -1;
@@ -64,7 +64,7 @@ int Stepper::add(float x, float y, float z, float e, float f) {
   if (revertReason) {
     quickStop();
     logError
-      << F("Unable to perform movement, ")
+      << F("Unable to perform movement at ") << millis() << F(", ")
       << revertReason
       << endl;
     return -1;
