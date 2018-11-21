@@ -26,10 +26,13 @@ namespace toolDetection {
 
       inline void frequentInterruptibleWork();
 
+      inline void setProbing(bool probing) { m_probing = probing; }
+
     private:
       ToolBox& m_toolBox;
       const PTopPin& m_pin;
       volatile bool m_enabled = true;
+      volatile bool m_probing = false;
 
       unsigned long m_nextCheckAt = 0;
       VoltageTypeStabilizer m_stabilizer;
@@ -71,6 +74,13 @@ namespace toolDetection {
     //       Collecting every ~20ms should be sufficient
     //       for tool classification and detach detection.
     //       In the worst case it should take 3-4 samples.
+
+    // Don't collect any voltage samples and don't try to do any tool detection
+    // during the probing sequence.
+    if (m_probing) {
+      return;
+    }
+
     const auto now = millis();
     if (now < m_nextCheckAt) {
       return;
