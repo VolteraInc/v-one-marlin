@@ -44,14 +44,9 @@ static unsigned s_countTriggers(const Endstop& endstop, unsigned maxSamples) {
   return count;
 }
 
-int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
+static int s_measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
   if (logging_enabled) {
     log << F("Measure at switch release: ") << endstop.name << endl;
-  }
-
-  // Tell the tool detector that we have started the probing sequence.
-  if (endstop.pin == vone->endstops.toolSwitch.pin) {
-    vone->toolDetector.setProbing(true);
   }
 
   const auto axis = endstop.axis;
@@ -80,12 +75,6 @@ int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, floa
       // Completely released, record position and exit
       if (count == 0) {
         releaseCompletedAt = current_position[axis];
-
-        // Before returning, tell the tool detector that we have finished the probing sequence.
-        if (endstop.pin == vone->endstops.toolSwitch.pin) {
-          vone->toolDetector.setProbing(false);
-        }
-
         return 0;
       }
     }
@@ -99,12 +88,6 @@ int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, floa
         axis == Y_AXIS ? distance * -direction : 0,
         axis == Z_AXIS ? distance * -direction : 0
     )) {
-
-      // Before returning, tell the tool detector that we have finished the probing sequence.
-      if (endstop.pin == vone->endstops.toolSwitch.pin) {
-        vone->toolDetector.setProbing(false);
-      }
-
       return -1;
     }
 
@@ -121,10 +104,24 @@ int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, floa
     << F("mm of travel")
     << endl;
 
-  // Before returning, tell the tool detector that we have finished the probing sequence.
+  return -1;
+}
+
+int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
+
+  int returnValue = 0;
+
+  // Tell the tool detector that we have started the probing sequence.
   if (endstop.pin == vone->endstops.toolSwitch.pin) {
-    vone->toolDetector.setProbing(false);
+    vone->toolDetector.setProbeIsRetracting(true);
   }
 
-  return -1;
+  returnValue = s_measureAtSwitchRelease(endstop, releaseStartedAt, releaseCompletedAt, delay_ms);
+
+  // Before returning, tell the tool detector that we have finished the probing sequence.
+  if (endstop.pin == vone->endstops.toolSwitch.pin) {
+    vone->toolDetector.setProbeIsRetracting(false);
+  }
+
+  return returnValue;
 }

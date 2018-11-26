@@ -26,13 +26,13 @@ namespace toolDetection {
 
       inline void frequentInterruptibleWork();
 
-      inline void setProbing(bool probing) { m_probing = probing; }
+      inline void setProbeIsRetracting(bool probeIsRetracting) { m_probeIsRetracting = probeIsRetracting; }
 
     private:
       ToolBox& m_toolBox;
       const PTopPin& m_pin;
       volatile bool m_enabled = true;
-      volatile bool m_probing = false;
+      volatile bool m_probeIsRetracting = false;
 
       unsigned long m_nextCheckAt = 0;
       VoltageTypeStabilizer m_stabilizer;
@@ -75,9 +75,9 @@ namespace toolDetection {
     //       for tool classification and detach detection.
     //       In the worst case it should take 3-4 samples.
 
-    // Don't collect any voltage samples and don't try to do any tool detection
-    // during the probing sequence.
-    if (m_probing) {
+    // The probe triggers intermittently while retracting, resulting in
+    // unstable voltage readings. For simplicity, we ignore these readings.
+    if (m_probeIsRetracting) {
       return;
     }
 
