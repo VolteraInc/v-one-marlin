@@ -109,7 +109,7 @@ static int s_measureAtSwitchRelease(const Endstop& endstop, float& releaseStarte
 
 int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
 
-  int returnValue = 0;
+  int returnValue = -1;
 
   // Tell the tool detector that we have started the probing sequence.
   if (endstop.pin == vone->endstops.toolSwitch.pin) {
