@@ -44,7 +44,7 @@ static unsigned s_countTriggers(const Endstop& endstop, unsigned maxSamples) {
   return count;
 }
 
-int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
+static int s_measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
   if (logging_enabled) {
     log << F("Measure at switch release: ") << endstop.name << endl;
   }
@@ -105,4 +105,23 @@ int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, floa
     << endl;
 
   return -1;
+}
+
+int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms) {
+
+  int returnValue = -1;
+
+  // Tell the tool detector that we have started the probing sequence.
+  if (endstop.pin == vone->endstops.toolSwitch.pin) {
+    vone->toolDetector.setProbeIsRetracting(true);
+  }
+
+  returnValue = s_measureAtSwitchRelease(endstop, releaseStartedAt, releaseCompletedAt, delay_ms);
+
+  // Before returning, tell the tool detector that we have finished the probing sequence.
+  if (endstop.pin == vone->endstops.toolSwitch.pin) {
+    vone->toolDetector.setProbeIsRetracting(false);
+  }
+
+  return returnValue;
 }

@@ -26,10 +26,13 @@ namespace toolDetection {
 
       inline void frequentInterruptibleWork();
 
+      inline void setProbeIsRetracting(bool probeIsRetracting) { m_probeIsRetracting = probeIsRetracting; }
+
     private:
       ToolBox& m_toolBox;
       const PTopPin& m_pin;
       volatile bool m_enabled = true;
+      volatile bool m_probeIsRetracting = false;
 
       unsigned long m_nextCheckAt = 0;
       VoltageTypeStabilizer m_stabilizer;
@@ -71,6 +74,13 @@ namespace toolDetection {
     //       Collecting every ~20ms should be sufficient
     //       for tool classification and detach detection.
     //       In the worst case it should take 3-4 samples.
+
+    // The probe triggers intermittently while retracting, resulting in
+    // unstable voltage readings. For simplicity, we ignore these readings.
+    if (m_probeIsRetracting) {
+      return;
+    }
+
     const auto now = millis();
     if (now < m_nextCheckAt) {
       return;
