@@ -33,6 +33,12 @@ const EndstopFilter* EndstopMonitor::lookup(const Endstop& endstop) const {
     case P_BOT_PIN: return &m_calibrationPlate;
 
     case P_TOP_PIN: return &m_toolSwitch;
+
+    #ifdef TRINAMIC_DRIVERS
+    case X_LIM_PIN: return &m_xLim;
+    case Y_LIM_PIN: return &m_yLim;
+    #endif // TRINAMIC_DRIVERS
+
     default:
       logError
         << F("Unable to access endstop with pin ")

@@ -15,4 +15,7 @@ struct PinSet {
     int bedTemperatureAnalogPin,
     int heaterDigitalPin
   );
+
+  int outputEndStopStatus();
+  int deprecated_OutputEndStopStatus();
 };

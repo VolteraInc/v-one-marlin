@@ -5,6 +5,7 @@
 #include "../vone/endstops/Endstop.h"
 #include "../../planner.h"
 #include "../../stepper.h"
+#include "../vone/stepper/trinamic.h"
 
 static int8_t axis_homed_state[3] = {0, 0, 0};
 const float homing_feedrate[] = HOMING_FEEDRATE;
@@ -62,6 +63,11 @@ static int s_zeroAxis(const Endstop& endstop) {
   int returnValue = -1;
   const auto axis = endstop.axis;
 
+  #ifdef TRINAMIC_SENSORLESS
+    int acc_x = max_acceleration_units_per_sq_second[ X_AXIS ];
+    int acc_y = max_acceleration_units_per_sq_second[ Y_AXIS ];
+  #endif
+
   log << F("zero axis:") << axis_codes[axis] << endl;
 
   // Finish any pending moves (prevents crashes)
@@ -96,6 +102,26 @@ static int s_zeroAxis(const Endstop& endstop) {
   switch(axis) {
     case X_AXIS:
     case Y_AXIS:
+      #ifdef TRINAMIC_SENSORLESS
+        // Trinamic Drivers need a minimum speed to properly do sensorless homing.
+        // When we home in X and Y, we don't need very precise measurements, +/- 0.25 mm is probably ok.
+        // The XY Positioner will give us the accuracy we require.
+        max_acceleration_units_per_sq_second[ X_AXIS ] = 700;
+        max_acceleration_units_per_sq_second[ Y_AXIS ] = 700;
+        reset_acceleration_rates();
+
+        // Move in +X and +Y a bit to create space. So we can reach sensorless homing speeds.
+        if (retractFromSwitch(endstop, HOMING_XY_OFFSET * 3)) {
+          logError
+            << F("Unable to create space in  ")
+            << axis_codes[axis]
+            << F(" axis during homing.")
+            << endl;
+          goto DONE;
+        }
+      #endif
+
+
       log << F("Retracting from ") << endstop.name << endl;
       if (retractFromSwitch(endstop, HOMING_XY_OFFSET)) {
         goto DONE;
@@ -113,6 +139,12 @@ static int s_zeroAxis(const Endstop& endstop) {
   returnValue = 0;
 
 DONE:
+  #ifdef TRINAMIC_SENSORLESS
+    max_acceleration_units_per_sq_second[ X_AXIS ] = acc_x;
+    max_acceleration_units_per_sq_second[ Y_AXIS ] = acc_y;
+    reset_acceleration_rates();
+  #endif
+
   plan_enable_skew_adjustment(true);
   return returnValue;
 }

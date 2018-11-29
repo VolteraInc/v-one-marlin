@@ -93,8 +93,25 @@ int checkExtents(tools::Tool& tool, float tolerance) {
   Point2d frontRight = { min_pos[X_AXIS], max_pos[Y_AXIS] };
 
   int returnValue = (
+    #ifdef TRINAMIC_DRIVERS
     // x-axis extents
-    s_checkExtent(F("X-axis extent - across back" ), tool, vone->endstops.xMin,  backRight,   backLeft, tolerance) ||
+    s_checkExtent(F("X-axis extent - across back" ), tool, vone->endstops.xLim, backRight,   backLeft, tolerance) ||
+    s_checkExtent(F("X-axis extent - across front"), tool, vone->endstops.xLim, frontRight, frontLeft, tolerance) ||
+
+    // y-axis extents
+    s_checkExtent(F("Y-axis extent - along right-side"), tool, vone->endstops.yLim, backRight, frontRight, tolerance) ||
+    s_checkExtent(F("Y-axis extent - along left-side" ), tool, vone->endstops.yLim, backLeft,  frontLeft,  tolerance) ||
+
+    // Diagonal to front left
+    s_checkExtent(F("X-axis extent - diagonal to front left"), tool, vone->endstops.xLim, backRight, frontLeft, tolerance) ||
+    s_checkExtent(F("Y-axis extent - diagonal to front left"), tool, vone->endstops.yLim, backRight, frontLeft, tolerance) ||
+
+    // Diagonal to front right
+    s_checkExtent(F("X-axis extent - diagonal to front right"), tool, vone->endstops.xLim, backLeft, frontRight, tolerance) ||
+    s_checkExtent(F("Y-axis extent - diagonal to front right"), tool, vone->endstops.yLim, backLeft, frontRight, tolerance)
+    #else
+    // x-axis extents
+    s_checkExtent(F("X-axis extent - across back" ), tool, vone->endstops.xMin, backRight,   backLeft, tolerance) ||
     s_checkExtent(F("X-axis extent - across front"), tool, vone->endstops.xMin, frontRight, frontLeft, tolerance) ||
 
     // y-axis extents
@@ -108,6 +125,7 @@ int checkExtents(tools::Tool& tool, float tolerance) {
     // Diagonal to front right
     s_checkExtent(F("X-axis extent - diagonal to front right"), tool, vone->endstops.xMin, backLeft, frontRight, tolerance) ||
     s_checkExtent(F("Y-axis extent - diagonal to front right"), tool, vone->endstops.yMin, backLeft, frontRight, tolerance)
+    #endif // TRINAMIC_DRIVERS
   );
 
   // Note: Touching switches and resycning with the stepper

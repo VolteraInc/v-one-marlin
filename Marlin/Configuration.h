@@ -1,5 +1,8 @@
 #pragma once
 
+#define TRINAMIC_DRIVERS (1) // Flag to indicate trinamic drivers.
+#define TRINAMIC_SENSORLESS // Flag to use sensorless homing.
+#define DEFAULT_PRIME_RETRACT (0.35) // How much to retract when priming.
 
 // Default Calibration offsets for the Voltera V-One
 #define XYPOS_X_POS       (32.098)  // average computed from 77 calibrations in July 2017
@@ -87,8 +90,11 @@ const bool P_TOP_ENDSTOP_INVERTING = true;
 
 const bool Y_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-const bool X_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-const bool Y_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+
+const bool X_LIM_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool Y_LIM_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool E_LIM_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+
 
 const bool XY_MIN_X_ENDSTOP_INVERTING = true;
 const bool XY_MAX_X_ENDSTOP_INVERTING = true;
@@ -141,11 +147,8 @@ const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
 #define Y_MAX_LENGTH (Y_MAX_POS - Y_MIN_POS)
 #define Z_MAX_LENGTH (Z_MAX_POS - Z_MIN_POS)
+#define E_MAX_LENGTH (20)
 //============================= Bed Auto Leveling ===========================
-
-//// MOVEMENT SETTINGS
-#define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
-#define HOMING_FEEDRATE {1200, 1200, 200 , 0}  // set the homing speeds (mm/min)
 
 // default settings
 
@@ -165,7 +168,16 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 1/16 6857.142857142858
 */
 
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {100.0,100.0,1600.0,1714.2857142857144}
+//// MOVEMENT SETTINGS
+#define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
+#ifdef TRINAMIC_DRIVERS
+  #define HOMING_FEEDRATE {2800, 2800, 200 , 55}  // set the homing speeds (mm/min)
+  #define DEFAULT_AXIS_STEPS_PER_UNIT   {100.0, 100.0, 1600.0, 6857.142857142858}
+
+#else
+  #define HOMING_FEEDRATE {1200, 1200, 200 , 0} // set the homing speeds (mm/min)
+  #define DEFAULT_AXIS_STEPS_PER_UNIT   {100.0, 100.0, 1600.0, 1714.2857142857144}
+#endif
 
 // Note: if speed is 100, step rate ends up at 10001, just over
 //       the threshold for double-stepping (taking 2 steps within

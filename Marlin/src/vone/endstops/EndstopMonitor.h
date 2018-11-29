@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../../../Configuration.h"
+
 #include "../../../Axis.h"
 #include "../../utils/ScopedInterruptDisable.h"
 #include "../../utils/ScopedInterruptDisable.h"
@@ -52,6 +54,11 @@ class EndstopMonitor {
 
     EndstopFilter m_toolSwitch;
 
+    #ifdef TRINAMIC_DRIVERS
+    EndstopFilter m_xLim;
+    EndstopFilter m_yLim;
+    #endif // TRINAMIC_DRIVERS
+
     const EndstopFilter* lookup(const Endstop& endstop) const;
     EndstopFilter* lookup(const Endstop& endstop);
 
@@ -86,18 +93,30 @@ class EndstopMonitor {
 
     // Right
     FORCE_INLINE void resetRightEndstops() {
+      #ifdef TRINAMIC_DRIVERS
+      m_xLim.reset();
+      #else
       m_xMin.reset();
+      #endif // TRINAMIC_DRIVERS
       m_xyPositionerRight.reset();
     }
 
     FORCE_INLINE void updateRightEndstops(volatile long stepCounts[NUM_AXIS]) {
+      #ifdef TRINAMIC_DRIVERS
+      updateEndstop(m_xLim, READ_PIN(X_LIM), m_endstops.xLim, stepCounts);
+      #else
       updateEndstop(m_xMin, READ_PIN(X_MIN), m_endstops.xMin, stepCounts);
+      #endif // TRINAMIC_DRIVERS
       updateEndstop(m_xyPositionerRight, READ_PIN(XY_MIN_X), m_endstops.xyPositionerRight, stepCounts);
     }
 
     FORCE_INLINE bool isTriggeredRight() const {
       ScopedInterruptDisable sid;
+      #ifdef TRINAMIC_DRIVERS
+      return m_xLim.triggered() || m_xyPositionerRight.triggered();
+      #else
       return m_xMin.triggered() || m_xyPositionerRight.triggered();
+      #endif // TRINAMIC_DRIVERS
     }
 
     // ------------------------------------------
@@ -119,18 +138,30 @@ class EndstopMonitor {
 
     // Back
     FORCE_INLINE void resetBackEndstops() {
+      #ifdef TRINAMIC_DRIVERS
+      m_yLim.reset();
+      #else
       m_yMin.reset();
+      #endif // TRINAMIC_DRIVERS
       m_xyPositionerBack.reset();
     }
 
     FORCE_INLINE void updateBackEndstops(volatile long stepCounts[NUM_AXIS]) {
+      #ifdef TRINAMIC_DRIVERS
+      updateEndstop(m_yLim, READ_PIN(Y_LIM), m_endstops.yLim, stepCounts);
+      #else
       updateEndstop(m_yMin, READ_PIN(Y_MIN), m_endstops.yMin, stepCounts);
+      #endif // TRINAMIC_DRIVERS
       updateEndstop(m_xyPositionerBack, READ_PIN(XY_MIN_Y), m_endstops.xyPositionerBack, stepCounts);
     }
 
     FORCE_INLINE bool isTriggeredBack() const {
       ScopedInterruptDisable sid;
+      #ifdef TRINAMIC_DRIVERS
+      return m_yLim.triggered() || m_xyPositionerBack.triggered();
+      #else
       return m_yMin.triggered() || m_xyPositionerBack.triggered();
+      #endif // TRINAMIC_DRIVERS
     }
 
     // ------------------------------------------

@@ -4,6 +4,8 @@
 #include "../../../Configuration.h"
 #include "../../../pins.h"
 
+#ifndef TRINAMIC_DRIVERS
+
 // Refer to http://ww1.microchip.com/downloads/en/DeviceDoc/22242A.pdf
 // To get understanding of write/read codes and addresses.
 
@@ -52,3 +54,5 @@ uint8_t digiPotGetCurrent(uint8_t axis) {
   const uint8_t digipot_addrs[] = DIGIPOT_ADDRESS;
   return s_digiPotRead(digipot_addrs[axis]);
 }
+
+#endif // TRINAMIC_DRIVERS

@@ -6,7 +6,10 @@
 #include "../../../planner.h"
 #include "../../../stepper.h"
 #include "../../../serial.h"
+
+#ifndef TRINAMIC_DRIVERS
 #include "./digipots.h"
+#endif
 
 Stepper::Stepper(
   EndstopMonitor& endstopMonitor
@@ -20,8 +23,10 @@ Stepper::Stepper(
 {
   plan_init();  // Initialize planner
 
+  #ifndef TRINAMIC_DRIVERS
   // Initialize Digipot Motor Current
   digiPotInit();
+  #endif
 
   // waveform generation = 0100 = CTC
   TCCR1B &= ~(1<<WGM13);
