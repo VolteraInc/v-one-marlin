@@ -21,19 +21,22 @@ VOne::VOne(
 
   , m_memoryUsage(F("free memory"), F(" bytes"), 8192)
 {
-  // Configure calling frequency of TIMER0_COMPB_vect
-  // NOTE: Timer 0 is used by millis() so don't change the prescaler
-  OCR0B = 128;
 }
 
 void VOne::start() {
+  log << F("starting") << endl;
+
   // ISRs are enabled on boot so we can't do this in the ctor (cleanly)
   // Note: The concern is that enabling ISRs in the ctor would allow them
   //       to run before the vone object is initialized. Fixing the
   //       initializing sequence is much cleaner than adding conditions to
   //       the ISRs
-  log << F("starting") << endl;
+
+  // Configure calling frequency of TIMER0_COMPB_vect
+  // NOTE: Timer 0 is used by millis() so don't change the prescaler
+  OCR0B = 128;
   ENABLE_TEMPERATURE_INTERRUPT();
+
   stepper.start();
 }
 
