@@ -234,12 +234,12 @@ ISR(TIMER1_COMPA_vect) {
   }
 
   // --------------------------------------------
-  // Allow other interrupts, so we don't miss serial characters
+  // Allow (some) other interrupts, so we don't miss serial characters
   const bool temp_isr_was_enabled = TEMPERATURE_ISR_ENABLED();
   DISABLE_TEMPERATURE_INTERRUPT();
   DISABLE_STEPPER_DRIVER_INTERRUPT();
+  interrupts();
   stepper.maxInterruptsAllowed.update(micros() - isr_start); // should be less than 40us, or we risk missing a character
-  sei();
 
   // --------------------------------------------
   // Continue processing the current block
@@ -281,7 +281,11 @@ ISR(TIMER1_COMPA_vect) {
 
   // --------------------------------------------
   // Restore interrupt settings
-  cli();
+  // Notes:
+  //   1) Disable interrupts before re-enable specific interrupts
+  //      otherwise that interrupt might trigger/run now
+  //   2) Global interrupts will be enabled when we exit this function
+  noInterrupts();
   ENABLE_STEPPER_DRIVER_INTERRUPT();
   if (temp_isr_was_enabled) ENABLE_TEMPERATURE_INTERRUPT();
 

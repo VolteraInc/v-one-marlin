@@ -97,13 +97,17 @@ void VOne::periodicReport() {
 ISR(TIMER0_COMPB_vect) {
   // Allow other interrupts
   DISABLE_TEMPERATURE_INTERRUPT();
-  sei();
+  interrupts();
 
   logging::inISR = true;
   vone->frequentInterruptibleWork();
   logging::inISR = false;
 
   // Restore interrupt settings
-  cli();
+  // Notes:
+  //   1) Disable interrupts before re-enable the frequentInterruptibleWork interrupt
+  //      otherwise that interrupt might trigger/run now
+  //   2) Global interrupts will be enabled when we exit this function
+  noInterrupts();
   ENABLE_TEMPERATURE_INTERRUPT();
 }
