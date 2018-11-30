@@ -27,6 +27,16 @@ VOne::VOne(
   ENABLE_TEMPERATURE_INTERRUPT();
 }
 
+void VOne::start() {
+  // ISRs are enabled on boot so we can't do this in the ctor (cleanly)
+  // Note: The concern is that enabling ISRs in the ctor would allow them
+  //       to run before the vone object is initialized. Fixing the
+  //       initializing sequence is much cleaner than adding conditions to
+  //       the ISRs
+  ENABLE_TEMPERATURE_INTERRUPT();
+  stepper.start();
+}
+
 void VOne::updateStats() {
   const auto now = millis();
   if (now > m_nextStatsCheckAt) {

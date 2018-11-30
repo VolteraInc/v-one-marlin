@@ -42,6 +42,7 @@ class VOne {
     tools::ToolBox toolBox;
     toolDetection::ToolDetector toolDetector;
 
+    void start();
     void frequentInterruptibleWork();
     void outputStatus();
     void periodicReport();

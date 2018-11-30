@@ -9,6 +9,7 @@ class EndstopMonitor;
 class Stepper {
   public:
     Stepper(EndstopMonitor& endstopMonitor);
+    void start();
 
     EndstopMonitor& endstopMonitor;
 

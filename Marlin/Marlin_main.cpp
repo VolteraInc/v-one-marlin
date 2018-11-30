@@ -69,6 +69,7 @@ char product_serial_number[15];
 
 //===========================================================================
 
+// NOTE: ISRs are enabled on boot
 void setup() {
   MYSERIAL.begin(BAUDRATE);
 
@@ -109,7 +110,7 @@ void setup() {
 
   manufacturing_init();
 
-  sei();
+  vone->start();
 
   protocol << F("--ready--") << endl;
 }
