@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utils/HighwaterReporter.h"
+#include "../utils/Reporters.h"
 
 #include "pins/PinSet.h"
 #include "endstops/Endstops.h"
@@ -49,7 +49,7 @@ class VOne {
 
   private:
     unsigned long m_nextStatsCheckAt = 0;
-    HighwaterReporter m_memoryUsage;
+    LowWaterReporter m_memoryUsage;
 
     void updateStats();
 

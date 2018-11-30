@@ -19,7 +19,7 @@ VOne::VOne(
   , toolBox(stepper, pins.ptop, endstops.toolSwitch)
   , toolDetector(toolBox, pins.ptop)
 
-  , m_memoryUsage(F("memory usage"), F(" bytes"), 8192)
+  , m_memoryUsage(F("free memory"), F(" bytes"), 8192)
 {
   // Configure calling frequency of TIMER0_COMPB_vect
   // NOTE: Timer 0 is used by millis() so don't change the prescaler
@@ -33,6 +33,7 @@ void VOne::start() {
   //       to run before the vone object is initialized. Fixing the
   //       initializing sequence is much cleaner than adding conditions to
   //       the ISRs
+  log << F("starting") << endl;
   ENABLE_TEMPERATURE_INTERRUPT();
   stepper.start();
 }

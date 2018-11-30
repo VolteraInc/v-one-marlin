@@ -75,7 +75,7 @@ static FORCE_INLINE void s_handleNewBlock(
   deceleration_time = 0;
   acc_step_rate = block.initial_rate;
   calculateStepTiming(acc_step_rate, timer, stepsPerISR);
-  vone->stepper.maxStepRate.update(acc_step_rate);
+  vone->stepper.maxStepRate.updateIfHigher(acc_step_rate);
   acceleration_time = timer;
 
   // Reset step counters
@@ -170,7 +170,7 @@ static FORCE_INLINE void s_calculateStepTiming(
     }
 
     // step_rate to timer interval
-    stepper.maxStepRate.update(acc_step_rate);
+    stepper.maxStepRate.updateIfHigher(acc_step_rate);
     calculateStepTiming(acc_step_rate, timer, stepsPerIsr);
     acceleration_time += timer;
   } else if (step_events_completed > (unsigned long int)block.decelerate_after) {
@@ -189,11 +189,11 @@ static FORCE_INLINE void s_calculateStepTiming(
     }
 
     // step_rate to timer interval
-    stepper.maxStepRate.update(step_rate);
+    stepper.maxStepRate.updateIfHigher(step_rate);
     calculateStepTiming(step_rate, timer, stepsPerIsr);
     deceleration_time += timer;
   } else {
-    stepper.maxStepRate.update(block.nominal_rate);
+    stepper.maxStepRate.updateIfHigher(block.nominal_rate);
     timer = OCR1A_nominal;
     stepsPerIsr = stepPerISR_nominal;
   }
@@ -223,7 +223,7 @@ ISR(TIMER1_COMPA_vect) {
       s_doStep(*current_block);
 
       if (i == 0) {
-        stepper.maxStepsComplete.update(micros() - isr_start);
+        stepper.maxStepsComplete.updateIfHigher(micros() - isr_start);
       }
 
       step_events_completed += 1;
@@ -239,7 +239,7 @@ ISR(TIMER1_COMPA_vect) {
   DISABLE_TEMPERATURE_INTERRUPT();
   DISABLE_STEPPER_DRIVER_INTERRUPT();
   interrupts();
-  stepper.maxInterruptsAllowed.update(micros() - isr_start); // should be less than 40us, or we risk missing a character
+  stepper.maxInterruptsAllowed.updateIfHigher(micros() - isr_start); // should be less than 40us, or we risk missing a character
 
   // --------------------------------------------
   // Continue processing the current block
@@ -292,8 +292,8 @@ ISR(TIMER1_COMPA_vect) {
   // --------------------------------------------
   // Reporting
   if (!triggered) {
-    stepper.maxCompletedWithoutTriggers.update(micros() - isr_start);
-    stepper.maxCompletedWithoutTriggersTics.update(TCNT1);
+    stepper.maxCompletedWithoutTriggers.updateIfHigher(micros() - isr_start);
+    stepper.maxCompletedWithoutTriggersTics.updateIfHigher(TCNT1);
   }
 }
 
