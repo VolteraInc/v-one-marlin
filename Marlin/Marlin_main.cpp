@@ -111,7 +111,7 @@ void setup() {
   manufacturing_init();
 
   vone->start();
-`
+
   protocol << F("ready") << endl;
 }
 
