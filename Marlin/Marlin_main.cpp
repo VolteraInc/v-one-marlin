@@ -111,8 +111,8 @@ void setup() {
   manufacturing_init();
 
   vone->start();
-
-  protocol << F("--ready--") << endl;
+`
+  protocol << F("ready") << endl;
 }
 
 void periodic_work() {
