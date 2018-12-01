@@ -71,7 +71,9 @@ inline MarlinSerial& operator<<(MarlinSerial &obj, const FloatWithFormat& st) {
 }
 
 
-inline MarlinSerial& protocol() { return MYSERIAL; }
+inline MarlinSerial& protocol() {
+  return MYSERIAL << logging::isrPrefix();
+}
 #define protocol protocol()
 
 inline MarlinSerial& log() {
