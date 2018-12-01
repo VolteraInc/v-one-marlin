@@ -5,12 +5,12 @@
 
 
 PinSet::PinSet(
-  int ptopDigialPin,
+  int ptopDigitalPin,
   int ptopAnalogPin,
   int bedTemperatureAnalogPin,
   int heaterDigitalPin
 )
-  : ptop(ptopDigialPin, ptopAnalogPin)
+  : ptop(ptopDigitalPin, ptopAnalogPin)
   , bedTemperature(bedTemperatureAnalogPin)
   , heater(heaterDigitalPin)
 {

@@ -22,7 +22,7 @@
 class VOne {
   public:
     VOne(
-      int ptopDigialPin,
+      int ptopDigitalPin,
       int ptopAnalogPin,
       int bedTemperatureAnalogPin,
       int heaterDigitalPin

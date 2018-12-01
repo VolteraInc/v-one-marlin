@@ -3,12 +3,12 @@
 #include "../libraries/MemoryFree/MemoryFree.h"
 
 VOne::VOne(
-  int ptopDigialPin,
+  int ptopDigitalPin,
   int ptopAnalogPin,
   int bedTemperaturePin,
   int heaterDigitalPin
 )
-  : pins(ptopDigialPin, ptopAnalogPin, bedTemperaturePin, heaterDigitalPin)
+  : pins(ptopDigitalPin, ptopAnalogPin, bedTemperaturePin, heaterDigitalPin)
 
   , adc(pins.ptop, pins.bedTemperature)
   , heater(pins.heater, pins.bedTemperature)
