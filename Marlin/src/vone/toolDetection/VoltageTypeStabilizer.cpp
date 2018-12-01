@@ -96,6 +96,7 @@ static unsigned long s_stabilityThreshold(VoltageType type) {
     //       (i.e. the entire range). So, seeing the same type for 30ms is
     //        _plenty_ of time
     case VoltageType::ProbeMounted:
+    case VoltageType::SmartDispenserMounted:
     case VoltageType::DrillMounted:
     default:
       return 50;
