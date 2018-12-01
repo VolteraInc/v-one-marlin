@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../../MarlinConfig.h"
-#include "../../utils/HighwaterReporter.h"
+#include "../../utils/Reporters.h"
 
 class Endstop;
 class EndstopMonitor;
@@ -9,6 +9,7 @@ class EndstopMonitor;
 class Stepper {
   public:
     Stepper(EndstopMonitor& endstopMonitor);
+    void start();
 
     EndstopMonitor& endstopMonitor;
 
@@ -24,12 +25,12 @@ class Stepper {
     //        right now
 
     // Monitoring/Reporting
-    HighwaterReporter maxStepsComplete;
-    HighwaterReporter maxInterruptsAllowed;
-    HighwaterReporter maxCompletedWithoutTriggers;
-    HighwaterReporter maxCompletedWithoutTriggersTics;
-    HighwaterReporter maxStepRate;
-    HighwaterReporter maxStepTiming;
+    HighWaterReporter maxStepsComplete;
+    HighWaterReporter maxInterruptsAllowed;
+    HighWaterReporter maxCompletedWithoutTriggers;
+    HighWaterReporter maxCompletedWithoutTriggersTics;
+    HighWaterReporter maxStepRate;
+    LowWaterReporter maxStepTiming;
     void periodicReport();
     void outputStatus();
 

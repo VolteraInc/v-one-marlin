@@ -6,6 +6,7 @@
 #include "../../../planner.h"
 #include "../../../stepper.h"
 #include "../../../serial.h"
+#include "./digipots.h"
 
 Stepper::Stepper(
   EndstopMonitor& endstopMonitor
@@ -18,7 +19,33 @@ Stepper::Stepper(
   , maxStepTiming(F("stepper step timing"), F(" tics"), 1000000UL)
 {
   plan_init();  // Initialize planner
-  st_init();    // Initialize stepper
+
+  // Initialize Digipot Motor Current
+  digiPotInit();
+
+  // waveform generation = 0100 = CTC
+  TCCR1B &= ~(1<<WGM13);
+  TCCR1B |=  (1<<WGM12);
+  TCCR1A &= ~(1<<WGM11);
+  TCCR1A &= ~(1<<WGM10);
+
+  // output mode = 00 (disconnected)
+  TCCR1A &= ~(3<<COM1A0);
+  TCCR1A &= ~(3<<COM1B0);
+
+  // Set the timer pre-scaler
+  // Generally we use a divider of 8, resulting in a 2MHz timer
+  // frequency on a 16MHz MCU. If you are going to change this, be
+  // sure to regenerate speed_lookuptable.h with
+  // create_speed_lookuptable.py
+  TCCR1B = (TCCR1B & ~(0x07<<CS10)) | (2<<CS10);
+
+  OCR1A = 0x4000;
+  TCNT1 = 0;
+}
+
+void Stepper::start() {
+  st_start();
 }
 
 void Stepper::stop(const __FlashStringHelper* reason) {

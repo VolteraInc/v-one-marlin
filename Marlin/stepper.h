@@ -20,12 +20,10 @@
 
 #pragma once
 
-#include <inttypes.h>
 #include "Axis.h"
-#include "macros.h"
 
-// Initialize and start the stepper motor subsystem
-void st_init();
+// Start the stepper motor subsystem
+void st_start();
 
 // Block until all buffered steps are executed
 void st_synchronize();

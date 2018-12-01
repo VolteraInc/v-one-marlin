@@ -28,7 +28,6 @@ and Philipp Tiefenbacher. */
 #include "planner.h"
 
 #include "src/vone/VOne.h"
-#include "src/vone/stepper/digipots.h"
 #include "src/vone/endstops/EndstopMonitor.h"
 #include "src/vone/stepper/calculateStepTiming.h"
 
@@ -76,7 +75,7 @@ static FORCE_INLINE void s_handleNewBlock(
   deceleration_time = 0;
   acc_step_rate = block.initial_rate;
   calculateStepTiming(acc_step_rate, timer, stepsPerISR);
-  vone->stepper.maxStepRate.update(acc_step_rate);
+  vone->stepper.maxStepRate.updateIfHigher(acc_step_rate);
   acceleration_time = timer;
 
   // Reset step counters
@@ -171,7 +170,7 @@ static FORCE_INLINE void s_calculateStepTiming(
     }
 
     // step_rate to timer interval
-    stepper.maxStepRate.update(acc_step_rate);
+    stepper.maxStepRate.updateIfHigher(acc_step_rate);
     calculateStepTiming(acc_step_rate, timer, stepsPerIsr);
     acceleration_time += timer;
   } else if (step_events_completed > (unsigned long int)block.decelerate_after) {
@@ -190,11 +189,11 @@ static FORCE_INLINE void s_calculateStepTiming(
     }
 
     // step_rate to timer interval
-    stepper.maxStepRate.update(step_rate);
+    stepper.maxStepRate.updateIfHigher(step_rate);
     calculateStepTiming(step_rate, timer, stepsPerIsr);
     deceleration_time += timer;
   } else {
-    stepper.maxStepRate.update(block.nominal_rate);
+    stepper.maxStepRate.updateIfHigher(block.nominal_rate);
     timer = OCR1A_nominal;
     stepsPerIsr = stepPerISR_nominal;
   }
@@ -224,7 +223,7 @@ ISR(TIMER1_COMPA_vect) {
       s_doStep(*current_block);
 
       if (i == 0) {
-        stepper.maxStepsComplete.update(micros() - isr_start);
+        stepper.maxStepsComplete.updateIfHigher(micros() - isr_start);
       }
 
       step_events_completed += 1;
@@ -235,12 +234,12 @@ ISR(TIMER1_COMPA_vect) {
   }
 
   // --------------------------------------------
-  // Allow other interrupts, so we don't miss serial characters
+  // Allow (some) other interrupts, so we don't miss serial characters
   const bool temp_isr_was_enabled = TEMPERATURE_ISR_ENABLED();
   DISABLE_TEMPERATURE_INTERRUPT();
   DISABLE_STEPPER_DRIVER_INTERRUPT();
-  stepper.maxInterruptsAllowed.update(micros() - isr_start); // should be less than 40us, or we risk missing a character
-  sei();
+  interrupts();
+  stepper.maxInterruptsAllowed.updateIfHigher(micros() - isr_start); // should be less than 40us, or we risk missing a character
 
   // --------------------------------------------
   // Continue processing the current block
@@ -282,41 +281,23 @@ ISR(TIMER1_COMPA_vect) {
 
   // --------------------------------------------
   // Restore interrupt settings
-  cli();
+  // Notes:
+  //   1) Disable interrupts before re-enable specific interrupts
+  //      otherwise that interrupt might trigger/run now
+  //   2) Global interrupts will be enabled when we exit this function
+  noInterrupts();
   ENABLE_STEPPER_DRIVER_INTERRUPT();
   if (temp_isr_was_enabled) ENABLE_TEMPERATURE_INTERRUPT();
 
   // --------------------------------------------
   // Reporting
   if (!triggered) {
-    stepper.maxCompletedWithoutTriggers.update(micros() - isr_start);
-    stepper.maxCompletedWithoutTriggersTics.update(TCNT1);
+    stepper.maxCompletedWithoutTriggers.updateIfHigher(micros() - isr_start);
+    stepper.maxCompletedWithoutTriggersTics.updateIfHigher(TCNT1);
   }
 }
 
-void st_init() {
-  // Initialize Digipot Motor Current
-  digiPotInit();
-
-  // waveform generation = 0100 = CTC
-  TCCR1B &= ~(1<<WGM13);
-  TCCR1B |=  (1<<WGM12);
-  TCCR1A &= ~(1<<WGM11);
-  TCCR1A &= ~(1<<WGM10);
-
-  // output mode = 00 (disconnected)
-  TCCR1A &= ~(3<<COM1A0);
-  TCCR1A &= ~(3<<COM1B0);
-
-  // Set the timer pre-scaler
-  // Generally we use a divider of 8, resulting in a 2MHz timer
-  // frequency on a 16MHz MCU. If you are going to change this, be
-  // sure to regenerate speed_lookuptable.h with
-  // create_speed_lookuptable.py
-  TCCR1B = (TCCR1B & ~(0x07<<CS10)) | (2<<CS10);
-
-  OCR1A = 0x4000;
-  TCNT1 = 0;
+void st_start() {
   ENABLE_STEPPER_DRIVER_INTERRUPT();
 }
 

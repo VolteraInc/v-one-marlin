@@ -19,12 +19,25 @@ VOne::VOne(
   , toolBox(stepper, pins.ptop, endstops.toolSwitch)
   , toolDetector(toolBox, pins.ptop)
 
-  , m_memoryUsage(F("memory usage"), F(" bytes"), 8192)
+  , m_memoryUsage(F("free memory"), F(" bytes"), 8192)
 {
+}
+
+void VOne::start() {
+  log << F("starting") << endl;
+
+  // ISRs are enabled on boot so we can't do this in the ctor (cleanly)
+  // Note: The concern is that enabling ISRs in the ctor would allow them
+  //       to run before the vone object is initialized. Fixing the
+  //       initializing sequence is much cleaner than adding conditions to
+  //       the ISRs
+
   // Configure calling frequency of TIMER0_COMPB_vect
   // NOTE: Timer 0 is used by millis() so don't change the prescaler
   OCR0B = 128;
   ENABLE_TEMPERATURE_INTERRUPT();
+
+  stepper.start();
 }
 
 void VOne::updateStats() {
@@ -87,13 +100,17 @@ void VOne::periodicReport() {
 ISR(TIMER0_COMPB_vect) {
   // Allow other interrupts
   DISABLE_TEMPERATURE_INTERRUPT();
-  sei();
+  interrupts();
 
   logging::inISR = true;
   vone->frequentInterruptibleWork();
   logging::inISR = false;
 
   // Restore interrupt settings
-  cli();
+  // Notes:
+  //   1) Disable interrupts before re-enable the frequentInterruptibleWork interrupt
+  //      otherwise that interrupt might trigger/run now
+  //   2) Global interrupts will be enabled when we exit this function
+  noInterrupts();
   ENABLE_TEMPERATURE_INTERRUPT();
 }

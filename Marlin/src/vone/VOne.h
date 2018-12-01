@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utils/HighwaterReporter.h"
+#include "../utils/Reporters.h"
 
 #include "pins/PinSet.h"
 #include "endstops/Endstops.h"
@@ -42,13 +42,14 @@ class VOne {
     tools::ToolBox toolBox;
     toolDetection::ToolDetector toolDetector;
 
+    void start();
     void frequentInterruptibleWork();
     void outputStatus();
     void periodicReport();
 
   private:
     unsigned long m_nextStatsCheckAt = 0;
-    HighwaterReporter m_memoryUsage;
+    LowWaterReporter m_memoryUsage;
 
     void updateStats();
 
