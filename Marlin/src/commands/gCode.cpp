@@ -265,6 +265,18 @@ int process_gcode(int command_code) {
     }
     return 0;
 
+    // DEFER auto priming
+    // G5  - Automatic Priming - Work in progress.
+    // case 5: {
+    //   if (TRINAMIC_SENSORLESS) {
+    //     float retract_amount = code_seen('D') ? code_value() : DEFAULT_PRIME_RETRACT;
+    //     primeE(retract_amount);
+    //   } else {
+    //     logError << F("Automatic Priming not available in this hardware version.") << endl;
+    //   }
+    //   return 0;
+    // }
+
     // G28 - Home X and Y normally, home Z to the top (legacy code relies on this behavior)
     case 28: {
       bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));

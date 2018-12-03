@@ -3,10 +3,12 @@
 #include "../endstops/Endstop.h"
 #include "../endstops/EndstopMonitor.h"
 
+#include "../../../Marlin.h"
 #include "../../../planner.h"
 #include "../../../stepper.h"
 #include "../../../serial.h"
 #include "./digipots.h"
+#include "./trinamicMotors.h"
 
 Stepper::Stepper(
   EndstopMonitor& endstopMonitor
@@ -20,8 +22,44 @@ Stepper::Stepper(
 {
   plan_init();  // Initialize planner
 
-  // Initialize Digipot Motor Current
-  digiPotInit();
+  if (TRINAMIC_DRIVERS) {
+    // Initialize Trinamic Driver
+    // Note: trinamicInit initalizes pins too
+    trinamicInit();
+
+  } else {
+    // Initialize Digipot Motor Current
+    digiPotInit();
+
+    //Initialize Dir Pins
+    SET_OUTPUT(X_DIR_PIN);
+    SET_OUTPUT(Y_DIR_PIN);
+    SET_OUTPUT(Z_DIR_PIN);
+    SET_OUTPUT(E_DIR_PIN);
+
+    // Initialize Enable Pins - steppers default to disabled.
+    SET_OUTPUT(X_ENABLE_PIN);
+    SET_OUTPUT(Y_ENABLE_PIN);
+    SET_OUTPUT(Z_ENABLE_PIN);
+    SET_OUTPUT(E_ENABLE_PIN);
+  }
+
+  // Initialize Step Pins
+  SET_OUTPUT(X_STEP_PIN);
+  WRITE(X_STEP_PIN, INVERT_X_STEP_PIN);
+  disable_x();
+
+  SET_OUTPUT(Y_STEP_PIN);
+  WRITE(Y_STEP_PIN, INVERT_Y_STEP_PIN);
+  disable_y();
+
+  SET_OUTPUT(Z_STEP_PIN);
+  WRITE(Z_STEP_PIN, INVERT_Z_STEP_PIN);
+  disable_z();
+
+  SET_OUTPUT(E_STEP_PIN);
+  WRITE(E_STEP_PIN, INVERT_E_STEP_PIN);
+  disable_e();
 
   // waveform generation = 0100 = CTC
   TCCR1B &= ~(1<<WGM13);

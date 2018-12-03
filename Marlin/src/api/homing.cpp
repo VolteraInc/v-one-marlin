@@ -61,6 +61,9 @@ static void s_axisIsAtZero(AxisEnum axis) {
 static int s_zeroAxis(const Endstop& endstop) {
   int returnValue = -1;
   const auto axis = endstop.axis;
+  const auto isXorYaxis = axis == X_AXIS || axis == Y_AXIS;
+  int acc_x = max_acceleration_units_per_sq_second[ X_AXIS ];
+  int acc_y = max_acceleration_units_per_sq_second[ Y_AXIS ];
 
   log << F("zero axis:") << axis_codes[axis] << endl;
 
@@ -82,6 +85,25 @@ static int s_zeroAxis(const Endstop& endstop) {
   current_position[axis] = 0;
   plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 
+  // Trinamic Drivers need a minimum speed to properly do sensorless homing.
+  // When we home in X and Y, we don't need very precise measurements, +/- 0.25 mm is probably ok.
+  // The XY Positioner will give us the accuracy we require.
+  if (TRINAMIC_SENSORLESS && isXorYaxis) {
+    max_acceleration_units_per_sq_second[ X_AXIS ] = 700;
+    max_acceleration_units_per_sq_second[ Y_AXIS ] = 700;
+    reset_acceleration_rates();
+
+    // Move in +X and +Y a bit to create space. So we can reach sensorless homing speeds.
+    if (retractFromSwitch(endstop, HOMING_XY_OFFSET * 3)) {
+      logError
+        << F("Unable to create space in  ")
+        << axis_codes[axis]
+        << F(" axis during homing.")
+        << endl;
+      goto DONE;
+    }
+  }
+
   // Move to the switch
   // Note: we use measureAtSwitch so that we contact the switch accurately
   // TODO: use measureAtSwitchRelease for homing?
@@ -93,17 +115,11 @@ static int s_zeroAxis(const Endstop& endstop) {
   // For X and Y we move away from switch slightly
   // Note: Otherwise we will not be able to go to 0,0 without
   //       hitting a limit switch (and messing up our position)
-  switch(axis) {
-    case X_AXIS:
-    case Y_AXIS:
-      log << F("Retracting from ") << endstop.name << endl;
-      if (retractFromSwitch(endstop, HOMING_XY_OFFSET)) {
-        goto DONE;
-      }
-    break;
-
-    default:
-    break;
+  if (isXorYaxis) {
+    log << F("Retracting from ") << endstop.name << endl;
+    if (retractFromSwitch(endstop, HOMING_XY_OFFSET)) {
+      goto DONE;
+    }
   }
 
   // Set current position as zero
@@ -113,6 +129,12 @@ static int s_zeroAxis(const Endstop& endstop) {
   returnValue = 0;
 
 DONE:
+  if (TRINAMIC_SENSORLESS && isXorYaxis) {
+    max_acceleration_units_per_sq_second[ X_AXIS ] = acc_x;
+    max_acceleration_units_per_sq_second[ Y_AXIS ] = acc_y;
+    reset_acceleration_rates();
+  }
+
   plan_enable_skew_adjustment(true);
   return returnValue;
 }

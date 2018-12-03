@@ -18,6 +18,11 @@ struct Endstops {
 
   const Endstop toolSwitch;
 
+  #ifdef TRINAMIC_DRIVERS
+  const Endstop xLim;
+  const Endstop yLim;
+  #endif
+
   Endstops();
 
   const Endstop* lookup(const int pin) const;

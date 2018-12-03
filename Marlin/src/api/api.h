@@ -15,6 +15,7 @@ bool homedXY();
 int homeXY(tools::Tool& tool);
 int homeZ(tools::Tool& tool);
 bool homedZ();
+int primeE(float retract_amount);
 int rawHome(tools::Tool& tool, bool homeX = true, bool homeY = true, bool homeZ = true);
 int getHomedState(AxisEnum axis);
 void setHomedState(AxisEnum axis, int value);
