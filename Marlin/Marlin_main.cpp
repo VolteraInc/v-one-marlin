@@ -91,9 +91,11 @@ void setup() {
 
   protocol << F("firmwareVersionReport: ") << VERSION_STRING << endl;
 
-  // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
+  // loads data from EEPROM if available, otherwise,
+  // uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
   Config_RetrieveCalibration();
+  log << F("Serial number: ") << product_serial_number << endl;
 
   // Preallocate space for the VOne then use
   // placement new to contruct the object
