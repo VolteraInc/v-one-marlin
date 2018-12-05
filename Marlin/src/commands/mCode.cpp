@@ -389,11 +389,10 @@ int process_mcode(int command_code) {
     //  M900 X20 -> Set current in miliamps and get current value.
     case 900: {
       protocol << F("Stepper - Set current in milliamps (i.e - M900 X200 Y300)") << endl;
-      for(int i = 0; i<NUM_AXIS; ++i){
-        if(code_seen(axis_codes[i])){
-          trinamicSetCurrent(i, code_value());
-        }
-      }
+      if (code_seen(X_AXIS)) { trinamicSetCurrent(X_AXIS, code_value()); }
+      if (code_seen(Y_AXIS)) { trinamicSetCurrent(Y_AXIS, code_value()); }
+      if (code_seen(Z_AXIS)) { trinamicSetCurrent(Z_AXIS, code_value()); }
+      if (code_seen(E_AXIS)) { trinamicSetCurrent(E_AXIS, code_value()); }
 
       protocol << F("Stepper - Current Values (Max: 32)") << endl;
       protocol
@@ -418,11 +417,10 @@ int process_mcode(int command_code) {
 
   case 902: {
     protocol << F("Stepper - Set Stallguard value (i.e - M902 X0 Y60)") << endl;
-    for(int i = 0; i<NUM_AXIS; ++i){
-      if(code_seen(axis_codes[i])){
-        trinamicSetSG(i, code_value());
-      }
-    }
+    if (code_seen(X_AXIS)) { trinamicSetSG(X_AXIS, code_value()); }
+    if (code_seen(Y_AXIS)) { trinamicSetSG(Y_AXIS, code_value()); }
+    if (code_seen(Z_AXIS)) { trinamicSetSG(Z_AXIS, code_value()); }
+    if (code_seen(E_AXIS)) { trinamicSetSG(E_AXIS, code_value()); }
 
     protocol << F("Stepper - Stall Guard Values (-64...0... 63)") << endl;
     protocol
