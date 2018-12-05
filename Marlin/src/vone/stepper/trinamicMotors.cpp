@@ -1,5 +1,6 @@
 #include "trinamicMotors.h"
 
+#include "../../../serial.h"
 #include "../../../pins.h"
 #include "../../libraries/TMC2130Stepper/src/TMC2130Stepper.h"
 
@@ -15,12 +16,18 @@ TMC2130Stepper m_e(E_ENABLE_PIN, E_DIR_PIN, E_STEP_PIN, E_CS_PIN);
 
 TMC2130Stepper& lookup(AxisEnum axis) {
   switch(axis) {
-    case X_AXIS: m_x;
-    case Y_AXIS: m_y;
-    case Z_AXIS: m_z;
-    case E_AXIS: m_e;
+    case X_AXIS: return m_x;
+    case Y_AXIS: return m_y;
+    case Z_AXIS: return m_z;
+    case E_AXIS: return m_e;
+    default:
+      logError
+        << F("Unable to access motor for axis ")
+        << (int)axis
+        << endl;
+      return m_x;
   }
-};
+}
 
 void trinamicInit() {
 
