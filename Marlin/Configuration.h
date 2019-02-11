@@ -6,12 +6,15 @@
 #define MODEL VONE_batch_0_TO_5
 
 #if MODEL == VONE_BATCH_0_to_5
-  // no flags
+  // no flags to set
+
 #elif MODEL == VONE_BATCH_6
   #define TRINAMIC_MOTORS 1
+
 #else
   #define TRINAMIC_MOTORS 1
   #define USE_TRINAMIC_STALL_DETECTION_FOR_HOMING 1
+
 #endif
 
 
