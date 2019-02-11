@@ -18,7 +18,7 @@ struct Endstops {
 
   const Endstop toolSwitch;
 
-  #ifdef TRINAMIC_DRIVERS
+  #ifdef TRINAMIC_MOTORS
   const Endstop xLim;
   const Endstop yLim;
   #endif

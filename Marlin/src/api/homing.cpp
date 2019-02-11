@@ -85,10 +85,11 @@ static int s_zeroAxis(const Endstop& endstop) {
   current_position[axis] = 0;
   plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 
-  // Trinamic Drivers need a minimum speed to properly do sensorless homing.
+  // Trinamic Drivers need a minimum speed to detect a stall
   // When we home in X and Y, we don't need very precise measurements, +/- 0.25 mm is probably ok.
   // The XY Positioner will give us the accuracy we require.
-  if (TRINAMIC_SENSORLESS && isXorYaxis) {
+  #ifdef USE_TRINAMIC_STALL_DETECTION_FOR_HOMING
+  if (isXorYaxis) {
     max_acceleration_units_per_sq_second[ X_AXIS ] = 700;
     max_acceleration_units_per_sq_second[ Y_AXIS ] = 700;
     reset_acceleration_rates();
@@ -103,6 +104,7 @@ static int s_zeroAxis(const Endstop& endstop) {
       goto DONE;
     }
   }
+  #endif
 
   // Move to the switch
   // Note: we use measureAtSwitch so that we contact the switch accurately
@@ -129,11 +131,13 @@ static int s_zeroAxis(const Endstop& endstop) {
   returnValue = 0;
 
 DONE:
-  if (TRINAMIC_SENSORLESS && isXorYaxis) {
+  #ifdef USE_TRINAMIC_STALL_DETECTION_FOR_HOMING
+  if (isXorYaxis) {
     max_acceleration_units_per_sq_second[ X_AXIS ] = acc_x;
     max_acceleration_units_per_sq_second[ Y_AXIS ] = acc_y;
     reset_acceleration_rates();
   }
+  #endif
 
   plan_enable_skew_adjustment(true);
   return returnValue;

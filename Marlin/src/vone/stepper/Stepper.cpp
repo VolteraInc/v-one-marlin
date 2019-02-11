@@ -22,12 +22,12 @@ Stepper::Stepper(
 {
   plan_init();  // Initialize planner
 
-  if (TRINAMIC_DRIVERS) {
+  #if TRINAMIC_MOTORS
     // Initialize Trinamic Driver
     // Note: trinamicInit initalizes pins too
     trinamicInit();
 
-  } else {
+  #else
     // Initialize Digipot Motor Current
     digiPotInit();
 
@@ -42,7 +42,7 @@ Stepper::Stepper(
     SET_OUTPUT(Y_ENABLE_PIN);
     SET_OUTPUT(Z_ENABLE_PIN);
     SET_OUTPUT(E_ENABLE_PIN);
-  }
+  #endif
 
   // Initialize Step Pins
   SET_OUTPUT(X_STEP_PIN);

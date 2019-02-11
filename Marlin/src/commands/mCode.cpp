@@ -384,7 +384,7 @@ int process_mcode(int command_code) {
       return 0;
     }
 
-#ifdef TRINAMIC_DRIVERS
+#ifdef TRINAMIC_MOTORS
 
     //  M900 X20 -> Set current in miliamps and get current value.
     case 900: {
@@ -478,7 +478,7 @@ int process_mcode(int command_code) {
       return 0;
     }
 
-#endif // TRINAMIC_DRIVERS
+#endif // TRINAMIC_MOTORS
 
     //-------------------------------------------
     // List Commands

@@ -1,7 +1,19 @@
 #pragma once
 
-#define TRINAMIC_DRIVERS (1) // Flag to indicate trinamic drivers.
-#define TRINAMIC_SENSORLESS (1) // Flag to use sensorless homing.
+#define VONE_batch_0_TO_5 1
+#define VONE_batch_6_to_present 6
+
+#define MODEL VONE_batch_0_TO_5
+
+#if MODEL == VONE_BATCH_0_to_5
+  // no flags
+#elif MODEL == VONE_BATCH_6
+  #define TRINAMIC_MOTORS 1
+#else
+  #define TRINAMIC_MOTORS 1
+  #define USE_TRINAMIC_STALL_DETECTION_FOR_HOMING 1
+#endif
+
 
 // Default Calibration offsets for the Voltera V-One
 #define XYPOS_X_POS       (32.098)  // average computed from 77 calibrations in July 2017
@@ -169,7 +181,7 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 
 //// MOVEMENT SETTINGS
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
-#ifdef TRINAMIC_DRIVERS
+#ifdef TRINAMIC_MOTORS
   #define HOMING_FEEDRATE {2800, 2800, 200 , 55}  // set the homing speeds (mm/min)
   #define DEFAULT_AXIS_STEPS_PER_UNIT   {100.0, 100.0, 1600.0, 6857.142857142858}
 
