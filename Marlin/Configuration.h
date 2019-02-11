@@ -2,7 +2,6 @@
 
 #define TRINAMIC_DRIVERS (1) // Flag to indicate trinamic drivers.
 #define TRINAMIC_SENSORLESS (1) // Flag to use sensorless homing.
-#define DEFAULT_PRIME_RETRACT (0.35) // How much to retract when priming.
 
 // Default Calibration offsets for the Voltera V-One
 #define XYPOS_X_POS       (32.098)  // average computed from 77 calibrations in July 2017

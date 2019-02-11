@@ -269,6 +269,7 @@ int process_gcode(int command_code) {
     // G5  - Automatic Priming - Work in progress.
     // case 5: {
     //   if (TRINAMIC_SENSORLESS) {
+    //     const auto DEFAULT_PRIME_RETRACT = 0.35 // How much to retract when priming.
     //     float retract_amount = code_seen('D') ? code_value() : DEFAULT_PRIME_RETRACT;
     //     primeE(retract_amount);
     //   } else {
