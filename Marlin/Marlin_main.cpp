@@ -122,7 +122,6 @@ void periodic_work() {
   manage_inactivity();
   glow_leds();
   manufacturing_procedures(); /// <--TODO: should not be here
-
 }
 
 void loop() {
@@ -139,5 +138,4 @@ void loop() {
 
   reportBufferEmpty();   // not important enough to monitor
   periodic_output();     // will generate excessive output
-
 }
