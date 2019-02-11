@@ -1,7 +1,6 @@
 #include "Endstops.h"
 
 #include "../../../serial.h"
-#include "../../../Marlin.h"
 
 #include <WString.h>
 #include "../pins/PTopPin/PTopPin.h"
@@ -19,6 +18,10 @@ Endstops::Endstops()
   , xyPositionerForward(F("xy-positioner front (xy-max-y)"), XY_MAX_Y_PIN, Y_AXIS, 1, XY_MAX_Y_ENDSTOP_INVERTING)
   , calibrationPlate(F("calibration plate (p-bot)"), P_BOT_PIN, Z_AXIS, -1, P_BOT_ENDSTOP_INVERTING)
   , toolSwitch(F("tool switch (p-top)"), P_TOP_PIN, Z_AXIS, -1, P_TOP_ENDSTOP_INVERTING)
+   #ifdef TRINAMIC_DRIVERS
+  , xLim(F("x-motor (x-lim)"), X_LIM_PIN, X_AXIS, -1, X_LIM_ENDSTOP_INVERTING, isAxisLimit)
+  , yLim(F("y-motor (y-lim)"), Y_LIM_PIN, Y_AXIS, -1, Y_LIM_ENDSTOP_INVERTING, isAxisLimit)
+   #endif // TRINAMIC_DRIVERS
 {
 }
 
@@ -38,6 +41,12 @@ const Endstop* Endstops::lookup(const int pin) const {
     case P_BOT_PIN: return &calibrationPlate;
 
     case P_TOP_PIN: return &toolSwitch;
+
+    #ifdef TRINAMIC_DRIVERS
+    case X_LIM_PIN: return &xLim;
+    case Y_LIM_PIN: return &yLim;
+    #endif // TRINAMIC_DRIVERS
+
     default:
       return nullptr;
   }
@@ -63,6 +72,11 @@ void Endstops::outputStatus() const {
   log << sp << s_pinStatusToString(READ_PIN(XY_MAX_X)) << sp << xyPositionerLeft.pin    << sp << xyPositionerLeft.name    << endl;
   log << sp << s_pinStatusToString(READ_PIN(XY_MIN_Y)) << sp << xyPositionerBack.pin    << sp << xyPositionerBack.name    << endl;
   log << sp << s_pinStatusToString(READ_PIN(XY_MAX_Y)) << sp << xyPositionerForward.pin << sp << xyPositionerForward.name << endl;
+
+  #ifdef TRINAMIC_DRIVERS
+  log << sp << s_pinStatusToString(READ_PIN(X_LIM)) << sp << xLim.pin << sp << xLim.name << endl;
+  log << sp << s_pinStatusToString(READ_PIN(Y_LIM)) << sp << yLim.pin << sp << yLim.name << endl;
+  #endif // TRINAMIC_DRIVERS
 }
 
 // -----------------------------------------------------------------------

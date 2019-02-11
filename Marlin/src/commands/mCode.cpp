@@ -10,6 +10,7 @@
 #include "../../version.h"
 #include "../vone/VOne.h"
 #include "../vone/stepper/digipots.h"
+#include "../vone/stepper/trinamicMotors.h"
 
 bool CooldownNoWait = true;
 bool target_direction;
@@ -123,6 +124,7 @@ int process_mcode(int command_code) {
 
         << F(" Absolute X:") << st_get_position(X_AXIS)
         << F(" Y:") << st_get_position(Y_AXIS)
+        << F(" Z:") << st_get_position(Z_AXIS)
 
         // # of moves queued in buffer
         << F(" B:") << (int)movesplanned()
@@ -382,6 +384,78 @@ int process_mcode(int command_code) {
       return 0;
     }
 
+#ifdef TRINAMIC_DRIVERS
+
+    //  M900 X20 -> Set current in miliamps and get current value.
+    case 900: {
+      protocol << F("Stepper - Set current in milliamps (i.e - M900 X200 Y300)") << endl;
+      if (code_seen(X_AXIS)) { trinamicSetCurrent(X_AXIS, code_value()); }
+      if (code_seen(Y_AXIS)) { trinamicSetCurrent(Y_AXIS, code_value()); }
+      if (code_seen(Z_AXIS)) { trinamicSetCurrent(Z_AXIS, code_value()); }
+      if (code_seen(E_AXIS)) { trinamicSetCurrent(E_AXIS, code_value()); }
+
+      protocol << F("Stepper - Current Values (Max: 32)") << endl;
+      protocol
+        << F("M900 X:") << trinamicGetCurrentScaling(X_AXIS)
+        << F("  Y:") << trinamicGetCurrentScaling(Y_AXIS)
+        << F("  Z:") << trinamicGetCurrentScaling(Z_AXIS)
+        << F("  E:") << trinamicGetCurrentScaling(E_AXIS)
+        << endl;
+      return 0;
+    }
+
+    case 901: {
+      protocol << F("Stepper - Actual TStep: (32 bit)") << endl;
+      protocol
+        << F("M901 X:") << trinamicGetTStep(X_AXIS)
+        << F("  Y:") << trinamicGetTStep(Y_AXIS)
+        << F("  Z:") << trinamicGetTStep(Z_AXIS)
+        << F("  E:") << trinamicGetTStep(E_AXIS)
+        << endl;
+      return 0;
+    }
+
+  case 902: {
+    protocol << F("Stepper - Set Stallguard value (i.e - M902 X0 Y60)") << endl;
+    if (code_seen(X_AXIS)) { trinamicSetSG(X_AXIS, code_value()); }
+    if (code_seen(Y_AXIS)) { trinamicSetSG(Y_AXIS, code_value()); }
+    if (code_seen(Z_AXIS)) { trinamicSetSG(Z_AXIS, code_value()); }
+    if (code_seen(E_AXIS)) { trinamicSetSG(E_AXIS, code_value()); }
+
+    protocol << F("Stepper - Stall Guard Values (-64...0... 63)") << endl;
+    protocol
+      << F("M902 X:") << trinamicGetSG(X_AXIS)
+      << F("  Y:") << trinamicGetSG(Y_AXIS)
+      << F("  Z:") << trinamicGetSG(Z_AXIS)
+      << F("  E:") << trinamicGetSG(E_AXIS)
+      << endl;
+    return 0;
+  }
+
+  case 903: {
+    protocol << F("Stepper - GSTAT") << endl;
+    protocol
+      << F("M903 X:") << trinamicGetGStat(X_AXIS)
+      << F("  Y:") << trinamicGetGStat(Y_AXIS)
+      << F("  Z:") << trinamicGetGStat(Z_AXIS)
+      << F("  E:") << trinamicGetGStat(E_AXIS)
+      << endl;
+    return 0;
+  }
+
+  case 904: {
+    protocol << F("Stepper - DRVSTATUS") << endl;
+    protocol
+      << F("M904 X:") << trinamicGetDRVSTATUS(X_AXIS)
+      << F("  Y:") << trinamicGetDRVSTATUS(Y_AXIS)
+      << F("  Z:") << trinamicGetDRVSTATUS(Z_AXIS)
+      << F("  E:") << trinamicGetDRVSTATUS(E_AXIS)
+      << endl;
+    return 0;
+  }
+
+#else
+
     // - M906 Get all digital potentiometer values.
     case 906: {
       protocol << F("Stepper Driver Currents (Max: 255)") << endl;
@@ -403,6 +477,8 @@ int process_mcode(int command_code) {
       }
       return 0;
     }
+
+#endif // TRINAMIC_DRIVERS
 
     //-------------------------------------------
     // List Commands
