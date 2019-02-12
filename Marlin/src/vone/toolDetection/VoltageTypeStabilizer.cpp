@@ -52,27 +52,40 @@ unsigned long toolDetection::VoltageTypeStabilizer::VoltageLog::timeSpanOfCurren
 
 // ----------------------------------------------
 // VoltageTypeStabilizer
-void toolDetection::VoltageTypeStabilizer::setStable(bool stable) {
+
+void toolDetection::VoltageTypeStabilizer::reportStable(unsigned long time) {
+  if (!m_stable) {
+    logWarning << "Attempted to report stability before readings stabilized" << endl;
+    return;
+  }
+
+  m_stableAndReported = true;
+  auto delta = time - m_unstableTime;
+
+  log
+    << F("Voltage type stabilized in ") << delta
+    << F("ms, voltages = [")
+    << m_voltages
+    << F("]")
+    << endl;
+
+  // Warn if unstable for longer than expected
+  if (delta > 1000) {
+    logWarning << F("Voltage type was unstable for ") << delta << F("ms") << endl;
+  }
+}
+
+void toolDetection::VoltageTypeStabilizer::setStable(bool stable, unsigned long time) {
   if (m_stable == stable) {
     return;
   }
+
   m_stable = stable;
 
-  // Log voltages when we stabilize
-  if (m_stable) {
-    auto delta = millis() - m_unstableTime;
-    log
-      << F("Voltage type stabilized in ") << delta
-      << F("ms, voltages = [")
-      << m_voltages
-      << F("]")
-      << endl;
-
-    if (delta > 1000) {
-      logWarning << F("Voltage type was unstable for ") << delta << F("ms") << endl;
-    }
-  } else {
-    m_unstableTime = millis();
+  // Record time when we become unstable
+  // Note: we do this so we can report lengthy periods of instability
+  if (!m_stable) {
+    m_unstableTime = time;
   }
 }
 
@@ -84,52 +97,38 @@ static unsigned long s_stabilityThreshold(VoltageType type) {
     case VoltageType::NoToolMounted:
       return 0;
 
-    // Use a longer duration for transitory voltage types
-    // Note: this should, in effect, hide these types, unless
-    //       something has gone wrong as the voltage is stuck
+    // The drop to 0 when the probe is trigger is effectively instantaneous
+    // For there it might fluctuate to other values, that have non-zero
+    // stability thresholds.
     case VoltageType::ProbeTriggered:
-    case VoltageType::DrillResetting:
-    case VoltageType::Unknown:
-      return 200;
+      return 0;
 
     // Note: it takes about 60ms to climb from 'Triggered' to 'Not Mounted'
-    //       (i.e. the entire range). So, seeing the same type for 30ms is
+    //       (i.e. the entire range). So, seeing the same type for 50ms is
     //        _plenty_ of time
     case VoltageType::ProbeMounted:
     case VoltageType::SmartDispenserMounted:
     case VoltageType::DrillMounted:
+    case VoltageType::DrillResetting:
+    case VoltageType::Unknown:
     default:
       return 50;
   }
+}
 
-// 617772,Probe Mounted, 3.471680
-// 617790,Probe Mounted, 3.471680
-// 617812,Probe Mounted, 3.471680
-// 617831,Probe Mounted, 3.471680
-// 617851,Probe Mounted, 3.476562
-// 617872,Probe Mounted, 3.471680
-// 617892,Probe Mounted, 3.471680
-// 617911,Probe Mounted, 3.471680
-// 617931,Probe Mounted, 3.471680
-// 617952,Probe Mounted, 3.471680
-// 617972,Probe Mounted, 3.471680
-// 617991,Drill Resetting, 0.336914
-// 618011,Unknown, 0.131836
-// 618032,Triggered, 0.000000
-// 618052,Unknown, 0.092773
-// 618071,Unknown, 0.708008
-// 618091,Unknown, 0.800781
-// 618112,Drill Mounted, 1.210937
-// 618132,Drill Mounted, 1.269531   // I suspect some intermittent contect here
-// 618152,Drill Mounted, 1.401367
-//  ...prob unknowns...
-// 618210,Probe Mounted, 3.291016
-// 618230,Probe Mounted, 3.393555
-// 618251,Probe Mounted, 3.437500
+// How much to delay before reporting stability
+static unsigned long s_reportingThreshold(VoltageType type) {
+  switch (type) {
+    // Delay reporting triggered so we don't generate nuisance
+    // messages while probing. But we will report if the probe is
+    // triggered for much longer than expected.
+    case VoltageType::ProbeTriggered:
+      return 200;
 
-// TODO: 1) move voltage classification to tools ... then we shouldn't see.
-//          unless we miss the detach, and the new tool is suddenly present
-//       2) increase timespan for now?
+    // In most cases we want no delay
+    default:
+      return 0;
+  }
 }
 
 void toolDetection::VoltageTypeStabilizer::add(unsigned long time, float voltage) {
@@ -149,19 +148,26 @@ void toolDetection::VoltageTypeStabilizer::add(unsigned long time, float voltage
 
   // If type has changed, mark as unstable
   if (m_type != type) {
-    setStable(false);
+    setStable(false, time);
     m_type = type;
   }
 
-  // If we are stable, leave
+  // If we are stable (and have it reported), leave
   // Note: we will do this over 99% of the time
-  if (m_stable) {
+  if (m_stableAndReported) {
     return;
   }
 
-  // Check for stability
-  const auto threshold = s_stabilityThreshold(type);
-  if (m_voltages.timeSpanOfCurrentType() >= threshold) {
-    setStable(true);
+  // Check for stability and reporting threshold
+  const auto period = m_voltages.timeSpanOfCurrentType();
+  if (!m_stable) {
+    const auto stabilityThreshold = s_stabilityThreshold(type);
+    if (period >= stabilityThreshold) {
+      setStable(true, time);
+    }
+  }
+  const auto reportingThreshold = s_reportingThreshold(type);
+  if (period >= reportingThreshold) {
+    reportStable(time);
   }
 }

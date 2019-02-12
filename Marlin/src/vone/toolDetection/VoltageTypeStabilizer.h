@@ -59,10 +59,12 @@ class VoltageTypeStabilizer {
   private:
     VoltageLog m_voltages;
     bool m_stable = false;
+    bool m_stableAndReported = false;
     unsigned long m_unstableTime = 0;
     VoltageType m_type = VoltageType::Unknown;
 
-    void setStable(bool stable);
+    void reportStable(unsigned long time);
+    void setStable(bool stable, unsigned long time);
 };
 
 inline MarlinSerial& operator<<(MarlinSerial &obj, const toolDetection::VoltageTypeStabilizer::VoltageLog& voltageLog) {
