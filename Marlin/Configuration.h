@@ -4,11 +4,13 @@
 #define VONE_batch_6_to_present 6
 
 #define MODEL VONE_batch_0_TO_5
+// #define MODEL VONE_batch_6_to_present
+// #define MODEL 9999
 
-#if MODEL == VONE_BATCH_0_to_5
+#if MODEL == VONE_batch_0_TO_5
   // no flags to set
 
-#elif MODEL == VONE_BATCH_6
+#elif MODEL == VONE_batch_6_to_present
   #define TRINAMIC_MOTORS 1
 
 #else
