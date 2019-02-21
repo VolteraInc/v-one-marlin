@@ -86,6 +86,7 @@ void toolDetection::VoltageTypeStabilizer::setStable(bool stable, unsigned long 
   // Note: we do this so we can report lengthy periods of instability
   if (!m_stable) {
     m_unstableTime = time;
+    m_stableAndReported = false;
   }
 }
 
