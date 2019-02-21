@@ -6,11 +6,10 @@
 #include "../pins/PTopPin/PTopPin.h"
 
 
-static const auto isAxisLimit = true;
 Endstops::Endstops()
-  : xMin(F("right (x-min)"), X_MIN_PIN, X_AXIS, -1, X_MIN_ENDSTOP_INVERTING, isAxisLimit)
-  , yMin(F("back (y-min)"), Y_MIN_PIN, Y_AXIS, -1, Y_MIN_ENDSTOP_INVERTING, isAxisLimit)
-  , zMax(F("top (z-max)"), Z_MAX_PIN, Z_AXIS, 1, Z_MAX_ENDSTOP_INVERTING, isAxisLimit)
+  : xMin(F("right (x-min)"), X_MIN_PIN, X_AXIS, -1, X_MIN_ENDSTOP_INVERTING)
+  , yMin(F("back (y-min)"), Y_MIN_PIN, Y_AXIS, -1, Y_MIN_ENDSTOP_INVERTING)
+  , zMax(F("top (z-max)"), Z_MAX_PIN, Z_AXIS, 1, Z_MAX_ENDSTOP_INVERTING)
   , zSwitch(F("z-switch (z-min)"), Z_MIN_PIN, Z_AXIS, -1, Z_MIN_ENDSTOP_INVERTING)
   , xyPositionerLeft(F("xy-positioner left (xy-max-x)"), XY_MAX_X_PIN, X_AXIS, 1, XY_MAX_X_ENDSTOP_INVERTING)
   , xyPositionerRight(F("xy-positioner right (xy-min-x)"), XY_MIN_X_PIN, X_AXIS, -1, XY_MIN_X_ENDSTOP_INVERTING)
@@ -19,8 +18,10 @@ Endstops::Endstops()
   , calibrationPlate(F("calibration plate (p-bot)"), P_BOT_PIN, Z_AXIS, -1, P_BOT_ENDSTOP_INVERTING)
   , toolSwitch(F("tool switch (p-top)"), P_TOP_PIN, Z_AXIS, -1, P_TOP_ENDSTOP_INVERTING)
    #ifdef TRINAMIC_MOTORS
-  , xLim(F("x-motor (x-lim)"), X_LIM_PIN, X_AXIS, -1, X_LIM_ENDSTOP_INVERTING, isAxisLimit)
-  , yLim(F("y-motor (y-lim)"), Y_LIM_PIN, Y_AXIS, -1, Y_LIM_ENDSTOP_INVERTING, isAxisLimit)
+    // Note: xLim and yLim are configured with direction -1
+    //       so they can be used for homing
+  , xLim(F("x-motor (x-lim)"), X_LIM_PIN, X_AXIS, -1, X_LIM_ENDSTOP_INVERTING)
+  , yLim(F("y-motor (y-lim)"), Y_LIM_PIN, Y_AXIS, -1, Y_LIM_ENDSTOP_INVERTING)
    #endif
 {
 }

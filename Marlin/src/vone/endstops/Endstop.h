@@ -11,21 +11,18 @@ struct Endstop {
   const AxisEnum axis;
   const int direction;
   const bool inverted;
-  const bool isAxisLimit;
 
   Endstop(
     const __FlashStringHelper* name,
     int pin,
     AxisEnum axis,
     int direction,
-    bool inverted,
-    bool isAxisLimit = false
+    bool inverted
   ) : name(name)
     , pin(pin)
     , axis(axis)
     , direction(direction)
     , inverted(inverted)
-    , isAxisLimit(isAxisLimit)
   {
     pinMode(pin, INPUT);
   }
