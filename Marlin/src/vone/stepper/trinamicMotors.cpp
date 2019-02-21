@@ -1,5 +1,7 @@
 #include "trinamicMotors.h"
 
+#ifdef TRINAMIC_MOTORS
+
 #include "../../../serial.h"
 #include "../../../pins.h"
 #include "../../libraries/TMC2130Stepper/src/TMC2130Stepper.h"
@@ -197,3 +199,5 @@ uint32_t trinamicGetDRVSTATUS(AxisEnum axis) {
 uint8_t trinamicGetGStat(AxisEnum axis) {
   return lookup(axis).GSTAT();
 }
+
+#endif

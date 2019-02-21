@@ -62,8 +62,11 @@ static int s_zeroAxis(const Endstop& endstop) {
   int returnValue = -1;
   const auto axis = endstop.axis;
   const auto isXorYaxis = axis == X_AXIS || axis == Y_AXIS;
+
+#ifdef USE_TRINAMIC_STALL_DETECTION_FOR_HOMING
   int acc_x = max_acceleration_units_per_sq_second[ X_AXIS ];
   int acc_y = max_acceleration_units_per_sq_second[ Y_AXIS ];
+#endif
 
   log << F("zero axis:") << axis_codes[axis] << endl;
 
