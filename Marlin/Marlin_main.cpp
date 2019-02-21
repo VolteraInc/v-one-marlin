@@ -29,6 +29,8 @@
 
 #include "Marlin.h"
 
+#include <stdlib.h>
+
 #include "version.h"
 #include "macros.h"
 #include "planner.h"
@@ -95,7 +97,27 @@ void setup() {
   // uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
   Config_RetrieveCalibration();
+
   log << F("Serial number: ") << product_serial_number << endl;
+  log << F("Firmware variant: ") << FIRMARE_VARIANT_NAME << endl;
+
+  // Confirm that firmware is compatible with hardware
+  auto batchNumber = strtol(&product_serial_number[3], nullptr, 10);
+  if (checkForFirmwareVariantMismatch(batchNumber)) {
+    // Note: Making this an error because it should never happen
+    //       if it does, it's worth making some noise
+    logError
+      << F("Unable to use printer, firmware variant (")
+      << MODEL
+      << F(") does not match printer model (batch ")
+      << batchNumber
+      << F(")")
+      << endl;
+
+    // Spin forever
+    // NOTE: Can't return, becuase loop() would be called
+    while(1);
+  }
 
   // Preallocate space for the VOne then use
   // placement new to contruct the object
