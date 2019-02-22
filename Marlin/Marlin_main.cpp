@@ -91,7 +91,7 @@ void setup() {
   MCUSR = 0;
 
 
-  protocol << F("firmwareVersionReport: ") << VERSION_STRING << endl;
+  protocol << F("firmwareVersionReport: ") << VERSION_STRING << FIRMARE_VARIANT_SUFFIX << endl;
 
   // loads data from EEPROM if available, otherwise,
   // uses defaults (and resets step acceleration rate)
@@ -99,7 +99,6 @@ void setup() {
   Config_RetrieveCalibration();
 
   log << F("Serial number: ") << product_serial_number << endl;
-  log << F("Firmware variant: ") << FIRMARE_VARIANT_NAME << endl;
 
   // Confirm that firmware is compatible with hardware
   auto batchNumber = strtol(&product_serial_number[3], nullptr, 10);

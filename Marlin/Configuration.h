@@ -9,19 +9,18 @@
 // #define MODEL EXPERIMENTAL
 
 #if MODEL == VONE_batch_0_TO_5
-  // no flags to set
-  #define FIRMARE_VARIANT_NAME "Batch 0 to 5"
+  #define FIRMARE_VARIANT_SUFFIX "_batch0to5"
   #define checkForFirmwareVariantMismatch(batchNumber) (batchNumber >= 6)
 
 #elif MODEL == VONE_batch_6_to_present
   #define TRINAMIC_MOTORS 1
-  #define FIRMARE_VARIANT_NAME "Batch 6 and up"
+  #define FIRMARE_VARIANT_SUFFIX "_batch6"
   #define checkForFirmwareVariantMismatch(batchNumber) (batchNumber < 6)
 
 #else
   #define TRINAMIC_MOTORS 1
   #define USE_TRINAMIC_STALL_DETECTION_FOR_HOMING 1
-  #define FIRMARE_VARIANT_NAME "Experimental"
+  #define FIRMARE_VARIANT_SUFFIX "_experimental"
   #define checkForFirmwareVariantMismatch(batchNumber) (false)
 
 #endif
