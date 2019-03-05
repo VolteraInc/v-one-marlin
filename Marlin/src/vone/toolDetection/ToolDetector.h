@@ -66,8 +66,6 @@ namespace toolDetection {
       // Drill
       case VoltageType::DrillMounted:
         return &m_toolBox.drill;
-      case VoltageType::DrillResetting:
-        return &m_toolBox.nullTool;  // treat resets as detaches
 
       // Dispenser and NoTool
       case VoltageType::NoToolMounted:

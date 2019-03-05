@@ -10,7 +10,6 @@ enum class VoltageType {
   ProbeTriggered,
 
   DrillMounted,
-  DrillResetting,
 
   SmartDispenserMounted,
 };
@@ -24,7 +23,6 @@ inline const char* toString(VoltageType type) {
     case VoltageType::ProbeTriggered: return "Triggered";
 
     case VoltageType::DrillMounted: return "Drill Mounted";
-    case VoltageType::DrillResetting: return "Drill Resetting";
 
     case VoltageType::SmartDispenserMounted: return "Smart Dispenser Mounted";
   }

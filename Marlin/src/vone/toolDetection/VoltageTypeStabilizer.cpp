@@ -127,7 +127,6 @@ static unsigned long s_stabilityThreshold(VoltageType type) {
     case VoltageType::ProbeMounted:
     case VoltageType::SmartDispenserMounted:
     case VoltageType::DrillMounted:
-    case VoltageType::DrillResetting:
     default:
       return 50;
   }
