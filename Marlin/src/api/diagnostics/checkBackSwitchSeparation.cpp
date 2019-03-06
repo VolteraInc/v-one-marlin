@@ -80,7 +80,7 @@ static int s_checkBackSwitchSeparation(tools::Tool& tool) {
   // Report if failed
   if (!pass) {
     logError
-      << F("Unable complete back switch separation check, distance from ")
+      << F("Unable to complete back switch separation check, distance from ")
       << yMin.name << F(" to ") << xyPositionerBack.name
       << F(" was less than ")
       << FloatWithFormat(MinDistance, 3)
