@@ -39,7 +39,8 @@ bool EndstopFilter::triggered() const {
 void EndstopFilter::addSample(int value) {
   ScopedInterruptDisable sid;
   if (value) {
-    // Increment the counter, but prevent overflow
+    // Note: Don't increment the counter if already
+    //       triggered, this prevents integer overflow
     if (!_triggered()) {
       ++m_triggerCount;
     }
