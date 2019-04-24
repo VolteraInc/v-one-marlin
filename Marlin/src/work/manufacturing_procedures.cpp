@@ -26,13 +26,10 @@ void manufacturing_procedures() {
   }
   s_runAt = 0;
 
-  // Check z-switch to determine if we should enter manufactuing mode
-  // Note: we check then raise then check again just in case
-  // a tool is contacting the switch. if it is, then raising is
-  // good idea.
+  // Check z-switch to determine if we should run a manufactuing procedure
   if (READ_PIN(Z_MIN)) {
+    log << F("Z-switch is triggered, raising");
     auto& currentTool = vone->toolBox.currentTool();
-
     if (
       currentTool.prepareToMove(tools::PrepareToMove::Option::startOnly) ||
       raise()
@@ -41,8 +38,14 @@ void manufacturing_procedures() {
       return;
     }
 
-    if (READ_PIN(Z_MIN)) {
-      s_run();
+    // Note: the tool may have been pressing the switch,
+    //       so we re-check it here (after raising)
+    if (!READ_PIN(Z_MIN)) {
+      log << F("Released z-switch");
+      return;
     }
+
+    // Run manufactuing procedure
+    s_run();
   }
 }
