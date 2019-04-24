@@ -27,8 +27,8 @@
 
 
 // Default Calibration offsets for the Voltera V-One
-#define XYPOS_X_POS       (32.098)  // average computed from 77 calibrations in July 2017
-#define XYPOS_Y_POS       ( 3.202)  // average computed from 77 calibrations in July 2017
+#define XYPOS_X_POS       (33.359)  // average computed from 218 measurements (from logs) in April 2019
+#define XYPOS_Y_POS       ( 4.573)  // average computed from 218 measurements (from logs) in April 2019
 #define OFFSET_FROM_XYPOS_TO_MINZ_X      (-29.60) // Distance between center of Min Z and XY Positioner - Taken from PCB and Solidworks CAD files
 #define OFFSET_FROM_XYPOS_TO_MINZ_Y      (2.5)  // Distance between center of Min Z and XY Positioner - Taken from PCB and Solidworks CAD files
 #define MIN_Z_X_POS       (XYPOS_X_POS + OFFSET_FROM_XYPOS_TO_MINZ_X)
