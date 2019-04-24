@@ -7,9 +7,28 @@
 #include "../../vone/tools/NullTool.h"
 #include "../../vone/tools/Probe.h"
 
-static int s_beginDiagnotic() {
-  overrideLeds(0, 255, 0, 30); // solid green
+static int s_beginDiagnotic(tools::Tool& tool) {
+  overrideLeds(0, 255, 0, 3); // pulse green
   log << F("Starting diagnostic procedure") << endl;
+
+  if (
+    tool.prepareToMove(tools::PrepareToMove::Option::startOnly) ||
+
+    // Ensure the tool is not pressing the z-switch
+    raise() ||
+
+    // Give the user time to release the z-switch
+    // Note: If the z-switch is still triggered after
+    //       the delay it's probably stuck
+    relativeMove(tool, 0, 0, -0.5, 0, 10)
+  ) {
+    return -1;
+  }
+
+  if (READ_PIN(Z_MIN)) {
+    logError << F("Unable to complete diagnostic procedure, Z-switch reported as 'triggered' after raiseing carriage") << endl;
+    return -1;
+  }
 
   overrideLeds(0, 255, 0, 0); // blink green
   return 0;
@@ -35,7 +54,7 @@ static int s_handleResult(tools::Tool& tool, int result) {
 
 int runBurnInSequence(tools::NullTool& noTool) {
   int result = (
-    s_beginDiagnotic() ||
+    s_beginDiagnotic(noTool) ||
     burnInSequence(noTool)
   );
   return s_handleResult(noTool, result);
@@ -43,7 +62,7 @@ int runBurnInSequence(tools::NullTool& noTool) {
 
 int runCalibrateSwitches(tools::Probe& probe, unsigned cycles) {
   int result = (
-    s_beginDiagnotic() ||
+    s_beginDiagnotic(probe) ||
     calibrateSwitchPositions(probe, cycles) ||
     checkBackSwitchSeparation(probe) ||
     checkExtents(probe)
