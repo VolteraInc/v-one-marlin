@@ -141,15 +141,12 @@ int process_gcode(int command_code) {
 
     // G4  - Dwell S<seconds> or P<milliseconds>
     case 4: {
-      unsigned long waitUntil = 0;
-      if(code_seen('P')) waitUntil = code_value(); // milliseconds to wait
-      if(code_seen('S')) waitUntil = code_value() * 1000; // seconds to wait
+      unsigned long delayMillis = 0;
+      if(code_seen('P')) delayMillis = code_value(); // milliseconds to wait
+      if(code_seen('S')) delayMillis = code_value() * 1000; // seconds to wait
 
       st_synchronize();
-      waitUntil += millis();  // keep track of when we started waiting
-      while(millis() < waitUntil) {
-        periodic_work();
-      }
+      safe_delay(delayMillis);
       return 0;
     }
 

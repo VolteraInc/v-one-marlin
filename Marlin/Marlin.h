@@ -12,6 +12,7 @@
 // Code that blocks/spins/waits should call this so that things like heating
 // and motor inactivity properly monitored
 void periodic_work();
+void safe_delay(unsigned long delayMillis);
 
 void setHomedState(AxisEnum axis, int value);
 #define enable_x() WRITE(X_ENABLE_PIN, X_ENABLE_ON)

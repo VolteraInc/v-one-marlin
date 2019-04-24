@@ -145,6 +145,13 @@ void periodic_work() {
   manufacturing_procedures(); /// <--TODO: should not be here
 }
 
+void safe_delay(unsigned long delayMillis) {
+  const auto waitUntil = millis() + delayMillis;
+  while (millis() < waitUntil) {
+    periodic_work();
+  }
+}
+
 void loop() {
   processSerialCommands();
 
