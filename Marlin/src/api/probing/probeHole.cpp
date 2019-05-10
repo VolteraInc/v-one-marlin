@@ -7,6 +7,7 @@ int probing::probeHole(
   tools::Probe& probe,
   const Point2d& center,
   float radius,
+  float additionalRetractDistance,
   Point3d measurements[],
   unsigned int maxMeasurements,
   unsigned int* o_numMeasurements,
@@ -40,7 +41,7 @@ int probing::probeHole(
     if (
       probe.moveToSafeHeight() ||
       moveXY(probe, dest.x, dest.y) ||
-      probe.probe(measurements[idx].z)
+      probe.probe(measurements[idx].z, additionalRetractDistance)
     ) {
       return -1;
     }

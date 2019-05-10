@@ -235,11 +235,14 @@ int process_vcode(int command_code) {
         logError << F("Unable to probe hole, no diameter given") << endl;
         return -1;
       }
+
       const auto holeDiameter = code_value();
       const Point2d center = {
         code_seen('X') ? code_value() : current_position[X_AXIS],
         code_seen('Y') ? code_value() : current_position[Y_AXIS]
       };
+      const auto additionalRetractDistance = code_seen('R') ? code_value() : tools::Probe::DefaultRetract;
+
       const auto MaxMeasurements = 100;
       Point3d measurements[MaxMeasurements];
       auto numMeasurements = 0u;
@@ -251,6 +254,7 @@ int process_vcode(int command_code) {
           probe,
           center,
           holeDiameter / 2,
+          additionalRetractDistance,
           measurements,
           MaxMeasurements,
           &numMeasurements

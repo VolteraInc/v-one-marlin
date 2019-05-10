@@ -21,6 +21,7 @@ namespace probing {
     tools::Probe& probe,
     const Point2d& center,
     float radius,
+    float additionalRetractDistance,
     Point3d measurements[],
     unsigned int maxMeasurements,
     unsigned int* o_numMeasurements = nullptr,
