@@ -115,6 +115,12 @@ int process_vcode(int command_code) {
       const auto speed = code_seen('F') ? code_value() : tools::Probe::DefaultSpeed;
       const auto maxSamples = code_seen('S') ? code_value() : tools::Probe::DefaultMaxSamples;
       const auto maxTouchesPerSample = code_seen('T') ? code_value() : tools::Probe::DefaultMaxTouchesPerSample;
+
+      // Note: id should not contain R, F, S or T
+      //       if it does,, arguments may be parsed from the id
+      char idBuffer[MAX_CMD_SIZE];
+      const char* id = parseStringArg('I', idBuffer, MAX_CMD_SIZE, nullptr);
+
       auto samplesTaken = 0u;
       auto touchesUsed = 0u;
       auto measurement = -9999.9f;
@@ -139,6 +145,7 @@ int process_vcode(int command_code) {
         << F(" displacement:") << probe.displacement()
         << F(" samplesTaken:") << samplesTaken
         << F(" touchesUsed:") << touchesUsed
+        << F(" id:") << id
         << endl;
       return 0;
     }
@@ -243,6 +250,11 @@ int process_vcode(int command_code) {
       };
       const auto additionalRetractDistance = code_seen('R') ? code_value() : tools::Probe::DefaultRetract;
 
+      // Note: id should not contain X, Y, D or R
+      //       if it does, arguments may be parsed from the id
+      char idBuffer[MAX_CMD_SIZE];
+      const char* id = parseStringArg('I', idBuffer, MAX_CMD_SIZE, nullptr);
+
       const auto MaxMeasurements = 100;
       Point3d measurements[MaxMeasurements];
       auto numMeasurements = 0u;
@@ -263,7 +275,11 @@ int process_vcode(int command_code) {
         return -1;
       }
 
-      protocol << F("{ \"probeHoleMeasurement\": { \"measurements\": [");
+      protocol << F("{ \"probeHoleMeasurement\": { ");
+      if (id != nullptr) {
+        protocol << F("\"id\": \"") << id << F("\",");
+      }
+      protocol << F("\"measurements\": [");
       for (auto idx = 0u; idx < numMeasurements; ++idx) {
         protocol
           << (idx != 0 ? F(", ") : F(""))
