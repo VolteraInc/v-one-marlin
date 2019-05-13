@@ -42,6 +42,7 @@ const char* code_value_raw() {
   return code_pointer ? code_pointer + 1 : nullptr;
 }
 
+
 char code_prefix() {
   if (!code_pointer) {
     return '\0';
@@ -54,4 +55,38 @@ char code_prefix() {
   }
 
   return command[index];
+}
+
+float parseFloatArg(char argCode, float defaultValue) {
+  const char* ptr = strchr(command_queue.front(), argCode);
+  if (ptr == nullptr) {
+    return defaultValue;
+  }
+
+  return strtod(ptr + 1, nullptr);
+}
+
+long parseLongArg(char argCode, long defaultValue) {
+  const char* ptr = strchr(command_queue.front(), argCode);
+  if (ptr == nullptr) {
+    return defaultValue;
+  }
+
+  return strtol(ptr + 1, nullptr, 10);
+}
+
+const char* parseStringArg(char argCode, char value[], int maxLen, const char* defaultValue) {
+  const char* ptr = strchr(command_queue.front(), argCode);
+  if (ptr == nullptr) {
+    return defaultValue;
+  }
+
+  int idx = 0;
+  while (*ptr != '\0' && *ptr != ' ' && idx < maxLen - 1) {
+    value[idx++] = *ptr;
+    ++ptr;
+  }
+  value[idx] = '\0';
+
+  return value;
 }

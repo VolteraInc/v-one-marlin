@@ -4,6 +4,14 @@
 
 extern CommandQueue command_queue;
 
+float parseFloatArg(char argCode, float defaultValue);
+long parseLongArg(char argCode, long defaultValue);
+
+// The string value that follows the given code
+// value ends at space or end of string
+const char* parseStringArg(char code, char value[], int maxLen, const char* defaultValue);
+
+
 bool command_prefix_seen(char prefix); // check if the given prefix matches the first letter of the current command
 bool code_seen(char code); // find the given code
 
