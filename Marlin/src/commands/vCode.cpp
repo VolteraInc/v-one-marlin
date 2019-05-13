@@ -238,17 +238,21 @@ int process_vcode(int command_code) {
     // Probe hole
     case 211: {
       using namespace probing;
-      if (!code_seen('D')) {
-        logError << F("Unable to probe hole, no diameter given") << endl;
+
+      const auto holeDiameter = parseFloatArg('D', -1.0f);
+      if (holeDiameter <= 0) {
+        logError
+          << F("Unable to probe hole, the given diameter must be greater than zero")
+          << endl;
         return -1;
       }
 
-      const auto holeDiameter = code_value();
-      const Point2d center = {
-        code_seen('X') ? code_value() : current_position[X_AXIS],
-        code_seen('Y') ? code_value() : current_position[Y_AXIS]
+      const Point2d center{
+        parseFloatArg('X', current_position[X_AXIS]),
+        parseFloatArg('Y', current_position[Y_AXIS])
       };
-      const auto additionalRetractDistance = code_seen('R') ? code_value() : tools::Probe::DefaultRetract;
+
+      const auto retract = parseFloatArg('R', tools::Probe::DefaultRetract);
 
       // Note: id should not contain X, Y, D or R
       //       if it does, arguments may be parsed from the id
@@ -266,7 +270,7 @@ int process_vcode(int command_code) {
           probe,
           center,
           holeDiameter / 2,
-          additionalRetractDistance,
+          retract,
           measurements,
           MaxMeasurements,
           &numMeasurements
