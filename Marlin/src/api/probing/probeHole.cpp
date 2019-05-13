@@ -41,7 +41,7 @@ int probing::probeHole(
     if (
       probe.moveToSafeHeight() ||
       moveXY(probe, dest.x, dest.y) ||
-      probe.probe(measurements[idx].z, additionalRetractDistance)
+      probe.probe(measurements[idx].z, tools::Probe::DefaultSpeed, additionalRetractDistance)
     ) {
       return -1;
     }
