@@ -76,12 +76,13 @@ long parseLongArg(char argCode, long defaultValue) {
 }
 
 const char* parseStringArg(char argCode, char value[], int maxLen, const char* defaultValue) {
-  const char* ptr = strchr(command_queue.front(), argCode);
-  if (ptr == nullptr) {
+  const char* argPtr = strchr(command_queue.front(), argCode);
+  if (argPtr == nullptr) {
     return defaultValue;
   }
 
   int idx = 0;
+  auto ptr = argPtr + 1;
   while (*ptr != '\0' && *ptr != ' ' && idx < maxLen - 1) {
     value[idx++] = *ptr;
     ++ptr;
