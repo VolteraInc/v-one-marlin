@@ -25,19 +25,18 @@
 
 #endif
 
-
 // Default Calibration offsets for the Voltera V-One
-#define XYPOS_X_POS       (34.637)  // average computed from 79 measurements (from logs) in May 2019
-#define XYPOS_Y_POS       ( 5.774)  // average computed from 79 measurements (from logs) in May 2019
-#define OFFSET_FROM_XYPOS_TO_MINZ_X      (-29.60) // Distance between center of Min Z and XY Positioner - Taken from PCB and Solidworks CAD files
-#define OFFSET_FROM_XYPOS_TO_MINZ_Y      (2.5)  // Distance between center of Min Z and XY Positioner - Taken from PCB and Solidworks CAD files
+#define XYPOS_X_POS                 ( 34.0)  // Value used by Will (our production Tech) for batch 6 units, set in Dec 2019
+#define XYPOS_Y_POS                 (  5.0)  // Value used by Will (our production Tech) for batch 6 units, set in Dec 2019
+#define OFFSET_FROM_XYPOS_TO_MINZ_X (-29.50) // Value used by Will (our production Tech) for batch 6 units, set in Dec 2019
+#define OFFSET_FROM_XYPOS_TO_MINZ_Y (  2.0)  // Value used by Will (our production Tech) for batch 6 units, set in Dec 2019
 #define MIN_Z_X_POS       (XYPOS_X_POS + OFFSET_FROM_XYPOS_TO_MINZ_X)
 #define MIN_Z_Y_POS       (XYPOS_Y_POS + OFFSET_FROM_XYPOS_TO_MINZ_Y)
 #define CALIB_X_SCALE     (1.0)
 #define CALIB_Y_SCALE     (1.0)
 #define CALIB_COS_THETA   (1.0)
 #define CALIB_TAN_THETA   (0.0)
-#define CALIB_X_BACKLASH  (0.0) // Default assumed backlash.
+#define CALIB_X_BACKLASH  (0.0) // Default assumed backlash
 #define CALIB_Y_BACKLASH  (0.0)
 
 #define XYPOS_Z_POS       (-4.0)
