@@ -4,8 +4,8 @@
 #define VONE_batch_6_to_present 6
 #define EXPERIMENTAL 9999
 
-#define MODEL VONE_batch_0_TO_5
-// #define MODEL VONE_batch_6_to_present
+// #define MODEL VONE_batch_0_TO_5
+#define MODEL VONE_batch_6_to_present
 // #define MODEL EXPERIMENTAL
 
 #if MODEL == VONE_batch_0_TO_5
