@@ -24,9 +24,8 @@ class Probe : public Tool {
     static constexpr float DefaultRetract = 0.7f;
 
     static constexpr float DefaultSpeed = 30;
-    static constexpr float DefaultMaxSamples = 1u; // 30u;
-    static constexpr float DefaultMaxTouchesPerSample = 1u; // 10u;
-    // TODO: restore multi-touch for beta ^
+    static constexpr float DefaultMaxSamples = 30u;
+    static constexpr float DefaultMaxTouchesPerSample = 10u;
 
     int probe(
       float& measurement,
