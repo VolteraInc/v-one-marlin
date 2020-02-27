@@ -1,6 +1,7 @@
 #include "../api/api.h"
 #include "../api/diagnostics/diagnostics.h"
 #include "../vone/VOne.h"
+#include "../vone/endstops/ScopedEndstopEnable.h"
 #include "../../Marlin.h"
 #include "../utils/rawToVoltage.h"
 
@@ -258,6 +259,20 @@ int process_dcode(int command_code) {
         return 0;
       }
 
+      // Temporarily ignore a pin, if given one
+      const Endstop* endstopToIgnore = nullptr;
+      if (code_seen('I')) {
+        const int ignorePin = code_value();
+        endstopToIgnore = vone->endstops.lookup(ignorePin);
+        if (!endstopToIgnore) {
+          log << F("Unknown pin provided (to ignore): ") << ignorePin << endl;
+          return 0;
+        }
+        log << F("Ignoring ") << endstopToIgnore->name << F(" until end of command") << endl;
+      }
+      auto& endstopMonitor = vone->stepper.endstopMonitor;
+      ScopedEndstop_DISABLE scopedEndstopDisable(endstopMonitor, endstopToIgnore);
+
       const int cycles = code_seen('C') ? code_value() : 1;
       for (int i = 0; i < cycles; ++i) {
         float measurement;
@@ -271,6 +286,7 @@ int process_dcode(int command_code) {
           << F(" measurement:") << measurement
           << endl;
       }
+
       return 0;
     }
 
