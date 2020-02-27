@@ -29,8 +29,7 @@
 
 */
 
-#ifndef MARLINSERIAL_H
-#define MARLINSERIAL_H
+#pragma once
 
 #include "MarlinConfig.h"
 
@@ -172,5 +171,3 @@
 #if defined(USBCON) && ENABLED(BLUETOOTH)
   extern HardwareSerial bluetoothSerial;
 #endif
-
-#endif // MARLINSERIAL_H
