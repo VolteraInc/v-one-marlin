@@ -147,25 +147,27 @@ void Config_PrintSettings() {
 
 void Config_PrintCalibration() {
   log << F("Serial No:") << endl;
-  log << F(" M504 S:") << product_serial_number
+  log << F("  M504 S") << product_serial_number
       << endl;
 
   log << F("Offsets:") << endl;
-  log << F(" M505 X:") << min_z_x_pos
-      << F(" Y:") << min_z_y_pos
-      << F(" I:") << xypos_x_pos
-      << F(" J:") << xypos_y_pos
+  log << F("  M505 X") << min_z_x_pos
+      << F(" Y") << min_z_y_pos
+      << F(" I") << xypos_x_pos
+      << F(" J") << xypos_y_pos
       << endl;
 
   log << F("Scaling and Skew (A in radians):") << endl;
-  log << F(" M506 X:") << calib_x_scale
-      << F(" Y:") << calib_y_scale
-      << F(" A:") << atan(calib_tan_theta) // We use atan because it preserves the sign.
+  log << F("  M506 X") << calib_x_scale
+      << F(" Y") << calib_y_scale
+      << F(" A") << atan(calib_tan_theta) // We use atan because it preserves the sign.
       << endl;
 
   log << F("Backlash Compensation:") << endl;
-  log << F(" M507 X:") << calib_x_backlash
-      << F(" Y:") << calib_y_backlash
+  log << F("  M507 X") << calib_x_backlash
+      << F(" Y") << calib_y_backlash
+      << endl;
+
       << endl;
 }
 
