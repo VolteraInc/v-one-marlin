@@ -168,6 +168,8 @@ void Config_PrintCalibration() {
       << F(" Y") << calib_y_backlash
       << endl;
 
+  log << F("Z-Switch Type:") << endl;
+  log << F("  M601 S") << z_switch_type
       << endl;
 }
 
