@@ -45,20 +45,23 @@ void sendHomedStatusUpdate() {
     << endl;
 }
 
-static void s_axisIsAtZero(AxisEnum axis) {
-  current_position[axis] = 0;
-
+static void s_zeroAxisAtCurrentPosition(AxisEnum axis, float homingOffset = 0.0f) {
+  // NOTE: Why we negate the offset ?
+  //       To offset the, say, z-home by 5.0, means we want z=0 to be 5mm
+  //       higher than the trigger position of the z-switch. Right now we are at
+  //       the trigger postion. We want to tell the planner that 0 is 5mm higher
+  //       than the current position. This is the same as telling it we are
+  //       currently at -5. That's why there is a negatation here.
+  current_position[axis] = -homingOffset;
   plan_set_position(
     current_position[ X_AXIS ],
     current_position[ Y_AXIS ],
     current_position[ Z_AXIS ],
     current_position[ E_AXIS ]
   );
-
-  setHomedState(axis, -1);
 }
 
-static int s_zeroAxis(const Endstop& endstop) {
+static int s_homeAxis(const Endstop& endstop, float offset = 0.0f) {
   int returnValue = -1;
   const auto axis = endstop.axis;
   const auto isXorYaxis = axis == X_AXIS || axis == Y_AXIS;
@@ -85,8 +88,7 @@ static int s_zeroAxis(const Endstop& endstop) {
   // Note: Doing this means that homing can deal with:
   //   - crazy values for the current_position
   //   - current_position and planner being out of sync
-  current_position[axis] = 0;
-  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+  s_zeroAxisAtCurrentPosition(axis);
 
   // Trinamic Drivers need a minimum speed to detect a stall
   // When we home in X and Y, we don't need very precise measurements, +/- 0.25 mm is probably ok.
@@ -127,8 +129,9 @@ static int s_zeroAxis(const Endstop& endstop) {
     }
   }
 
-  // Set current position as zero
-  s_axisIsAtZero(axis);
+  // We are home!
+  s_zeroAxisAtCurrentPosition(axis, offset);
+  setHomedState(axis, -1);
 
   // Success
   returnValue = 0;
@@ -150,13 +153,13 @@ int rawHome(tools::Tool& tool, bool homingX, bool homingY, bool homingZ) {
   // Homing Y first moves the print head out of the way, which
   // which allows the user to access the board/bed sooner
   if (homingY) {
-    if (s_zeroAxis(vone->endstops.yMin)) {
+    if (s_homeAxis(vone->endstops.yMin)) {
       return -1;
     }
   }
 
   if (homingX) {
-    if (s_zeroAxis(vone->endstops.xMin)) {
+    if (s_homeAxis(vone->endstops.xMin)) {
       return -1;
     }
   }
@@ -198,11 +201,10 @@ int moveToZSwitchXY(tools::Tool& tool) {
   return moveXY(tool, min_z_x_pos, min_z_y_pos);
 }
 
-int homeZ(tools::Tool& tool) {
-  // Home Z to the z-switch
+int homeZ(tools::Tool& tool, float offset) {
   if (
     moveToZSwitchXY(tool) ||
-    s_zeroAxis(vone->endstops.zSwitch)
+    s_homeAxis(vone->endstops.zSwitch, offset)
   ) {
     return -1;
   }
@@ -210,7 +212,7 @@ int homeZ(tools::Tool& tool) {
   // Determine the max-z soft limit
   // Note: the point of contact can vary slightly, so we add some fudge to make to max tolerant
   const float fudge = 0.5; // mm
-  if(raise()) {
+  if (raise()) {
     return -1;
   }
   max_pos[Z_AXIS] = current_position[Z_AXIS] + fudge;
