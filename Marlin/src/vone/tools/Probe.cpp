@@ -1,14 +1,12 @@
 #include "Probe.h"
 
 #include "../../../Marlin.h"
-#include "../../../stepper.h" // enable_p_top TODO: go through Stepper
 #include "../../api/api.h"
 #include "../../api/measurement/measurement.h"
 #include "../../api/movement/movement.h"
 #include "../pins/PTopPin/PTopPin.h"
 #include "../toolDetection/classifyVoltage.h"
 #include "../stepper/Stepper.h"
-#include "../endstops/EndstopMonitor.h"
 
 int confirmAttachedAndNotTriggered(const char* context, tools::Probe& probe) {
   if (confirmAttached(context, probe)) {
