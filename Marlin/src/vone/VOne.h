@@ -25,7 +25,8 @@ class VOne {
       int ptopDigitalPin,
       int ptopAnalogPin,
       int bedTemperatureAnalogPin,
-      int heaterDigitalPin
+      int heaterDigitalPin,
+      ZSwitch::Type zSwitchType
     );
 
     PinSet pins;

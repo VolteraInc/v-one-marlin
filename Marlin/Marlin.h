@@ -41,7 +41,7 @@ extern float min_z_x_pos;
 extern float min_z_y_pos;
 extern float xypos_x_pos;
 extern float xypos_y_pos;
-
+extern int z_switch_type;
 
 
 void setStepperInactiveDuration(unsigned long duration);

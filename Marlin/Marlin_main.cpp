@@ -68,6 +68,7 @@ float min_z_y_pos;
 float xypos_x_pos;
 float xypos_y_pos;
 char product_serial_number[15];
+int z_switch_type = -1;
 
 //===========================================================================
 
@@ -118,6 +119,14 @@ void setup() {
     while(1);
   }
 
+  const auto configuredZSwitchType = ZSwitch::toType(z_switch_type);
+  const auto zSwitchType = ZSwitch::determineType(
+    configuredZSwitchType,
+    batchNumber
+  );
+  log << F("z-switch config: ") << ZSwitch::typeName(configuredZSwitchType) << endl;
+  log << F("using z-switch: ") << ZSwitch::typeName(zSwitchType) << endl;
+
   // Preallocate space for the VOne then use
   // placement new to contruct the object
   static byte voneBuffer[sizeof(VOne)];
@@ -125,7 +134,8 @@ void setup() {
     P_TOP_PIN,
     P_TOP_ANALOG_PIN,
     TEMP_BED_PIN,
-    HEATER_BED_PIN
+    HEATER_BED_PIN,
+    zSwitchType
   );
 
   sendHomedStatusUpdate();

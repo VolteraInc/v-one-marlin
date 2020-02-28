@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Endstop.h"
+#include "ZSwitch.h"
 
 class PTopPin;
 
@@ -8,7 +9,7 @@ struct Endstops {
   const Endstop xMin;
   const Endstop yMin;
   const Endstop zMax;
-  const Endstop zSwitch;
+  const ZSwitch zSwitch;
 
   const Endstop xyPositionerLeft;
   const Endstop xyPositionerRight;
@@ -23,7 +24,7 @@ struct Endstops {
   const Endstop yLim;
   #endif
 
-  Endstops();
+  Endstops(ZSwitch::Type zSwitchType);
 
   const Endstop* lookup(const int pin) const;
 

@@ -23,10 +23,16 @@ int confirmAttachedAndNotTriggered(const char* context, tools::Probe& probe) {
   return 0;
 }
 
-tools::Probe::Probe(Stepper& stepper, PTopPin& pin, const Endstop& toolSwitch)
+tools::Probe::Probe(
+  Stepper& stepper,
+  PTopPin& pin,
+  const Endstop& toolSwitch,
+  const ZSwitch& zSwitch
+)
   : Tool(stepper)
   , m_pin(pin)
   , m_toolSwitch(toolSwitch)
+  , m_zSwitch(zSwitch)
 {
 }
 

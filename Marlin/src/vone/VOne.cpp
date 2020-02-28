@@ -6,17 +6,24 @@ VOne::VOne(
   int ptopDigitalPin,
   int ptopAnalogPin,
   int bedTemperaturePin,
-  int heaterDigitalPin
+  int heaterDigitalPin,
+  ZSwitch::Type zSwitchType
 )
   : pins(ptopDigitalPin, ptopAnalogPin, bedTemperaturePin, heaterDigitalPin)
-
+  , endstops(zSwitchType)
   , adc(pins.ptop, pins.bedTemperature)
   , heater(pins.heater, pins.bedTemperature)
 
   , m_endstopMonitor(endstops)
   , stepper(m_endstopMonitor)
 
-  , toolBox(stepper, pins.ptop, endstops.toolSwitch)
+  , toolBox(
+      stepper,
+      pins.ptop,
+      endstops.toolSwitch,
+      endstops.zSwitch
+    )
+
   , toolDetector(toolBox, pins.ptop)
 
   , m_memoryUsage(F("free memory"), F(" bytes"), 8192)
