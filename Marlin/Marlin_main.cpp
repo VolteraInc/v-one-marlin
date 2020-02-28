@@ -103,6 +103,7 @@ void setup() {
 
   // Confirm that firmware is compatible with hardware
   auto batchNumber = strtol(&product_serial_number[3], nullptr, 10);
+  log << F("batchNumber is ") << batchNumber << endl;
   if (checkForFirmwareVariantMismatch(batchNumber)) {
     // Note: Making this an error because it should never happen
     //       if it does, it's worth making some noise
