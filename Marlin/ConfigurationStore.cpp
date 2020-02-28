@@ -271,7 +271,6 @@ void Config_RetrieveSettings() {
     } else {
       const auto isOldConfig = strncmp(stored_ver, SETTINGS_VERSION_NONE, 3) != 0;
       if (isOldConfig) {
-        log << F("Reading speed settings, version ") << stored_ver << endl;
         Config_ClearStoredSettings();
       }
 
