@@ -24,7 +24,7 @@ int getHomedState(AxisEnum axis) {
 
 void setHomedState(AxisEnum axis, int value) {
   if (axis_homed_state[axis] != value) {
-    log << F("Homed ") << axis_codes[axis] << F("-axis") << endl;
+    log << F("set ") << axis_codes[axis] << F("-axis homed state to ") << value << endl;
 
     axis_homed_state[axis] = value;
     sendHomedStatusUpdate();
