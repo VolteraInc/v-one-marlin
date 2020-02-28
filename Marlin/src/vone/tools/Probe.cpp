@@ -7,6 +7,7 @@
 #include "../pins/PTopPin/PTopPin.h"
 #include "../toolDetection/classifyVoltage.h"
 #include "../stepper/Stepper.h"
+#include "../endstops/ScopedEndstopEnable.h"
 
 int confirmAttachedAndNotTriggered(const char* context, tools::Probe& probe) {
   if (confirmAttached(context, probe)) {
@@ -47,11 +48,56 @@ int tools::Probe::prepareToMoveImpl_HomeXY() {
 }
 
 int tools::Probe::prepareToMoveImpl_CalibrateXYZ() {
+  auto& endstopMonitor = m_stepper.endstopMonitor;
+
+  if (!m_zSwitch.isSpringStrongerThanProbe()) {
+    // Using original z-switch, which has a spring weaker than
+    // the probe's. So, we expect the z-switch to trigger,
+    // and report an error if the probe triggers first.
+    // NOTE:
+    //   1) a nice side-effect is that we will detect bad z-switches
+    //   2) with this zSwitch the probe's spring will compress
+    //      slightly, resulting in variablity the homed Z position
+    return (
+      homeZ(*this) || // home Z so we can enter the xy pos with decent precision
+      centerTool(*this) ||
+      measureProbeDisplacement(*this, m_probeDisplacement) || // do this now, saves a trip back to the xy-pos after re-homing
+      homeZ(*this) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
+      raise()
+    );
+  }
+
+  // We are using a z-switch with a spring stronger than the probe
+  // so we will descend and trigger the probe before starting the
+  // z-homing sequence.
+
+  // Confirm the probe triggers before the z-switch
+  {
+    log << F("Lowering probe toward z-switch until ") << m_toolSwitch.name << F(" triggers")<< endl;
+    ScopedEndstopEnable scopedEnable(endstopMonitor, m_zSwitch);
+    if (
+      moveToZSwitchXY(*this) ||
+      moveToEndstop(m_toolSwitch)
+    ) {
+      return -1;
+    }
+  }
+
+  // Ignore the toolswitch during z-homing
+  ScopedEndstop_DISABLE scopedEnable(endstopMonitor, m_toolSwitch);
+
   return (
-    homeZ(*this) || // home Z so we can enter the xy pos with decent precision
+    // home Z so we can enter the xy pos with decent precision
+    homeZ(*this, 0.250) ||
     centerTool(*this) ||
-    measureProbeDisplacement(*this, m_probeDisplacement) || // do this now, saves a trip back to the xy-pos after re-homing
-    homeZ(*this) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
+    measureProbeDisplacement(*this, m_probeDisplacement) ||
+
+    // Re-home at a consistent xy location
+    // (and compensate for probe displacement)
+    // NOTE: we've seen a 30um differnce in the
+    //       measurement with the old switch
+    homeZ(*this, m_probeDisplacement) ||
+
     raise()
   );
 }
