@@ -384,6 +384,27 @@ int process_mcode(int command_code) {
       return 0;
     }
 
+    // 600 - Infield Upgrades
+    // -------------------
+
+    // M601 - z-switch replacement
+    case 601:
+      if (code_seen('S')) {
+        auto zSwitchType = ZSwitch::toType(
+          static_cast<int>(code_value_long())
+        );
+
+        log
+          << F("Setting Z-Switch type to ")
+          << ZSwitch::typeName(zSwitchType)
+          << F(", reboot for change to take effect")
+          << endl;
+
+        z_switch_type = static_cast<int>(zSwitchType);
+        Config_StoreCalibration();
+      }
+      return 0;
+
 #ifdef TRINAMIC_MOTORS
 
     //  M900 X20 -> Set current in miliamps and get current value.
