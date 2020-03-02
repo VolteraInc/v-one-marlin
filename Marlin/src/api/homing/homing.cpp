@@ -5,7 +5,6 @@
 
 #include "../../../Marlin.h"
 #include "../../vone/VOne.h"
-#include "../../../planner.h"
 
 static int8_t axis_homed_state[3] = {0, 0, 0};
 const float homing_feedrate[] = HOMING_FEEDRATE;
@@ -56,16 +55,18 @@ int zeroAxisAtCurrentPosition(AxisEnum axis, float homingOffset) {
 }
 
 int rawHome(tools::Tool& tool, bool homingX, bool homingY, bool homingZ) {
+  auto& stepper = vone->stepper;
+  auto& endstops = vone->endstops;
   // Homing Y first moves the print head out of the way, which
   // which allows the user to access the board/bed sooner
   if (homingY) {
-    if (homeHorizontalAxis(vone->endstops.yMin)) {
+    if (homeHorizontalAxis(stepper, endstops.yMin)) {
       return -1;
     }
   }
 
   if (homingX) {
-    if (homeHorizontalAxis(vone->endstops.xMin)) {
+    if (homeHorizontalAxis(stepper, endstops.xMin)) {
       return -1;
     }
   }

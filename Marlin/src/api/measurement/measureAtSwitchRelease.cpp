@@ -1,9 +1,7 @@
 #include "measurement.h"
 
-#include "../../../Marlin.h"
-#include "../../../stepper.h"
 #include "../movement/movement.h"
-
+#include "../../../Marlin.h"
 #include "../../vone/VOne.h"
 
 static unsigned s_countTriggers(const Endstop& endstop, unsigned maxSamples) {
@@ -51,7 +49,7 @@ static int s_measureAtSwitchRelease(const Endstop& endstop, float& releaseStarte
   const auto direction = endstop.direction;
 
   // Finish any pending moves (prevents crashes)
-  st_synchronize();
+  vone->stepper.finishPendingMoves();
 
   // Note: 1mm should be more than enough for a release
   const auto maxTravel = 1u;

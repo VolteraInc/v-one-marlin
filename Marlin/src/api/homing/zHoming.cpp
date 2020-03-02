@@ -1,9 +1,7 @@
 #include "../api.h"
 
-#include "../../../serial.h"
 #include "../../../Marlin.h"
 #include "../../vone/VOne.h"
-#include "../../../stepper.h"
 
 #include "internal.h"
 
@@ -28,10 +26,10 @@ int moveToZSwitchXY(tools::Tool& tool) {
 }
 
 int homeZ(tools::Tool& tool, float offset) {
-  log << F("Homing z-axis") << endl;
+  log << F("homing z-axis") << endl;
 
   // Finish any pending moves (prevents crashes)
-  st_synchronize();
+  vone->stepper.finishPendingMoves();
 
   // Clear homed state
   // Note: movement safety checks may fail while homing, clearing
@@ -76,7 +74,7 @@ int homeZ(tools::Tool& tool, float offset) {
   // NOTE: The offset is already included in current_position
   //       when we compute max_pos
   float delta = zMaxMeasurement - zSwitchMeasurement;
-  max_pos[Z_AXIS] = current_position[Z_AXIS] + delta; //
+  max_pos[Z_AXIS] = current_position[Z_AXIS] + delta;
   log << F("distance between zMax and zSwitch is") << delta << endl;
   log << F("set maximum Z position to ") << max_pos[Z_AXIS] << endl;
 

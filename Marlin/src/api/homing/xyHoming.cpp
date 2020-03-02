@@ -3,10 +3,9 @@
 #include "homing.h"
 #include "internal.h"
 
-#include "../../../planner.h"
-#include "../../../stepper.h"
 #include "../../../serial.h"
 #include "../../vone/endstops/Endstop.h"
+#include "../../vone/stepper/Stepper.h"
 
 int homeHorizontalAxis(Stepper& stepper, const Endstop& endstop, float offset) {
   int returnValue = -1;
@@ -15,7 +14,7 @@ int homeHorizontalAxis(Stepper& stepper, const Endstop& endstop, float offset) {
   log << F("homing axis: ") << axis_codes[axis] << endl;
 
   // Finish any pending moves (prevents crashes)
-  st_synchronize();
+  stepper.finishPendingMoves();
 
   // Clear homed state
   // Note: movement safety checks may fail while homing, clearing
@@ -23,7 +22,7 @@ int homeHorizontalAxis(Stepper& stepper, const Endstop& endstop, float offset) {
   setHomedState(axis, 0);
 
   // Raise flag to let planner know we are homing an axis so it ignores skew adjustments.
-  plan_enable_skew_adjustment(false);
+  stepper.enableSkewAdjustment(false);
 
   float measurement;
   if (
@@ -54,6 +53,6 @@ int homeHorizontalAxis(Stepper& stepper, const Endstop& endstop, float offset) {
   returnValue = 0;
 
 DONE:
-  plan_enable_skew_adjustment(true);
+  stepper.enableSkewAdjustment();
   return returnValue;
 }
