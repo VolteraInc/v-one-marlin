@@ -9,7 +9,7 @@ tools::NullTool::NullTool(Stepper& stepper)
 
 int tools::NullTool::prepareToMoveImpl_Start() {
   return (
-    raise() ||
+    raiseToEndstop() ||
     confirmAttached("prepare empty tool carriage", *this)
   );
 }

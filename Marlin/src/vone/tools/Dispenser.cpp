@@ -19,7 +19,7 @@ int tools::Dispenser::meshGears() {
 
 int tools::Dispenser::prepareToMoveImpl_Start() {
   return (
-    raise() ||
+    raiseToEndstop() ||
     confirmAttached("prepare dispenser", *this) ||
     meshGears()
   );
@@ -34,7 +34,7 @@ int tools::Dispenser::prepareToMoveImpl_CalibrateXYZ() {
     homeZ(*this) || // home Z so we can enter the xy pos with decent precision
     centerTool(*this) ||
     homeZ(*this) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
-    raise()
+    raiseToSoftMax(*this)
   );
 }
 

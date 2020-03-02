@@ -179,7 +179,7 @@ int process_dcode(int command_code) {
     case 102: {
       bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
       if (code_seen('Z')) {
-        if (raise()) {
+        if (raiseToEndstop()) {
           return -1;
         }
       }

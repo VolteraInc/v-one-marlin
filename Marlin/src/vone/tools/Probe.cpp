@@ -38,7 +38,7 @@ tools::Probe::Probe(
 int tools::Probe::prepareToMoveImpl_Start() {
   m_stepper.endstopMonitor.ignore(m_toolSwitch, false);
   return (
-    raise() ||
+    raiseToEndstop() ||
     confirmAttachedAndNotTriggered("prepare probe", *this)
   );
 }
@@ -63,7 +63,7 @@ int tools::Probe::prepareToMoveImpl_CalibrateXYZ() {
       centerTool(*this) ||
       measureProbeDisplacement(*this, m_probeDisplacement) || // do this now, saves a trip back to the xy-pos after re-homing
       homeZ(*this) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
-      raise()
+      raiseToSoftMax(*this)
     );
   }
 
@@ -98,7 +98,7 @@ int tools::Probe::prepareToMoveImpl_CalibrateXYZ() {
     //       measurement with the old switch
     homeZ(*this, m_probeDisplacement) ||
 
-    raise()
+    raiseToSoftMax(*this)
   );
 }
 

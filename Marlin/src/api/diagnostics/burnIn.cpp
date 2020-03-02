@@ -76,7 +76,7 @@ int burnInSequence(tools::NullTool& noTool, int steps) {
   const float bedCenterY = bedBoundsMinY + (max_pos[Y_AXIS] - bedBoundsMinY) / 2;
 
   if (
-    raise() ||
+    raiseToEndstop() ||
     confirmAttached("perform burn-in sequence", noTool) ||
     noTool.prepareToMove() ||
 

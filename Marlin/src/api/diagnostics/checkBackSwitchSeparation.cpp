@@ -32,7 +32,7 @@ static int s_checkBackSwitchSeparation(tools::Tool& tool) {
 
   if (
     tool.prepareToMove() ||
-    raise() ||
+    raiseToSoftMax(tool) ||
 
     // Measure xyPositionerBack
     moveToXyPositioner(tool) ||
@@ -42,7 +42,7 @@ static int s_checkBackSwitchSeparation(tools::Tool& tool) {
     // Note: retract from the switch first rather than raising while still
     //       in contact with xyPositionerBack
     retractFromSwitch(xyPositionerBack) ||
-    raise() ||
+    raiseToSoftMax(tool) ||
 
     // Measure yMin
     s_measure(yMin, measurements.yMin, NUM_MEASUREMENTS) ||

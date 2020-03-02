@@ -32,7 +32,7 @@ void manufacturing_procedures() {
     auto& currentTool = vone->toolBox.currentTool();
     if (
       currentTool.prepareToMove(tools::PrepareToMove::Option::startOnly) ||
-      raise()
+      raiseToEndstop()
     ) {
       logWarning << F("Unable to release z-switch on boot, ignoring") << endl;
       return;

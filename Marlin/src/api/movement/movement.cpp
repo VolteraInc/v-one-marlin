@@ -359,7 +359,26 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
 
 
 int raise() {
+int raise(tools::Tool& tool) {
+  if (!homedZ()) {
+    return moveToEndstop(vone->endstops.zMax);
+  }
+
+  return moveZ(tool, max_pos[Z_AXIS]);
+}
+
+int raiseToEndstop() {
   return moveToEndstop(vone->endstops.zMax);
+}
+
+int raiseToSoftMax(tools::Tool& tool) {
+  if (!homedZ()) {
+    logError
+      << F("Unable to move to raise to max height, current tool has not been homed in z")
+      << endl;
+    return -1;
+  }
+  return moveZ(tool, max_pos[Z_AXIS]);
 }
 
 int retractFromSwitch(const Endstop& endstop, float retractDistance) {

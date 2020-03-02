@@ -271,7 +271,7 @@ int process_gcode(int command_code) {
 
       if (home_all || code_seen('Z')) {
         setHomedState(Z_AXIS, 0);
-        raise();
+        raiseToEndstop();
 
         // Set the position so that we can process absolute movements (e.g. G1)
         current_position[Z_AXIS] = Z_MAX_POS;

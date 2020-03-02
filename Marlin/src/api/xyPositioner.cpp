@@ -34,7 +34,7 @@ int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
   auto const dx = abs(xypos_x_pos - current_position[X_AXIS]);
   auto const dy = abs(xypos_y_pos - current_position[Y_AXIS]);
   if (dx > 1 || dy > 1) {
-    if (raise()) {
+    if (raise(tool)) {
       return -1;
     }
   }
