@@ -32,9 +32,6 @@
 #include <stdlib.h>
 
 #include "version.h"
-#include "macros.h"
-#include "planner.h"
-#include "stepper.h"
 #include "temperature_profile.h"
 #include "ConfigurationStore.h"
 
