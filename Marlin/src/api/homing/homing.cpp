@@ -45,20 +45,14 @@ void sendHomedStatusUpdate() {
     << endl;
 }
 
-void zeroAxisAtCurrentPosition(AxisEnum axis, float homingOffset = 0.0f) {
+int zeroAxisAtCurrentPosition(AxisEnum axis, float homingOffset) {
   // NOTE: Why do we negate the offset?
   //       To offset z-home by 5.0, means we want z=0 to be 5mm higher than
   //       the trigger position of the z-switch. Right now we are at the
   //       trigger postion. We want to tell the planner that 0 is 5mm higher
   //       than the current position. This is the same as telling it we are
   //       currently at -5. That's why there is a negatation here.
-  current_position[axis] = -homingOffset;
-  plan_set_position(
-    current_position[ X_AXIS ],
-    current_position[ Y_AXIS ],
-    current_position[ Z_AXIS ],
-    current_position[ E_AXIS ]
-  );
+  return vone->stepper.overrideCurrentPosition(axis, -homingOffset);
 }
 
 int rawHome(tools::Tool& tool, bool homingX, bool homingY, bool homingZ) {

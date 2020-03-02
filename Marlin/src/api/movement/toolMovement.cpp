@@ -107,7 +107,9 @@ int centerTool(tools::Tool& tool) {
     return -1;
   }
 
-  // Overwrite the current position with constant position.
-  setPosition(xypos_x_pos, xypos_y_pos, current_position[Z_AXIS], current_position[E_AXIS]);
-  return 0;
+  // Overwrite the current location with calibrated position
+  st_synchronize();
+  return vone->stepper.overrideCurrentPosition(
+    xypos_x_pos, xypos_y_pos, current_position[Z_AXIS], current_position[E_AXIS]
+  );
 }

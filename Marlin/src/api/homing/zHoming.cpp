@@ -38,12 +38,6 @@ int homeZ(tools::Tool& tool, float offset) {
   // the homed state disables those safety checks.
   setHomedState(Z_AXIS, 0);
 
-  // Make the current location 0, and sync with the planner
-  // Note: Doing this means that homing can deal with:
-  //   - crazy values for the current_position
-  //   - current_position and planner being out of sync
-  zeroAxisAtCurrentPosition(Z_AXIS);
-
   // Determine the max-z (soft limit)
   // Note: the point of contact can vary slightly, so we back off a small
   //       amount to avoid triggering the switch during raiseToSoftMax
@@ -54,17 +48,28 @@ int homeZ(tools::Tool& tool, float offset) {
   float zMaxMeasurement;
   float zSwitchMeasurement;
   if (
+    // Make the current location 0, and sync with the planner
+    // Note: Doing this means that homing can deal with:
+    //   - crazy values for the current_position
+    //   - current_position and planner being out of sync
+    zeroAxisAtCurrentPosition(Z_AXIS) ||
+
+    // Go to the z-switch
     moveToZSwitchXY(tool) ||
+
+    // Measure the zMax and z-switch locations
     measureAtSwitch(vone->endstops.zMax, useDefaultMaxTravel, zMaxMeasurement) ||
     retractFromSwitch(vone->endstops.zMax, zMaxOffset) ||
-    measureAtSwitch(vone->endstops.zSwitch, useDefaultMaxTravel, zSwitchMeasurement)
+    measureAtSwitch(vone->endstops.zSwitch, useDefaultMaxTravel, zSwitchMeasurement) ||
+
+    // Set the home position here
+    zeroAxisAtCurrentPosition(Z_AXIS, offset)
   ) {
     logError << F("Unable to home z-axis") << endl;
     return -1;
   }
 
   // We are home!
-  zeroAxisAtCurrentPosition(Z_AXIS, offset);
   setHomedState(Z_AXIS, -1);
 
   // Set max-z

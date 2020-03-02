@@ -102,13 +102,13 @@ int process_mcode(int command_code) {
 
     case 112:
       quickStop();
-      // We can optionally reset the planner to the stepper counts in some axes
-      if (code_seen(axis_codes[X_AXIS])) current_position[X_AXIS] = st_get_position_mm(X_AXIS);
-      if (code_seen(axis_codes[Y_AXIS])) current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
-      if (code_seen(axis_codes[Z_AXIS])) current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
-      if (code_seen(axis_codes[E_AXIS])) current_position[E_AXIS] = st_get_position_mm(E_AXIS);
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-      return 0;
+      // Reset the planner to the stepper counts in some axes
+      return vone->stepper.resyncWithStepCount(
+        code_seen('X'),
+        code_seen('Y'),
+        code_seen('Z'),
+        code_seen('E')
+      );
 
     // M114 - Output current position to serial port
     case 114:
@@ -148,15 +148,15 @@ int process_mcode(int command_code) {
     // M122 - We let the planner know where we are
     case 122: {
       st_synchronize();
+      bool hasX = code_seen('X');
+      bool hasY = code_seen('Y');
+      bool hasE = code_seen('E');
+
       // If no axes are specified, we reset the Z axis (for compat with the old software)
-      // Otherwise, we reset the specified axes
-      bool z_default = !((code_seen(axis_codes[X_AXIS])) || (code_seen(axis_codes[Y_AXIS])) || (code_seen(axis_codes[Z_AXIS]))|| (code_seen(axis_codes[E_AXIS])));
-      if (code_seen(axis_codes[X_AXIS])) current_position[X_AXIS] = st_get_position_mm(X_AXIS);
-      if (code_seen(axis_codes[Y_AXIS])) current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
-      if (code_seen(axis_codes[Z_AXIS]) || z_default) current_position[Z_AXIS]  = st_get_position_mm(Z_AXIS);
-      if (code_seen(axis_codes[E_AXIS])) current_position[E_AXIS] = st_get_position_mm(E_AXIS);
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-      return 0;
+      // NOTE: this 'old software' may no longer exists
+      bool zDefault = !hasX && !hasY && !hasE;
+      bool hasZ = zDefault || code_seen('Z');
+      return vone->stepper.resyncWithStepCount(hasX, hasY, hasZ, hasE);
     }
 
     // M123 - set software endstop(s) to current position - specify axis/es and T for top (max) and B for bottom (min). These are reset upon homing

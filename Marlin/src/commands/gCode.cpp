@@ -162,13 +162,7 @@ int process_gcode(int command_code) {
         raiseToEndstop();
 
         // Set the position so that we can process absolute movements (e.g. G1)
-        current_position[Z_AXIS] = Z_MAX_POS;
-        plan_set_position(
-          current_position[ X_AXIS ],
-          current_position[ Y_AXIS ],
-          current_position[ Z_AXIS ],
-          current_position[ E_AXIS ]
-        );
+        vone->stepper.overrideCurrentPosition(Z_AXIS, Z_MAX_POS);
       }
 
       if (home_all || code_seen('X')) {
@@ -200,20 +194,14 @@ int process_gcode(int command_code) {
       return 0;
 
     // G92 - Set current position to coordinates given
-    case 92:
+    case 92: {
       st_synchronize();
-      for(int8_t i=0; i < NUM_AXIS; i++) {
-        if(code_seen(axis_codes[i])) {
-           if(i == E_AXIS) {
-             current_position[i] = code_value();
-             plan_set_e_position(current_position[E_AXIS]);
-           } else {
-             current_position[i] = code_value();
-             plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-           }
-        }
-      }
-      return 0;
+      const float x = code_seen('X') ? code_value() : current_position[ X_AXIS ];
+      const float y = code_seen('Y') ? code_value() : current_position[ Y_AXIS ];
+      const float z = code_seen('Z') ? code_value() : current_position[ Z_AXIS ];
+      const float e = code_seen('E') ? code_value() : current_position[ E_AXIS ];
+      return vone->stepper.overrideCurrentPosition(x, y, z, e);
+    }
 
     //-------------------------------------------
     // List Commands

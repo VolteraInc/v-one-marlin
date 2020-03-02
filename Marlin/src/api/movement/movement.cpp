@@ -31,19 +31,6 @@ int setPosition(float x, float y, float z, float e) {
   return 0;
 }
 
-// Set the planner position based on the stepper's position.
-// Note: Certain movements, like attempting to move past an end-stop, will leave the
-// planner out of sync with the stepper. This function corrects the planner's position.
-static void s_resyncWithStepper(AxisEnum axis) {
-  current_position[axis] = st_get_position_mm(axis);
-  plan_set_position(
-    current_position[X_AXIS],
-    current_position[Y_AXIS],
-    current_position[Z_AXIS],
-    current_position[E_AXIS]
-  );
-}
-
 static float s_maxTravelInAxis(AxisEnum axis, int direction) {
   switch(axis) {
     case X_AXIS: return getHomedState(X_AXIS) ? X_MAX_LENGTH + 1 : X_MAX_LENGTH_BEFORE_HOMING;
@@ -267,8 +254,7 @@ int moveToLimit(AxisEnum axis, int direction, float f, float maxTravel) {
   }
 
   // Resync with stepper position
-  s_resyncWithStepper(axis);
-  return 0;
+  return vone->stepper.resyncWithStepCount(axis);
 }
 
 int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
@@ -316,8 +302,7 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   }
 
   // Resync with stepper position
-  s_resyncWithStepper(axis);
-  return 0;
+  return vone->stepper.resyncWithStepCount(axis);
 }
 
 int raise(tools::Tool& tool) {

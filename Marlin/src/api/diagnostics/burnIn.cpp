@@ -2,6 +2,7 @@
 
 #include "../../api/api.h"
 #include "../../../Marlin.h"
+#include "../../vone/VOne.h"
 #include "../../../stepper.h"
 #include "../../work/work.h"
 
@@ -82,7 +83,7 @@ int burnInSequence(tools::NullTool& noTool, int steps) {
 
     // Move to a known location to start
     moveXY(noTool, 0, 0) ||
-    setPosition(0, 0, Z_MAX_POS, 0) ||
+    vone->stepper.overrideCurrentPosition(0, 0, Z_MAX_POS, 0) ||
 
     // Entire volume, default (fast) speeds
     // Note: takes about 5min to complete 5 steps
