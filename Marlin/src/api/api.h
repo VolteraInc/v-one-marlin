@@ -1,5 +1,6 @@
 #pragma once
 
+#include "homing/homing.h"
 #include "movement/movement.h"
 #include "measurement/measurement.h"
 #include "probing/probing.h"
@@ -10,17 +11,6 @@ namespace tools {
   class Probe;
 }
 
-// Homing
-bool homedXY();
-int homeXY(tools::Tool& tool);
-int homeZ(tools::Tool& tool, float offset = 0.0f);
-bool homedZ();
-int primeE(float retract_amount);
-int rawHome(tools::Tool& tool, bool homeX = true, bool homeY = true, bool homeZ = true);
-int getHomedState(AxisEnum axis);
-void setHomedState(AxisEnum axis, int value);
-void sendHomedStatusUpdate();
-int moveToZSwitchXY(tools::Tool& tool);
 
 // XY positioner
 const float defaultXyPositionerCycles = 2;
