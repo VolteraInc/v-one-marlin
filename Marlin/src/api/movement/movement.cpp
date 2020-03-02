@@ -14,23 +14,6 @@ static const float s_defaultRetractDistance[] = {
   Z_HOME_RETRACT_MM
 };
 
-int setPosition(float x, float y, float z, float e) {
-  // Wait for moves to finish before altering the axis
-  st_synchronize();
-
-  current_position[X_AXIS] = x;
-  current_position[Y_AXIS] = y;
-  current_position[Z_AXIS] = z;
-  current_position[E_AXIS] = e;
-  plan_set_position(
-    current_position[X_AXIS],
-    current_position[Y_AXIS],
-    current_position[Z_AXIS],
-    current_position[E_AXIS]
-  );
-  return 0;
-}
-
 static float s_maxTravelInAxis(AxisEnum axis, int direction) {
   switch(axis) {
     case X_AXIS: return getHomedState(X_AXIS) ? X_MAX_LENGTH + 1 : X_MAX_LENGTH_BEFORE_HOMING;

@@ -38,10 +38,7 @@ int raiseToSoftMax(tools::Tool& tool);
 int raise(tools::Tool& tool);
 int raiseToEndstop();
 
-// Set planner position
-int setPosition(float x, float y, float z, float e);
-
-
+// Retract
 int retractFromSwitch(const Endstop& endstop, float retractDistance = useDefaultRetractDistance);
 
 
