@@ -106,6 +106,14 @@ bool Stepper::stopped() const {
   return stopReason() != nullptr;
 }
 
+void Stepper::finishPendingMoves() const {
+  st_synchronize();
+}
+
+void Stepper::enableSkewAdjustment(bool enabled) {
+  plan_enable_skew_adjustment(enabled);
+}
+
 int Stepper::overrideCurrentPosition(float x, float y, float z, float e) {
   // DEFER: Stepper (or planner) should own current_position
   //        everything else should access it through Stepper

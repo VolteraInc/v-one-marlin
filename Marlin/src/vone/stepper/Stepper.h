@@ -18,6 +18,8 @@ class Stepper {
     void stop(const __FlashStringHelper* reason);
     void resume();
 
+    void enableSkewAdjustment(bool enable = true);
+
     int overrideCurrentPosition(float x, float y, float z, float e);
     int overrideCurrentPosition(float position[4]);
     int overrideCurrentPosition(AxisEnum axis, float value);
@@ -29,6 +31,8 @@ class Stepper {
     int resyncWithStepCount(bool x, bool y, bool z, bool e);
 
     int add(float x, float y, float z, float e, float f);
+
+    void finishPendingMoves() const;
 
     // DEFER: Ideally the stepper isr would be defined in this file
     //        but carving stepper_isr() into multiple h-files +
