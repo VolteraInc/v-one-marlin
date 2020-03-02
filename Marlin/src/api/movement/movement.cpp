@@ -14,16 +14,6 @@ static const float s_defaultRetractDistance[] = {
   Z_HOME_RETRACT_MM
 };
 
-
-int setPositionEOnly(float e) {
-  // Wait for moves to finish before altering the axis
-  st_synchronize();
-
-  current_position[E_AXIS] = e;
-  plan_set_e_position(e);
-  return 0;
-}
-
 int setPosition(float x, float y, float z, float e) {
   // Wait for moves to finish before altering the axis
   st_synchronize();

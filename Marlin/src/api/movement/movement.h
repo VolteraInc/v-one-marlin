@@ -39,7 +39,6 @@ int raise(tools::Tool& tool);
 int raiseToEndstop();
 
 // Set planner position
-int setPositionEOnly(float e);
 int setPosition(float x, float y, float z, float e);
 
 
