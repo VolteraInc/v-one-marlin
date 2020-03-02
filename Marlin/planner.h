@@ -74,7 +74,7 @@ void plan_set_e_position(float e);
 void plan_enable_skew_adjustment(bool enable);
 
 
-uint8_t movesplanned(); //return the nr of buffered moves
+uint8_t movesplanned(); //return the number of buffered moves
 
 extern unsigned long minsegmenttime;
 extern float max_feedrate[4]; // set the max speeds
