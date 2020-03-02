@@ -330,35 +330,6 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   return 0;
 }
 
-// DEFER: auto-priming
-// int moveToLimitE(int direction) {
-//   if(logging_enabled) {
-//     log
-//       << F("Move to limit: ")
-//       << (direction < 0 ? '-' : '+')
-//       << 'E'
-//       << endl;
-//   }
-//
-//   // Finish any pending moves (prevents crashes)
-//   st_synchronize();
-//   const auto travel = direction < 0 ? -E_MAX_LENGTH : E_MAX_LENGTH;
-//   if (relativeRawMoveE(travel, homing_feedrate[E_AXIS])) {
-//     return -1;
-//   }
-//
-//   // Confirm we triggered
-//   if (!endstop_triggered(E_AXIS)) {
-//     return -1;
-//   }
-//
-//   // Resync with true position
-//   s_fixPosition(E_AXIS);
-//   return 0;
-// }
-
-
-int raise() {
 int raise(tools::Tool& tool) {
   if (!homedZ()) {
     return moveToEndstop(vone->endstops.zMax);
