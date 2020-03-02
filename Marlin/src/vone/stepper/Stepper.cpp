@@ -106,6 +106,51 @@ bool Stepper::stopped() const {
   return stopReason() != nullptr;
 }
 
+int Stepper::overrideCurrentPosition(float x, float y, float z, float e) {
+  // DEFER: Stepper (or planner) should own current_position
+  //        everything else should access it through Stepper
+  //        (consider renaming to Stepper ot planner.destination)
+  current_position[X_AXIS] = x;
+  current_position[Y_AXIS] = y;
+  current_position[Z_AXIS] = z;
+  current_position[E_AXIS] = e;
+  plan_set_position(x, y, z, e);
+  return 0;
+}
+
+int Stepper::overrideCurrentPosition(float position[4]) {
+  return overrideCurrentPosition(
+    position[X_AXIS],
+    position[Y_AXIS],
+    position[Z_AXIS],
+    position[E_AXIS]
+  );
+}
+
+int Stepper::overrideCurrentPosition(AxisEnum axis, float value) {
+  if (axis == E_AXIS) {
+    current_position[E_AXIS] = value;
+    plan_set_e_position(value);
+    return 0;
+  }
+
+  current_position[axis] = value;
+  return overrideCurrentPosition(current_position);
+}
+
+
+int Stepper::resyncWithStepCount(AxisEnum axis) {
+  return overrideCurrentPosition(axis, st_get_position_mm(X_AXIS));
+}
+
+int Stepper::resyncWithStepCount(bool x, bool y, bool z, bool e) {
+  if (x) { current_position[X_AXIS] = st_get_position_mm(X_AXIS); }
+  if (y) { current_position[Y_AXIS] = st_get_position_mm(Y_AXIS); }
+  if (z) { current_position[Z_AXIS] = st_get_position_mm(Z_AXIS); }
+  if (e) { current_position[E_AXIS] = st_get_position_mm(E_AXIS); }
+  return overrideCurrentPosition(current_position);
+}
+
 int Stepper::add(float x, float y, float z, float e, float f) {
 
   // Check if we are stopped
