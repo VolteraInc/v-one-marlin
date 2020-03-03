@@ -539,6 +539,11 @@ int process_mcode(int command_code) {
       log << F("  M503 - output configuration") << endl;
       log << endl;
 
+      log << F("Infield Upgrades") << endl;
+      log << F("  M601 - z-switch replacement (S0 original, S1 stronger spring, S-1 use default) -- M601 S1") << endl;
+      log << endl;
+
+
       log << F("Internal use") << endl;
       log << F("  M92  - Set axis steps per unit - same syntax as G92") << endl;
       log << F("  M520 - output calibrated positions and factors") << endl;
