@@ -394,7 +394,7 @@ int process_dcode(int command_code) {
       log << F("  D102 - Home -- D102 or D102 XY") << endl;
       log << F("  D103 - xy positioner -- D103 or D103 M (move-only)") << endl;
       log << F("  D104 - measure probe displacement") << endl;
-      log << F("  D105 - measure at switch (I to ignore a pin)-- D105 P62") << endl;
+      log << F("  D105 - measure at switch (I to ignore a pin) -- D105 P62") << endl;
       log << F("  D106 - sample pin values (P=pin C=cycles M=milliseconds between readings) -- D106 P2 C10 M5 ") << endl;
       log << F("  D108 - measure at switch release -- D108 -Z") << endl;
       log << F("  D109 - check location of xy-positioner's back switch -- D109") << endl;
