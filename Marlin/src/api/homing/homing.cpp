@@ -54,36 +54,26 @@ int zeroAxisAtCurrentPosition(AxisEnum axis, float homingOffset) {
   return vone->stepper.overrideCurrentPosition(axis, -homingOffset);
 }
 
-int rawHome(tools::Tool& tool, bool homingX, bool homingY, bool homingZ) {
-  auto& stepper = vone->stepper;
-  auto& endstops = vone->endstops;
-  // Homing Y first moves the print head out of the way, which
-  // which allows the user to access the board/bed sooner
-  if (homingY) {
-    if (homeHorizontalAxis(stepper, endstops.yMin)) {
-      return -1;
-    }
-  }
-
-  if (homingX) {
-    if (homeHorizontalAxis(stepper, endstops.xMin)) {
-      return -1;
-    }
-  }
-
-  if (homingZ) {
-    if (homeZ(tool)) {
-      return -1;
-    }
-  }
-
-  // Success
-  return 0;
-}
-
 int homeXY(tools::Tool& tool) {
+  auto& stepper = vone->stepper;
+  auto& xMin = vone->endstops.xMin;
+  auto& yMin = vone->endstops.yMin;
+
   return (
     raise(tool) ||
-    rawHome(tool, true, true, false)
+    homeHorizontalAxis(stepper, yMin) ||
+    homeHorizontalAxis(stepper, xMin)
   );
+}
+
+int rawHomeX() {
+  auto& stepper = vone->stepper;
+  auto& xMin = vone->endstops.xMin;
+  return homeHorizontalAxis(stepper, xMin);
+}
+
+int rawHomeY() {
+  auto& stepper = vone->stepper;
+  auto& yMin = vone->endstops.yMin;
+  return homeHorizontalAxis(stepper, yMin);
 }

@@ -177,19 +177,36 @@ int process_dcode(int command_code) {
 
     // Algorithms - Homing
     case 102: {
-      vone->stepper.resume();
-      bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
-      if (code_seen('Z')) {
-        if (raiseToEndstop()) {
+      auto& stepper = vone->stepper;
+      auto& currentTool = vone->toolBox.currentTool();
+
+      stepper.resume();
+
+      bool home_all = !code_seen('X') && !code_seen('Y');
+
+      if (raise(currentTool)) {
+        return -1;
+      }
+
+      // Home Z
+      // NOTE: Homing Z requires knowledge of the tool and zSwitch
+      //       (see Probe.cpp). So, we can not call homeZ here.
+
+      // Home Y
+      if (home_all || code_seen('Y')) {
+        if (rawHomeY()) {
           return -1;
         }
       }
-      return rawHome(
-        tool,
-        home_all || code_seen('X'),
-        home_all || code_seen('Y'),
-        home_all || code_seen('Z')
-      );
+
+      // Home X
+      if (home_all || code_seen('X')) {
+        if (rawHomeX()) {
+          return -1;
+        }
+      }
+
+      return 0;
     }
 
     // Algorithms - XY Positioner
@@ -392,7 +409,7 @@ int process_dcode(int command_code) {
       log << F("") << endl;
       log << F("Algorithms") << endl;
       log << F("  D101 - prepare tool to move") << endl;
-      log << F("  D102 - Home -- D102 or D102 XY") << endl;
+      log << F("  D102 - Home X or Y -- D102 or D102 XY") << endl;
       log << F("  D103 - xy positioner -- D103 or D103 M (move-only)") << endl;
       log << F("  D104 - measure probe displacement") << endl;
       log << F("  D105 - measure at switch (I to ignore a pin) -- D105 P62") << endl;

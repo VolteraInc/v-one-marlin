@@ -152,11 +152,16 @@ int process_gcode(int command_code) {
 
     // G28 - Home X and Y normally, home Z to the top (legacy code relies on this behavior)
     case 28: {
-      bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
+      auto& stepper = vone->stepper;
+      auto& endstops = vone->endstops;
+      auto& currentTool = vone->toolBox.currentTool();
 
-      vone->toolBox.currentTool().resetPreparations();
-      vone->stepper.resume();
+      currentTool.resetPreparations();
+      stepper.resume();
 
+      bool home_all = !code_seen('X') && !code_seen('Y') && !code_seen('Z');
+
+      // Raise, and home Z to top
       if (home_all || code_seen('Z')) {
         setHomedState(Z_AXIS, 0);
         raiseToEndstop();
@@ -165,20 +170,21 @@ int process_gcode(int command_code) {
         vone->stepper.overrideCurrentPosition(Z_AXIS, Z_MAX_POS);
       }
 
-      if (home_all || code_seen('X')) {
-        setHomedState(X_AXIS, 0);
-      }
-
+      // Home Y
       if (home_all || code_seen('Y')) {
         setHomedState(Y_AXIS, 0);
+        if (rawHomeY()) {
+          return -1;
+        }
       }
 
-      rawHome(
-        vone->toolBox.nullTool,
-        home_all || code_seen('X'),
-        home_all || code_seen('Y'),
-        false
-      );
+      // Home X
+      if (home_all || code_seen('X')) {
+        setHomedState(X_AXIS, 0);
+        if (rawHomeX()) {
+          return -1;
+        }
+      }
 
       return 0;
     }

@@ -16,6 +16,9 @@ int getHomedState(AxisEnum axis);
 void setHomedState(AxisEnum axis, int value);
 void sendHomedStatusUpdate();
 
-int rawHome(tools::Tool& tool, bool homeX = true, bool homeY = true, bool homeZ = true);
-
 int moveToZSwitchXY(tools::Tool& tool);
+
+// Unsafe methods for debugging + gcode commands
+// NOTE: raw/unsafe because they these do not raise before homing
+int rawHomeX();
+int rawHomeY();
