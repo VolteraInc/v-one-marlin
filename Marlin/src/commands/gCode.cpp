@@ -153,7 +153,6 @@ int process_gcode(int command_code) {
     // G28 - Home X and Y normally, home Z to the top (legacy code relies on this behavior)
     case 28: {
       auto& stepper = vone->stepper;
-      auto& endstops = vone->endstops;
       auto& currentTool = vone->toolBox.currentTool();
 
       currentTool.resetPreparations();
@@ -167,7 +166,7 @@ int process_gcode(int command_code) {
         raiseToEndstop();
 
         // Set the position so that we can process absolute movements (e.g. G1)
-        vone->stepper.overrideCurrentPosition(Z_AXIS, Z_MAX_POS);
+        stepper.overrideCurrentPosition(Z_AXIS, Z_MAX_POS);
       }
 
       // Home Y
