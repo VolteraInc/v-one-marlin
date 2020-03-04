@@ -88,7 +88,9 @@ int tools::Probe::prepareToMoveImpl_CalibrateXYZ() {
 
   return (
     // home Z so we can enter the xy pos with decent precision
-    homeZ(*this, 0.250) ||
+    // NOTE: We don't know the displacement yet so we use max displacement
+    //       becuase it is safer to be too high.
+    homeZOnly(*this, MaxDisplacement) ||
     centerTool(*this) ||
     measureProbeDisplacement(*this, m_probeDisplacement) ||
 
