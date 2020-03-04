@@ -84,7 +84,7 @@ int tools::Probe::prepareToMoveImpl_CalibrateXYZ() {
   }
 
   // Ignore the toolswitch during z-homing
-  ScopedEndstop_DISABLE scopedEnable(endstopMonitor, m_toolSwitch);
+  ScopedEndstop_DISABLE sed(endstopMonitor, m_toolSwitch);
 
   return (
     // home Z so we can enter the xy pos with decent precision
