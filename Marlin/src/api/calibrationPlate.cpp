@@ -6,8 +6,8 @@
 #include "../vone/VOne.h"
 #include "../vone/endstops/ScopedEndstopEnable.h"
 
-static const float MinDisplacement = 0.050f;
-static const float MaxDisplacement = 0.500f;
+const float MinDisplacement = 0.050f;
+const float MaxDisplacement = 0.500f;
 
 static int s_measureCalibrationPlateZ(float& plateZ, float maxTravel) {
   const auto& calibrationPlate = vone->endstops.calibrationPlate;

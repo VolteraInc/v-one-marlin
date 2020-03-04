@@ -7,6 +7,8 @@
 #include "../vone/endstops/Endstop.h"
 #include "../vone/endstops/ScopedEndstopEnable.h"
 
+const float defaultXyPositionerCycles = 2;
+
 static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
   switch (howToMoveToZ) {
     case useConfiguredZ:

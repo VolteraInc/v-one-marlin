@@ -13,17 +13,19 @@ namespace tools {
 
 
 // XY positioner
-const float defaultXyPositionerCycles = 2;
+extern const float defaultXyPositionerCycles;
 enum HowToMoveToZ { useConfiguredZ, usePlateBackOffForZ, skipMoveInZ };
 int xyPositionerTouch(tools::Tool& tool, const Endstop& endstop, float& measurement);
 int xyPositionerFindCenter(tools::Tool& tool, long cycles, float& centerX, float& centerY, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
 int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
 
 // Calibration plate
+extern const float MinDisplacement;
+extern const float MaxDisplacement;
 int measureProbeDisplacement(tools::Probe& probe, float& displacement);
 
 // Bed
-const float bedBoundsMinY = 40.0f;
+extern const float bedBoundsMinY;
 bool isOverBed(float x, float y);
 bool haveBedHeightMap();
 float bedHeightAt(float x, float y);
