@@ -177,6 +177,7 @@ int process_dcode(int command_code) {
 
     // Algorithms - Homing
     case 102: {
+      vone->stepper.resume();
       bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
       if (code_seen('Z')) {
         if (raiseToEndstop()) {
