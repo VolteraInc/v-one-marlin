@@ -38,11 +38,15 @@ void periodic_output() {
   }
 
   // Output temperature if temp or target changes or we are running a heating profile
-  // NOTE: The temp sensor is noisy so filter small changes.
+  // NOTE: The temp sensor is noisy so filter small changes. We have seen 1 degree
+  //       fluctuations at room temperature. This because of noise in the voltage
+  //       readings and the tight spacing in the temperature mapping table near
+  //       room temperatures (see ThermistorTable.h). Hence we look for changes
+  //       of 1 degree or more.
   const auto current = vone->heater.currentTemperature();
   const auto target = vone->heater.targetTemperature();
   const auto timeRemaining = profile_remaining_time();
-  bool tempChanged = abs(prev.temperature.current - current) >= 0.5;
+  bool tempChanged = abs(prev.temperature.current - current) >= 1;
   bool targetChanged = prev.temperature.target != target;
   if ( !profile_empty() || tempChanged || targetChanged) {
       if (targetChanged) {
