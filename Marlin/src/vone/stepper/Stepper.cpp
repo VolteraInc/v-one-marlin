@@ -148,7 +148,7 @@ int Stepper::overrideCurrentPosition(AxisEnum axis, float value) {
 
 
 int Stepper::resyncWithStepCount(AxisEnum axis) {
-  return overrideCurrentPosition(axis, st_get_position_mm(X_AXIS));
+  return overrideCurrentPosition(axis, st_get_position_mm(axis));
 }
 
 int Stepper::resyncWithStepCount(bool x, bool y, bool z, bool e) {
