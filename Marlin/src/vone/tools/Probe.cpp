@@ -255,6 +255,6 @@ void tools::Probe::outputStatus() const {
   if (heightSafetyEnabled()) {
     log << F("  height safety: ON, safe height is ") << safeHeight() << endl;
   } else {
-    log << F("  height safety: OFF") << endl;
+    log << F("  height safety: inactive") << endl;
   }
 }
