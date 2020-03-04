@@ -167,24 +167,19 @@ int process_vcode(int command_code) {
     // V51: Raise to soft max
     // NOTE: does not hit limit switches, but will prepare the tool if needed
     case 51: {
-      const float x = code_seen('X') ? 0 : current_position[ X_AXIS ];
-      const float y = code_seen('Y') ? 0 : current_position[ Y_AXIS ];
       return (
         currentTool.prepareToMove() ||
-        raiseToSoftMax(currentTool) ||
-        moveXY(currentTool, x, y)
+        raiseToSoftMax(currentTool)
       );
     }
 
     // V52: Park - Raise to soft max then goto 0,0
     // NOTE: does not hit limit switches, but will prepare the tool if needed
     case 52: {
-      const float x = code_seen('X') ? 0 : current_position[ X_AXIS ];
-      const float y = code_seen('Y') ? 0 : current_position[ Y_AXIS ];
       return (
         currentTool.prepareToMove() ||
         raiseToSoftMax(currentTool) ||
-        moveXY(currentTool, x, y)
+        moveXY(currentTool, 0, 0)
       );
     }
 
