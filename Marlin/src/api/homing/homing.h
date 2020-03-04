@@ -10,7 +10,9 @@ bool homedXY();
 bool homedZ();
 
 int homeXY(tools::Tool& tool);
-int homeZ(tools::Tool& tool, float offset = 0.0f);
+
+int homeZOnly(tools::Tool& tool, float offset = 0.0f);
+int homeZandEstablishSoftMax(tools::Tool& tool, float offset = 0.0f);
 
 int getHomedState(AxisEnum axis);
 void setHomedState(AxisEnum axis, int value);

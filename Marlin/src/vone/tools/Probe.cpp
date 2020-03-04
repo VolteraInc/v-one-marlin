@@ -59,10 +59,10 @@ int tools::Probe::prepareToMoveImpl_CalibrateXYZ() {
     //   2) with this zSwitch the probe's spring will compress
     //      slightly, resulting in variablity the homed Z position
     return (
-      homeZ(*this) || // home Z so we can enter the xy pos with decent precision
+      homeZOnly(*this) || // home Z so we can enter the xy pos with decent precision
       centerTool(*this) ||
       measureProbeDisplacement(*this, m_probeDisplacement) || // do this now, saves a trip back to the xy-pos after re-homing
-      homeZ(*this) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
+      homeZandEstablishSoftMax(*this) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
       raiseToSoftMax(*this)
     );
   }
@@ -96,7 +96,7 @@ int tools::Probe::prepareToMoveImpl_CalibrateXYZ() {
     // (and compensate for probe displacement)
     // NOTE: we've seen a 30um differnce in the
     //       measurement with the old switch
-    homeZ(*this, m_probeDisplacement) ||
+    homeZandEstablishSoftMax(*this, m_probeDisplacement) ||
 
     raiseToSoftMax(*this)
   );

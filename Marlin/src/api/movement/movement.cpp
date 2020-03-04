@@ -8,6 +8,8 @@
 #include "../../vone/endstops/Endstop.h"
 #include "../../vone/endstops/ScopedEndstopEnable.h"
 
+static bool s_establishedSoftMaxZ = false;
+
 static const float s_defaultRetractDistance[] = {
   X_HOME_RETRACT_MM,
   Y_HOME_RETRACT_MM,
@@ -26,6 +28,22 @@ static float s_maxTravelInAxis(AxisEnum axis, int direction) {
         << endl;
       return 0; // Will likely result in an obvious error, which we can fix
   }
+}
+
+bool establishedSoftMaxZ() {
+  return s_establishedSoftMaxZ;
+}
+
+void establishSoftMaxZ(float value) {
+  log << F("setting maximum Z position to ") << value << endl;
+  s_establishedSoftMaxZ = true;
+  max_pos[Z_AXIS] = value;
+}
+
+void clearSoftMaxZ() {
+  log << F("resetting max z to default") << Z_MAX_POS << endl;
+  s_establishedSoftMaxZ = false;
+  max_pos[Z_AXIS] = Z_MAX_POS;
 }
 
 int outputMovementStatus() {
@@ -74,6 +92,7 @@ int outputMovementStatus() {
     << F(" x:") << min_pos[X_AXIS] << F(" to ") << max_pos[X_AXIS]
     << F(" y:") << min_pos[Y_AXIS] << F(" to ") << max_pos[Y_AXIS]
     << F(" z:") << min_pos[Z_AXIS] << F(" to ") << max_pos[Z_AXIS]
+    << (establishedSoftMaxZ() ? F(" (using soft max z)") : F(" (using default max z)"))
     << endl;
 
   return 0;
@@ -288,26 +307,26 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   return vone->stepper.resyncWithStepCount(axis);
 }
 
-int raise(tools::Tool& tool) {
-  if (!homedZ()) {
-    return moveToEndstop(vone->endstops.zMax);
-  }
-
-  return moveZ(tool, max_pos[Z_AXIS]);
-}
 
 int raiseToEndstop() {
   return moveToEndstop(vone->endstops.zMax);
 }
 
 int raiseToSoftMax(tools::Tool& tool) {
-  if (!homedZ()) {
+  if (!establishedSoftMaxZ()) {
     logError
       << F("Unable to move to raise to max height, current tool has not been homed in z")
       << endl;
     return -1;
   }
   return moveZ(tool, max_pos[Z_AXIS]);
+}
+
+int raise(tools::Tool& tool) {
+  if (!establishedSoftMaxZ()) {
+    return raiseToEndstop();
+  }
+  return raiseToSoftMax(tool);
 }
 
 int retractFromSwitch(const Endstop& endstop, float retractDistance) {

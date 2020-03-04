@@ -63,3 +63,8 @@ int confirmAttached(const char* context, tools::Tool& tool);
 extern float axis_steps_per_unit[4];
 float stepsToMillimeters(long step, AxisEnum axis);
 long millimetersToSteps(float mm, AxisEnum axis);
+
+// Soft max Z
+void establishSoftMaxZ(float value);
+bool establishedSoftMaxZ();
+void clearSoftMaxZ();

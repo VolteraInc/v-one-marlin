@@ -30,7 +30,7 @@ void setHomedState(AxisEnum axis, int value) {
 
     // When reseting Z, reset it's soft limit too
     if (axis == Z_AXIS && value == 0) {
-      max_pos[Z_AXIS] = Z_MAX_POS;
+      clearSoftMaxZ();
     }
   }
 }
