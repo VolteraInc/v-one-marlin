@@ -13,10 +13,6 @@ bool homedXY() {
   return getHomedState(X_AXIS) && getHomedState(Y_AXIS);
 }
 
-bool homedZ() {
-  return getHomedState(Z_AXIS);
-}
-
 int getHomedState(AxisEnum axis) {
   return axis_homed_state[axis];
 }

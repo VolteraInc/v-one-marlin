@@ -7,7 +7,6 @@ namespace tools {
 }
 
 bool homedXY();
-bool homedZ();
 
 int homeXY(tools::Tool& tool);
 
