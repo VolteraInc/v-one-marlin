@@ -64,6 +64,7 @@ void Config_StoreCalibration() {
   EEPROM_WRITE_VAR(i, calib_x_backlash);
   EEPROM_WRITE_VAR(i, calib_y_backlash);
   EEPROM_WRITE_VAR(i, z_switch_type);
+  EEPROM_WRITE_VAR(i, xypos_z_pos);
 
   // Now write the version, which marks the stored data as valid
   char ver2[4] = EEPROM_CURRENT_VERSION;
@@ -155,6 +156,7 @@ void Config_PrintCalibration() {
       << F(" Y") << min_z_y_pos
       << F(" I") << xypos_x_pos
       << F(" J") << xypos_y_pos
+      << F(" K") << xypos_z_pos
       << endl;
 
   log << F("Scaling and Skew (A in radians):") << endl;
@@ -195,6 +197,7 @@ void Config_RetrieveCalibration() {
     min_z_y_pos= MIN_Z_Y_POS;
     xypos_x_pos= XYPOS_X_POS;
     xypos_y_pos= XYPOS_Y_POS;
+    xypos_z_pos= XYPOS_Z_POS;
     calib_x_scale = CALIB_X_SCALE;
     calib_y_scale = CALIB_Y_SCALE;
     calib_cos_theta = CALIB_COS_THETA;
@@ -231,8 +234,10 @@ void Config_RetrieveCalibration() {
 
   if (isV12 || isV11 || isV10) {
     z_switch_type = -1;
+    xypos_z_pos = XYPOS_Z_POS;
   } else {
     EEPROM_READ_VAR(i, z_switch_type);
+    EEPROM_READ_VAR(i, xypos_z_pos);
   }
 
   // It's possible that our stored backlash is garbage.

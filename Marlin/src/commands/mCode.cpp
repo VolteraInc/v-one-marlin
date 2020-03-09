@@ -344,12 +344,13 @@ int process_mcode(int command_code) {
       return 0;
     }
 
-    // M505 - Store No. Min X, Min Y, XY Positioner locations.
+    // M505 - Store z-switch and XY-Positioner locations
     case 505: {
       if(code_seen('X')) min_z_x_pos = code_value();
       if(code_seen('Y')) min_z_y_pos = code_value();
       if(code_seen('I')) xypos_x_pos = code_value();
       if(code_seen('J')) xypos_y_pos = code_value();
+      if(code_seen('K')) xypos_z_pos = code_value();
       Config_StoreCalibration();
       return 0;
     }

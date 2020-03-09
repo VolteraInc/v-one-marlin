@@ -64,6 +64,7 @@ float min_z_x_pos;
 float min_z_y_pos;
 float xypos_x_pos;
 float xypos_y_pos;
+float xypos_z_pos;
 char product_serial_number[15];
 int z_switch_type = -1;
 
