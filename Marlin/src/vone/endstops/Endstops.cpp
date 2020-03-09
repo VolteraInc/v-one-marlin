@@ -80,6 +80,32 @@ void Endstops::outputStatus() const {
   #endif
 }
 
+static void s_reportAndUpdateStatus(
+  const __FlashStringHelper* name,
+  bool& reportedStatus,
+  bool currentStatus
+) {
+  if (reportedStatus != currentStatus) {
+    reportedStatus = currentStatus;
+    log << name << s_pinStatusToString(currentStatus) << endl;
+  }
+}
+
+void Endstops::reportChanges() {
+  s_reportAndUpdateStatus(xMin.name, m_reportedStatus.xMinTriggered, READ_PIN(X_MIN));
+  s_reportAndUpdateStatus(yMin.name, m_reportedStatus.yMinTriggered, READ_PIN(Y_MIN));
+  s_reportAndUpdateStatus(zMax.name, m_reportedStatus.zMaxTriggered, READ_PIN(Z_MAX));
+  s_reportAndUpdateStatus(zSwitch.name, m_reportedStatus.zSwitchTriggered, READ_PIN(Z_MIN));
+
+  s_reportAndUpdateStatus(calibrationPlate.name, m_reportedStatus.calibrationPlateTriggered, READ_PIN(P_BOT));
+  s_reportAndUpdateStatus(toolSwitch.name, m_reportedStatus.toolSwitchTriggered, READ_PIN(P_TOP));
+
+  s_reportAndUpdateStatus(xyPositionerLeft.name, m_reportedStatus.xyPositionerLeftTriggered, READ_PIN(XY_MAX_X));
+  s_reportAndUpdateStatus(xyPositionerRight.name, m_reportedStatus.xyPositionerRightTriggered, READ_PIN(XY_MAX_Y));
+  s_reportAndUpdateStatus(xyPositionerBack.name, m_reportedStatus.xyPositionerBackTriggered, READ_PIN(XY_MIN_Y));
+  s_reportAndUpdateStatus(xyPositionerForward.name, m_reportedStatus.xyPositionerForwardTriggered, READ_PIN(XY_MAX_Y));
+}
+
 // -----------------------------------------------------------------------
 // Note: this output is used in manufacturing scripts
 //       so we can't change it without updating those scripts

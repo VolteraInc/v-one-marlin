@@ -93,15 +93,16 @@ void VOne::frequentInterruptibleWork() {
 
 void VOne::outputStatus() {
   m_memoryUsage.outputStatus();
-  endstops.outputStatus();
   motors.outputStatus();
   stepper.outputStatus();
+  endstops.outputStatus();
 }
 
 void VOne::periodicReport() {
   m_memoryUsage.reportIfChanged();
   stepper.periodicReport();
   motors.reportChanges();
+  endstops.reportChanges();
 }
 
 // See stepper.cpp for TIMER1_COMPA_vect
