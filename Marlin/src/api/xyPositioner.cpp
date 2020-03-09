@@ -12,13 +12,18 @@ const float defaultXyPositionerCycles = 2;
 static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
   switch (howToMoveToZ) {
     case useConfiguredZ:
-      return moveZ(tool, XYPOS_Z_POS);
+      return moveZ(tool, xypos_z_pos);
 
-    case usePlateBackOffForZ:
+    case usePlateBackOffForZ: {
+      const auto& calibrationPlate = vone->endstops.calibrationPlate;
       return (
-        moveToLimit(Z_AXIS, -1) ||      // Lower in Z (probe switch should trigger)
-        relativeMove(tool, 0, 0, 2, 0)  // Retract slightly
+        // Lower until plate triggers
+        moveToEndstop(calibrationPlate) ||
+
+        // Retract to at least .5mm above surface
+        relativeMove(tool, 0, 0, MaxDisplacement + .5, 0)
       );
+    }
 
     case skipMoveInZ:
       return 0;
