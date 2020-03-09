@@ -45,6 +45,9 @@ void Heater::updateHeating(float temperature) {
   // Shut off the heater if the temperature is out of range
   // Notes: A temp below the minimum suggests the thermometer is broken
   if (temperature < BED_MINTEMP || temperature > BED_MAXTEMP) {
+    // DEFER: sometimes this error is sent on power down. ideas for fixing:
+    //        delay reporting for 1-2 seconds OR compare to previous value
+    //        (or average) i.e. identify and ignore this 'spike'
     logError
       << F("Unable to operate heater, current temperature is ") << temperature
       << F(" degrees, which is outside of the expected range, ") << BED_MINTEMP
