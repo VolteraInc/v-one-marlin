@@ -20,8 +20,10 @@ static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveT
         // Lower until plate triggers
         moveToEndstop(calibrationPlate) ||
 
-        // Retract to at least .5mm above surface
-        relativeMove(tool, 0, 0, MaxDisplacement + .5, 0)
+        // Retract .5mm above surface
+        // Note: probe displacement can be ignored becuase the
+        //       calibration plate triggers before the probe
+        relativeMove(tool, 0, 0, .5, 0)
       );
     }
 
