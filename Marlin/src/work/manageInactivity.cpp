@@ -24,32 +24,31 @@ void setStepperInactiveDuration(unsigned long duration) {
   stepper_inactive_time = duration;
 }
 
-void manage_inactivity() {
-  // Run periodically
-  static unsigned long nextCheckAt = 0;
-  const auto now = millis();
-  if (now < nextCheckAt) {
+static void s_autoShutOff_Motors(unsigned long now) {
+  if (
+    !vone->motors.anyEnabled() || // motors are already off
+    stepper_inactive_time == 0 || // no timeout is configured
+    now - previous_millis_active_cmd < stepper_inactive_time || // timeout has not been reached
+    blocks_queued() // still work in queue
+  ) {
     return;
   }
-  nextCheckAt = now + 1000;
 
-  if((now - previous_millis_active_cmd) > stepper_inactive_time && stepper_inactive_time) {
-    if(!blocks_queued()) {
-      refresh_cmd_timeout(); // Reseting timeout stops us from constantly checking.
-      log
-        << F("The stepper has been inactive for more than ")
-        << stepper_inactive_time
-        << F("ms, deactivating motors")
-        << endl;
+  // Reseting timeout
+  // NOTE: stops us from constantly checking
+//  refresh_cmd_timeout();
 
-      disable_x();
-      disable_y();
-      disable_z();
-      disable_e();
-      vone->toolBox.currentTool().resetPreparations();
-    }
-  }
+  log
+    << F("The system has been inactive for more than ")
+    << stepper_inactive_time
+    << F("ms, deactivating motors")
+    << endl;
 
+  vone->toolBox.currentTool().resetPreparations();
+  vone->motors.off();
+}
+
+static void s_autoShutOff_Heater(unsigned long now) {
   // If we've been waiting for ~1 hour. Kill the heater.
   if(now - previous_millis_serial_rx > heater_inactive_time && heater_inactive_time) {
     previous_millis_serial_rx = now; //Resetting timeout stops us from constantly checking
@@ -60,4 +59,17 @@ void manage_inactivity() {
       << endl;
     profile_reset();
   }
+}
+
+void manage_inactivity() {
+  // Run periodically
+  static unsigned long nextCheckAt = 0;
+  const auto now = millis();
+  if (now < nextCheckAt) {
+    return;
+  }
+  nextCheckAt = now + 1000;
+
+  s_autoShutOff_Motors(now);
+  s_autoShutOff_Heater(now);
 }

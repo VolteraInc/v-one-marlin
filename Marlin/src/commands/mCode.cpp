@@ -19,10 +19,7 @@ int process_mcode(int command_code) {
   switch(command_code) {
     // M17 - Enable/Power all stepper motors
     case 17:
-      enable_x();
-      enable_y();
-      enable_z();
-      enable_e();
+      vone->motors.on();
       return 0;
 
     // M18 - Release motors, or set inactivity timeout
@@ -35,10 +32,10 @@ int process_mcode(int command_code) {
         st_synchronize();
         vone->toolBox.currentTool().resetPreparations();
         bool disableAll = !(code_seen('X') || code_seen('Y') || code_seen('Z') || code_seen('E'));
-        if (disableAll || code_seen('X')) disable_x();
-        if (disableAll || code_seen('Y')) disable_y();
-        if (disableAll || code_seen('Z')) disable_z();
-        if (disableAll || code_seen('E')) disable_e();
+        if (disableAll || code_seen('X')) vone->motors.xAxis.off();
+        if (disableAll || code_seen('Y')) vone->motors.yAxis.off();
+        if (disableAll || code_seen('Z')) vone->motors.zAxis.off();
+        if (disableAll || code_seen('E')) vone->motors.eAxis.off();
       }
       return 0;
 

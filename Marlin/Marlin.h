@@ -14,19 +14,6 @@
 void periodic_work();
 void safe_delay(unsigned long delayMillis);
 
-void setHomedState(AxisEnum axis, int value);
-#define enable_x() WRITE(X_ENABLE_PIN, X_ENABLE_ON)
-#define disable_x() { WRITE(X_ENABLE_PIN,!X_ENABLE_ON); setHomedState(X_AXIS, 0); }
-
-#define enable_y() WRITE(Y_ENABLE_PIN, Y_ENABLE_ON)
-#define disable_y() { WRITE(Y_ENABLE_PIN,!Y_ENABLE_ON); setHomedState(Y_AXIS, 0); }
-
-#define enable_z() WRITE(Z_ENABLE_PIN, Z_ENABLE_ON)
-#define disable_z() { WRITE(Z_ENABLE_PIN,!Z_ENABLE_ON); setHomedState(Z_AXIS, 0); }
-
-#define enable_e() WRITE(E_ENABLE_PIN, E_ENABLE_ON)
-#define disable_e() WRITE(E_ENABLE_PIN,!E_ENABLE_ON)
-
 extern const float homing_feedrate[];
 extern bool axis_relative_modes[];
 extern int feedmultiply;
