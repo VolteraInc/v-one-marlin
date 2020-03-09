@@ -43,8 +43,6 @@ static int s_calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool
     return -1;
   }
 
-
-
   // Store computed positions
   if (storeResults) {
     log << F("Storing settings...") << endl;
