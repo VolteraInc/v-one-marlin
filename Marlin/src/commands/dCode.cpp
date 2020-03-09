@@ -149,6 +149,20 @@ int process_dcode(int command_code) {
       vone->outputStatus();
       return 0;
 
+
+    // Toggle voltage logging
+    case 3: {
+      auto& toolDetector = vone->toolDetector;
+      toolDetector.enableVoltageLogging(
+        !toolDetector.voltageLoggingEnabled()
+      );
+      log
+        << F("Voltage logging ")
+        << (toolDetector.voltageLoggingEnabled() ? F("ON") : F("OFF"))
+        << endl;
+      return 0;
+    }
+
     case 5: {
       // Stop/resume Stepper
       if (code_seen('E')) {
@@ -405,6 +419,7 @@ int process_dcode(int command_code) {
       log << F("General Commands") << endl;
       log << F("  D1 - Toggle logging ON/OFF (default: OFF)") << endl;
       log << F("  D2 - Output status, including switches and stats") << endl;
+      log << F("  D3 - Toggle voltage logging for pogo pins") << endl;
       log << F("  D5 - stepper stop/resume -- D5 E1 to resume, E0 to stop, no args for status") << endl;
       log << F("") << endl;
       log << F("Algorithms") << endl;

@@ -108,16 +108,10 @@ int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, floa
   int returnValue = -1;
 
   // Tell the tool detector that we have started the probing sequence.
-  if (endstop.pin == vone->endstops.toolSwitch.pin) {
-    vone->toolDetector.setProbeIsRetracting(true);
-  }
 
   returnValue = s_measureAtSwitchRelease(endstop, releaseStartedAt, releaseCompletedAt, delay_ms);
 
   // Before returning, tell the tool detector that we have finished the probing sequence.
-  if (endstop.pin == vone->endstops.toolSwitch.pin) {
-    vone->toolDetector.setProbeIsRetracting(false);
-  }
 
   return returnValue;
 }

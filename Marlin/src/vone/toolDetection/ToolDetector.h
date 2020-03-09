@@ -15,8 +15,8 @@ namespace toolDetection {
   class ToolDetector {
 
     public:
-      ToolDetector(ToolBox& tools, const PTopPin& pin)
-        : m_toolBox(tools)
+      ToolDetector(ToolBox& toolBox, const PTopPin& pin)
+        : m_toolBox(toolBox)
         , m_pin(pin)
       {
       }
@@ -24,32 +24,22 @@ namespace toolDetection {
       bool enabled() const { return m_enabled; }
       void enable(bool enable) { m_enabled = enable; }
 
+      bool voltageLoggingEnabled() const { return m_stabilizer.voltageLoggingEnabled(); }
+      void enableVoltageLogging(bool enable) { m_stabilizer.enableVoltageLogging(enable); }
+
       inline void frequentInterruptibleWork();
-
-      inline void setProbeIsRetracting(bool probeIsRetracting) {
-        if (m_probeIsRetracting == probeIsRetracting) {
-          return;
-        }
-
-        m_probeIsRetracting = probeIsRetracting;
-
-        // Probe no longer retracting, delay voltage readings a little longer
-        if (!m_probeIsRetracting) {
-          m_ignoreVoltagesUntil = millis() + 100;
-        }
-      }
 
     private:
       ToolBox& m_toolBox;
       const PTopPin& m_pin;
       volatile bool m_enabled = true;
-      volatile bool m_probeIsRetracting = false;
-      volatile unsigned long m_ignoreVoltagesUntil = 0;
+      unsigned long m_unstableStartTime = 0;
 
       unsigned long m_nextCheckAt = 0;
       VoltageTypeStabilizer m_stabilizer;
 
       inline Tool* mapToTool(VoltageType type);
+      inline void checkForInstability(unsigned long time);
   };
 
   Tool* ToolDetector::mapToTool(VoltageType type) {
@@ -82,6 +72,49 @@ namespace toolDetection {
     return nullptr;
   }
 
+  void ToolDetector::checkForInstability(unsigned long time) {
+    // Report if unstable for longer than expected
+    if (m_unstableStartTime == 0) {
+      auto duration = m_stabilizer.currentInstabliltyDuration();
+      if (
+        duration < 1000 ||
+
+        // Don't report voltage warnings if the probe is mounted
+        // NOTE: Voltage reading are unstable when the probe is
+        //       triggered, and while retracted from a triggering
+        //       position. During probing (repeated intentional
+        //       triggering) the instability can last for several
+        //       seconds. Reporting that would be too noisy
+        //       and there is little value in adding more complexity
+        //       to report more detail for the probe
+        m_toolBox.probe.attached()
+      ) {
+        return;
+      }
+
+      m_unstableStartTime = m_stabilizer.currentInstabliltyStartTime();
+      logWarning
+        << F("Voltage type has been unstable for ")
+        << duration
+        << F("ms, voltages = [")
+        << m_stabilizer.voltages()
+        << F("]")
+        << endl;
+
+    } else if (m_stabilizer.isStable()) {
+      // Instability finished, report additional info
+      auto duration = m_unstableStartTime - time;
+      log
+        << F("Voltage type stabilized after ")
+        << duration
+        << F("ms, voltages = [")
+        << m_stabilizer.voltages()
+        << F("]")
+        << endl;
+      m_unstableStartTime = 0;
+    }
+  }
+
   void ToolDetector::frequentInterruptibleWork() {
     // Run periodically
     // Note: Voltage climbs from 0 to 5 over ~60ms,
@@ -95,18 +128,15 @@ namespace toolDetection {
     }
     m_nextCheckAt = now + 20;
 
-    // The probe triggers intermittently while retracting, resulting in
-    // unstable voltage readings. For simplicity, we ignore these readings.
-    if (m_probeIsRetracting || now < m_ignoreVoltagesUntil) {
-      return;
-    }
-
-    // Determine attached tool
+    // Update voltage classification
     const auto sample = m_pin.value();
     m_stabilizer.add(sample.startTime, sample.voltage);
-    const auto detectedTool = mapToTool(m_stabilizer.value());
+
+    // Report if unstable for longer than expected
+    checkForInstability(sample.startTime);
 
     // Update tool
+    const auto detectedTool = mapToTool(m_stabilizer.value());
     if (detectedTool && m_enabled) {
       m_toolBox.setTool(detectedTool);
     }
