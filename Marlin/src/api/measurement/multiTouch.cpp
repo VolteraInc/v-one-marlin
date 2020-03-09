@@ -61,7 +61,8 @@ int multiTouch(
     ++touchesUsed;
 
     // Return early if measurements are stable
-    const auto maxDelta = 0.000625f;
+    const auto epsilon = 0.000001;
+    const auto maxDelta = 0.000625 + epsilon;
     const auto minMatches = 4u;
     const auto maxWindowSize = 6u;
     if (trailingStabilityCheck(releaseStarts, touchesUsed, maxWindowSize, minMatches, maxDelta, result)) {

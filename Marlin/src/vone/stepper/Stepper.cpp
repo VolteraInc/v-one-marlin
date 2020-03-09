@@ -32,34 +32,30 @@ Stepper::Stepper(
     digiPotInit();
 
     //Initialize Dir Pins
-    SET_OUTPUT(X_DIR_PIN);
-    SET_OUTPUT(Y_DIR_PIN);
-    SET_OUTPUT(Z_DIR_PIN);
-    SET_OUTPUT(E_DIR_PIN);
+    // SET_OUTPUT(X_DIR_PIN);
+    // SET_OUTPUT(Y_DIR_PIN);
+    // SET_OUTPUT(Z_DIR_PIN);
+    // SET_OUTPUT(E_DIR_PIN);
 
     // Initialize Enable Pins - steppers default to disabled.
-    SET_OUTPUT(X_ENABLE_PIN);
-    SET_OUTPUT(Y_ENABLE_PIN);
-    SET_OUTPUT(Z_ENABLE_PIN);
-    SET_OUTPUT(E_ENABLE_PIN);
+    // SET_OUTPUT(X_ENABLE_PIN);
+    // SET_OUTPUT(Y_ENABLE_PIN);
+    // SET_OUTPUT(Z_ENABLE_PIN);
+    // SET_OUTPUT(E_ENABLE_PIN);
   #endif
 
   // Initialize Step Pins
   SET_OUTPUT(X_STEP_PIN);
   WRITE(X_STEP_PIN, INVERT_X_STEP_PIN);
-  disable_x();
 
   SET_OUTPUT(Y_STEP_PIN);
   WRITE(Y_STEP_PIN, INVERT_Y_STEP_PIN);
-  disable_y();
 
   SET_OUTPUT(Z_STEP_PIN);
   WRITE(Z_STEP_PIN, INVERT_Z_STEP_PIN);
-  disable_z();
 
   SET_OUTPUT(E_STEP_PIN);
   WRITE(E_STEP_PIN, INVERT_E_STEP_PIN);
-  disable_e();
 
   // waveform generation = 0100 = CTC
   TCCR1B &= ~(1<<WGM13);
@@ -104,6 +100,59 @@ const __FlashStringHelper* Stepper::stopReason() const {
 
 bool Stepper::stopped() const {
   return stopReason() != nullptr;
+}
+
+void Stepper::finishPendingMoves() const {
+  st_synchronize();
+}
+
+void Stepper::enableSkewAdjustment(bool enabled) {
+  plan_enable_skew_adjustment(enabled);
+}
+
+int Stepper::overrideCurrentPosition(float x, float y, float z, float e) {
+  // DEFER: Stepper (or planner) should own current_position
+  //        everything else should access it through Stepper
+  //        (consider renaming to Stepper ot planner.destination)
+  current_position[X_AXIS] = x;
+  current_position[Y_AXIS] = y;
+  current_position[Z_AXIS] = z;
+  current_position[E_AXIS] = e;
+  plan_set_position(x, y, z, e);
+  return 0;
+}
+
+int Stepper::overrideCurrentPosition(float position[4]) {
+  return overrideCurrentPosition(
+    position[X_AXIS],
+    position[Y_AXIS],
+    position[Z_AXIS],
+    position[E_AXIS]
+  );
+}
+
+int Stepper::overrideCurrentPosition(AxisEnum axis, float value) {
+  if (axis == E_AXIS) {
+    current_position[E_AXIS] = value;
+    plan_set_e_position(value);
+    return 0;
+  }
+
+  current_position[axis] = value;
+  return overrideCurrentPosition(current_position);
+}
+
+
+int Stepper::resyncWithStepCount(AxisEnum axis) {
+  return overrideCurrentPosition(axis, st_get_position_mm(axis));
+}
+
+int Stepper::resyncWithStepCount(bool x, bool y, bool z, bool e) {
+  if (x) { current_position[X_AXIS] = st_get_position_mm(X_AXIS); }
+  if (y) { current_position[Y_AXIS] = st_get_position_mm(Y_AXIS); }
+  if (z) { current_position[Z_AXIS] = st_get_position_mm(Z_AXIS); }
+  if (e) { current_position[E_AXIS] = st_get_position_mm(E_AXIS); }
+  return overrideCurrentPosition(current_position);
 }
 
 int Stepper::add(float x, float y, float z, float e, float f) {

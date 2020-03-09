@@ -50,7 +50,7 @@ tools::Drill::Drill(Stepper& stepper, PTopPin& pin)
 
 int tools::Drill::prepareToMoveImpl_Start() {
   return (
-    raise() ||
+    raiseToEndstop() ||
     confirmAttached("prepare drill", *this) ||
     stopRotation()
   );
@@ -62,10 +62,10 @@ int tools::Drill::prepareToMoveImpl_HomeXY() {
 
 int tools::Drill::prepareToMoveImpl_CalibrateXYZ() {
   return (
-    homeZ(*this) || // home Z so we can enter the xy pos with decent precision
+    homeZOnly(*this) || // home Z so we can enter the xy pos with decent precision
     centerTool(*this) ||
-    homeZ(*this) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
-    raise()
+    homeZandEstablishSoftMax(*this) || // re-home Z at a _slightly_ different XY (we've seen a 30um differnce in the measurement)
+    raiseToSoftMax(*this)
   );
 }
 

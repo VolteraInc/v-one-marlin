@@ -34,17 +34,24 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size) {
 // the default values are used whenever there is a change to the data, to prevent
 // wrong data being written to the variables.
 // ALSO:  always make sure the variables in the Store and retrieve sections are in the same order.
+#define EEPROM_VERSION_NONE "000"
 #define EEPROM_VERSION_V10 "V10"
 #define EEPROM_VERSION_V11 "V11"
 #define EEPROM_VERSION_V12 "V12"
-#define EEPROM_VERSION EEPROM_VERSION_V12
+#define EEPROM_VERSION_V13 "V13"
+#define EEPROM_CURRENT_VERSION EEPROM_VERSION_V13
+
+#define SETTINGS_VERSION_NONE "000"
+#define SETTINGS_VERSION_V12 "V12"
+#define CURRENT_SETTINGS_VERSION SETTINGS_VERSION_V12
 
 void Config_StoreCalibration() {
   // Mark the stored settings as invalid
-  char ver[4] = "000";
+  char ver[4] = EEPROM_VERSION_NONE;
   int i = EEPROM_OFFSET_CALIB;
   EEPROM_WRITE_VAR(i, ver);
 
+  // Write settings
   EEPROM_WRITE_VAR(i, product_serial_number);
   EEPROM_WRITE_VAR(i, min_z_x_pos);
   EEPROM_WRITE_VAR(i, min_z_y_pos);;
@@ -56,17 +63,19 @@ void Config_StoreCalibration() {
   EEPROM_WRITE_VAR(i, calib_tan_theta);
   EEPROM_WRITE_VAR(i, calib_x_backlash);
   EEPROM_WRITE_VAR(i, calib_y_backlash);
+  EEPROM_WRITE_VAR(i, z_switch_type);
+  EEPROM_WRITE_VAR(i, xypos_z_pos);
 
-  //We think we wrote everything fine, so validate offsets by writing the eeprom version.
-  char ver2[4]=EEPROM_VERSION;
-  i=EEPROM_OFFSET_CALIB;
-  EEPROM_WRITE_VAR(i,ver2); // validate data
+  // Now write the version, which marks the stored data as valid
+  char ver2[4] = EEPROM_CURRENT_VERSION;
+  i = EEPROM_OFFSET_CALIB;
+  EEPROM_WRITE_VAR(i, ver2);
 
   log << F("Calibration Stored") << endl;
 }
 
 void Config_ClearStoredSettings() {
-  char ver[4]= "000";
+  char ver[4]= SETTINGS_VERSION_NONE;
   int i = EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i, ver);
 
@@ -93,7 +102,7 @@ void Config_StoreSettings() {
   EEPROM_WRITE_VAR(i, max_e_jerk);
 
   // Now write the version, which marks the stored data as valid
-  char ver2[4] = EEPROM_VERSION;
+  char ver2[4] = CURRENT_SETTINGS_VERSION;
   i = EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i, ver2);
 
@@ -139,87 +148,105 @@ void Config_PrintSettings() {
 
 void Config_PrintCalibration() {
   log << F("Serial No:") << endl;
-  log << F(" M504 S:") << product_serial_number
+  log << F("  M504 S") << product_serial_number
       << endl;
 
   log << F("Offsets:") << endl;
-  log << F(" M505 X:") << min_z_x_pos
-      << F(" Y:") << min_z_y_pos
-      << F(" I:") << xypos_x_pos
-      << F(" J:") << xypos_y_pos
+  log << F("  M505 X") << min_z_x_pos
+      << F(" Y") << min_z_y_pos
+      << F(" I") << xypos_x_pos
+      << F(" J") << xypos_y_pos
+      << F(" K") << xypos_z_pos
       << endl;
 
   log << F("Scaling and Skew (A in radians):") << endl;
-  log << F(" M506 X:") << calib_x_scale
-      << F(" Y:") << calib_y_scale
-      << F(" A:") << atan(calib_tan_theta) // We use atan because it preserves the sign.
+  log << F("  M506 X") << calib_x_scale
+      << F(" Y") << calib_y_scale
+      << F(" A") << atan(calib_tan_theta) // We use atan because it preserves the sign.
       << endl;
 
   log << F("Backlash Compensation:") << endl;
-  log << F(" M507 X:") << calib_x_backlash
-      << F(" Y:") << calib_y_backlash
+  log << F("  M507 X") << calib_x_backlash
+      << F(" Y") << calib_y_backlash
+      << endl;
+
+  log << F("Z-Switch Type:") << endl;
+  log << F("  M601 S") << z_switch_type
       << endl;
 }
 
 // Attempts to load from EEPROM, reverts to default if not possible.
 void Config_RetrieveCalibration() {
-    int i = EEPROM_OFFSET_CALIB;
+  int i = EEPROM_OFFSET_CALIB;
 
-    // Read version of stored settings
-    char stored_ver[4];
-    EEPROM_READ_VAR(i, stored_ver);
-    log << F("Reading calibration settings, version ") << stored_ver << endl;
+  // Read version of stored settings
+  char stored_ver[4];
+  EEPROM_READ_VAR(i, stored_ver);
+  log << F("Reading calibration settings, version ") << stored_ver << endl;
 
-    const bool isV10 = strncmp(stored_ver, EEPROM_VERSION_V10, 3) == 0;
-    const bool isV11 = strncmp(stored_ver, EEPROM_VERSION_V11, 3) == 0;
-    const bool isCurrent = strncmp(stored_ver, EEPROM_VERSION, 3) == 0;
-    if (isCurrent || isV11 || isV10) {
-        if (isV10) {
-          EEPROM_READ_VAR_SIZE(i, product_serial_number, 11);
-          // Note: we do not upgrade-and-write the stored values using
-          // the new format, yet. This allows users to revert to older
-          // firmware without loosing settings. Once enough time
-          // has passed we can overwrite.
-          // Also if the user stores settings we'll use the latest format,
-          // to avoid creating special cases in the write code, for what
-          // should be an extremely rare scenario.
-        } else {
-          EEPROM_READ_VAR(i, product_serial_number);
-        }
-        EEPROM_READ_VAR(i,min_z_x_pos);
-        EEPROM_READ_VAR(i,min_z_y_pos);
-        EEPROM_READ_VAR(i,xypos_x_pos);
-        EEPROM_READ_VAR(i,xypos_y_pos);
-        EEPROM_READ_VAR(i,calib_x_scale);
-        EEPROM_READ_VAR(i,calib_y_scale);
-        EEPROM_READ_VAR(i,calib_cos_theta);
-        EEPROM_READ_VAR(i,calib_tan_theta);
-        EEPROM_READ_VAR(i,calib_x_backlash);
-        EEPROM_READ_VAR(i,calib_y_backlash);
-    } else {
-        // Print an error and revert to default.
-        log << F("Error. EEPROM Offsets missing. Is the unit calibrated?") << endl;
-        strcpy(product_serial_number, PRODUCT_SERIAL);
-        min_z_x_pos= MIN_Z_X_POS;
-        min_z_y_pos= MIN_Z_Y_POS;
-        xypos_x_pos= XYPOS_X_POS;
-        xypos_y_pos= XYPOS_Y_POS;
-        calib_x_scale = CALIB_X_SCALE;
-        calib_y_scale = CALIB_Y_SCALE;
-        calib_cos_theta = CALIB_COS_THETA;
-        calib_tan_theta = CALIB_TAN_THETA;
-        calib_x_backlash = CALIB_X_BACKLASH;
-        calib_y_backlash = CALIB_Y_BACKLASH;
-    }
+  const bool isV10 = strncmp(stored_ver, EEPROM_VERSION_V10, 3) == 0;
+  const bool isV11 = strncmp(stored_ver, EEPROM_VERSION_V11, 3) == 0;
+  const bool isV12 = strncmp(stored_ver, EEPROM_VERSION_V12, 3) == 0;
+  const bool isV13 = strncmp(stored_ver, EEPROM_VERSION_V13, 3) == 0;
 
-    // It's possible that our stored backlash is garbage.
-    if (calib_x_backlash < 0.0 || calib_x_backlash > 1.0 || isnan(calib_x_backlash)) {
-      calib_x_backlash = CALIB_X_BACKLASH;
-    }
-    if (calib_y_backlash < 0.0 || calib_y_backlash > 1.0 || isnan(calib_y_backlash)) {
-      calib_y_backlash = CALIB_Y_BACKLASH;
-    }
+  // Bad version, print an error and revert to defaults
+  if (!isV13 && !isV12 && !isV11 && !isV10) {
+    logWarning << F("EEPROM Offsets missing. Is the unit calibrated?") << endl;
+    strcpy(product_serial_number, PRODUCT_SERIAL);
+    min_z_x_pos= MIN_Z_X_POS;
+    min_z_y_pos= MIN_Z_Y_POS;
+    xypos_x_pos= XYPOS_X_POS;
+    xypos_y_pos= XYPOS_Y_POS;
+    xypos_z_pos= XYPOS_Z_POS;
+    calib_x_scale = CALIB_X_SCALE;
+    calib_y_scale = CALIB_Y_SCALE;
+    calib_cos_theta = CALIB_COS_THETA;
+    calib_tan_theta = CALIB_TAN_THETA;
+    calib_x_backlash = CALIB_X_BACKLASH;
+    calib_y_backlash = CALIB_Y_BACKLASH;
+    z_switch_type = -1;
+    return;
+  }
 
+  if (isV10) {
+    EEPROM_READ_VAR_SIZE(i, product_serial_number, 11);
+    // Note: we do not upgrade-and-write the stored values using
+    // the new format, yet. This allows users to revert to older
+    // firmware without loosing settings. Once enough time
+    // has passed we can overwrite.
+    // Also if the user stores settings we'll use the latest format,
+    // to avoid creating special cases in the write code, for what
+    // should be an extremely rare scenario.
+  } else {
+    EEPROM_READ_VAR(i, product_serial_number);
+  }
+
+  EEPROM_READ_VAR(i, min_z_x_pos);
+  EEPROM_READ_VAR(i, min_z_y_pos);
+  EEPROM_READ_VAR(i, xypos_x_pos);
+  EEPROM_READ_VAR(i, xypos_y_pos);
+  EEPROM_READ_VAR(i, calib_x_scale);
+  EEPROM_READ_VAR(i, calib_y_scale);
+  EEPROM_READ_VAR(i, calib_cos_theta);
+  EEPROM_READ_VAR(i, calib_tan_theta);
+  EEPROM_READ_VAR(i, calib_x_backlash);
+  EEPROM_READ_VAR(i, calib_y_backlash);
+
+  if (isV12 || isV11 || isV10) {
+    z_switch_type = -1;
+    xypos_z_pos = XYPOS_Z_POS;
+  } else {
+    EEPROM_READ_VAR(i, z_switch_type);
+    EEPROM_READ_VAR(i, xypos_z_pos);
+  }
+
+  // It's possible that our stored backlash is garbage.
+  if (calib_x_backlash < 0.0 || calib_x_backlash > 1.0 || isnan(calib_x_backlash)) {
+    calib_x_backlash = CALIB_X_BACKLASH;
+  }
+  if (calib_y_backlash < 0.0 || calib_y_backlash > 1.0 || isnan(calib_y_backlash)) {
+    calib_y_backlash = CALIB_Y_BACKLASH;
+  }
 }
 
 void Config_RetrieveSettings() {
@@ -230,7 +257,7 @@ void Config_RetrieveSettings() {
     EEPROM_READ_VAR(i, stored_ver);
 
     // check version
-    if (strncmp(stored_ver, EEPROM_VERSION, 3) == 0) {
+    if (strncmp(stored_ver, CURRENT_SETTINGS_VERSION, 3) == 0) {
       log << F("Reading speed settings, version ") << stored_ver << endl;
 
       EEPROM_READ_VAR(i, axis_steps_per_unit);
@@ -251,9 +278,8 @@ void Config_RetrieveSettings() {
 
       logNotice << F("Using stored values for speed settings") << endl;
     } else {
-      const auto isOldConfig = strncmp(stored_ver, "000", 3) != 0;
+      const auto isOldConfig = strncmp(stored_ver, SETTINGS_VERSION_NONE, 3) != 0;
       if (isOldConfig) {
-        log << F("Reading speed settings, version ") << stored_ver << endl;
         Config_ClearStoredSettings();
       }
 

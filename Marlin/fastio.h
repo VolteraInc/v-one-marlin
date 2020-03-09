@@ -3,9 +3,7 @@
   why double up on these macros? see http://gcc.gnu.org/onlinedocs/cpp/Stringification.html
 */
 
-#ifndef	_FASTIO_ARDUINO_H
-#define	_FASTIO_ARDUINO_H
-
+#pragma once
 #include <avr/io.h>
 
 /*
@@ -4016,5 +4014,3 @@ pins
 #ifndef	DIO0_PIN
 #error pins for this chip not defined in arduino.h! If you write an appropriate pin definition and have this firmware work on your chip, please submit a pull request
 #endif
-
-#endif /* _FASTIO_ARDUINO_H */

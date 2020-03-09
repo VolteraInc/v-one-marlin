@@ -1,6 +1,7 @@
 #include "../api/api.h"
 #include "../api/diagnostics/diagnostics.h"
 #include "../vone/VOne.h"
+#include "../vone/endstops/ScopedEndstopEnable.h"
 #include "../../Marlin.h"
 #include "../utils/rawToVoltage.h"
 
@@ -148,6 +149,20 @@ int process_dcode(int command_code) {
       vone->outputStatus();
       return 0;
 
+
+    // Toggle voltage logging
+    case 3: {
+      auto& toolDetector = vone->toolDetector;
+      toolDetector.enableVoltageLogging(
+        !toolDetector.voltageLoggingEnabled()
+      );
+      log
+        << F("Voltage logging ")
+        << (toolDetector.voltageLoggingEnabled() ? F("ON") : F("OFF"))
+        << endl;
+      return 0;
+    }
+
     case 5: {
       // Stop/resume Stepper
       if (code_seen('E')) {
@@ -176,18 +191,36 @@ int process_dcode(int command_code) {
 
     // Algorithms - Homing
     case 102: {
-      bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
-      if (code_seen('Z')) {
-        if (raise()) {
+      auto& stepper = vone->stepper;
+      auto& currentTool = vone->toolBox.currentTool();
+
+      stepper.resume();
+
+      bool home_all = !code_seen('X') && !code_seen('Y');
+
+      if (raise(currentTool)) {
+        return -1;
+      }
+
+      // Home Z
+      // NOTE: Homing Z requires knowledge of the tool and zSwitch
+      //       (see Probe.cpp). So, we can not call homeZ here.
+
+      // Home Y
+      if (home_all || code_seen('Y')) {
+        if (rawHomeY()) {
           return -1;
         }
       }
-      return rawHome(
-        tool,
-        home_all || code_seen('X'),
-        home_all || code_seen('Y'),
-        home_all || code_seen('Z')
-      );
+
+      // Home X
+      if (home_all || code_seen('X')) {
+        if (rawHomeX()) {
+          return -1;
+        }
+      }
+
+      return 0;
     }
 
     // Algorithms - XY Positioner
@@ -258,6 +291,20 @@ int process_dcode(int command_code) {
         return 0;
       }
 
+      // Temporarily ignore a pin, if given one
+      const Endstop* endstopToIgnore = nullptr;
+      if (code_seen('I')) {
+        const int ignorePin = code_value();
+        endstopToIgnore = vone->endstops.lookup(ignorePin);
+        if (!endstopToIgnore) {
+          log << F("Unknown pin provided (to ignore): ") << ignorePin << endl;
+          return 0;
+        }
+        log << F("Ignoring ") << endstopToIgnore->name << F(" until end of command") << endl;
+      }
+      auto& endstopMonitor = vone->stepper.endstopMonitor;
+      ScopedEndstop_DISABLE scopedEndstopDisable(endstopMonitor, endstopToIgnore);
+
       const int cycles = code_seen('C') ? code_value() : 1;
       for (int i = 0; i < cycles; ++i) {
         float measurement;
@@ -271,6 +318,7 @@ int process_dcode(int command_code) {
           << F(" measurement:") << measurement
           << endl;
       }
+
       return 0;
     }
 
@@ -371,14 +419,15 @@ int process_dcode(int command_code) {
       log << F("General Commands") << endl;
       log << F("  D1 - Toggle logging ON/OFF (default: OFF)") << endl;
       log << F("  D2 - Output status, including switches and stats") << endl;
+      log << F("  D3 - Toggle voltage logging for pogo pins") << endl;
       log << F("  D5 - stepper stop/resume -- D5 E1 to resume, E0 to stop, no args for status") << endl;
       log << F("") << endl;
       log << F("Algorithms") << endl;
       log << F("  D101 - prepare tool to move") << endl;
-      log << F("  D102 - Home -- D102 or D102 XY") << endl;
+      log << F("  D102 - Home X or Y -- D102 or D102 XY") << endl;
       log << F("  D103 - xy positioner -- D103 or D103 M (move-only)") << endl;
       log << F("  D104 - measure probe displacement") << endl;
-      log << F("  D105 - measure at switch -- D105 P62") << endl;
+      log << F("  D105 - measure at switch (I to ignore a pin) -- D105 P62") << endl;
       log << F("  D106 - sample pin values (P=pin C=cycles M=milliseconds between readings) -- D106 P2 C10 M5 ") << endl;
       log << F("  D108 - measure at switch release -- D108 -Z") << endl;
       log << F("  D109 - check location of xy-positioner's back switch -- D109") << endl;

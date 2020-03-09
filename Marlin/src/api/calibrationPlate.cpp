@@ -1,16 +1,23 @@
 #include "api.h"
 
-#include "../../Marlin.h" // Z_AXIS
-#include "../../stepper.h" // enable_calibration_plate()
+// #include "../../Marlin.h" // Z_AXIS
+// #include "../../stepper.h"
 #include "../vone/tools/Probe.h"
 #include "../vone/VOne.h"
+#include "../vone/endstops/ScopedEndstopEnable.h"
 
-static const float MinDisplacement = 0.050f;
-static const float MaxDisplacement = 0.500f;
+const float MinDisplacement = 0.050f;
+const float MaxDisplacement = 0.500f;
 
 static int s_measureCalibrationPlateZ(float& plateZ, float maxTravel) {
-  log << F("Measuring calibration plate") << endl;
   const auto& calibrationPlate = vone->endstops.calibrationPlate;
+  const auto& toolSwitch = vone->endstops.toolSwitch;
+  auto& endstopMonitor = vone->stepper.endstopMonitor;
+
+  // Enable toolswitch, it should not trigger
+  ScopedEndstopEnable scopedEnable(endstopMonitor, toolSwitch);
+
+  log << F("Measuring calibration plate") << endl;
   return (
     measureAtSwitch(calibrationPlate, maxTravel, plateZ) ||
     retractFromSwitch(calibrationPlate)

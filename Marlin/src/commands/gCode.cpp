@@ -150,191 +150,43 @@ int process_gcode(int command_code) {
       return 0;
     }
 
-    // G18: XYPositioner Y1 - Move in +Y until a switch is triggered
-    case 18: {
-      float measurement;
-      if ( xyPositionerTouch(vone->toolBox.currentTool(), vone->endstops.xyPositionerForward, measurement)
-        || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
-        return -1;
-      }
-      protocol << F("xyPositionerMeasurement +Y:") << measurement << endl;
-      return 0;
-    }
-
-    // G19: XYPositioner Y2 - Move in -Y until a switch is triggered
-    case 19: {
-      float measurement;
-      if ( xyPositionerTouch(vone->toolBox.currentTool(), vone->endstops.xyPositionerBack, measurement)
-        || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
-        return -1;
-      }
-      protocol << F("xyPositionerMeasurement -Y:") << measurement << endl;
-      return 0;
-    }
-
-    // G20: XYPositioner X1 - Move in +X until a switch is triggered
-    case 20: {
-      float measurement;
-      if ( xyPositionerTouch(vone->toolBox.currentTool(), vone->endstops.xyPositionerLeft, measurement)
-        || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
-        return -1;
-      }
-      protocol << F("xyPositionerMeasurement +X:") << measurement << endl;
-      return 0;
-    }
-
-    // G21: XYPositioner X2 - Move in -X until switch triggered
-    case 21: {
-      float measurement;
-      if ( xyPositionerTouch(vone->toolBox.currentTool(), vone->endstops.xyPositionerRight, measurement)
-        || moveXY(vone->toolBox.probe, xypos_x_pos, xypos_y_pos)) {
-          return -1;
-      }
-      protocol << F("xyPositionerMeasurement -X:") << measurement << endl;
-      return 0;
-    }
-
-    // G24 - Test the zMIN endstop trigger position
-    // move to impossible position, and report where limit switch triggered.
-    case 24: {
-      auto& endstopMonitor = vone->stepper.endstopMonitor;
-      const auto& zSwitch = vone->endstops.zSwitch;
-      ScopedEndstopEnable scopedEnable(endstopMonitor, zSwitch);
-
-      feedrate = homing_feedrate[Z_AXIS]/(6);
-      // move down until you find the bed
-      float zPosition = -10;
-      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60);
-      st_synchronize();
-
-      // we have to let the planner know where we are right now as it is not where we said to go.
-      current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-      protocol << F("Z: ") << (current_position[Z_AXIS] * 1000) << endl;
-    }
-    return 0;
-
-    // G25 - Test the xAxis endstop trigger position
-    // move to impossible position, and report where limit switch triggered.
-    case 25: {
-      // move down until you find the bed
-      feedrate = homing_feedrate[X_AXIS]/(6);
-      float xPosition = -10;
-      plan_buffer_line(xPosition, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/60);
-      st_synchronize();
-
-      // we have to let the planner know where we are right now as it is not where we said to go.
-      current_position[X_AXIS] = st_get_position_mm(X_AXIS);
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-      protocol << F("X: ") << (current_position[X_AXIS] * 1000) << endl;
-    }
-    return 0;
-
-    // G26 - Test the yAxis endstop trigger position
-    // move to impossible position, and report where limit switch triggered.
-    case 26: {
-      // move down until you find the bed
-      feedrate = homing_feedrate[Y_AXIS]/(6);
-      float yPosition = -10;
-      plan_buffer_line(current_position[X_AXIS], yPosition, current_position[Z_AXIS], current_position[E_AXIS], feedrate/60);
-      st_synchronize();
-
-      // we have to let the planner know where we are right now as it is not where we said to go.
-      current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-      protocol << F("Y: ") << (current_position[Y_AXIS] * 1000) << endl;
-    }
-    return 0;
-
-    // G27 - Test the zMAX trigger position
-    // move to impossible position, and report where limit switch triggered.
-    case 27: {
-      // move down until you find the bed
-      feedrate = homing_feedrate[Z_AXIS]/(6);
-      float zPosition = 30;
-      plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60);
-      st_synchronize();
-
-      // we have to let the planner know where we are right now as it is not where we said to go.
-      current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS],current_position[Z_AXIS] , current_position[E_AXIS]);
-      protocol << F("Z: ") << (current_position[Z_AXIS] * 1000) << endl;
-    }
-    return 0;
-
     // G28 - Home X and Y normally, home Z to the top (legacy code relies on this behavior)
     case 28: {
-      bool home_all = !(code_seen('X') || code_seen('Y') || code_seen('Z'));
+      auto& stepper = vone->stepper;
+      auto& currentTool = vone->toolBox.currentTool();
 
-      vone->toolBox.currentTool().resetPreparations();
-      vone->stepper.resume();
+      currentTool.resetPreparations();
+      stepper.resume();
 
+      bool home_all = !code_seen('X') && !code_seen('Y') && !code_seen('Z');
+
+      // Raise, and home Z to top
       if (home_all || code_seen('Z')) {
         setHomedState(Z_AXIS, 0);
-        raise();
+        raiseToEndstop();
 
         // Set the position so that we can process absolute movements (e.g. G1)
-        current_position[Z_AXIS] = Z_MAX_POS;
-        plan_set_position(
-          current_position[ X_AXIS ],
-          current_position[ Y_AXIS ],
-          current_position[ Z_AXIS ],
-          current_position[ E_AXIS ]
-        );
+        stepper.overrideCurrentPosition(Z_AXIS, Z_MAX_POS);
       }
 
-      if (home_all || code_seen('X')) {
-        setHomedState(X_AXIS, 0);
-      }
-
+      // Home Y
       if (home_all || code_seen('Y')) {
         setHomedState(Y_AXIS, 0);
+        if (rawHomeY()) {
+          return -1;
+        }
       }
 
-      rawHome(
-        vone->toolBox.nullTool,
-        home_all || code_seen('X'),
-        home_all || code_seen('Y'),
-        false
-      );
+      // Home X
+      if (home_all || code_seen('X')) {
+        setHomedState(X_AXIS, 0);
+        if (rawHomeX()) {
+          return -1;
+        }
+      }
 
       return 0;
     }
-
-    // G30 - Single Z Probe, probes bed at current XY location.
-    case 30: {
-      float measurement;
-      if (vone->toolBox.probe.probe(measurement, useDefaultFeedrate, NoRetract, 1, 1)) {
-        return -1;
-      }
-
-      // Output position
-      protocol
-        << F("probeMeasurement")
-        << F(" x:") << current_position[X_AXIS]
-        << F(" y:") << current_position[Y_AXIS]
-        << F(" z:") << measurement
-        << endl;
-      return 0;
-    }
-
-    // G31 - Reports the Probe Offset
-    case 31: {
-      float z_probe_offset;
-      if (measureProbeDisplacement(vone->toolBox.probe, z_probe_offset)) {
-        return -1;
-      }
-      protocol
-        << F("Probe Offset: ")
-        << z_probe_offset * 1000 // TODO: should use formating, not multiplication
-        << endl;
-      return 0;
-    }
-
-    // G33 - Homes the Z axis to the Z-switch.
-    case 33:
-      // Note: it is safer to assume a dispenser is attached than it is to assume a probe is.
-      return homeZ(vone->toolBox.dispenser);
 
     // G90 - Use Absolute Coordinates
     case 90:
@@ -347,20 +199,14 @@ int process_gcode(int command_code) {
       return 0;
 
     // G92 - Set current position to coordinates given
-    case 92:
+    case 92: {
       st_synchronize();
-      for(int8_t i=0; i < NUM_AXIS; i++) {
-        if(code_seen(axis_codes[i])) {
-           if(i == E_AXIS) {
-             current_position[i] = code_value();
-             plan_set_e_position(current_position[E_AXIS]);
-           } else {
-             current_position[i] = code_value();
-             plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-           }
-        }
-      }
-      return 0;
+      const float x = code_seen('X') ? code_value() : current_position[ X_AXIS ];
+      const float y = code_seen('Y') ? code_value() : current_position[ Y_AXIS ];
+      const float z = code_seen('Z') ? code_value() : current_position[ Z_AXIS ];
+      const float e = code_seen('E') ? code_value() : current_position[ E_AXIS ];
+      return vone->stepper.overrideCurrentPosition(x, y, z, e);
+    }
 
     //-------------------------------------------
     // List Commands
@@ -384,10 +230,8 @@ int process_gcode(int command_code) {
       log << F(" G92 - Set current position to coordinates given -- G92 Z3.4") << endl;
       log << F("") << endl;
 
-      log << F("Homing/Probing - deprecated") << endl;
+      log << F("Deprecated") << endl;
       log << F(" G28 - Home axes -- G28 X, G28 XY, G28") << endl;
-      log << F(" G30 - Probe bed at current position") << endl;
-      log << F(" G33 - Home to z-switch") << endl;
       log << F("") << endl;
       return 0;
   }

@@ -11,9 +11,6 @@ namespace toolDetection {
 //       e.g climbing from 3.5 to 5 take about 30ms.
 class VoltageTypeStabilizer {
   public:
-    void add(unsigned long time, float voltage);
-    VoltageType value() { return m_stable ? m_type : VoltageType::Unknown; }
-
     class VoltageLog {
       public:
         struct Sample {
@@ -56,12 +53,31 @@ class VoltageTypeStabilizer {
         friend MarlinSerial& operator<<(MarlinSerial& obj, const VoltageLog& vl);
     };
 
+    void add(unsigned long time, float voltage);
+    VoltageType value() { return m_stable ? m_type : VoltageType::Unknown; }
+
+    bool isStable() { return m_stable; }
+
+    unsigned long currentInstabliltyStartTime() {
+      return m_stable ? 0 : m_instabliltyStartTime;
+    }
+    unsigned long currentInstabliltyDuration() {
+      return m_stable ? 0 : m_voltages.back().time - m_instabliltyStartTime;
+    }
+
+    const VoltageLog& voltages() { return m_voltages; }
+
+    bool voltageLoggingEnabled() const { return m_voltageLoggingEnabled; }
+    void enableVoltageLogging(bool enable) { m_voltageLoggingEnabled = enable; }
+
   private:
     VoltageLog m_voltages;
     bool m_stable = false;
     bool m_stableAndReported = false;
-    unsigned long m_unstableTime = 0;
+    unsigned long m_instabliltyStartTime = 0;
     VoltageType m_type = VoltageType::Unknown;
+
+    volatile bool m_voltageLoggingEnabled = false;
 
     void reportStable(unsigned long time);
     void setStable(bool stable, unsigned long time);

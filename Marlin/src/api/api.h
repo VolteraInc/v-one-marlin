@@ -1,5 +1,6 @@
 #pragma once
 
+#include "homing/homing.h"
 #include "movement/movement.h"
 #include "measurement/measurement.h"
 #include "probing/probing.h"
@@ -10,30 +11,21 @@ namespace tools {
   class Probe;
 }
 
-// Homing
-bool homedXY();
-int homeXY(tools::Tool& tool);
-int homeZ(tools::Tool& tool);
-bool homedZ();
-int primeE(float retract_amount);
-int rawHome(tools::Tool& tool, bool homeX = true, bool homeY = true, bool homeZ = true);
-int getHomedState(AxisEnum axis);
-void setHomedState(AxisEnum axis, int value);
-void sendHomedStatusUpdate();
-int moveToZSwitchXY(tools::Tool& tool);
 
 // XY positioner
-const float defaultXyPositionerCycles = 2;
+extern const float defaultXyPositionerCycles;
 enum HowToMoveToZ { useConfiguredZ, usePlateBackOffForZ, skipMoveInZ };
 int xyPositionerTouch(tools::Tool& tool, const Endstop& endstop, float& measurement);
 int xyPositionerFindCenter(tools::Tool& tool, long cycles, float& centerX, float& centerY, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
 int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
 
 // Calibration plate
+extern const float MinDisplacement;
+extern const float MaxDisplacement;
 int measureProbeDisplacement(tools::Probe& probe, float& displacement);
 
 // Bed
-const float bedBoundsMinY = 40.0f;
+extern const float bedBoundsMinY;
 bool isOverBed(float x, float y);
 bool haveBedHeightMap();
 float bedHeightAt(float x, float y);

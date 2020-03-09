@@ -8,51 +8,13 @@
 #include "../../vone/endstops/Endstop.h"
 #include "../../vone/endstops/ScopedEndstopEnable.h"
 
+static bool s_establishedSoftMaxZ = false;
+
 static const float s_defaultRetractDistance[] = {
   X_HOME_RETRACT_MM,
   Y_HOME_RETRACT_MM,
   Z_HOME_RETRACT_MM
 };
-
-
-int setPositionEOnly(float e) {
-  // Wait for moves to finish before altering the axis
-  st_synchronize();
-
-  current_position[E_AXIS] = e;
-  plan_set_e_position(e);
-  return 0;
-}
-
-int setPosition(float x, float y, float z, float e) {
-  // Wait for moves to finish before altering the axis
-  st_synchronize();
-
-  current_position[X_AXIS] = x;
-  current_position[Y_AXIS] = y;
-  current_position[Z_AXIS] = z;
-  current_position[E_AXIS] = e;
-  plan_set_position(
-    current_position[X_AXIS],
-    current_position[Y_AXIS],
-    current_position[Z_AXIS],
-    current_position[E_AXIS]
-  );
-  return 0;
-}
-
-// Set the planner position based on the stepper's position.
-// Note: Certain movements, like attempting to move past an end-stop, will leave the
-// planner out of sync with the stepper. This function corrects the planner's position.
-static void s_resyncWithStepper(AxisEnum axis) {
-  current_position[axis] = st_get_position_mm(axis);
-  plan_set_position(
-    current_position[X_AXIS],
-    current_position[Y_AXIS],
-    current_position[Z_AXIS],
-    current_position[E_AXIS]
-  );
-}
 
 static float s_maxTravelInAxis(AxisEnum axis, int direction) {
   switch(axis) {
@@ -66,6 +28,22 @@ static float s_maxTravelInAxis(AxisEnum axis, int direction) {
         << endl;
       return 0; // Will likely result in an obvious error, which we can fix
   }
+}
+
+bool establishedSoftMaxZ() {
+  return s_establishedSoftMaxZ;
+}
+
+void establishSoftMaxZ(float value) {
+  log << F("setting maximum Z position to ") << value << endl;
+  s_establishedSoftMaxZ = true;
+  max_pos[Z_AXIS] = value;
+}
+
+void clearSoftMaxZ() {
+  log << F("resetting max z to default") << Z_MAX_POS << endl;
+  s_establishedSoftMaxZ = false;
+  max_pos[Z_AXIS] = Z_MAX_POS;
 }
 
 int outputMovementStatus() {
@@ -114,6 +92,7 @@ int outputMovementStatus() {
     << F(" x:") << min_pos[X_AXIS] << F(" to ") << max_pos[X_AXIS]
     << F(" y:") << min_pos[Y_AXIS] << F(" to ") << max_pos[Y_AXIS]
     << F(" z:") << min_pos[Z_AXIS] << F(" to ") << max_pos[Z_AXIS]
+    << (establishedSoftMaxZ() ? F(" (using soft max z)") : F(" (using default max z)"))
     << endl;
 
   return 0;
@@ -277,8 +256,7 @@ int moveToLimit(AxisEnum axis, int direction, float f, float maxTravel) {
   }
 
   // Resync with stepper position
-  s_resyncWithStepper(axis);
-  return 0;
+  return vone->stepper.resyncWithStepCount(axis);
 }
 
 int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
@@ -326,40 +304,29 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   }
 
   // Resync with stepper position
-  s_resyncWithStepper(axis);
-  return 0;
+  return vone->stepper.resyncWithStepCount(axis);
 }
 
-// DEFER: auto-priming
-// int moveToLimitE(int direction) {
-//   if(logging_enabled) {
-//     log
-//       << F("Move to limit: ")
-//       << (direction < 0 ? '-' : '+')
-//       << 'E'
-//       << endl;
-//   }
-//
-//   // Finish any pending moves (prevents crashes)
-//   st_synchronize();
-//   const auto travel = direction < 0 ? -E_MAX_LENGTH : E_MAX_LENGTH;
-//   if (relativeRawMoveE(travel, homing_feedrate[E_AXIS])) {
-//     return -1;
-//   }
-//
-//   // Confirm we triggered
-//   if (!endstop_triggered(E_AXIS)) {
-//     return -1;
-//   }
-//
-//   // Resync with true position
-//   s_fixPosition(E_AXIS);
-//   return 0;
-// }
 
-
-int raise() {
+int raiseToEndstop() {
   return moveToEndstop(vone->endstops.zMax);
+}
+
+int raiseToSoftMax(tools::Tool& tool) {
+  if (!establishedSoftMaxZ()) {
+    logError
+      << F("Unable to move to raise to max height, current tool has not been homed in z")
+      << endl;
+    return -1;
+  }
+  return moveZ(tool, max_pos[Z_AXIS]);
+}
+
+int raise(tools::Tool& tool) {
+  if (!establishedSoftMaxZ()) {
+    return raiseToEndstop();
+  }
+  return raiseToSoftMax(tool);
 }
 
 int retractFromSwitch(const Endstop& endstop, float retractDistance) {

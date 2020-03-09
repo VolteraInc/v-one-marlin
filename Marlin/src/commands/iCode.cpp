@@ -16,6 +16,7 @@ int process_icode(int command_code) {
     case 1:
       xypos_x_pos = XYPOS_X_POS;
       xypos_y_pos = XYPOS_Y_POS;
+      xypos_z_pos = XYPOS_Z_POS;
       min_z_x_pos = MIN_Z_X_POS;
       min_z_y_pos = MIN_Z_Y_POS;
 
@@ -23,6 +24,7 @@ int process_icode(int command_code) {
         << F("Reset Positions to")
         << F(" xyPositioner_x:") << xypos_x_pos
         << F(" xyPositioner_y:") << xypos_y_pos
+        << F(" xyPositioner_Z:") << xypos_z_pos
         << F(" zSwitch_x:") << min_z_x_pos
         << F(" zSwitch_y:") << min_z_y_pos
         << endl;
@@ -41,6 +43,7 @@ int process_icode(int command_code) {
         << F(" cycles:") << cycles
         << F(" xyPositioner_x:") << xypos_x_pos
         << F(" xyPositioner_y:") << xypos_y_pos
+        << F(" xyPositioner_z:") << xypos_z_pos
         << F(" zSwitch_x:") << min_z_x_pos
         << F(" zSwitch_y:") << min_z_y_pos
         << endl;

@@ -6,11 +6,11 @@
 #include "../pins/PTopPin/PTopPin.h"
 
 
-Endstops::Endstops()
+Endstops::Endstops(ZSwitch::Type zSwitchType)
   : xMin(F("right (x-min)"), X_MIN_PIN, X_AXIS, -1, X_MIN_ENDSTOP_INVERTING)
   , yMin(F("back (y-min)"), Y_MIN_PIN, Y_AXIS, -1, Y_MIN_ENDSTOP_INVERTING)
   , zMax(F("top (z-max)"), Z_MAX_PIN, Z_AXIS, 1, Z_MAX_ENDSTOP_INVERTING)
-  , zSwitch(F("z-switch (z-min)"), Z_MIN_PIN, Z_AXIS, -1, Z_MIN_ENDSTOP_INVERTING)
+  , zSwitch(zSwitchType, F("z-switch (z-min)"), Z_MIN_PIN, Z_AXIS, -1, Z_MIN_ENDSTOP_INVERTING)
   , xyPositionerLeft(F("xy-positioner left (xy-max-x)"), XY_MAX_X_PIN, X_AXIS, 1, XY_MAX_X_ENDSTOP_INVERTING)
   , xyPositionerRight(F("xy-positioner right (xy-min-x)"), XY_MIN_X_PIN, X_AXIS, -1, XY_MIN_X_ENDSTOP_INVERTING)
   , xyPositionerBack(F("xy-positioner back (xy-min-y)"), XY_MIN_Y_PIN, Y_AXIS, -1, XY_MIN_Y_ENDSTOP_INVERTING)
@@ -78,6 +78,32 @@ void Endstops::outputStatus() const {
   log << sp << s_pinStatusToString(READ_PIN(X_LIM)) << sp << xLim.pin << sp << xLim.name << endl;
   log << sp << s_pinStatusToString(READ_PIN(Y_LIM)) << sp << yLim.pin << sp << yLim.name << endl;
   #endif
+}
+
+static void s_reportAndUpdateStatus(
+  const __FlashStringHelper* name,
+  bool& reportedStatus,
+  bool currentStatus
+) {
+  if (reportedStatus != currentStatus) {
+    reportedStatus = currentStatus;
+    log << name << s_pinStatusToString(currentStatus) << endl;
+  }
+}
+
+void Endstops::reportChanges() {
+  s_reportAndUpdateStatus(xMin.name, m_reportedStatus.xMinTriggered, READ_PIN(X_MIN));
+  s_reportAndUpdateStatus(yMin.name, m_reportedStatus.yMinTriggered, READ_PIN(Y_MIN));
+  s_reportAndUpdateStatus(zMax.name, m_reportedStatus.zMaxTriggered, READ_PIN(Z_MAX));
+  s_reportAndUpdateStatus(zSwitch.name, m_reportedStatus.zSwitchTriggered, READ_PIN(Z_MIN));
+
+  s_reportAndUpdateStatus(calibrationPlate.name, m_reportedStatus.calibrationPlateTriggered, READ_PIN(P_BOT));
+  s_reportAndUpdateStatus(toolSwitch.name, m_reportedStatus.toolSwitchTriggered, READ_PIN(P_TOP));
+
+  s_reportAndUpdateStatus(xyPositionerLeft.name, m_reportedStatus.xyPositionerLeftTriggered, READ_PIN(XY_MAX_X));
+  s_reportAndUpdateStatus(xyPositionerRight.name, m_reportedStatus.xyPositionerRightTriggered, READ_PIN(XY_MAX_Y));
+  s_reportAndUpdateStatus(xyPositionerBack.name, m_reportedStatus.xyPositionerBackTriggered, READ_PIN(XY_MIN_Y));
+  s_reportAndUpdateStatus(xyPositionerForward.name, m_reportedStatus.xyPositionerForwardTriggered, READ_PIN(XY_MAX_Y));
 }
 
 // -----------------------------------------------------------------------

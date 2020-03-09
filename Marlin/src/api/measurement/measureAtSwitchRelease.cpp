@@ -1,11 +1,7 @@
 #include "measurement.h"
 
-#include "../../../Marlin.h"
-#include "../../../stepper.h"
-#include "../../../planner.h"
-#include "../../utils/rawToVoltage.h"
 #include "../movement/movement.h"
-
+#include "../../../Marlin.h"
 #include "../../vone/VOne.h"
 
 static unsigned s_countTriggers(const Endstop& endstop, unsigned maxSamples) {
@@ -53,7 +49,7 @@ static int s_measureAtSwitchRelease(const Endstop& endstop, float& releaseStarte
   const auto direction = endstop.direction;
 
   // Finish any pending moves (prevents crashes)
-  st_synchronize();
+  vone->stepper.finishPendingMoves();
 
   // Note: 1mm should be more than enough for a release
   const auto maxTravel = 1u;
@@ -112,16 +108,10 @@ int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, floa
   int returnValue = -1;
 
   // Tell the tool detector that we have started the probing sequence.
-  if (endstop.pin == vone->endstops.toolSwitch.pin) {
-    vone->toolDetector.setProbeIsRetracting(true);
-  }
 
   returnValue = s_measureAtSwitchRelease(endstop, releaseStartedAt, releaseCompletedAt, delay_ms);
 
   // Before returning, tell the tool detector that we have finished the probing sequence.
-  if (endstop.pin == vone->endstops.toolSwitch.pin) {
-    vone->toolDetector.setProbeIsRetracting(false);
-  }
 
   return returnValue;
 }

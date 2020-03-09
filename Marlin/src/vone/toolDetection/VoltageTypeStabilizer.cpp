@@ -60,21 +60,18 @@ void toolDetection::VoltageTypeStabilizer::reportStable(unsigned long time) {
   }
 
   m_stableAndReported = true;
-  auto delta = time - m_unstableTime;
 
-  log
-    << F("Voltage type stabilized to ")
-    << toString(m_type)
-    << F(" after ")
-    << delta
-    << F("ms, voltages = [")
-    << m_voltages
-    << F("]")
-    << endl;
-
-  // Warn if unstable for longer than expected
-  if (delta > 1000) {
-    logWarning << F("Voltage type was unstable for ") << delta << F("ms") << endl;
+  if (m_voltageLoggingEnabled) {
+    auto delta = time - m_instabliltyStartTime;
+    log
+      << F("Voltage type stabilized to ")
+      << toString(m_type)
+      << F(" after ")
+      << delta
+      << F("ms, voltages = [")
+      << m_voltages
+      << F("]")
+      << endl;
   }
 }
 
@@ -88,7 +85,7 @@ void toolDetection::VoltageTypeStabilizer::setStable(bool stable, unsigned long 
   // Record time when we become unstable
   // Note: we do this so we can report lengthy periods of instability
   if (!m_stable) {
-    m_unstableTime = time;
+    m_instabliltyStartTime = time;
     m_stableAndReported = false;
   }
 }
@@ -154,8 +151,8 @@ void toolDetection::VoltageTypeStabilizer::add(unsigned long time, float voltage
   }
 
   // Initialize unstable time based on first sample
-  if (m_unstableTime == 0) {
-    m_unstableTime = time;
+  if (m_instabliltyStartTime == 0) {
+    m_instabliltyStartTime = time;
   }
 
   // Collect sample

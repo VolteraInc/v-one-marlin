@@ -162,6 +162,43 @@ int process_vcode(int command_code) {
       return homeXY(currentTool);
 
     //-------------------------------------------
+    // Locations / Positions
+
+    // V51: Raise to soft max
+    // NOTE: does not hit limit switches, but will prepare the tool if needed
+    case 51: {
+      return (
+        currentTool.prepareToMove() ||
+        raiseToSoftMax(currentTool)
+      );
+    }
+
+    // V52: Park - Raise to soft max then goto 0,0
+    // NOTE: does not hit limit switches, but will prepare the tool if needed
+    case 52: {
+      return (
+        currentTool.prepareToMove() ||
+        raiseToSoftMax(currentTool) ||
+        moveXY(currentTool, 0, 0)
+      );
+    }
+
+    // V53: Goto zSwitch position
+    case 53:
+      return (
+        currentTool.prepareToMove() ||
+        moveToZSwitchXY(currentTool)
+      );
+
+    // V54: Goto xy-positioner
+    case 54:
+      return (
+        currentTool.prepareToMove() ||
+        moveToXyPositioner(currentTool)
+      );
+
+
+    //-------------------------------------------
     // Tool status
     case 100: {
       const auto& tb = vone->toolBox;
@@ -318,6 +355,13 @@ int process_vcode(int command_code) {
       log << F("  V2 - Relative Move/Dispense -- V2 X5 Y3 Z-1 E2 F6000") << endl;
       log << F("  V3 - Move until limit switch triggers -- V3 -X -Y -Z F6000") << endl;
       log << F("  V5 - raise, home XY, and reset tool preparations -- V5") << endl;
+      log << endl;
+
+      log << F("Location Commands") << endl;
+      log << F("  V51 - raise to soft max (does not hit endstop)") << endl;
+      log << F("  V52 - raise to soft max then go to 0,0") << endl;
+      log << F("  V53 - go to the z-switch") << endl;
+      log << F("  V54 - go to the xy-positioner") << endl;
       log << endl;
 
       log << F("Tool Commands") << endl;

@@ -6,17 +6,24 @@ VOne::VOne(
   int ptopDigitalPin,
   int ptopAnalogPin,
   int bedTemperaturePin,
-  int heaterDigitalPin
+  int heaterDigitalPin,
+  ZSwitch::Type zSwitchType
 )
   : pins(ptopDigitalPin, ptopAnalogPin, bedTemperaturePin, heaterDigitalPin)
-
+  , endstops(zSwitchType)
   , adc(pins.ptop, pins.bedTemperature)
   , heater(pins.heater, pins.bedTemperature)
 
   , m_endstopMonitor(endstops)
   , stepper(m_endstopMonitor)
 
-  , toolBox(stepper, pins.ptop, endstops.toolSwitch)
+  , toolBox(
+      stepper,
+      pins.ptop,
+      endstops.toolSwitch,
+      endstops.zSwitch
+    )
+
   , toolDetector(toolBox, pins.ptop)
 
   , m_memoryUsage(F("free memory"), F(" bytes"), 8192)
@@ -86,13 +93,16 @@ void VOne::frequentInterruptibleWork() {
 
 void VOne::outputStatus() {
   m_memoryUsage.outputStatus();
-  endstops.outputStatus();
+  motors.outputStatus();
   stepper.outputStatus();
+  endstops.outputStatus();
 }
 
 void VOne::periodicReport() {
   m_memoryUsage.reportIfChanged();
-  vone->stepper.periodicReport();
+  stepper.periodicReport();
+  motors.reportChanges();
+  endstops.reportChanges();
 }
 
 // See stepper.cpp for TIMER1_COMPA_vect

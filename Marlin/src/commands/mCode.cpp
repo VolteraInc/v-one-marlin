@@ -19,10 +19,7 @@ int process_mcode(int command_code) {
   switch(command_code) {
     // M17 - Enable/Power all stepper motors
     case 17:
-      enable_x();
-      enable_y();
-      enable_z();
-      enable_e();
+      vone->motors.on();
       return 0;
 
     // M18 - Release motors, or set inactivity timeout
@@ -35,10 +32,10 @@ int process_mcode(int command_code) {
         st_synchronize();
         vone->toolBox.currentTool().resetPreparations();
         bool disableAll = !(code_seen('X') || code_seen('Y') || code_seen('Z') || code_seen('E'));
-        if (disableAll || code_seen('X')) disable_x();
-        if (disableAll || code_seen('Y')) disable_y();
-        if (disableAll || code_seen('Z')) disable_z();
-        if (disableAll || code_seen('E')) disable_e();
+        if (disableAll || code_seen('X')) vone->motors.xAxis.off();
+        if (disableAll || code_seen('Y')) vone->motors.yAxis.off();
+        if (disableAll || code_seen('Z')) vone->motors.zAxis.off();
+        if (disableAll || code_seen('E')) vone->motors.eAxis.off();
       }
       return 0;
 
@@ -102,13 +99,13 @@ int process_mcode(int command_code) {
 
     case 112:
       quickStop();
-      // We can optionally reset the planner to the stepper counts in some axes
-      if (code_seen(axis_codes[X_AXIS])) current_position[X_AXIS] = st_get_position_mm(X_AXIS);
-      if (code_seen(axis_codes[Y_AXIS])) current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
-      if (code_seen(axis_codes[Z_AXIS])) current_position[Z_AXIS] = st_get_position_mm(Z_AXIS);
-      if (code_seen(axis_codes[E_AXIS])) current_position[E_AXIS] = st_get_position_mm(E_AXIS);
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-      return 0;
+      // Reset the planner to the stepper counts in some axes
+      return vone->stepper.resyncWithStepCount(
+        code_seen('X'),
+        code_seen('Y'),
+        code_seen('Z'),
+        code_seen('E')
+      );
 
     // M114 - Output current position to serial port
     case 114:
@@ -148,15 +145,15 @@ int process_mcode(int command_code) {
     // M122 - We let the planner know where we are
     case 122: {
       st_synchronize();
+      bool hasX = code_seen('X');
+      bool hasY = code_seen('Y');
+      bool hasE = code_seen('E');
+
       // If no axes are specified, we reset the Z axis (for compat with the old software)
-      // Otherwise, we reset the specified axes
-      bool z_default = !((code_seen(axis_codes[X_AXIS])) || (code_seen(axis_codes[Y_AXIS])) || (code_seen(axis_codes[Z_AXIS]))|| (code_seen(axis_codes[E_AXIS])));
-      if (code_seen(axis_codes[X_AXIS])) current_position[X_AXIS] = st_get_position_mm(X_AXIS);
-      if (code_seen(axis_codes[Y_AXIS])) current_position[Y_AXIS] = st_get_position_mm(Y_AXIS);
-      if (code_seen(axis_codes[Z_AXIS]) || z_default) current_position[Z_AXIS]  = st_get_position_mm(Z_AXIS);
-      if (code_seen(axis_codes[E_AXIS])) current_position[E_AXIS] = st_get_position_mm(E_AXIS);
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-      return 0;
+      // NOTE: this 'old software' may no longer exists
+      bool zDefault = !hasX && !hasY && !hasE;
+      bool hasZ = zDefault || code_seen('Z');
+      return vone->stepper.resyncWithStepCount(hasX, hasY, hasZ, hasE);
     }
 
     // M123 - set software endstop(s) to current position - specify axis/es and T for top (max) and B for bottom (min). These are reset upon homing
@@ -347,12 +344,13 @@ int process_mcode(int command_code) {
       return 0;
     }
 
-    // M505 - Store No. Min X, Min Y, XY Positioner locations.
+    // M505 - Store z-switch and XY-Positioner locations
     case 505: {
       if(code_seen('X')) min_z_x_pos = code_value();
       if(code_seen('Y')) min_z_y_pos = code_value();
       if(code_seen('I')) xypos_x_pos = code_value();
       if(code_seen('J')) xypos_y_pos = code_value();
+      if(code_seen('K')) xypos_z_pos = code_value();
       Config_StoreCalibration();
       return 0;
     }
@@ -383,6 +381,27 @@ int process_mcode(int command_code) {
       Config_PrintCalibration();
       return 0;
     }
+
+    // 600 - Infield Upgrades
+    // -------------------
+
+    // M601 - z-switch replacement
+    case 601:
+      if (code_seen('S')) {
+        auto zSwitchType = ZSwitch::toType(
+          static_cast<int>(code_value_long())
+        );
+
+        log
+          << F("Setting Z-Switch type to ")
+          << ZSwitch::typeName(zSwitchType)
+          << F(", reboot for change to take effect")
+          << endl;
+
+        z_switch_type = static_cast<int>(zSwitchType);
+        Config_StoreCalibration();
+      }
+      return 0;
 
 #ifdef TRINAMIC_MOTORS
 
@@ -517,6 +536,11 @@ int process_mcode(int command_code) {
       log << F("  M502 - revert to factory defaults (still need to write to EEPROM)") << endl;
       log << F("  M503 - output configuration") << endl;
       log << endl;
+
+      log << F("Infield Upgrades") << endl;
+      log << F("  M601 - z-switch replacement (S0 original, S1 stronger spring, S-1 use default) -- M601 S1") << endl;
+      log << endl;
+
 
       log << F("Internal use") << endl;
       log << F("  M92  - Set axis steps per unit - same syntax as G92") << endl;

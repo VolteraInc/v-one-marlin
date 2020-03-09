@@ -3,13 +3,19 @@
 #include "Tool.h"
 
 class Endstop;
+class ZSwitch;
 class PTopPin;
 
 namespace tools {
 
 class Probe : public Tool {
   public:
-    Probe(Stepper& stepper, PTopPin& pin, const Endstop& toolSwitch);
+    Probe(
+      Stepper& stepper,
+      PTopPin& pin,
+      const Endstop& toolSwitch,
+      const ZSwitch& zSwitch
+    );
 
     // Retract constants
     // Note: Retract enough to ensure we don't crash when
@@ -47,6 +53,7 @@ class Probe : public Tool {
     float m_probeDisplacement = 0.0f;
     PTopPin& m_pin;
     const Endstop& m_toolSwitch;
+    const ZSwitch& m_zSwitch;
     bool m_heightSafetyEnabled = false;
     unsigned int m_numHeightSamples = 0u;
     float m_maxSampledHeight = -INFINITY;

@@ -1,13 +1,13 @@
 #pragma once
 
+#include "Point2d.h"
+#include "Point3d.h"
+#include "../../../Axis.h"
+
 class Endstop;
 namespace tools {
   class Tool;
 }
-
-#include "Point2d.h"
-#include "Point3d.h"
-#include "../../../Axis.h"
 
 const int useDefaultFeedrate = -1;
 const float useDefaultMaxTravel = 9999.9f;
@@ -29,13 +29,16 @@ int relativeMove(tools::Tool& tool, float x, float y, float z, float e, float f 
 // Move until switch hit
 int moveToLimit(AxisEnum axis, int direction, float f = useDefaultFeedrate, float maxTravel = useDefaultMaxTravel);
 int moveToEndstop(const Endstop& endstop, float f = useDefaultFeedrate, float maxTravel = useDefaultMaxTravel);
-int raise();
 
-// Set planner position
-int setPositionEOnly(float e);
-int setPosition(float x, float y, float z, float e);
+// Raise
+// NOTE: We believe that raising to the zMax endstop can
+//       introduce a small amount to error into the z-axis
+//       so raiseToSoftMax should be used instead
+int raiseToSoftMax(tools::Tool& tool);
+int raise(tools::Tool& tool);
+int raiseToEndstop();
 
-
+// Retract
 int retractFromSwitch(const Endstop& endstop, float retractDistance = useDefaultRetractDistance);
 
 
@@ -60,3 +63,8 @@ int confirmAttached(const char* context, tools::Tool& tool);
 extern float axis_steps_per_unit[4];
 float stepsToMillimeters(long step, AxisEnum axis);
 long millimetersToSteps(float mm, AxisEnum axis);
+
+// Soft max Z
+void establishSoftMaxZ(float value);
+bool establishedSoftMaxZ();
+void clearSoftMaxZ();

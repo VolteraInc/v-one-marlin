@@ -2,4 +2,8 @@
 
 bool logging_enabled = false;
 const char endl[] = "\n";
-bool logging::inISR = false;
+
+namespace logging {
+  bool inISR = false;
+  LogSuppesser suppressLog;
+}

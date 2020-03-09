@@ -12,6 +12,8 @@
 #include "tools/ToolBox.h"
 #include "toolDetection/ToolDetector.h"
 
+#include "motors/Motors.h"
+
 // DEFER: ideally these would live in the cpp file,
 //        but slicing up stepper_isr into h-files is
 //        too much work for right now
@@ -25,13 +27,15 @@ class VOne {
       int ptopDigitalPin,
       int ptopAnalogPin,
       int bedTemperatureAnalogPin,
-      int heaterDigitalPin
+      int heaterDigitalPin,
+      ZSwitch::Type zSwitchType
     );
 
     PinSet pins;
     Endstops endstops;
     adc::AnalogDigitalConverter adc;
     Heater heater;
+    Motors motors;
 
   private:
     EndstopMonitor m_endstopMonitor;

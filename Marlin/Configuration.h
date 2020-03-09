@@ -19,7 +19,6 @@
 
 #else
   #define TRINAMIC_MOTORS 1
-  #define USE_TRINAMIC_STALL_DETECTION_FOR_HOMING 1
   #define FIRMARE_VARIANT_SUFFIX "_experimental"
   #define checkForFirmwareVariantMismatch(batchNumber) (false)
 

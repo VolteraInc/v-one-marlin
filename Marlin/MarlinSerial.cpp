@@ -45,12 +45,10 @@ struct ring_buffer_r {
   };
 #endif
 
-#if UART_PRESENT(SERIAL_PORT)
-  ring_buffer_r rx_buffer = { { 0 }, 0, 0 };
-  #if TX_BUFFER_SIZE > 0
-    ring_buffer_t tx_buffer = { { 0 }, 0, 0 };
-    static bool _written;
-  #endif
+ring_buffer_r rx_buffer = { { 0 }, 0, 0 };
+#if TX_BUFFER_SIZE > 0
+  ring_buffer_t tx_buffer = { { 0 }, 0, 0 };
+  static bool _written;
 #endif
 
 #if ENABLED(SERIAL_XON_XOFF)

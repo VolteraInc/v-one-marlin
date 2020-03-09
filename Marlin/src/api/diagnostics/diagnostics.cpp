@@ -2,8 +2,6 @@
 #include "../../api/api.h"
 #include "../../api/diagnostics/diagnostics.h"
 
-#include "../../../planner.h"
-
 #include "../../vone/tools/NullTool.h"
 #include "../../vone/tools/Probe.h"
 
@@ -15,7 +13,7 @@ static int s_beginDiagnotic(tools::Tool& tool) {
     tool.prepareToMove(tools::PrepareToMove::Option::startOnly) ||
 
     // Ensure the tool is not pressing the z-switch
-    raise() ||
+    raise(tool) ||
 
     // Give the user time to release the z-switch
     // Note: If the z-switch is still triggered after
@@ -41,7 +39,7 @@ static int s_handleResult(tools::Tool& tool, int result) {
     // Success, pulse leds and go to finished position
     // (trying to make it obvious that we are done)
     log << F("Diagnostic procedure completed successfully") << endl;
-    raise();
+    raise(tool);
     moveXY(tool, bedCenterX, max_pos[Y_AXIS]);
 
     overrideLeds(255, 255, 255, 3); // pulse white (which also helps confirm LEDs have all 3 colors)

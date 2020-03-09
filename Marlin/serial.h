@@ -9,7 +9,14 @@ extern bool logging_enabled;
 extern const char endl[];
 
 namespace logging {
+  class LogSuppesser: public MarlinSerial {};
+  template <typename T>
+  inline LogSuppesser& operator<<(LogSuppesser &logger, T& ) {
+    return logger;
+  }
+
   extern bool inISR;
+  extern LogSuppesser suppressLog;
 
   inline const __FlashStringHelper* isrPrefix() {
     if (inISR) {
@@ -80,6 +87,12 @@ inline MarlinSerial& log() {
   return MYSERIAL << logging::isrPrefix() << F("log: ");
 }
 #define log log()
+
+inline MarlinSerial& logDebug() {
+  return logging_enabled ? log : logging::suppressLog;
+}
+#define logDebug logDebug()
+
 
 inline MarlinSerial& logNotice() {
   return MYSERIAL << logging::isrPrefix() << F("notice: ");

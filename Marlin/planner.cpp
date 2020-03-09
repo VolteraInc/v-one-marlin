@@ -57,6 +57,7 @@
 #include "src/compensationAlgorithms/api.h"
 #include "src/api/movement/movement.h" // mm to steps
 #include "macros.h"
+#include "src/vone/VOne.h"
 
 //===========================================================================
 //=============================public variables ============================
@@ -507,10 +508,10 @@ void plan_buffer_line(float x, float y, float z, float e, float feed_rate)
   }
 
   // enable active axes
-  if (block->steps_x != 0) { enable_x(); }
-  if (block->steps_y != 0) { enable_y(); }
-  if (block->steps_z != 0) { enable_z(); }
-  if (block->steps_e != 0) { enable_e(); }
+  if (block->steps_x != 0) { vone->motors.xAxis.on(); }
+  if (block->steps_y != 0) { vone->motors.yAxis.on(); }
+  if (block->steps_z != 0) { vone->motors.zAxis.on(); }
+  if (block->steps_e != 0) { vone->motors.eAxis.on(); }
 
   if (block->steps_e == 0) {
     if (feed_rate < mintravelfeedrate) {

@@ -32,9 +32,6 @@
 #include <stdlib.h>
 
 #include "version.h"
-#include "macros.h"
-#include "planner.h"
-#include "stepper.h"
 #include "temperature_profile.h"
 #include "ConfigurationStore.h"
 
@@ -67,7 +64,9 @@ float min_z_x_pos;
 float min_z_y_pos;
 float xypos_x_pos;
 float xypos_y_pos;
+float xypos_z_pos;
 char product_serial_number[15];
+int z_switch_type = -1;
 
 //===========================================================================
 
@@ -102,6 +101,7 @@ void setup() {
 
   // Confirm that firmware is compatible with hardware
   auto batchNumber = strtol(&product_serial_number[3], nullptr, 10);
+  log << F("batchNumber is ") << batchNumber << endl;
   if (checkForFirmwareVariantMismatch(batchNumber)) {
     // Note: Making this an error because it should never happen
     //       if it does, it's worth making some noise
@@ -118,6 +118,14 @@ void setup() {
     while(1);
   }
 
+  const auto configuredZSwitchType = ZSwitch::toType(z_switch_type);
+  const auto zSwitchType = ZSwitch::determineType(
+    configuredZSwitchType,
+    batchNumber
+  );
+  log << F("z-switch config: ") << ZSwitch::typeName(configuredZSwitchType) << endl;
+  log << F("using z-switch: ") << ZSwitch::typeName(zSwitchType) << endl;
+
   // Preallocate space for the VOne then use
   // placement new to contruct the object
   static byte voneBuffer[sizeof(VOne)];
@@ -125,7 +133,8 @@ void setup() {
     P_TOP_PIN,
     P_TOP_ANALOG_PIN,
     TEMP_BED_PIN,
-    HEATER_BED_PIN
+    HEATER_BED_PIN,
+    zSwitchType
   );
 
   sendHomedStatusUpdate();

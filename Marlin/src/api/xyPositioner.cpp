@@ -7,16 +7,25 @@
 #include "../vone/endstops/Endstop.h"
 #include "../vone/endstops/ScopedEndstopEnable.h"
 
+const float defaultXyPositionerCycles = 2;
+
 static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
   switch (howToMoveToZ) {
     case useConfiguredZ:
-      return moveZ(tool, XYPOS_Z_POS);
+      return moveZ(tool, xypos_z_pos);
 
-    case usePlateBackOffForZ:
+    case usePlateBackOffForZ: {
+      const auto& calibrationPlate = vone->endstops.calibrationPlate;
       return (
-        moveToLimit(Z_AXIS, -1) ||      // Lower in Z (probe switch should trigger)
-        relativeMove(tool, 0, 0, 2, 0)  // Retract slightly
+        // Lower until plate triggers
+        moveToEndstop(calibrationPlate) ||
+
+        // Retract .5mm above surface
+        // Note: probe displacement can be ignored becuase the
+        //       calibration plate triggers before the probe
+        relativeMove(tool, 0, 0, .5, 0)
       );
+    }
 
     case skipMoveInZ:
       return 0;
@@ -34,7 +43,7 @@ int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
   auto const dx = abs(xypos_x_pos - current_position[X_AXIS]);
   auto const dy = abs(xypos_y_pos - current_position[Y_AXIS]);
   if (dx > 1 || dy > 1) {
-    if (raise()) {
+    if (raise(tool)) {
       return -1;
     }
   }
