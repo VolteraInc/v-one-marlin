@@ -40,8 +40,11 @@
 
 #define XYPOS_Z_POS       (-4.0)
 
-//Default Serial number for the Voltera V-One
-#define PRODUCT_SERIAL    ("V1-00-0000-120")
+// Default Serial number for the Voltera V-One
+// Note: Use a recent batch number so that deduced properties are more likely
+//       to be correct. As of this writing the most recent change was that
+//       batch7 has a stronger z-switch
+#define PRODUCT_SERIAL    ("V1-07-0000-120")
 
 
 //===========================================================================
