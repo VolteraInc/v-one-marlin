@@ -24,7 +24,7 @@ static int s_beginDiagnotic(tools::Tool& tool) {
   }
 
   if (READ_PIN(Z_MIN)) {
-    logError << F("Unable to complete diagnostic procedure, Z-switch reported as 'triggered' after raiseing carriage") << endl;
+    logError << F("Unable to complete diagnostic procedure, Z-switch reported as 'triggered' after raising carriage") << endl;
     return -1;
   }
 
