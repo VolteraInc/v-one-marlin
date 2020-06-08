@@ -158,7 +158,15 @@ void manage_heating_profile() {
     }
 
     // Check if the temperature has not moved at all during heating. Could indicate a loose/fallen thermistor
-    if (now >= (profile.startTime + seconds(10)) && (target > current) && abs(current - profile.changeTemperature) < 2) {
+    // Note: Give the heater 20s to exceed the temp it was at when this step of the profile began.
+    //       10s was not enough. This delay gives the heater time to overcome thermal inertia
+    //       if it was toggled to an off state (or cooling). Also the changeTemperature may be
+    //       higher than expected if we are were on a down-swing when we entered this step. So,
+    //       even if we have time to overcome thermal inertia we stil need to climb back to that
+    //       point -- that's why 10s was not enough.
+    // DEFER: it's possible that significant cooling would result in more thermal inertia and a
+    //        higher changeTemperature. 20s may not be enough to overcome that.
+    if (now >= (profile.startTime + seconds(20)) && (target > current) && abs(current - profile.changeTemperature) < 2) {
       logError
         << F("Temperature change not detected. ")
         << F("Current: ") << current << F("C")
