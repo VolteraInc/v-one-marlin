@@ -164,6 +164,12 @@ void manage_heating_profile() {
     //       higher than expected if we are were on a down-swing when we entered this step. So,
     //       even if we have time to overcome thermal inertia we stil need to climb back to that
     //       point -- that's why 10s was not enough.
+    //
+    // !!! DO NOT INCREASE PAST 20s !!!
+    // If increased to 30s, we may heat the bed over 60deg, while reporting a normal temperature
+    // This increased the risk of a user getting hurt. If are tempted to change this value again
+    // we should instead change the how we test for this failure.
+    //
     // DEFER: it's possible that significant cooling would result in more thermal inertia and a
     //        higher changeTemperature. 20s may not be enough to overcome that.
     if (now >= (profile.startTime + seconds(20)) && (target > current) && abs(current - profile.changeTemperature) < 2) {
