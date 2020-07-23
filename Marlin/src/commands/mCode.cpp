@@ -69,12 +69,12 @@ int process_mcode(int command_code) {
       }
       return 0;
 
-    // M93 - Manually control LEDs. Set the RGB LEDs using R[1-255] V[1-255] B[1-255] (uses V instead of G for green)
+    // M93 - Manually control LEDs.
+    //       M93 R[1-255] G[1-255] B[1-255]
+    //       Call with no arguments to release LEDs
     case 93:
-      // Syntax is M93 R:nnn V:nnn B:nnn (0 <= nnn <= 255)
-      // (Call with no arguments to release LEDs)
-      // Note: 'G' _use_ to break the gcode parser, so we accepted V (as in vert).
-      // we continue to support V for backkwards compat.
+      // Note: We accept V because long ago using G would break command parsing,
+      //       we continue to support V (as in vert) for backkwards compatability.
       return overrideLeds(
         code_seen('R') ? constrain(code_value(), 0, 255) : 0,
         (code_seen('G') || code_seen('V')) ? constrain(code_value(), 0, 255) : 0,
@@ -508,7 +508,7 @@ int process_mcode(int command_code) {
 
       log << F("Utilities") << endl;
       log << F("  M400 - Finish all moves") << endl;
-      log << F("  M93  - Manually control LEDs. Set the RGB LEDs using R[1-255] V[1-255] B[1-255] (uses V instead of G for green)") << endl;
+      log << F("  M93  - Manually control LEDs. Set the RGB LEDs using R[1-255] G[1-255] B[1-255]") << endl;
       log << endl;
 
       log << F("Temperature") << endl;
