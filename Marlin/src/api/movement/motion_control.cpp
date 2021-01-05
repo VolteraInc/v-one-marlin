@@ -21,7 +21,7 @@
 
 #include "./motion_control.h"
 #include "../../../Marlin.h" // X_AXIS, etc.
-#include "../../vone/tools/tool.h"
+#include "../../vone/tools/Tool.h"
 
 // The arc is approximated by generating a huge number of tiny, linear segments. The length of each
 // segment is configured in settings.mm_per_arc_segment.
