@@ -95,19 +95,8 @@ static unsigned long s_stabilityThreshold(VoltageType type) {
   switch (type) {
     // NoToolMounted is already high on the voltage scale
     // no need to collect multiple samples to disambiguate
-    // Note: we don't want to delay classifying as NoToolMounted
-    //       (unless we have too) becuase detach detection is
-    //       more important than reducing noisy logging
     case VoltageType::NoToolMounted:
       return 0;
-
-    // If you are unlucky you can see 60ms of Unknowns
-    // This happens if the reading happen to fall between valid ranges
-    // while climbing toward a stable reading. So to avoid classifying
-    // in that case we want this value slightly larger than the time
-    // it takes to climb (see note 1 below)
-    case VoltageType::Unknown:
-      return 100;
 
     // Notes:
     //     1) General: it takes about 60ms to climb from 'Triggered' to 'Not Mounted'
@@ -120,12 +109,29 @@ static unsigned long s_stabilityThreshold(VoltageType type) {
     //        (e.g. when the probe is triggered manually) we will wait for a
     //        few samples before classifying as ProbeTriggered
     //
+    //     3) Increased from 50 to 200ms because we have seen probes report
+    //        "DrillMounted" when the threshold is 50ms. It may be necessary
+    //        increase the value further.
+    //
+    //     4) There is no strong need to detect tool change extremely fast.
+    //        Originally, we wanted to detect detaches quickly for "Drill
+    //        Safety", but that logic is flawed since the printer can not
+    //        stop the drill if it is detached. Moreover, detach detection
+    //        should related to 'NoToolMounted' not these values.
+    //
+    //     5) If you are unlucky, you can see 60ms of Unknowns
+    //        This happens if the reading happen to fall between valid ranges
+    //        while climbing toward a stable reading. So to avoid classifying
+    //        in that case we want this value slightly larger than the time
+    //        it takes to climb (see note 1). We increase it further base on
+    //        note 4.
     case VoltageType::ProbeTriggered:
     case VoltageType::ProbeMounted:
     case VoltageType::SmartDispenserMounted:
     case VoltageType::DrillMounted:
+    case VoltageType::Unknown:
     default:
-      return 50;
+      return 200;
   }
 }
 
