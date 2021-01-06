@@ -93,11 +93,6 @@ void toolDetection::VoltageTypeStabilizer::setStable(bool stable, unsigned long 
 // Returns the amount of time needed to treat voltage as stable.
 static unsigned long s_stabilityThreshold(VoltageType type) {
   switch (type) {
-    // NoToolMounted is already high on the voltage scale
-    // no need to collect multiple samples to disambiguate
-    case VoltageType::NoToolMounted:
-      return 0;
-
     // Notes:
     //     1) General: it takes about 60ms to climb from 'Triggered' to 'Not Mounted'
     //       (i.e. the entire range). So, seeing the same type for 50ms is
@@ -125,11 +120,20 @@ static unsigned long s_stabilityThreshold(VoltageType type) {
     //        in that case we want this value slightly larger than the time
     //        it takes to climb (see note 1). We increase it further base on
     //        note 4.
+    //
+    //     6) NoToolMounted is fairly high on the voltage scale so there
+    //        wasn't a strong need to collect multiple samples to disambiguate
+    //        BUT we have seen the smart dispenser report 'Not Mounted' voltages
+    //        after the e-axis is changed (perhaps due to the impact of the gears).
+    //        So, we now use a non-zero threshold for NoToolMounted too, and it might
+    //        as well use the same value as the other voltage classes.
+    //
     case VoltageType::ProbeTriggered:
     case VoltageType::ProbeMounted:
     case VoltageType::SmartDispenserMounted:
     case VoltageType::DrillMounted:
     case VoltageType::Unknown:
+    case VoltageType::NoToolMounted:
     default:
       return 200;
   }
