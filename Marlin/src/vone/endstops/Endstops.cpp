@@ -101,7 +101,7 @@ void Endstops::reportChanges() {
   s_reportAndUpdateStatus(toolSwitch.name, m_reportedStatus.toolSwitchTriggered, READ_PIN(P_TOP));
 
   s_reportAndUpdateStatus(xyPositionerLeft.name, m_reportedStatus.xyPositionerLeftTriggered, READ_PIN(XY_MAX_X));
-  s_reportAndUpdateStatus(xyPositionerRight.name, m_reportedStatus.xyPositionerRightTriggered, READ_PIN(XY_MAX_Y));
+  s_reportAndUpdateStatus(xyPositionerRight.name, m_reportedStatus.xyPositionerRightTriggered, READ_PIN(XY_MIN_X));
   s_reportAndUpdateStatus(xyPositionerBack.name, m_reportedStatus.xyPositionerBackTriggered, READ_PIN(XY_MIN_Y));
   s_reportAndUpdateStatus(xyPositionerForward.name, m_reportedStatus.xyPositionerForwardTriggered, READ_PIN(XY_MAX_Y));
 }
