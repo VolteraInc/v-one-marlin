@@ -19,7 +19,8 @@ class Drill : public Tool {
     int stopRotation();
     int stopRotationIfMounted();
 
-    virtual const char* name() const override { return "Drill"; }
+    virtual const char* type() const override { return "Drill"; }
+    virtual unsigned int version() const override { return 1; }
     virtual int prepareToMoveImpl_Start() override;
     virtual int prepareToMoveImpl_HomeXY() override;
     virtual int prepareToMoveImpl_CalibrateXYZ() override;

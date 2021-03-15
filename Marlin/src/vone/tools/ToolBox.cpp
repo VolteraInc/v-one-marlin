@@ -1,9 +1,11 @@
 #include "ToolBox.h"
 #include "../../../serial.h"
 
-static void outputToolUpdate(const char* type) {
+static void outputToolUpdate(const char* type, unsigned int version) {
   protocol
-    << F("toolUpdate type:") << type
+    << F("toolUpdate")
+    << F(" type:") << type
+    << F(" version:") << version
     << endl;
 }
 
@@ -18,5 +20,5 @@ void tools::ToolBox::setTool(tools::Tool *tool) {
 
   m_currentTool = tool;
   m_currentTool->attach();
-  outputToolUpdate(m_currentTool->name());
+  outputToolUpdate(m_currentTool->type(), m_currentTool->version());
 }

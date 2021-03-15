@@ -73,7 +73,7 @@ int confirmAttached(const char* context, tools::Tool& tool) {
   if (tool.detached()) {
     logError
       << F("Unable to ") << context
-      << F(", tool type '") << tool.name()
+      << F(", tool type '") << tool.type()
       << F("' is required")
       << endl;
     return -1;

@@ -8,7 +8,7 @@ class SmartDispenser : public Dispenser {
     SmartDispenser(Stepper& stepper);
 
   private:
-    virtual const char* name() const override { return "Dispenser"; }
+    virtual unsigned int version() const override { return 2; }
 };
 
 }

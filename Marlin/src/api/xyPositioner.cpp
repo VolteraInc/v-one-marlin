@@ -86,7 +86,7 @@ int xyPositionerTouch(tools::Tool& tool, const Endstop& endstop, float& measurem
       logWarning
         << F("The ") << yMin.name << F(" switch triggered before reaching ")
         << F("the ") << xyPositionerBack.name << F(" switch -- ")
-        << F("the current tool is a ") << tool.name()
+        << F("the current tool is a ") << tool.type() << F(" ") << tool.version()
         << endl;
     }
   }

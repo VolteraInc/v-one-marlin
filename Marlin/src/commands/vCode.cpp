@@ -107,7 +107,10 @@ int process_vcode(int command_code) {
     case 4: {
       auto& probe = vone->toolBox.probe;
       if (probe.detached()) {
-        logError << F("Unable to probe, current tool is ") << currentTool.name() << endl;
+        logError
+          << F("Unable to probe, current tool is a ")
+          << currentTool.type() << F(" ") << currentTool.version()
+          << endl;
         return -1;
       }
 
@@ -203,7 +206,8 @@ int process_vcode(int command_code) {
     case 100: {
       const auto& tb = vone->toolBox;
       log << F("Tool") << endl;
-      log << F("  type: ") << currentTool.name() << endl;
+      log << F("  type: ") << currentTool.type() << endl;
+      log << F("  version: ") << currentTool.version() << endl;
       log << F("  prepared: ") << currentTool.prepared() << endl;
 
       tb.probe.outputStatus();
@@ -228,10 +232,19 @@ int process_vcode(int command_code) {
       vone->toolDetector.enable(!code_seen('F'));
 
       // Set Tool
-      if      (code_seen('P')) vone->toolBox.setTool(&vone->toolBox.probe);
-      else if (code_seen('D')) vone->toolBox.setTool(&vone->toolBox.dispenser);
-      else if (code_seen('R')) vone->toolBox.setTool(&vone->toolBox.drill);
-      else                     vone->toolBox.setTool(&vone->toolBox.nullTool);
+      if (code_seen('P')) {
+        vone->toolBox.setTool(&vone->toolBox.probe);
+      } else if (code_seen('R')) {
+        vone->toolBox.setTool(&vone->toolBox.drill);
+      } else if (code_seen('D')) {
+        if (code_value_long() == 2) {
+          vone->toolBox.setTool(&vone->toolBox.smartDispenser);
+        } else {
+          vone->toolBox.setTool(&vone->toolBox.dispenser);
+        }
+      } else {
+        vone->toolBox.setTool(&vone->toolBox.nullTool);
+      }
 
       return 0;
     }

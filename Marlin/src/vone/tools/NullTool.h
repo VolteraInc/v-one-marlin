@@ -8,7 +8,9 @@ class NullTool : public Tool {
     NullTool(Stepper& stepper);
 
   private:
-    virtual const char* name() const override { return "None"; }
+    virtual const char* type() const override { return "None"; }
+    virtual unsigned int version() const override { return 1; }
+
     virtual int prepareToMoveImpl_Start() override;
     virtual int prepareToMoveImpl_HomeXY() override;
     virtual int prepareToMoveImpl_CalibrateXYZ() override;

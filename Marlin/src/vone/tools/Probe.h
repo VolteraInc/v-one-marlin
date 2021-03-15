@@ -59,7 +59,9 @@ class Probe : public Tool {
     float m_maxSampledHeight = -INFINITY;
     float m_safeHeight = -INFINITY;
 
-    virtual const char* name() const override { return "Probe"; }
+    virtual const char* type() const override { return "Probe"; }
+    virtual unsigned int version() const override { return 1; }
+
     virtual int prepareToMoveImpl_Start() override;
     virtual int prepareToMoveImpl_HomeXY() override;
     virtual int prepareToMoveImpl_CalibrateXYZ() override;

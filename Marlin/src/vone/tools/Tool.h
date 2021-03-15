@@ -16,7 +16,8 @@ class Tool {
   public:
     Tool(Stepper& stepper);
 
-    virtual const char* name() const = 0;
+    virtual const char* type() const = 0;
+    virtual unsigned int version() const = 0;
 
     void attach();
     void detach();

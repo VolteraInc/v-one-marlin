@@ -389,7 +389,7 @@ int process_dcode(int command_code) {
       ) {
         logError
           << F("Unable to check back switches, current tool, ")
-          << tool.name()
+          << tool.type() << F(" ") << tool.version()
           << F(" is not supported for this command")
           << endl;
         return -1;

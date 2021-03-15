@@ -18,7 +18,8 @@ class Dispenser : public Tool {
 
     int meshGears();
 
-    virtual const char* name() const override { return "Dispenser"; }
+    virtual const char* type() const final { return "Dispenser"; }
+    virtual unsigned int version() const override { return 1; }
     virtual int prepareToMoveImpl_Start() override;
     virtual int prepareToMoveImpl_HomeXY() override;
     virtual int prepareToMoveImpl_CalibrateXYZ() override;
