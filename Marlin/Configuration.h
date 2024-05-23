@@ -1,21 +1,28 @@
 #pragma once
 
 #define VONE_batch_0_TO_5 1
-#define VONE_batch_6_to_present 6
+#define VONE_batch_6_to_7 6
+#define VONE_batch_8_to_present 8
 #define EXPERIMENTAL 9999
 
-#define MODEL VONE_batch_0_TO_5
-// #define MODEL VONE_batch_6_to_present
+//#define MODEL VONE_batch_0_TO_5
+// #define MODEL VONE_batch_6_to_7
+#define MODEL VONE_batch_8_to_present
 // #define MODEL EXPERIMENTAL
 
 #if MODEL == VONE_batch_0_TO_5
   #define FIRMARE_VARIANT_SUFFIX "_batch0to5"
   #define checkForFirmwareVariantMismatch(batchNumber) (batchNumber >= 6)
 
-#elif MODEL == VONE_batch_6_to_present
+#elif MODEL == VONE_batch_6_to_7
   #define TRINAMIC_MOTORS 1
   #define FIRMARE_VARIANT_SUFFIX "_batch6"
   #define checkForFirmwareVariantMismatch(batchNumber) (batchNumber < 6)
+
+#elif MODEL == VONE_batch_8_to_present
+  #define TRINAMIC_MOTORS 1
+  #define FIRMWARE_VARIANT_SUFFIC "_batch8"
+  #define checkForFirmwareVariantMismatch(batchNumber) (batchNumber < 8)
 
 #else
   #define TRINAMIC_MOTORS 1
