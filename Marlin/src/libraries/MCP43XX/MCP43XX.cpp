@@ -92,6 +92,11 @@ void MCP43XX::WiperDecrement(uint8_t potNum)
     SPI.endTransaction();
 }
 
+uint8_t MCP43XX::GetWiperPosition(uint8_t potNum)
+{
+  return ReadWiperPosition(potNum); //should not use comms in longrun and just expose member
+}
+
 void MCP43XX::SetWiperPosition(uint8_t potNum, uint8_t value)
 {
     uint8_t cmdByte = B00000000;

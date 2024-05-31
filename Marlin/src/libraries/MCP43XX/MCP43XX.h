@@ -69,6 +69,8 @@ public:
   void SetWiperMid();
   void SetWiperMid(uint8_t potNum);
 
+  uint8_t GetWiperPosition(uint8_t potNum);
+
   void SaveNVWiperPosition();
   void SaveNVWiperPosition(uint8_t potNum);
 

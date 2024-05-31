@@ -1,6 +1,6 @@
 #include "xyzPotentiometer.h"
 
-MCP43XX xyzPotentiometer = MCP43XX(XYZ_POT_CS_PIN, XYZ_POT_RESISTANCE);;
+MCP43XX xyzPotentiometer = MCP43XX(XYZ_POT_CS_PIN, XYZ_POT_RESISTANCE);
 
 bool startupXYZPotentiometer()
 {
@@ -15,11 +15,9 @@ bool startupXYZPotentiometer()
 
 bool tuneXYZPot(potAxis _axis)
 {
-    uint8_t potNum;
-    uint8_t analogInPin;
+    uint8_t potNum, potPos, analogInPin;
     int8_t polarity;
-    uint16_t analogReading;
-    float analogVoltage;
+    float analogVoltage, analogDiff;
 
     switch(_axis)
     {
@@ -39,32 +37,57 @@ bool tuneXYZPot(potAxis _axis)
             polarity = Z_POLARITY;
             break;
     }
-    for(uint8_t i = 0; i < MAX_TUNE_ATTEMPTS; i++)
+
+    //read current state of circuit
+    analogVoltage = readAnalogVoltage(analogInPin);
+    potPos = xyzPotentiometer.GetWiperPosition(potNum);
+    
+    do
     {
-        analogVoltage = readAnalogVoltage(analogInPin);
-        analogVoltage -= TARGET_VOLTAGE*VOLTAGE_DIVIDER; //analogVoltage now holds how close or far we are from the target voltage
-        analogVoltage *= polarity; //allows for correction of backwards wired potentiometer
-        
-        if (abs(analogVoltage) <= VOLTAGE_TOLERANCE*VOLTAGE_DIVIDER) //we are in tolerance
-        {
-            return true;
-        }
-        else if(analogVoltage > 0) //voltage read is too high
+        //how far off tolerance are we currently
+        analogDiff = analogVoltage - TARGET_VOLTAGE*VOLTAGE_DIVIDER;
+        analogDiff *= polarity; //allows for correction of backwards wired potentiometer
+
+        if(analogDiff > 0) //voltage read is too high
         {
             xyzPotentiometer.WiperDecrement(potNum);
+            potPos--;
+            //Serial.println(analogVoltage);
+            
+            //check if next sample got us closer to tolerance
+            analogVoltage = readAnalogVoltage(analogInPin);
+            if( abs(analogVoltage - TARGET_VOLTAGE*VOLTAGE_DIVIDER) > abs (analogDiff) ) //if true, we are getting farther out of tolerance
+            {
+                xyzPotentiometer.WiperIncrement(potNum); //go back a step to correct overcorrection
+                break; //exit loop
+            }
+            
         }
         else //voltage read is too low
         {
             xyzPotentiometer.WiperIncrement(potNum);
+            potPos++;
+            //Serial.println(analogVoltage);
+
+            //check if next sample got us closer to tolerance
+            analogVoltage = readAnalogVoltage(analogInPin);
+            if( abs(analogVoltage - TARGET_VOLTAGE*VOLTAGE_DIVIDER) > abs (analogDiff) ) //if true, we are getting farther out of tolerance
+            {
+                xyzPotentiometer.WiperDecrement(potNum); //go back a step to correct overcorrection
+                break; //exit loop
+            }
         }
     }
-    return false; //wasn't able to reach required voltage
+    while(potPos > MIN_POT_POS && potPos < MAX_POT_POS);
+
+    //evaluate tuning
+    return isTuneXYZPot(_axis);
 } 
 
 bool isTuneXYZPot(potAxis _axis)
 {
     uint8_t analogInPin;
-    uint16_t analogReading;
+    uint16_t analogVoltage;
 
     switch(_axis)
     {
@@ -79,10 +102,10 @@ bool isTuneXYZPot(potAxis _axis)
             break;
     }
     
-    analogReading = readAnalogVoltage(analogInPin);
-    analogReading -= TARGET_VOLTAGE;
+    analogVoltage = readAnalogVoltage(analogInPin);
+    analogVoltage -= TARGET_VOLTAGE*VOLTAGE_DIVIDER;
 
-    if(abs(analogReading) <= VOLTAGE_TOLERANCE*VOLTAGE_DIVIDER){
+    if(abs(analogVoltage) <= VOLTAGE_TOLERANCE*VOLTAGE_DIVIDER){
         return true;
     }
     else
@@ -90,11 +113,11 @@ bool isTuneXYZPot(potAxis _axis)
         return false;
     }
 }
-
-bool saveTuneXYZPot() //save current configuration into the potentiometer for future default/startup config
+/*
+bool saveTuneXYZPot() //CURRENTLY NOT WORKING
 {
     xyzPotentiometer.SaveNVWiperPosition();
-}
+}*/
 
 //util
 float readAnalogVoltage(uint8_t _pin)
@@ -114,4 +137,3 @@ float readAnalogVoltage(uint8_t _pin)
 float valToVolt (uint16_t val){
     return ADC_REFERENCE_VOLTAGE*(((float)val)/ADC_MAX_CODE);
 }
-

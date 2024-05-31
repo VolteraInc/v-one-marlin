@@ -14,15 +14,16 @@
 #define Z_POLARITY 1
 
 #define XYZ_POT_RESISTANCE 100000
+#define MAX_POT_POS 255
+#define MIN_POT_POS 0
 
-#define SAMPLE_DELAY_MS 5
-#define NUM_SAMPLES 5
-#define MAX_TUNE_ATTEMPTS 126
+#define SAMPLE_DELAY_MS 5//10
+#define NUM_SAMPLES 5//10
 
 #define ADC_REFERENCE_VOLTAGE 5.0
 #define ADC_MAX_CODE 1024 //10-bit ADC
 
-#define TARGET_VOLTAGE 5
+#define TARGET_VOLTAGE 5.0
 #define VOLTAGE_TOLERANCE 0.5
 #define VOLTAGE_DIVIDER 0.5
 
@@ -34,4 +35,3 @@ bool isTuneXYZPot(potAxis _axis);
 bool saveTuneXYZPot();
 float readAnalogVoltage(uint8_t _pin);
 float valToVolt (uint16_t val);
-
