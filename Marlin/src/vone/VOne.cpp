@@ -45,6 +45,9 @@ void VOne::start() {
   ENABLE_TEMPERATURE_INTERRUPT();
 
   stepper.start();
+
+  //new, tune xyz potentiometer
+  
 }
 
 void VOne::updateStats() {
