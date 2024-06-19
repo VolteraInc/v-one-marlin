@@ -14,6 +14,8 @@
 #include "motors/Motors.h"
 #include "../api/xyzPotentiometer/xyzPotentiometer.h"
 
+#include "endstops/EndstopMonitor.h"
+
 // DEFER: ideally these would live in the cpp file,
 //        but slicing up stepper_isr into h-files is
 //        too much work for right now

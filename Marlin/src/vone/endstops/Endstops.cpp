@@ -10,18 +10,19 @@ Endstops::Endstops(ZSwitch::Type zSwitchType)
   : xMin(F("right (x-min)"), X_MIN_PIN, X_AXIS, -1, X_MIN_ENDSTOP_INVERTING)
   , yMin(F("back (y-min)"), Y_MIN_PIN, Y_AXIS, -1, Y_MIN_ENDSTOP_INVERTING)
   , zMax(F("top (z-max)"), Z_MAX_PIN, Z_AXIS, 1, Z_MAX_ENDSTOP_INVERTING)
+  #ifndef XYZ_STRAIN //remove this since we are no longer reading the pin for trigger
   , zSwitch(zSwitchType, F("z-switch (z-min)"), Z_MIN_PIN, Z_AXIS, -1, Z_MIN_ENDSTOP_INVERTING)
   , xyPositionerLeft(F("xy-positioner left (xy-max-x)"), XY_MAX_X_PIN, X_AXIS, 1, XY_MAX_X_ENDSTOP_INVERTING)
   , xyPositionerRight(F("xy-positioner right (xy-min-x)"), XY_MIN_X_PIN, X_AXIS, -1, XY_MIN_X_ENDSTOP_INVERTING)
   , xyPositionerBack(F("xy-positioner back (xy-min-y)"), XY_MIN_Y_PIN, Y_AXIS, -1, XY_MIN_Y_ENDSTOP_INVERTING)
   , xyPositionerForward(F("xy-positioner front (xy-max-y)"), XY_MAX_Y_PIN, Y_AXIS, 1, XY_MAX_Y_ENDSTOP_INVERTING)
+  #endif
   , calibrationPlate(F("calibration plate (p-bot)"), P_BOT_PIN, Z_AXIS, -1, P_BOT_ENDSTOP_INVERTING)
   , toolSwitch(F("tool switch (p-top)"), P_TOP_PIN, Z_AXIS, -1, P_TOP_ENDSTOP_INVERTING)
    #ifdef TRINAMIC_MOTORS
-    // Note: xLim and yLim are configured with direction -1
-    //       so they can be used for homing
-  , xLim(F("x-motor (x-lim)"), X_LIM_PIN, X_AXIS, -1, X_LIM_ENDSTOP_INVERTING)
-  , yLim(F("y-motor (y-lim)"), Y_LIM_PIN, Y_AXIS, -1, Y_LIM_ENDSTOP_INVERTING)
+    //previously called xLim and yLim, these are the software endstops to detect the maximum left and front extent of machine
+  , xMax(F("left (x-max)"), X_LIM_PIN, X_AXIS, 1, X_LIM_ENDSTOP_INVERTING)
+  , yMax(F("front (y-max)"), Y_LIM_PIN, Y_AXIS, 1, Y_LIM_ENDSTOP_INVERTING)
    #endif
 {
 }
@@ -32,20 +33,22 @@ const Endstop* Endstops::lookup(const int pin) const {
     case Y_MIN_PIN: return &yMin;
     case Z_MAX_PIN: return &zMax;
 
+    #ifndef XYZ_STRAIN //remove this since we are no longer reading the pin for trigger
     case Z_MIN_PIN: return &zSwitch;
 
     case XY_MIN_X_PIN: return &xyPositionerRight;
     case XY_MAX_X_PIN: return &xyPositionerLeft;
     case XY_MIN_Y_PIN: return &xyPositionerBack;
     case XY_MAX_Y_PIN: return &xyPositionerForward;
+    #endif
 
     case P_BOT_PIN: return &calibrationPlate;
 
     case P_TOP_PIN: return &toolSwitch;
 
     #ifdef TRINAMIC_MOTORS
-    case X_LIM_PIN: return &xLim;
-    case Y_LIM_PIN: return &yLim;
+    case X_LIM_PIN: return &xMax;
+    case Y_LIM_PIN: return &yMax;
     #endif
 
     default:
@@ -65,18 +68,20 @@ void Endstops::outputStatus() const {
   log << sp << s_pinStatusToString(READ_PIN(Y_MIN)) << sp << yMin.pin << sp << yMin.name  << endl;
   log << sp << s_pinStatusToString(READ_PIN(Z_MAX)) << sp << zMax.pin << sp << zMax.name << endl;
 
-  log << sp << s_pinStatusToString(READ_PIN(Z_MIN)) << sp << zSwitch.pin          << sp << zSwitch.name          << endl;
   log << sp << s_pinStatusToString(READ_PIN(P_BOT)) << sp << calibrationPlate.pin << sp << calibrationPlate.name << endl;
   log << sp << s_pinStatusToString(READ_PIN(P_TOP)) << sp << toolSwitch.pin       << sp << toolSwitch.name       << endl;
 
+  #ifndef XYZ_STRAIN //remove this since we are no longer reading the pin for trigger
+  log << sp << s_pinStatusToString(READ_PIN(Z_MIN)) << sp << zSwitch.pin          << sp << zSwitch.name          << endl;
   log << sp << s_pinStatusToString(READ_PIN(XY_MIN_X)) << sp << xyPositionerRight.pin   << sp << xyPositionerRight.name   << endl;
   log << sp << s_pinStatusToString(READ_PIN(XY_MAX_X)) << sp << xyPositionerLeft.pin    << sp << xyPositionerLeft.name    << endl;
   log << sp << s_pinStatusToString(READ_PIN(XY_MIN_Y)) << sp << xyPositionerBack.pin    << sp << xyPositionerBack.name    << endl;
   log << sp << s_pinStatusToString(READ_PIN(XY_MAX_Y)) << sp << xyPositionerForward.pin << sp << xyPositionerForward.name << endl;
+  #endif
 
   #ifdef TRINAMIC_MOTORS
-  log << sp << s_pinStatusToString(READ_PIN(X_LIM)) << sp << xLim.pin << sp << xLim.name << endl;
-  log << sp << s_pinStatusToString(READ_PIN(Y_LIM)) << sp << yLim.pin << sp << yLim.name << endl;
+  log << sp << s_pinStatusToString(READ_PIN(X_LIM)) << sp << xMax.pin << sp << xMax.name << endl;
+  log << sp << s_pinStatusToString(READ_PIN(Y_LIM)) << sp << yMax.pin << sp << yMax.name << endl;
   #endif
 }
 
@@ -95,15 +100,17 @@ void Endstops::reportChanges() {
   s_reportAndUpdateStatus(xMin.name, m_reportedStatus.xMinTriggered, READ_PIN(X_MIN));
   s_reportAndUpdateStatus(yMin.name, m_reportedStatus.yMinTriggered, READ_PIN(Y_MIN));
   s_reportAndUpdateStatus(zMax.name, m_reportedStatus.zMaxTriggered, READ_PIN(Z_MAX));
-  s_reportAndUpdateStatus(zSwitch.name, m_reportedStatus.zSwitchTriggered, READ_PIN(Z_MIN));
 
   s_reportAndUpdateStatus(calibrationPlate.name, m_reportedStatus.calibrationPlateTriggered, READ_PIN(P_BOT));
   s_reportAndUpdateStatus(toolSwitch.name, m_reportedStatus.toolSwitchTriggered, READ_PIN(P_TOP));
 
+  #ifndef XYZ_STRAIN //remove this since we are no longer reading the pin for trigger
+  s_reportAndUpdateStatus(zSwitch.name, m_reportedStatus.zSwitchTriggered, READ_PIN(Z_MIN));
   s_reportAndUpdateStatus(xyPositionerLeft.name, m_reportedStatus.xyPositionerLeftTriggered, READ_PIN(XY_MAX_X));
   s_reportAndUpdateStatus(xyPositionerRight.name, m_reportedStatus.xyPositionerRightTriggered, READ_PIN(XY_MIN_X));
   s_reportAndUpdateStatus(xyPositionerBack.name, m_reportedStatus.xyPositionerBackTriggered, READ_PIN(XY_MIN_Y));
   s_reportAndUpdateStatus(xyPositionerForward.name, m_reportedStatus.xyPositionerForwardTriggered, READ_PIN(XY_MAX_Y));
+  #endif
 }
 
 // -----------------------------------------------------------------------
@@ -119,15 +126,17 @@ void Endstops::deprecated_outputStatus() const {
 
   protocol << F("x_min: ") << s_deprecatedFormat(READ_PIN(X_MIN)) << endl;
   protocol << F("y_min: ") << s_deprecatedFormat(READ_PIN(Y_MIN)) << endl;
-
-  protocol << F("z_min: ") << s_deprecatedFormat(READ_PIN(Z_MIN)) << endl;
+  
   protocol << F("z_max: ") << s_deprecatedFormat(READ_PIN(Z_MAX)) << endl;
 
   protocol << F("p_top: ") << s_deprecatedFormat(READ_PIN(P_TOP)) << endl;
   protocol << F("p_bot: ") << s_deprecatedFormat(READ_PIN(P_BOT)) << endl;
 
+  #ifndef XYZ_STRAIN //remove this since we are no longer reading the pin for trigger
+  protocol << F("z_min: ") << s_deprecatedFormat(READ_PIN(Z_MIN)) << endl;
   protocol << F("xy_min_x: ") << s_deprecatedFormat(READ_PIN(XY_MIN_X)) << endl;
   protocol << F("xy_max_x: ") << s_deprecatedFormat(READ_PIN(XY_MAX_X)) << endl;
   protocol << F("xy_min_y: ") << s_deprecatedFormat(READ_PIN(XY_MIN_Y)) << endl;
   protocol << F("xy_max_y: ") << s_deprecatedFormat(READ_PIN(XY_MAX_Y)) << endl;
+  #endif
 }

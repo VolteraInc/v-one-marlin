@@ -42,12 +42,20 @@ class EndstopMonitor {
     EndstopFilter m_yMin;
     EndstopFilter m_zMax;
 
+    #ifdef TRINAMIC_MOTORS
+    EndstopFilter m_xMax;
+    EndstopFilter m_yMax;
+    #endif
+
+    #ifndef XYZ_STRAIN
     EndstopFilter m_zSwitch;
 
     EndstopFilter m_xyPositionerLeft;
     EndstopFilter m_xyPositionerRight;
     EndstopFilter m_xyPositionerForward;
     EndstopFilter m_xyPositionerBack;
+    #endif
+    
     EndstopFilter m_calibrationPlate;
 
     EndstopFilter m_toolSwitch;
@@ -60,7 +68,11 @@ class EndstopMonitor {
 
     // Left
     FORCE_INLINE void resetLeftEndstops() {
+      #ifdef XYZ_STRAIN
+      m_xMax.reset();
+      #else
       m_xyPositionerLeft.reset();
+      #endif
     }
 
     FORCE_INLINE void updateEndstop(
@@ -76,28 +88,47 @@ class EndstopMonitor {
     }
 
     FORCE_INLINE void updateLeftEndstops(volatile long stepCounts[NUM_AXIS]) {
+      #ifdef XYZ_STRAIN
+      updateEndstop(m_xMax, READ_PIN(X_LIM), m_endstops.xMax, stepCounts);
+      #else
       updateEndstop(m_xyPositionerLeft, READ_PIN(XY_MAX_X), m_endstops.xyPositionerLeft, stepCounts);
+      #endif
     }
 
     FORCE_INLINE bool isTriggeredLeft() const {
       ScopedInterruptDisable sid;
+      #ifdef XYZ_STRAIN
+      return m_xMax.triggered();
+      #else
       return m_xyPositionerLeft.triggered();
+      #endif
     }
 
     // Right
     FORCE_INLINE void resetRightEndstops() {
       m_xMin.reset();
+
+      #ifndef XYZ_STRAIN
       m_xyPositionerRight.reset();
+      #endif
     }
 
     FORCE_INLINE void updateRightEndstops(volatile long stepCounts[NUM_AXIS]) {
       updateEndstop(m_xMin, READ_PIN(X_MIN), m_endstops.xMin, stepCounts);
+
+      #ifndef XYZ_STRAIN
       updateEndstop(m_xyPositionerRight, READ_PIN(XY_MIN_X), m_endstops.xyPositionerRight, stepCounts);
+      #endif
     }
 
     FORCE_INLINE bool isTriggeredRight() const {
       ScopedInterruptDisable sid;
+
+      #ifdef XYZ_STRAIN
+      return m_xMin.triggered();
+      #else
       return m_xMin.triggered() || m_xyPositionerRight.triggered();
+      #endif
     }
 
     // ------------------------------------------
@@ -105,32 +136,55 @@ class EndstopMonitor {
 
     // Forward
     FORCE_INLINE void resetForwardEndstops() {
+      #ifdef XYZ_STRAIN
+      m_yMax.reset();
+      #else
       m_xyPositionerForward.reset();
+      #endif
     }
 
     FORCE_INLINE void updateForwardEndstops(volatile long stepCounts[NUM_AXIS]) {
+      #ifdef XYZ_STRAIN
+      updateEndstop(m_yMax, READ_PIN(Y_LIM), m_endstops.yMax, stepCounts);
+      #else
       updateEndstop(m_xyPositionerForward, READ_PIN(XY_MAX_Y), m_endstops.xyPositionerForward, stepCounts);
+      #endif
     }
 
     FORCE_INLINE bool isTriggeredForward() const {
       ScopedInterruptDisable sid;
+
+      #ifdef XYZ_STRAIN
+      return m_yMax.triggered();
+      #else
       return m_xyPositionerForward.triggered();
+      #endif
     }
 
     // Back
     FORCE_INLINE void resetBackEndstops() {
       m_yMin.reset();
+
+      #ifndef XYZ_STRAIN
       m_xyPositionerBack.reset();
+      #endif
     }
 
     FORCE_INLINE void updateBackEndstops(volatile long stepCounts[NUM_AXIS]) {
       updateEndstop(m_yMin, READ_PIN(Y_MIN), m_endstops.yMin, stepCounts);
+
+      #ifndef XYZ_STRAIN
       updateEndstop(m_xyPositionerBack, READ_PIN(XY_MIN_Y), m_endstops.xyPositionerBack, stepCounts);
+      #endif
     }
 
     FORCE_INLINE bool isTriggeredBack() const {
       ScopedInterruptDisable sid;
+      #ifdef XYZ_STRAIN
+      return m_yMin.triggered();
+      #else
       return m_yMin.triggered() || m_xyPositionerBack.triggered();
+      #endif
     }
 
     // ------------------------------------------
@@ -151,22 +205,34 @@ class EndstopMonitor {
 
     // Down
     FORCE_INLINE void resetDownEndstops() {
-      m_zSwitch.reset();
       m_calibrationPlate.reset();
       m_toolSwitch.reset();
+
+      #ifndef XYZ_STRAIN
+      m_zSwitch.reset();
+      #endif
     }
 
     FORCE_INLINE void updateDownEndstops(volatile long stepCounts[NUM_AXIS]) {
-      updateEndstop(m_zSwitch, READ_PIN(Z_MIN), m_endstops.zSwitch, stepCounts);
       updateEndstop(m_calibrationPlate, READ_PIN(P_BOT), m_endstops.calibrationPlate, stepCounts);
       updateEndstop(m_toolSwitch, READ_PIN(P_TOP), m_endstops.toolSwitch, stepCounts);
+
+      #ifndef XYZ_STRAIN
+      updateEndstop(m_zSwitch, READ_PIN(Z_MIN), m_endstops.zSwitch, stepCounts);
+      #endif
     }
 
     FORCE_INLINE bool isTriggeredDown() const {
       return (
+        #ifdef XYZ_STRAIN
+        m_calibrationPlate.triggered() ||
+        m_toolSwitch.triggered()
+        #else
         m_zSwitch.triggered() ||
         m_calibrationPlate.triggered() ||
         m_toolSwitch.triggered()
+        #endif
+        
       );
     }
 };

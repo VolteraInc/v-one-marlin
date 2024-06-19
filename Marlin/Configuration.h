@@ -6,7 +6,7 @@
 #define EXPERIMENTAL 9999
 
 //#define MODEL VONE_batch_0_TO_5
-// #define MODEL VONE_batch_6_to_7
+//#define MODEL VONE_batch_6_to_7
 #define MODEL VONE_batch_8_to_present
 // #define MODEL EXPERIMENTAL
 
@@ -20,8 +20,9 @@
   #define checkForFirmwareVariantMismatch(batchNumber) (batchNumber < 6)
 
 #elif MODEL == VONE_batch_8_to_present
+  #define XYZ_STRAIN 1
   #define TRINAMIC_MOTORS 1
-  #define FIRMWARE_VARIANT_SUFFIC "_batch8"
+  #define FIRMARE_VARIANT_SUFFIX "_batch8" //this has to be spelt incorrectly to match above pattern, todo refactor "FIRMARE" to "FIRMWARE"
   #define checkForFirmwareVariantMismatch(batchNumber) (batchNumber < 8)
 
 #else
@@ -31,6 +32,21 @@
 
 #endif
 
+#ifdef MODEL == 8 //todo update with final mechanical dims
+#define XYPOS_X_POS                 ( 27.5)
+#define XYPOS_Y_POS                 (  10.3)
+#define OFFSET_FROM_XYPOS_TO_MINZ_X      (0) //now in the same position
+#define OFFSET_FROM_XYPOS_TO_MINZ_Y      (0) //now in the same position
+#define MIN_Z_X_POS       (XYPOS_X_POS + OFFSET_FROM_XYPOS_TO_MINZ_X)
+#define MIN_Z_Y_POS       (XYPOS_Y_POS + OFFSET_FROM_XYPOS_TO_MINZ_Y)
+#define CALIB_X_SCALE     (1.0)
+#define CALIB_Y_SCALE     (1.0)
+#define CALIB_COS_THETA   (1.0)
+#define CALIB_TAN_THETA   (0.0)
+#define CALIB_X_BACKLASH  (0.0) // Default assumed backlash
+#define CALIB_Y_BACKLASH  (0.0)
+
+#else
 // Default Calibration offsets for the Voltera V-One
 #define XYPOS_X_POS                 ( 34.1)  // Value used by Will (our production Tech) for batch 6 units, set in Dec 2019
 #define XYPOS_Y_POS                 (  4.5)  // Value used by Will (our production Tech) for batch 6 units, set in Dec 2019
@@ -45,14 +61,17 @@
 #define CALIB_X_BACKLASH  (0.0) // Default assumed backlash
 #define CALIB_Y_BACKLASH  (0.0)
 
+#endif
+
 #define XYPOS_Z_POS       (-4.0)
 
 // Default Serial number for the Voltera V-One
 // Note: Use a recent batch number so that deduced properties are more likely
 //       to be correct. As of this writing the most recent change was that
 //       batch7 has a stronger z-switch
-#define PRODUCT_SERIAL    ("V1-07-0000-120")
+//#define PRODUCT_SERIAL    ("V1-07-0000-120")
 
+#define PRODUCT_SERIAL ("V1-08-0000-120")
 
 //===========================================================================
 //=============================Serial Settings===========================
@@ -124,7 +143,6 @@ const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 const bool X_LIM_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Y_LIM_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool E_LIM_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-
 
 const bool XY_MIN_X_ENDSTOP_INVERTING = true;
 const bool XY_MAX_X_ENDSTOP_INVERTING = true;

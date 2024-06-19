@@ -10,15 +10,15 @@
 
 //use these to flip polarity of potentiometers if they're wired in reverse
 #define X_POLARITY -1
-#define Y_POLARITY 1
+#define Y_POLARITY -1
 #define Z_POLARITY 1
 
 #define XYZ_POT_RESISTANCE 100000
 #define MAX_POT_POS 255
 #define MIN_POT_POS 0
 
-#define SAMPLE_DELAY_MS 5//10
-#define NUM_SAMPLES 5//10
+#define SAMPLE_DELAY_MS 10//10
+#define NUM_SAMPLES 10//10
 
 #define ADC_REFERENCE_VOLTAGE 5.0
 #define ADC_MAX_CODE 1024 //10-bit ADC
@@ -30,6 +30,7 @@
 enum potAxis {X, Y, Z};
 
 bool startupXYZPotentiometer();
+bool tuneXYZPot();
 bool tuneXYZPot(potAxis _axis);
 bool isTuneXYZPot(potAxis _axis);
 bool saveTuneXYZPot();

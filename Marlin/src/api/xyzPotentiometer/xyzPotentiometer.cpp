@@ -13,6 +13,13 @@ bool startupXYZPotentiometer()
     xyzPotentiometer.WiperConnect(Z_POT_CHANNEL);
 }
 
+bool tuneXYZPot()
+{
+    potAxis xAxe = X;
+    return tuneXYZPot(xAxe);
+
+}
+
 bool tuneXYZPot(potAxis _axis)
 {
     uint8_t potNum, potPos, analogInPin;
@@ -87,7 +94,7 @@ bool tuneXYZPot(potAxis _axis)
 bool isTuneXYZPot(potAxis _axis)
 {
     uint8_t analogInPin;
-    uint16_t analogVoltage;
+    float analogVoltage;
 
     switch(_axis)
     {
@@ -113,11 +120,11 @@ bool isTuneXYZPot(potAxis _axis)
         return false;
     }
 }
-/*
+
 bool saveTuneXYZPot() //CURRENTLY NOT WORKING
 {
     xyzPotentiometer.SaveNVWiperPosition();
-}*/
+}
 
 //util
 float readAnalogVoltage(uint8_t _pin)

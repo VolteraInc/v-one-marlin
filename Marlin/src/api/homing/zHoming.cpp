@@ -27,7 +27,7 @@ int moveToZSwitchXY(tools::Tool& tool) {
 
 static const bool skipEstablishSoftMaxZ = false;
 static int s_homeZaxis(tools::Tool& tool, float offset, bool shouldEstablishSoftMaxZ = true) {
-  const auto& zSwitch = vone->endstops.zSwitch;
+  //const auto& zSwitch = vone->endstops.zSwitch;
   const auto& zMax = vone->endstops.zMax;
 
   log << F("homing z-axis") << endl;
@@ -63,7 +63,7 @@ static int s_homeZaxis(tools::Tool& tool, float offset, bool shouldEstablishSoft
       return -1;
     }
   }
-
+  /*
   float zSwitchMeasurement;
   if (
     // Measure the z-switch location
@@ -74,7 +74,7 @@ static int s_homeZaxis(tools::Tool& tool, float offset, bool shouldEstablishSoft
   ) {
     logError << F("Unable to home z-axis, could not measure") << zSwitch.name << endl;
     return -1;
-  }
+  }*/
 
   // We are home!
   setHomedState(Z_AXIS, -1);
@@ -83,7 +83,7 @@ static int s_homeZaxis(tools::Tool& tool, float offset, bool shouldEstablishSoft
     // Set max-z
     // NOTE: The offset is already included in current_position
     //       when we compute max_pos
-    float delta = zMaxMeasurement - zSwitchMeasurement;
+    float delta = zMaxMeasurement;// - zSwitchMeasurement; ##########################################
     float triggerAvoidanceBuffer = 0.5;
     log << F("distance between zMax and zSwitch is ") << delta << endl;
     establishSoftMaxZ(current_position[Z_AXIS] + delta - triggerAvoidanceBuffer);

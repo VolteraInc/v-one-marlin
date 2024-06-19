@@ -18,6 +18,11 @@ MCP43XX::MCP43XX(uint8_t CSPin, uint8_t potResistance)
     this->_wiper3Position = ReadWiperPosition(3);
 }
 
+uint8_t MCP43XX::GetWiperPosition(uint8_t potNum)
+{
+  return ReadWiperPosition(potNum); //should not use comms in longrun and just expose member
+}
+
 void MCP43XX::WiperIncrement(uint8_t potNum)
 {
     uint8_t cmdByte = B00000000;
@@ -26,22 +31,22 @@ void MCP43XX::WiperIncrement(uint8_t potNum)
     {
     case 0:
         cmdByte = ADDRESS_WIPER_0 | COMMAND_INCREMENT;
-        _wiper0Position++;
+        this->_wiper0Position++;
         break;
     
     case 1:
         cmdByte = ADDRESS_WIPER_1 | COMMAND_INCREMENT;
-        _wiper1Position++;
+        this->_wiper1Position++;
         break;
 
     case 2:
         cmdByte = ADDRESS_WIPER_2 | COMMAND_INCREMENT;
-        _wiper2Position++;
+        this->_wiper2Position++;
         break;
 
     case 3:
         cmdByte = ADDRESS_WIPER_3 | COMMAND_INCREMENT;
-        _wiper3Position++;
+        this->_wiper3Position++;
         break;
     }
 
@@ -63,22 +68,22 @@ void MCP43XX::WiperDecrement(uint8_t potNum)
     {
     case 0:
         cmdByte = ADDRESS_WIPER_0 | COMMAND_DECREMENT;
-        _wiper0Position--;
+        this->_wiper0Position--;
         break;
     
     case 1:
         cmdByte = ADDRESS_WIPER_1 | COMMAND_DECREMENT;
-        _wiper1Position--;
+        this->_wiper1Position--;
         break;
     
     case 2:
         cmdByte = ADDRESS_WIPER_2 | COMMAND_DECREMENT;
-        _wiper2Position--;
+        this->_wiper2Position--;
         break;
     
     case 3:
         cmdByte = ADDRESS_WIPER_3 | COMMAND_DECREMENT;
-        _wiper3Position--;
+        this->_wiper3Position--;
         break;
     }
 
@@ -90,11 +95,6 @@ void MCP43XX::WiperDecrement(uint8_t potNum)
     
     ::digitalWrite(_CSPin, HIGH);
     SPI.endTransaction();
-}
-
-uint8_t MCP43XX::GetWiperPosition(uint8_t potNum)
-{
-  return ReadWiperPosition(potNum); //should not use comms in longrun and just expose member
 }
 
 void MCP43XX::SetWiperPosition(uint8_t potNum, uint8_t value)

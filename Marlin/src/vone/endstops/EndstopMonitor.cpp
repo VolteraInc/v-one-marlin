@@ -8,13 +8,17 @@ EndstopMonitor::EndstopMonitor(
 ) : m_endstops(endstops)
 {
   m_toolSwitch.ignore();
-  m_zSwitch.ignore();
   m_calibrationPlate.ignore();
+
+  #ifndef XYZ_STRAIN
+  m_zSwitch.ignore();
 
   m_xyPositionerRight.ignore();
   m_xyPositionerLeft.ignore();
   m_xyPositionerBack.ignore();
   m_xyPositionerForward.ignore();
+  #endif
+  
 }
 
 const EndstopFilter* EndstopMonitor::lookup(const Endstop& endstop) const {
@@ -23,12 +27,14 @@ const EndstopFilter* EndstopMonitor::lookup(const Endstop& endstop) const {
     case Y_MIN_PIN: return &m_yMin;
     case Z_MAX_PIN: return &m_zMax;
 
+    #ifndef XYZ_STRAIN
     case Z_MIN_PIN: return &m_zSwitch;
 
     case XY_MIN_X_PIN: return &m_xyPositionerRight;
     case XY_MAX_X_PIN: return &m_xyPositionerLeft;
     case XY_MIN_Y_PIN: return &m_xyPositionerBack;
     case XY_MAX_Y_PIN: return &m_xyPositionerForward;
+    #endif
 
     case P_BOT_PIN: return &m_calibrationPlate;
 

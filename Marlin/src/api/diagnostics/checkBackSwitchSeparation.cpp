@@ -15,6 +15,8 @@ int s_measure(const Endstop& endstop, float measurements[], unsigned int numMeas
   return 0;
 }
 
+#ifndef XYZ_STRAIN //with new strain guage design, the XYZ positoner is brought significantly forward, so this test is not required
+
 // Confirm the minY and xyMinY switches are far enough apart.
 // If these switches are too close it's possible we'll hit the
 // minY switch instead of the xyMinY switch
@@ -109,3 +111,5 @@ int checkBackSwitchSeparation(tools::Tool& tool) {
     returnValue
   );
 }
+
+#endif

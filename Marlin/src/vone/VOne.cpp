@@ -1,6 +1,7 @@
 #include "VOne.h"
 
 #include "../libraries/MemoryFree/MemoryFree.h"
+#include "../vone/endstops/ScopedEndstopEnable.h"
 
 VOne::VOne(
   int ptopDigitalPin,
@@ -20,8 +21,8 @@ VOne::VOne(
   , toolBox(
       stepper,
       pins.ptop,
-      endstops.toolSwitch,
-      endstops.zSwitch
+      endstops.toolSwitch//,
+      //endstops.zSwitch
     )
 
   , toolDetector(toolBox, pins.ptop)
@@ -47,7 +48,16 @@ void VOne::start() {
   stepper.start();
 
   //new, tune xyz potentiometer
-  
+  startupXYZPotentiometer();
+
+  log << F("Tuning XYZ potentiometer") << endl;
+
+  while(!tuneXYZPot())
+  {
+    delay(1000);
+  };
+
+  log << F("Tuned XYZ potentiometer") << endl;
 }
 
 void VOne::updateStats() {
