@@ -46,6 +46,13 @@
 #define CALIB_X_BACKLASH  (0.0) // Default assumed backlash
 #define CALIB_Y_BACKLASH  (0.0)
 
+#define Z_MIN_VIRTUAL_ENDSTOP     true
+#define XY_MAX_X_VIRTUAL_ENDSTOP  true
+#define XY_MIN_X_VIRTUAL_ENDSTOP  true
+#define XY_MAX_Y_VIRTUAL_ENDSTOP  true
+#define XY_MIN_Y_VIRTUAL_ENDSTOP  true
+
+
 #else
 // Default Calibration offsets for the Voltera V-One
 #define XYPOS_X_POS                 ( 34.1)  // Value used by Will (our production Tech) for batch 6 units, set in Dec 2019
@@ -60,6 +67,12 @@
 #define CALIB_TAN_THETA   (0.0)
 #define CALIB_X_BACKLASH  (0.0) // Default assumed backlash
 #define CALIB_Y_BACKLASH  (0.0)
+
+#define Z_MIN_VIRTUAL_ENDSTOP     false
+#define XY_MAX_X_VIRTUAL_ENDSTOP  false
+#define XY_MIN_X_VIRTUAL_ENDSTOP  false
+#define XY_MAX_Y_VIRTUAL_ENDSTOP  false
+#define XY_MIN_Y_VIRTUAL_ENDSTOP  false
 
 #endif
 
@@ -148,6 +161,7 @@ const bool XY_MIN_X_ENDSTOP_INVERTING = true;
 const bool XY_MAX_X_ENDSTOP_INVERTING = true;
 const bool XY_MIN_Y_ENDSTOP_INVERTING = true;
 const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
+
 #define READ_PIN(PIN) (READ(PIN ## _PIN) ^ (PIN ## _ENDSTOP_INVERTING))
 
 // For Inverting Stepper Enable Pins (Active Low) use 0, Non Inverting (Active High) use 1
@@ -220,6 +234,7 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
 #ifdef TRINAMIC_MOTORS
   #define HOMING_FEEDRATE {2800, 2800, 200 , 55}  // set the homing speeds (mm/min)
+  //#define HOMING_FEEDRATE {500, 500, 200 , 55} //THIS IS JUST HERE FOR TESTING
   #define DEFAULT_AXIS_STEPS_PER_UNIT   {100.0, 100.0, 1600.0, 6857.142857142858}
 
 #else

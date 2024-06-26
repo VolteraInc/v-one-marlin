@@ -12,7 +12,6 @@
 #include "tools/ToolBox.h"
 #include "toolDetection/ToolDetector.h"
 #include "motors/Motors.h"
-#include "../api/xyzPotentiometer/xyzPotentiometer.h"
 
 #include "endstops/EndstopMonitor.h"
 

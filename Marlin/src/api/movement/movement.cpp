@@ -271,10 +271,21 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
+  #ifdef XYZ_STRAIN
+
+  // Check if already triggered
+  if (endstopMonitor.isTriggered(endstop)) {
+    return 0;
+  }
+
+  #else
+
   // Check if already triggered
   if (endstop.readTriggered()) {
     return 0;
   }
+
+  #endif
 
   // Enable endstop, if necessary
   ScopedEndstopEnable scopedEnable(endstopMonitor, endstop);
@@ -341,6 +352,7 @@ int retractFromSwitch(const Endstop& endstop, float retractDistance) {
   st_synchronize();
 
   // Retract slightly
+  auto& endstopMonitor = vone->stepper.endstopMonitor;
   const auto axis = endstop.axis;
   const auto direction = endstop.direction;
   const float distance = retractDistance < 0 ? s_defaultRetractDistance[axis] : retractDistance;
@@ -367,6 +379,17 @@ int retractFromSwitch(const Endstop& endstop, float retractDistance) {
   //       rely on the stepper's endstop monitor
   //       becuase it will not check switches when
   //       moving away from them.
+#ifdef XYZ_STRAIN
+  if (endstopMonitor.isTriggered(endstop)) {
+    logError
+      << F("Unable to retract from ")
+      << endstop.name
+      << F(", switch did not release during retract movement")
+      << endl;
+    return -1;
+  }
+#else
+
   if (endstop.readTriggered()) {
     logError
       << F("Unable to retract from ")
@@ -375,6 +398,8 @@ int retractFromSwitch(const Endstop& endstop, float retractDistance) {
       << endl;
     return -1;
   }
+
+#endif
 
   return 0;
 }

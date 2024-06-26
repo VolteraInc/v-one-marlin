@@ -68,9 +68,10 @@ class ZSwitch : public Endstop {
       int pin,
       AxisEnum axis,
       int direction,
-      bool inverted
+      bool inverted,
+      bool virtualEndstop
     )
-      : Endstop(name, pin, axis, direction, inverted)
+      : Endstop(name, pin, axis, direction, inverted, virtualEndstop)
       , m_type(type)
     {}
 

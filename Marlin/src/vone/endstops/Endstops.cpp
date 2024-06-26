@@ -7,22 +7,22 @@
 
 
 Endstops::Endstops(ZSwitch::Type zSwitchType)
-  : xMin(F("right (x-min)"), X_MIN_PIN, X_AXIS, -1, X_MIN_ENDSTOP_INVERTING)
-  , yMin(F("back (y-min)"), Y_MIN_PIN, Y_AXIS, -1, Y_MIN_ENDSTOP_INVERTING)
-  , zMax(F("top (z-max)"), Z_MAX_PIN, Z_AXIS, 1, Z_MAX_ENDSTOP_INVERTING)
-  #ifndef XYZ_STRAIN //remove this since we are no longer reading the pin for trigger
-  , zSwitch(zSwitchType, F("z-switch (z-min)"), Z_MIN_PIN, Z_AXIS, -1, Z_MIN_ENDSTOP_INVERTING)
-  , xyPositionerLeft(F("xy-positioner left (xy-max-x)"), XY_MAX_X_PIN, X_AXIS, 1, XY_MAX_X_ENDSTOP_INVERTING)
-  , xyPositionerRight(F("xy-positioner right (xy-min-x)"), XY_MIN_X_PIN, X_AXIS, -1, XY_MIN_X_ENDSTOP_INVERTING)
-  , xyPositionerBack(F("xy-positioner back (xy-min-y)"), XY_MIN_Y_PIN, Y_AXIS, -1, XY_MIN_Y_ENDSTOP_INVERTING)
-  , xyPositionerForward(F("xy-positioner front (xy-max-y)"), XY_MAX_Y_PIN, Y_AXIS, 1, XY_MAX_Y_ENDSTOP_INVERTING)
-  #endif
-  , calibrationPlate(F("calibration plate (p-bot)"), P_BOT_PIN, Z_AXIS, -1, P_BOT_ENDSTOP_INVERTING)
-  , toolSwitch(F("tool switch (p-top)"), P_TOP_PIN, Z_AXIS, -1, P_TOP_ENDSTOP_INVERTING)
-   #ifdef TRINAMIC_MOTORS
+  : xMin(F("right (x-min)"), X_MIN_PIN, X_AXIS, -1, X_MIN_ENDSTOP_INVERTING, false)
+  , yMin(F("back (y-min)"), Y_MIN_PIN, Y_AXIS, -1, Y_MIN_ENDSTOP_INVERTING, false)
+  , zMax(F("top (z-max)"), Z_MAX_PIN, Z_AXIS, 1, Z_MAX_ENDSTOP_INVERTING, false)
+  , calibrationPlate(F("calibration plate (p-bot)"), P_BOT_PIN, Z_AXIS, -1, P_BOT_ENDSTOP_INVERTING, false)
+  , toolSwitch(F("tool switch (p-top)"), P_TOP_PIN, Z_AXIS, -1, P_TOP_ENDSTOP_INVERTING, false)
+
+  , zSwitch(zSwitchType, F("z-switch (z-min)"), Z_MIN_PIN, Z_AXIS, -1, Z_MIN_ENDSTOP_INVERTING, Z_MIN_VIRTUAL_ENDSTOP)
+  , xyPositionerLeft(F("xy-positioner left (xy-max-x)"), XY_MAX_X_PIN, X_AXIS, 1, XY_MAX_X_ENDSTOP_INVERTING, XY_MAX_X_VIRTUAL_ENDSTOP)
+  , xyPositionerRight(F("xy-positioner right (xy-min-x)"), XY_MIN_X_PIN, X_AXIS, -1, XY_MIN_X_ENDSTOP_INVERTING, XY_MIN_X_VIRTUAL_ENDSTOP)
+  , xyPositionerBack(F("xy-positioner back (xy-min-y)"), XY_MIN_Y_PIN, Y_AXIS, -1, XY_MIN_Y_ENDSTOP_INVERTING, XY_MIN_Y_VIRTUAL_ENDSTOP)
+  , xyPositionerForward(F("xy-positioner front (xy-max-y)"), XY_MAX_Y_PIN, Y_AXIS, 1, XY_MAX_Y_ENDSTOP_INVERTING, XY_MAX_Y_VIRTUAL_ENDSTOP)
+   
+  #ifdef TRINAMIC_MOTORS
     //previously called xLim and yLim, these are the software endstops to detect the maximum left and front extent of machine
-  , xMax(F("left (x-max)"), X_LIM_PIN, X_AXIS, 1, X_LIM_ENDSTOP_INVERTING)
-  , yMax(F("front (y-max)"), Y_LIM_PIN, Y_AXIS, 1, Y_LIM_ENDSTOP_INVERTING)
+  , xMax(F("left (x-max)"), X_LIM_PIN, X_AXIS, 1, X_LIM_ENDSTOP_INVERTING, false)
+  , yMax(F("front (y-max)"), Y_LIM_PIN, Y_AXIS, 1, Y_LIM_ENDSTOP_INVERTING, false)
    #endif
 {
 }
@@ -33,17 +33,13 @@ const Endstop* Endstops::lookup(const int pin) const {
     case Y_MIN_PIN: return &yMin;
     case Z_MAX_PIN: return &zMax;
 
-    #ifndef XYZ_STRAIN //remove this since we are no longer reading the pin for trigger
     case Z_MIN_PIN: return &zSwitch;
-
     case XY_MIN_X_PIN: return &xyPositionerRight;
     case XY_MAX_X_PIN: return &xyPositionerLeft;
     case XY_MIN_Y_PIN: return &xyPositionerBack;
     case XY_MAX_Y_PIN: return &xyPositionerForward;
-    #endif
 
     case P_BOT_PIN: return &calibrationPlate;
-
     case P_TOP_PIN: return &toolSwitch;
 
     #ifdef TRINAMIC_MOTORS

@@ -33,19 +33,21 @@
   #define E_ENABLE_PIN      34
   #define E_CS_PIN          30
 
-  #define P_BOT_PIN         54 //this is currently not implemented in HW but removing this leads to compile error (its defined in a macro)
-
   //wip
-  #define XY_MIN_X_PIN      61
-  #define XY_MAX_X_PIN      60
-  #define XY_MIN_Y_PIN      63 //62 - this should be 63 but due to current sensor config we use the same pin 62
-  #define XY_MAX_Y_PIN      62
-  #define Z_MIN_PIN         64
-  #define XYZ_POT_CS_PIN    67
+  #define ADC_PWDN          57
+  #define ADC_RST           58
+  #define XYZ_START         60
+  #define XYZ_DATA_RDY      62
+  #define P_BOT_PIN         64
+  #define XYZ_CS_PIN        67
 
-  #define X_TRIG_ANALOG_PIN 3
-  #define Y_TRIG_ANALOG_PIN 4
-  #define Z_TRIG_ANALOG_PIN 5
+  //these define virtual endstops, negative is a useful shorthand here, to-do refactor
+  #define XY_MIN_X_PIN      80//-1
+  #define XY_MAX_X_PIN      81//-2
+  #define XY_MIN_Y_PIN      82//-3
+  #define XY_MAX_Y_PIN      83//-4
+  #define Z_MIN_PIN         84//-5
+
   //end of wip
 
   #define P_TOP_PIN         56
