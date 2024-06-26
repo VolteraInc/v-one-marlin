@@ -21,7 +21,7 @@ ADS126X::ADS126X(uint8_t CSPin, uint8_t STARTPin, uint8_t PWDNPin, uint8_t RESET
 	::pinMode(_RESETPin, OUTPUT);
     ::digitalWrite(_RESETPin, HIGH);
 	
-	::pinMode(_DRDYPin, INPUT);
+	::pinMode(_DRDYPin, INPUT_PULLUP);
 	
 }
 
@@ -38,14 +38,16 @@ uint32_t ADS126X::getADCData()
 		start();
 	}
 	
-	beginSPI();
-	
 	while(!dataReady()); //wait for data ready signal, to-do must add timeout
+
+	beginSPI();
+
+	//log << dataReady() << endl;
 	
 	SPI.transfer(cmdByte);
 	//log << cmdByte << endl;
 	msbByte = SPI.transfer(DUMMY_BYTE);
-	log << msbByte << endl;
+	//log << msbByte << endl;
 	if(true)//msbByte == cmdByte) //verify we're talking to the chip
 	{
 		msbByte = SPI.transfer(DUMMY_BYTE);
@@ -340,6 +342,8 @@ void ADS126X::stop() //using HW pin here
 
 bool ADS126X::dataReady()
 {
+	//return READ_PIN(XYZ_DATA_RDY);
+	log << digitalRead(_DRDYPin) << endl;
 	return !digitalRead(_DRDYPin);
 }
 

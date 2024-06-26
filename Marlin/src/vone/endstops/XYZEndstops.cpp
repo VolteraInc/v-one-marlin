@@ -18,7 +18,7 @@ XYZSensor::XYZSensor(const Endstops& endstops)
     const auto& xyzLeft = &endstops.xyPositionerLeft;
     const auto& xyzRight = &endstops.xyPositionerRight;
 
-    xyzSensor.setDataRate(7200);
+    //xyzSensor.setDataRate(7200);
 
     tuneXYZEndstop(*xyzFront);
     tuneXYZEndstop(*xyzBack);
@@ -82,7 +82,7 @@ uint8_t XYZSensor::isXYZTouch(const Endstop& endstop) //currently implemented to
 {
     //ScopedInterruptDisable sid;
     //const Endstop *es = &endstop;
-    uint32_t analogReading;
+    uint32_t analogReading = 0;
     setChannel(endstop); //removing this causes a crash, why? its already in X from tuning...
     analogReading = xyzSensor.getADCData();
     //analogReading = _tuneXValue;

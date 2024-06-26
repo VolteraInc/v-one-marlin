@@ -162,6 +162,8 @@ const bool XY_MAX_X_ENDSTOP_INVERTING = true;
 const bool XY_MIN_Y_ENDSTOP_INVERTING = true;
 const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
 
+const bool XYZ_DATA_RDY_ENDSTOP_INVERTING = true;
+
 #define READ_PIN(PIN) (READ(PIN ## _PIN) ^ (PIN ## _ENDSTOP_INVERTING))
 
 // For Inverting Stepper Enable Pins (Active Low) use 0, Non Inverting (Active High) use 1
