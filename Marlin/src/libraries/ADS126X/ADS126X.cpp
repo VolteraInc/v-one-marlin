@@ -43,18 +43,14 @@ uint32_t ADS126X::getADCData()
 	while(!dataReady()); //wait for data ready signal, to-do must add timeout
 	
 	SPI.transfer(cmdByte);
-	if(SPI.transfer(DUMMY_BYTE) == cmdByte) //verify we're talking to the chip
+	//log << cmdByte << endl;
+	msbByte = SPI.transfer(DUMMY_BYTE);
+	log << msbByte << endl;
+	if(true)//msbByte == cmdByte) //verify we're talking to the chip
 	{
 		msbByte = SPI.transfer(DUMMY_BYTE);
 		midByte = SPI.transfer(DUMMY_BYTE);
 		lsbByte = SPI.transfer(DUMMY_BYTE);
-		
-		
-		log << msbByte << endl;
-		//log << F("new") << endl;
-		log << midByte << endl; //these aren't executing?
-		log << lsbByte << endl;
-		//log << F("new2") << endl;
 		
 		//combine bytes
 		result |= msbByte;
@@ -64,7 +60,7 @@ uint32_t ADS126X::getADCData()
 		result <<= 8;
 		
 		result |= lsbByte;
-		//log << result << endl;
+		log << result << endl;
 
 		pauseSPI();
 		//stop();

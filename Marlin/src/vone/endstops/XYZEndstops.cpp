@@ -19,7 +19,7 @@ XYZSensor::XYZSensor(const Endstops& endstops)
     const auto& xyzRight = &endstops.xyPositionerRight;
 
     xyzSensor.setDataRate(7200);
-    
+
     tuneXYZEndstop(*xyzFront);
     tuneXYZEndstop(*xyzBack);
     tuneXYZEndstop(*xyzLeft);
@@ -89,7 +89,7 @@ uint8_t XYZSensor::isXYZTouch(const Endstop& endstop) //currently implemented to
     
     if(endstop.axis == X_AXIS)
     {
-        //if(abs(analogReading - _tuneXValue) > TRIGGER_THRESHOLD ){log << analogReading << endl;}
+        if(abs(analogReading - _tuneXValue) > TRIGGER_THRESHOLD ){log << analogReading << endl;}
 
         return (abs(analogReading - _tuneXValue) > TRIGGER_THRESHOLD ) ? 0 : 1;
     }
