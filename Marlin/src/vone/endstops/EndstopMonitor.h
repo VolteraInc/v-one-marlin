@@ -90,7 +90,7 @@ class EndstopMonitor {
       updateEndstop(m_xMax, READ_PIN(X_LIM), m_endstops.xMax, stepCounts);
 
       #ifdef XYZ_STRAIN
-      //updateEndstop(m_xyPositionerLeft, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerLeft), m_endstops.xyPositionerLeft, stepCounts); //read strain guage
+      updateEndstop(m_xyPositionerLeft, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerLeft), m_endstops.xyPositionerLeft, stepCounts); //read strain guage
       #else
       updateEndstop(m_xyPositionerLeft, READ_PIN(XY_MAX_X), m_endstops.xyPositionerLeft, stepCounts);
       #endif
@@ -98,7 +98,7 @@ class EndstopMonitor {
 
     FORCE_INLINE bool isTriggeredLeft() const {
       ScopedInterruptDisable sid;
-      return m_xMax.triggered();// || m_xyPositionerLeft.triggered();;
+      return m_xMax.triggered() || m_xyPositionerLeft.triggered();
     }
 
     // Right

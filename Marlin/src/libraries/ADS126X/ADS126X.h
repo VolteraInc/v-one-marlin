@@ -162,7 +162,7 @@
 
 //SPI config
 
-#define SPI_FREQ 1000000//(16000000/8)
+#define SPI_FREQ 5000000//(16000000/8)
 
 class ADS126X {
   public:

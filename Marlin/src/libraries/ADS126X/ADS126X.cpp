@@ -36,6 +36,7 @@ uint32_t ADS126X::getADCData()
 	if(!_conversionActive)
 	{
 		start();
+		//delay(10);
 	}
 	
 	while(!dataReady()); //wait for data ready signal, to-do must add timeout
@@ -48,7 +49,7 @@ uint32_t ADS126X::getADCData()
 	//log << cmdByte << endl;
 	msbByte = SPI.transfer(DUMMY_BYTE);
 	//log << msbByte << endl;
-	if(true)//msbByte == cmdByte) //verify we're talking to the chip
+	if(msbByte == cmdByte) //verify we're talking to the chip
 	{
 		msbByte = SPI.transfer(DUMMY_BYTE);
 		midByte = SPI.transfer(DUMMY_BYTE);
@@ -74,11 +75,11 @@ uint32_t ADS126X::getADCData()
 	return 0xFFFFFFFF; //this is an impossible result
 }
 
-bool ADS126X::setDataRate(uint16_t dataRate) //TO IMPLEMENT THIS WILL CURRENTLY GET RID OF THE FILTER SETTING
+bool ADS126X::setDataRate(uint16_t dataRate)
 {
 	uint8_t _addr = ADS126X_MODE0;
 	uint8_t _payload;
-	
+
 	//check if this is the current setting
 	if (dataRate == this->_dataRate)
 	{
@@ -87,45 +88,61 @@ bool ADS126X::setDataRate(uint16_t dataRate) //TO IMPLEMENT THIS WILL CURRENTLY 
 	
 	//get current register contents
 	_payload = readRegister(_addr);
-	
 	//clear data rate bitset
 	_payload &= 0b00000111;
 	
 	switch (dataRate) {
 		case 2:
 			_payload |= ADS126X_DR_2_5;
+			break;
 		case 5:
 			_payload |= ADS126X_DR_5;
+			break;
 		case 10:
 			_payload |= ADS126X_DR_10;
+			break;
 		case 17:
 			_payload |= ADS126X_DR_16_6;
+			break;
 		case 20:
 			_payload |= ADS126X_DR_20;
+			break;
 		case 50:
 			_payload |= ADS126X_DR_50;
+			break;
 		case 60:
 			_payload |= ADS126X_DR_60;
+			break;
 		case 100:
 			_payload |= ADS126X_DR_100;
+			break;
 		case 400:
 			_payload |= ADS126X_DR_400;
+			break;
 		case 1200:
 			_payload |= ADS126X_DR_1200;
+			break;
 		case 2400:
 			_payload |= ADS126X_DR_2400;
+			break;
 		case 4800:
 			_payload |= ADS126X_DR_4800;
+			break;
 		case 7200:
 			_payload |= ADS126X_DR_7200;
+			break;
 		case 14400:
 			_payload |= ADS126X_DR_14400;
+			break;
 		case 19200:
 			_payload |= ADS126X_DR_19200;
+			break;
 		case 25600:
 			_payload |= ADS126X_DR_25600;
+			break;
 		case 40000:
 			_payload |= ADS126X_DR_40000;
+			break;
 		default:
 			//invalid dataRate
 			return false;
@@ -155,14 +172,19 @@ bool ADS126X::setFilter(uint8_t filter)
 	switch (filter) {
 		case 0:
 			_payload |= ADS126X_FILT_SINC1;
+			break;
 		case 1:
 			_payload |= ADS126X_FILT_SINC2;
+			break;
 		case 2:
 			_payload |= ADS126X_FILT_SINC3;
+			break;
 		case 3:
 			_payload |= ADS126X_FILT_SINC4;
+			break;
 		case 4:
 			_payload |= ADS126X_FILT_FIR;
+			break;
 		default:
 			//invalid dataRate
 			return false;
@@ -192,20 +214,28 @@ bool ADS126X::setPGAGain (uint8_t gain)
 	switch (gain) {
 		case 1:
 			_payload |= ADS126X_PGA_GAIN_1;
+			break;
 		case 2:
 			_payload |= ADS126X_PGA_GAIN_2;
+			break;
 		case 4:
 			_payload |= ADS126X_PGA_GAIN_4;
+			break;
 		case 8:
 			_payload |= ADS126X_PGA_GAIN_8;
+			break;
 		case 16:
 			_payload |= ADS126X_PGA_GAIN_16;
+			break;
 		case 32:
 			_payload |= ADS126X_PGA_GAIN_32;
+			break;
 		case 64:
 			_payload |= ADS126X_PGA_GAIN_64;
+			break;
 		case 128:
 			_payload |= ADS126X_PGA_GAIN_128;
+			break;
 		default:
 			//invalid dataRate
 			return false;
@@ -364,12 +394,12 @@ void ADS126X::beginSPI() //to save time during datastream
 {
 	SPI.begin();
     SPI.beginTransaction(SPISettings(SPI_FREQ, MSBFIRST, SPI_MODE1));
-	::digitalWrite(this->_CSPin, LOW);
+	digitalWrite(_CSPin, LOW);
 }
 
 void ADS126X::pauseSPI()
 {
-	::digitalWrite(this->_CSPin, HIGH);
+	digitalWrite(_CSPin, HIGH);
 	SPI.endTransaction();
 }
 
