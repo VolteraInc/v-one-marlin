@@ -21,7 +21,7 @@ XYZSensor::XYZSensor(const Endstops& endstops)
     tuneXYZEndstop(*xyzLeft);
     tuneXYZEndstop(*xyzRight);
 
-    //log << F("tUNED XYZ") << endl;
+    log << F("TUNED XYZ") << endl;
 }
 
 void XYZSensor::tuneXYZEndstop(const Endstop& endstop)
@@ -69,7 +69,12 @@ uint8_t XYZSensor::isXYZTouch(const Endstop& endstop) //currently implemented to
 {
     //ScopedInterruptDisable sid;
     uint32_t analogReading = 0;
-    setChannel(endstop); //removing this causes a crash, why? its already in X from tuning...
+
+    //log << xyzSensor.readRegister(0x02) << endl; //let's check to see if SPI works here...
+    //log << 11 << endl;
+
+
+    setChannel(endstop);
     analogReading = xyzSensor.getADCData();
     //analogReading = _tuneXValue;
     log << analogReading << endl;
@@ -101,7 +106,7 @@ void XYZSensor::setChannel(const Endstop& endstop)
     
     if(endstop.axis == X_AXIS)
     {
-        log << F("MUXX") << endl;
+        //log << F("MUXX") << endl;
         if(this->_invertX)
         {
             xyzSensor.setMux(X_MUX_N, X_MUX_P);
@@ -115,7 +120,7 @@ void XYZSensor::setChannel(const Endstop& endstop)
     }
     else if (endstop.axis == Y_AXIS)
     {
-        log << F("MUXY") << endl;
+        //log << F("MUXY") << endl;
         if(_invertY)
         {
             xyzSensor.setMux(Y_MUX_N, Y_MUX_P);

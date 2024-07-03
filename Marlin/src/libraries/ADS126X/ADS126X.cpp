@@ -22,6 +22,16 @@ ADS126X::ADS126X(uint8_t CSPin, uint8_t STARTPin, uint8_t PWDNPin, uint8_t RESET
     ::digitalWrite(_RESETPin, HIGH);
 	
 	::pinMode(_DRDYPin, INPUT_PULLUP);
+
+	//configure and start ADC
+	//reset();
+	//SPI.begin();
+	//SPI.usingInterrupt(255); //account for timer that controls stepper
+
+	start();
+
+	log << F("start ADC126X") << endl;
+
 	
 }
 
@@ -33,23 +43,25 @@ uint32_t ADS126X::getADCData()
 	//pauseSPI();
 
 	//check if conversions are underway
-	if(!_conversionActive)
-	{
-		start();
+	//if(!_conversionActive)
+	//{
+		//start();
 		//delay(10);
-	}
+	//}
 	
+	beginSPI();
+
 	while(!dataReady()); //wait for data ready signal, to-do must add timeout
 
-	beginSPI();
+	//beginSPI();
 
 	//log << dataReady() << endl;
 	
 	SPI.transfer(cmdByte);
 	//log << cmdByte << endl;
-	msbByte = SPI.transfer(DUMMY_BYTE);
+	//msbByte = SPI.transfer(DUMMY_BYTE);
 	//log << msbByte << endl;
-	if(msbByte == cmdByte) //verify we're talking to the chip
+	if(SPI.transfer(DUMMY_BYTE) == cmdByte) //verify we're talking to the chip
 	{
 		msbByte = SPI.transfer(DUMMY_BYTE);
 		midByte = SPI.transfer(DUMMY_BYTE);
@@ -63,15 +75,13 @@ uint32_t ADS126X::getADCData()
 		result <<= 8;
 		
 		result |= lsbByte;
-		log << result << endl;
+		//log << result << endl;
 
 		pauseSPI();
-		//stop();
 		return result;
 	}
 	
 	pauseSPI();
-	//stop();
 	return 0xFFFFFFFF; //this is an impossible result
 }
 
@@ -317,7 +327,7 @@ bool ADS126X::setMux(uint8_t muxP, uint8_t muxN)
 	uint8_t muxOptions[] = {ADS126X_AIN0, ADS126X_AIN1, ADS126X_AIN2, ADS126X_AIN3, ADS126X_AIN4, ADS126X_AIN5, ADS126X_AIN6, ADS126X_AIN7, ADS126X_AIN8, ADS126X_AIN9, ADS126X_AINCOM};
 	
 	//check if this is the current setting
-	if (muxP == this->_muxP && muxP == this->_muxN)
+	if (muxP == this->_muxP && muxN == this->_muxN)
 	{
 		return true; //already configured as requested
 	}
@@ -373,8 +383,8 @@ void ADS126X::stop() //using HW pin here
 bool ADS126X::dataReady()
 {
 	//return READ_PIN(XYZ_DATA_RDY);
-	log << digitalRead(_DRDYPin) << endl;
-	return !digitalRead(_DRDYPin);
+	//log << digitalRead(_DRDYPin) << endl;
+	return !READ(62);
 }
 
 void ADS126X::sysOffCal()
@@ -394,13 +404,17 @@ void ADS126X::beginSPI() //to save time during datastream
 {
 	SPI.begin();
     SPI.beginTransaction(SPISettings(SPI_FREQ, MSBFIRST, SPI_MODE1));
-	digitalWrite(_CSPin, LOW);
+	//digitalWrite(_CSPin, LOW);
+	WRITE(67,0);
 }
 
 void ADS126X::pauseSPI()
 {
-	digitalWrite(_CSPin, HIGH);
+	
+	WRITE(67,1);
+	//digitalWrite(_CSPin, HIGH);
 	SPI.endTransaction();
+	SPI.end();
 }
 
 bool ADS126X::sendCommand(uint8_t cmdByte) 
@@ -431,6 +445,7 @@ bool ADS126X::writeRegister(uint8_t addr, uint8_t payload)
 	if(SPI.transfer(payload) == cmdByte) //check echo back for chip functionality
 	{ 
 		pauseSPI();
+		log << F("reg write success") << endl;
 		return true; //successful write
 	}
     

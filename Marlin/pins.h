@@ -34,6 +34,10 @@
   #define E_CS_PIN          30
 
   //wip
+  #define SCK_PIN           52
+  #define MOSI_PIN          51
+  #define MISO_PIN          50
+
   #define ADC_PWDN          57
   #define ADC_RST           58
   #define XYZ_START         60

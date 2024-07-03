@@ -4,6 +4,9 @@
 #include <SPI.h>
 #include "../../../serial.h"
 
+#define SPICS_PIN 				67
+#define DATARDY_PIN				62
+
 #define DUMMY_BYTE				0x00
 
 //Command Bytes
@@ -162,7 +165,7 @@
 
 //SPI config
 
-#define SPI_FREQ 5000000//(16000000/8)
+#define SPI_FREQ 16000000/8//(16000000/8)
 
 class ADS126X {
   public:
@@ -207,6 +210,7 @@ class ADS126X {
 	uint32_t getADCData();
 	
     //General Commands
+	uint8_t readRegister(uint8_t addr);
     
   private:
     uint8_t _CSPin, _STARTPin, _PWDNPin, _RESETPin, _DRDYPin;
@@ -215,7 +219,7 @@ class ADS126X {
 	bool _bypass = false, _chop = false, _OS = false, _conversionActive = false;
 
     bool sendCommand(uint8_t cmdByte);
-    uint8_t readRegister(uint8_t addr);
+    
     bool writeRegister(uint8_t addr, uint8_t payload);
 
 };
