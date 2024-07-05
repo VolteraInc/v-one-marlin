@@ -62,6 +62,9 @@ int xyPositionerTouch(tools::Tool& tool, const Endstop& endstop, float& measurem
   const auto& yMin = vone->endstops.yMin;
   const auto& xyPositionerBack = vone->endstops.xyPositionerBack;
 
+  //enable XYZ endstops and readings
+  XYZModeEnable xyzEnable (endstopMonitor);
+
   if (&endstop != &xyPositionerBack) {
     if (moveToEndstop(endstop, slow, 6.0f)) {
       return -1;

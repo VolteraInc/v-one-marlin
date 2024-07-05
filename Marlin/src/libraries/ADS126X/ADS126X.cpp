@@ -75,7 +75,6 @@ uint32_t ADS126X::getADCData()
 		result <<= 8;
 		
 		result |= lsbByte;
-		//log << result << endl;
 
 		pauseSPI();
 		return result;
@@ -329,6 +328,7 @@ bool ADS126X::setMux(uint8_t muxP, uint8_t muxN)
 	//check if this is the current setting
 	if (muxP == this->_muxP && muxN == this->_muxN)
 	{
+		//log << F("aw yep") << endl;
 		return true; //already configured as requested
 	}
 	
@@ -342,9 +342,12 @@ bool ADS126X::setMux(uint8_t muxP, uint8_t muxN)
 		this->_muxP = muxP;
 		this->_muxN = muxN;
 		
+		log << muxP << endl;
+		log << muxN << endl;
 		return true;
 	}
 
+	//log << F("aw yep2") << endl;
 	return false;
 }
 

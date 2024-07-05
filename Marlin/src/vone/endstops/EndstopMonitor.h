@@ -28,6 +28,10 @@ class EndstopMonitor {
     FORCE_INLINE bool hasUnreportedHits() const;
     void reportHits(void (*reportHit)(const Endstop& endstop, float triggeringPosition));
 
+    //Toggle XYZ Mode (saves communication time when talking to ADC chip)
+    void enableXYZ();
+    void disableXYZ();
+
     // Step handlers
     FORCE_INLINE void onSteppingInX(int direction, volatile long stepCounts[NUM_AXIS], bool& triggered);
     FORCE_INLINE void onSteppingInY(int direction, volatile long stepCounts[NUM_AXIS], bool& triggered);
@@ -60,10 +64,14 @@ class EndstopMonitor {
 
     #ifdef XYZ_STRAIN
     XYZSensor m_xyzsensor;
+    //XYZ Mode
+    bool inXYZMode = false;
     #endif
 
     const EndstopFilter* lookup(const Endstop& endstop) const;
     EndstopFilter* lookup(const Endstop& endstop);
+
+    
 
     // ------------------------------------------
     // X-axis
@@ -90,7 +98,7 @@ class EndstopMonitor {
       updateEndstop(m_xMax, READ_PIN(X_LIM), m_endstops.xMax, stepCounts);
 
       #ifdef XYZ_STRAIN
-      updateEndstop(m_xyPositionerLeft, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerLeft), m_endstops.xyPositionerLeft, stepCounts); //read strain guage
+      if(inXYZMode) { updateEndstop(m_xyPositionerLeft, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerLeft), m_endstops.xyPositionerLeft, stepCounts); } //read strain guage
       #else
       updateEndstop(m_xyPositionerLeft, READ_PIN(XY_MAX_X), m_endstops.xyPositionerLeft, stepCounts);
       #endif
@@ -111,7 +119,7 @@ class EndstopMonitor {
       updateEndstop(m_xMin, READ_PIN(X_MIN), m_endstops.xMin, stepCounts);
       
       #ifdef XYZ_STRAIN
-      updateEndstop(m_xyPositionerRight, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerRight), m_endstops.xyPositionerRight, stepCounts); //read strain guage
+      if(inXYZMode) { updateEndstop(m_xyPositionerRight, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerRight), m_endstops.xyPositionerRight, stepCounts); } //read strain guage
       #else
       updateEndstop(m_xyPositionerRight, READ_PIN(XY_MIN_X), m_endstops.xyPositionerRight, stepCounts);
       #endif
@@ -129,14 +137,14 @@ class EndstopMonitor {
     // Forward
     FORCE_INLINE void resetForwardEndstops() {
       m_yMax.reset();
-      //m_xyPositionerForward.reset();
+      m_xyPositionerForward.reset();
     }
 
     FORCE_INLINE void updateForwardEndstops(volatile long stepCounts[NUM_AXIS]) {
       updateEndstop(m_yMax, READ_PIN(Y_LIM), m_endstops.yMax, stepCounts);
       
       #ifdef XYZ_STRAIN
-      //updateEndstop(m_xyPositionerForward, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerForward), m_endstops.xyPositionerForward, stepCounts); //read strain guage
+      if(inXYZMode) { updateEndstop(m_xyPositionerForward, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerForward), m_endstops.xyPositionerForward, stepCounts); }//read strain guage
       #else
       updateEndstop(m_xyPositionerForward, READ_PIN(XY_MAX_Y), m_endstops.xyPositionerForward, stepCounts);
       #endif
@@ -144,31 +152,28 @@ class EndstopMonitor {
 
     FORCE_INLINE bool isTriggeredForward() const {
       ScopedInterruptDisable sid;
-      return m_yMax.triggered();// || m_xyPositionerForward.triggered();
+      return m_yMax.triggered() || m_xyPositionerForward.triggered();
     }
 
     // Back
     FORCE_INLINE void resetBackEndstops() {
       m_yMin.reset();
-      //m_xyPositionerBack.reset();
+      m_xyPositionerBack.reset();
     }
 
     FORCE_INLINE void updateBackEndstops(volatile long stepCounts[NUM_AXIS]) {
       updateEndstop(m_yMin, READ_PIN(Y_MIN), m_endstops.yMin, stepCounts);
 
       #ifdef XYZ_STRAIN
-      //updateEndstop(m_xyPositionerBack, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerBack), m_endstops.xyPositionerBack, stepCounts); //read strain guage
+      if(inXYZMode) { updateEndstop(m_xyPositionerBack, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerBack), m_endstops.xyPositionerBack, stepCounts); } //read strain guage
       #else
       updateEndstop(m_xyPositionerBack, READ_PIN(XY_MIN_Y), m_endstops.xyPositionerBack, stepCounts);
       #endif
-
-
-      
     }
 
     FORCE_INLINE bool isTriggeredBack() const {
       ScopedInterruptDisable sid;
-      return m_yMin.triggered();// || m_xyPositionerBack.triggered();
+      return m_yMin.triggered() || m_xyPositionerBack.triggered();
     }
 
     // ------------------------------------------
@@ -200,7 +205,7 @@ class EndstopMonitor {
       //to do need to implement the zmin/z-switch############################################################################
       
       #ifdef XYZ_STRAIN
-      //updateEndstop(m_xyPositionerBack, isXYZTouch(m_endstops.xyPositionerBack), m_endstops.xyPositionerBack, stepCounts); //read strain guage
+      if(inXYZMode) { updateEndstop(m_zSwitch, m_xyzsensor.isXYZTouch(m_endstops.zSwitch), m_endstops.zSwitch, stepCounts); } //read strain guage
       #else
       updateEndstop(m_zSwitch, READ_PIN(Z_MIN), m_endstops.zSwitch, stepCounts);
       #endif
@@ -261,3 +266,5 @@ void EndstopMonitor::onSteppingInZ(int direction, volatile long stepCounts[NUM_A
     triggered = isTriggeredUp();
   }
 }
+
+

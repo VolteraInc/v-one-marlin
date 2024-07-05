@@ -13,7 +13,7 @@
 #define Z_MUX_P 7
 #define Z_MUX_N 6
 
-#define TRIGGER_THRESHOLD 1000 //TUNE BACK DOWN
+#define TRIGGER_THRESHOLD 250 //TUNE BACK DOWN
 #define NUM_SAMPLES 10
 
 class XYZSensor
@@ -28,7 +28,7 @@ class XYZSensor
 
     private:
         uint32_t _tuneXValue, _tuneYValue, _tuneZValue;
-        bool _invertX = false, _invertY = false, _invertZ = false;
+        bool _invertX = false, _invertY = true, _invertZ = true;
         ADS126X xyzSensor = ADS126X(XYZ_CS_PIN, XYZ_START, ADC_PWDN, ADC_RST, XYZ_DATA_RDY);
 
 };

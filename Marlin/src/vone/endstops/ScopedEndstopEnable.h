@@ -47,3 +47,20 @@ private:
   EndstopMonitor& monitor;
   const Endstop* m_e1;
 };
+
+//added to control the XYZ mode for endstop monitor
+struct XYZModeEnable {
+  FORCE_INLINE XYZModeEnable(
+    EndstopMonitor& monitor
+  )
+    : monitor(monitor)
+  {
+    monitor.enableXYZ();
+  }
+
+  FORCE_INLINE ~XYZModeEnable() {
+    monitor.disableXYZ();
+  }
+private:
+  EndstopMonitor& monitor;
+};

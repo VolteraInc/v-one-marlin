@@ -76,7 +76,7 @@
 
 #endif
 
-#define XYPOS_Z_POS       (-4.0)
+#define XYPOS_Z_POS       (-3.0)//(-4.0)
 
 // Default Serial number for the Voltera V-One
 // Note: Use a recent batch number so that deduced properties are more likely
@@ -236,7 +236,6 @@ micro/step * 200 step / 16 teeth  * 24 teeth / 1 rev * 1 rev / 0.7 mm pitch
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
 #ifdef TRINAMIC_MOTORS
   #define HOMING_FEEDRATE {2800, 2800, 200 , 55}  // set the homing speeds (mm/min)
-  //#define HOMING_FEEDRATE {500, 500, 200 , 55} //THIS IS JUST HERE FOR TESTING
   #define DEFAULT_AXIS_STEPS_PER_UNIT   {100.0, 100.0, 1600.0, 6857.142857142858}
 
 #else

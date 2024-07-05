@@ -142,3 +142,16 @@ void EndstopMonitor::reportHits(
     m_triggerLog.pop();
   }
 }
+
+#ifdef XYZ_STRAIN
+
+void EndstopMonitor::enableXYZ()
+{
+  this->inXYZMode = true;
+}
+
+void EndstopMonitor::disableXYZ()
+{
+  this->inXYZMode = false;
+}
+#endif

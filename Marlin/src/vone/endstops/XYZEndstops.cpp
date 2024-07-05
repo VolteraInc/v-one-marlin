@@ -13,6 +13,7 @@ XYZSensor::XYZSensor(const Endstops& endstops)
     const auto& xyzBack = &endstops.xyPositionerBack;
     const auto& xyzLeft = &endstops.xyPositionerLeft;
     const auto& xyzRight = &endstops.xyPositionerRight;
+    const auto& zMin = &endstops.zSwitch;
 
     xyzSensor.setDataRate(7200);
 
@@ -20,33 +21,30 @@ XYZSensor::XYZSensor(const Endstops& endstops)
     tuneXYZEndstop(*xyzBack);
     tuneXYZEndstop(*xyzLeft);
     tuneXYZEndstop(*xyzRight);
-
-    log << F("TUNED XYZ") << endl;
+    tuneXYZEndstop(*zMin);
 }
 
 void XYZSensor::tuneXYZEndstop(const Endstop& endstop)
 {
     if(endstop.axis == X_AXIS)
     {
-        //_channel = X;
-        //log << F("Start tUNEX") << endl;
+
         setChannel(endstop);
         _tuneXValue = 0;
         for(int i = 0; i < NUM_SAMPLES; i++)
         {
-            _tuneXValue =+ xyzSensor.getADCData()/10;
+            _tuneXValue = _tuneXValue + xyzSensor.getADCData()/10;
+            log << _tuneXValue << endl;
         }
-         //log << F("End tUNEX") << endl;
         //implement method for flipping polarity?
     }
     else if (endstop.axis == Y_AXIS)
     {
-        //_channel = Y;
         setChannel(endstop);
         _tuneYValue = 0;
         for(int i = 0; i < NUM_SAMPLES; i++)
         {
-            _tuneYValue =+ xyzSensor.getADCData()/10;
+            _tuneYValue = _tuneYValue + xyzSensor.getADCData()/10;
         }
 
         //implement method for flipping polarity?
@@ -58,7 +56,7 @@ void XYZSensor::tuneXYZEndstop(const Endstop& endstop)
         _tuneZValue = 0;
         for(int i = 0; i < NUM_SAMPLES; i++)
         {
-            _tuneYValue =+ xyzSensor.getADCData()/10;
+            _tuneZValue = _tuneZValue + xyzSensor.getADCData()/10;
         }
 
         //implement method for flipping polarity?
@@ -67,31 +65,32 @@ void XYZSensor::tuneXYZEndstop(const Endstop& endstop)
 
 uint8_t XYZSensor::isXYZTouch(const Endstop& endstop) //currently implemented to just see if something is triggered in this axis, reducing computation time
 {
-    //ScopedInterruptDisable sid;
     uint32_t analogReading = 0;
-
-    //log << xyzSensor.readRegister(0x02) << endl; //let's check to see if SPI works here...
-    //log << 11 << endl;
-
-
+    int32_t compReading = 0;
     setChannel(endstop);
     analogReading = xyzSensor.getADCData();
-    //analogReading = _tuneXValue;
-    log << analogReading << endl;
-    
+
     if(endstop.axis == X_AXIS)
     {
-        //if(abs(analogReading - _tuneXValue) > TRIGGER_THRESHOLD ){log << analogReading << endl;}
-
-        return (abs(analogReading - _tuneXValue) > TRIGGER_THRESHOLD ) ? 1 : 0;
+              
+        compReading = analogReading - _tuneXValue;
+        log << analogReading << endl;  
+        log << _tuneXValue << endl;  
+        return (abs(compReading) > TRIGGER_THRESHOLD ) ? 1 : 0;
     }
     else if (endstop.axis == Y_AXIS)
     {
-        return (abs(analogReading - _tuneYValue) > TRIGGER_THRESHOLD ) ? 0 : 1;
+        log << analogReading << endl;  
+        log << _tuneYValue << endl; 
+        compReading = analogReading - _tuneYValue;
+        return (abs(compReading) > TRIGGER_THRESHOLD ) ? 1 : 0;
     }
     else if (endstop.axis == Z_AXIS)//Z_axis
     {
-        return (abs(analogReading - _tuneZValue) > TRIGGER_THRESHOLD ) ? 0 : 1;
+        log << analogReading << endl;  
+        log << _tuneZValue << endl; 
+        compReading = analogReading - _tuneZValue;
+        return (abs(compReading) > TRIGGER_THRESHOLD ) ? 1 : 0;
     }
     else
     {
@@ -106,7 +105,6 @@ void XYZSensor::setChannel(const Endstop& endstop)
     
     if(endstop.axis == X_AXIS)
     {
-        //log << F("MUXX") << endl;
         if(this->_invertX)
         {
             xyzSensor.setMux(X_MUX_N, X_MUX_P);
@@ -120,7 +118,6 @@ void XYZSensor::setChannel(const Endstop& endstop)
     }
     else if (endstop.axis == Y_AXIS)
     {
-        //log << F("MUXY") << endl;
         if(_invertY)
         {
             xyzSensor.setMux(Y_MUX_N, Y_MUX_P);

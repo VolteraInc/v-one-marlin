@@ -4,6 +4,7 @@
 #include "../../vone/VOne.h"
 
 #include "internal.h"
+#include "../../vone/endstops/ScopedEndstopEnable.h"
 
 int moveToZSwitchXY(tools::Tool& tool) {
   log << F("Move to z-switch's x,y position") << endl;
@@ -29,6 +30,7 @@ static const bool skipEstablishSoftMaxZ = false;
 static int s_homeZaxis(tools::Tool& tool, float offset, bool shouldEstablishSoftMaxZ = true) {
   const auto& zSwitch = vone->endstops.zSwitch;
   const auto& zMax = vone->endstops.zMax;
+  auto& endstopMonitor = vone->stepper.endstopMonitor;
 
   log << F("homing z-axis") << endl;
 
@@ -64,6 +66,11 @@ static int s_homeZaxis(tools::Tool& tool, float offset, bool shouldEstablishSoft
     }
   }
   
+  //enable XYZ endstops, this is just for test yo
+  //endstopMonitor.enableXYZ();
+  XYZModeEnable xyzEnable (endstopMonitor);
+  log << F("XYZ enabled") << endl;
+
   float zSwitchMeasurement;
   if (
     // Measure the z-switch location
