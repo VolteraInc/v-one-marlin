@@ -328,10 +328,12 @@ bool ADS126X::setMux(uint8_t muxP, uint8_t muxN)
 	//check if this is the current setting
 	if (muxP == this->_muxP && muxN == this->_muxN)
 	{
-		//log << F("aw yep") << endl;
 		return true; //already configured as requested
 	}
 	
+	reset(); //seems to be necessary to change registers once ADC has been running for some time, investigate alternate stability later - todo
+	setDataRate(7200); //reconfigure, expand this
+
 	if(muxP < 11 && muxN < 11) //check for legal choice, e.g. inputs 0-10
 	{
 		//low 4 bits are for MUXN, top 4 bits are for MUXP
@@ -341,13 +343,10 @@ bool ADS126X::setMux(uint8_t muxP, uint8_t muxN)
 		writeRegister(_addr, _payload);
 		this->_muxP = muxP;
 		this->_muxN = muxN;
-		
-		log << muxP << endl;
-		log << muxN << endl;
+	
 		return true;
 	}
 
-	//log << F("aw yep2") << endl;
 	return false;
 }
 
@@ -373,21 +372,25 @@ void ADS126X::reset()
 
 void ADS126X::start() //using HW pin here
 {
-	digitalWrite(_STARTPin, HIGH);
+	//digitalWrite(_STARTPin, HIGH);
+	WRITE(60,1); //clean this up - todo
 	_conversionActive = true;
+	delay(10);
 }
 
 void ADS126X::stop() //using HW pin here
 {
-	digitalWrite(_STARTPin, LOW);
+	//digitalWrite(_STARTPin, LOW);
+	WRITE(60,0); //clean this up - todo
 	_conversionActive = false;
+	delay(10);
 }
 
 bool ADS126X::dataReady()
 {
 	//return READ_PIN(XYZ_DATA_RDY);
 	//log << digitalRead(_DRDYPin) << endl;
-	return !READ(62);
+	return !READ(62); //clean this up - todo
 }
 
 void ADS126X::sysOffCal()
@@ -408,7 +411,7 @@ void ADS126X::beginSPI() //to save time during datastream
 	SPI.begin();
     SPI.beginTransaction(SPISettings(SPI_FREQ, MSBFIRST, SPI_MODE1));
 	//digitalWrite(_CSPin, LOW);
-	WRITE(67,0);
+	WRITE(67,0); //clean this up - todo
 }
 
 void ADS126X::pauseSPI()
@@ -417,7 +420,7 @@ void ADS126X::pauseSPI()
 	WRITE(67,1);
 	//digitalWrite(_CSPin, HIGH);
 	SPI.endTransaction();
-	SPI.end();
+	SPI.end(); //clean this up - todo
 }
 
 bool ADS126X::sendCommand(uint8_t cmdByte) 
@@ -440,15 +443,17 @@ bool ADS126X::sendCommand(uint8_t cmdByte)
 bool ADS126X::writeRegister(uint8_t addr, uint8_t payload) 
 {
 	uint8_t cmdByte = ADS126X_WREG | addr; //this creates the command to write to resiter at addr
+
+	uint8_t temp = 0x00;
 	
 	//begin SPI (time this)
 	beginSPI();
 	
 	SPI.transfer(cmdByte);
-	if(SPI.transfer(payload) == cmdByte) //check echo back for chip functionality
+	temp = SPI.transfer(payload);
+	if(temp == cmdByte) //check echo back for chip functionality
 	{ 
 		pauseSPI();
-		log << F("reg write success") << endl;
 		return true; //successful write
 	}
     

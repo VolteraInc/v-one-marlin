@@ -17,26 +17,24 @@ XYZSensor::XYZSensor(const Endstops& endstops)
 
     xyzSensor.setDataRate(7200);
 
+    tuneXYZEndstop(*zMin); //PUT FIRST FOR TEST PURPOSES
     tuneXYZEndstop(*xyzFront);
     tuneXYZEndstop(*xyzBack);
     tuneXYZEndstop(*xyzLeft);
     tuneXYZEndstop(*xyzRight);
-    tuneXYZEndstop(*zMin);
 }
 
 void XYZSensor::tuneXYZEndstop(const Endstop& endstop)
 {
     if(endstop.axis == X_AXIS)
     {
-
         setChannel(endstop);
         _tuneXValue = 0;
         for(int i = 0; i < NUM_SAMPLES; i++)
         {
             _tuneXValue = _tuneXValue + xyzSensor.getADCData()/10;
-            log << _tuneXValue << endl;
         }
-        //implement method for flipping polarity?
+        log << _tuneXValue << endl; //for dev
     }
     else if (endstop.axis == Y_AXIS)
     {
@@ -46,20 +44,17 @@ void XYZSensor::tuneXYZEndstop(const Endstop& endstop)
         {
             _tuneYValue = _tuneYValue + xyzSensor.getADCData()/10;
         }
-
-        //implement method for flipping polarity?
+        log << _tuneYValue << endl; //for dev
     }
     else //Z_axis
     {
-        //_channel = Z;
         setChannel(endstop);
         _tuneZValue = 0;
         for(int i = 0; i < NUM_SAMPLES; i++)
         {
             _tuneZValue = _tuneZValue + xyzSensor.getADCData()/10;
         }
-
-        //implement method for flipping polarity?
+        log << _tuneZValue << endl; //for dev
     }
 }
 
@@ -69,26 +64,20 @@ uint8_t XYZSensor::isXYZTouch(const Endstop& endstop) //currently implemented to
     int32_t compReading = 0;
     setChannel(endstop);
     analogReading = xyzSensor.getADCData();
+    log << analogReading << endl;
 
     if(endstop.axis == X_AXIS)
     {
-              
         compReading = analogReading - _tuneXValue;
-        log << analogReading << endl;  
-        log << _tuneXValue << endl;  
         return (abs(compReading) > TRIGGER_THRESHOLD ) ? 1 : 0;
     }
     else if (endstop.axis == Y_AXIS)
     {
-        log << analogReading << endl;  
-        log << _tuneYValue << endl; 
         compReading = analogReading - _tuneYValue;
         return (abs(compReading) > TRIGGER_THRESHOLD ) ? 1 : 0;
     }
     else if (endstop.axis == Z_AXIS)//Z_axis
     {
-        log << analogReading << endl;  
-        log << _tuneZValue << endl; 
         compReading = analogReading - _tuneZValue;
         return (abs(compReading) > TRIGGER_THRESHOLD ) ? 1 : 0;
     }
@@ -104,7 +93,7 @@ void XYZSensor::setChannel(const Endstop& endstop)
     xyzSensor.stop();
     
     if(endstop.axis == X_AXIS)
-    {
+    {   
         if(this->_invertX)
         {
             xyzSensor.setMux(X_MUX_N, X_MUX_P);
@@ -112,8 +101,6 @@ void XYZSensor::setChannel(const Endstop& endstop)
         else
         {
             xyzSensor.setMux(X_MUX_P, X_MUX_N);
-            
-
         }
     }
     else if (endstop.axis == Y_AXIS)

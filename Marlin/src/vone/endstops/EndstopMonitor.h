@@ -144,7 +144,7 @@ class EndstopMonitor {
       updateEndstop(m_yMax, READ_PIN(Y_LIM), m_endstops.yMax, stepCounts);
       
       #ifdef XYZ_STRAIN
-      if(inXYZMode) { updateEndstop(m_xyPositionerForward, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerForward), m_endstops.xyPositionerForward, stepCounts); }//read strain guage
+      if(inXYZMode) { updateEndstop(m_xyPositionerForward, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerForward), m_endstops.xyPositionerForward, stepCounts);}//read strain guage
       #else
       updateEndstop(m_xyPositionerForward, READ_PIN(XY_MAX_Y), m_endstops.xyPositionerForward, stepCounts);
       #endif
