@@ -48,12 +48,13 @@ uint32_t ADS126X::getADCData()
 		//start();
 		//delay(10);
 	//}
-	
+	//long time = micros();
 	beginSPI();
-
-	while(!dataReady()); //wait for data ready signal, to-do must add timeout
-
+	//time = micros();
+	while(!dataReady()); //wait for data ready signal, to-do must add timeout, currently taking 40ms...20Hz
+	//time = micros();
 	//beginSPI();
+	//time = micros() - time;
 
 	//log << dataReady() << endl;
 	
@@ -75,7 +76,8 @@ uint32_t ADS126X::getADCData()
 		result <<= 8;
 		
 		result |= lsbByte;
-
+		
+		//log << time << endl;
 		pauseSPI();
 		return result;
 	}
@@ -92,7 +94,7 @@ bool ADS126X::setDataRate(uint16_t dataRate)
 	//check if this is the current setting
 	if (dataRate == this->_dataRate)
 	{
-		return true; //already configured as requested
+		//return true; //already configured as requested, THIS NEEDS TO BE IMPLEMENTED SMARTER
 	}
 	
 	//get current register contents
@@ -322,6 +324,8 @@ bool ADS126X::setMux(uint8_t muxP, uint8_t muxN)
 {
 	uint8_t _addr = ADS126X_INPMUX;
 	uint8_t _payload = 0x00;
+
+	
 	
 	uint8_t muxOptions[] = {ADS126X_AIN0, ADS126X_AIN1, ADS126X_AIN2, ADS126X_AIN3, ADS126X_AIN4, ADS126X_AIN5, ADS126X_AIN6, ADS126X_AIN7, ADS126X_AIN8, ADS126X_AIN9, ADS126X_AINCOM};
 	
@@ -330,8 +334,11 @@ bool ADS126X::setMux(uint8_t muxP, uint8_t muxN)
 	{
 		return true; //already configured as requested
 	}
-	
+
+	//long time = micros();
+	stop();
 	reset(); //seems to be necessary to change registers once ADC has been running for some time, investigate alternate stability later - todo
+	//delay(10); //waiting for a reset
 	setDataRate(7200); //reconfigure, expand this
 
 	if(muxP < 11 && muxN < 11) //check for legal choice, e.g. inputs 0-10
@@ -343,10 +350,11 @@ bool ADS126X::setMux(uint8_t muxP, uint8_t muxN)
 		writeRegister(_addr, _payload);
 		this->_muxP = muxP;
 		this->_muxN = muxN;
-	
+		//log << (micros() - time) << endl;
+		start();
 		return true;
 	}
-
+	start();
 	return false;
 }
 
@@ -367,7 +375,11 @@ void ADS126X::unlock()
 
 void ADS126X::reset()
 {
-	sendCommand(ADS126X_RESET);
+	//sendCommand(ADS126X_RESET);
+	digitalWrite(_RESETPin, LOW);
+	delay(500);
+	digitalWrite(_RESETPin, HIGH);
+	delay(500);
 }
 
 void ADS126X::start() //using HW pin here
@@ -375,7 +387,7 @@ void ADS126X::start() //using HW pin here
 	//digitalWrite(_STARTPin, HIGH);
 	WRITE(60,1); //clean this up - todo
 	_conversionActive = true;
-	delay(10);
+	//delay(10);
 }
 
 void ADS126X::stop() //using HW pin here
@@ -383,7 +395,7 @@ void ADS126X::stop() //using HW pin here
 	//digitalWrite(_STARTPin, LOW);
 	WRITE(60,0); //clean this up - todo
 	_conversionActive = false;
-	delay(10);
+	//delay(10);
 }
 
 bool ADS126X::dataReady()
@@ -410,6 +422,7 @@ void ADS126X::beginSPI() //to save time during datastream
 {
 	SPI.begin();
     SPI.beginTransaction(SPISettings(SPI_FREQ, MSBFIRST, SPI_MODE1));
+	//SPI.usingInterrupt(255);
 	//digitalWrite(_CSPin, LOW);
 	WRITE(67,0); //clean this up - todo
 }

@@ -32,9 +32,10 @@
 
 #endif
 
-#ifdef MODEL == 8 //todo update with final mechanical dims
-#define XYPOS_X_POS                 ( 27.5)
-#define XYPOS_Y_POS                 (  10.3)
+#ifdef MODEL == 8
+#define XYPOS_X_POS                 ( 27.9)
+#define XYPOS_Y_POS                 (  8.5)
+#define XYPOS_Z_POS                 (  2.5)
 #define OFFSET_FROM_XYPOS_TO_MINZ_X      (0) //now in the same position
 #define OFFSET_FROM_XYPOS_TO_MINZ_Y      (0) //now in the same position
 #define MIN_Z_X_POS       (XYPOS_X_POS + OFFSET_FROM_XYPOS_TO_MINZ_X)
@@ -57,6 +58,7 @@
 // Default Calibration offsets for the Voltera V-One
 #define XYPOS_X_POS                 ( 34.1)  // Value used by Will (our production Tech) for batch 6 units, set in Dec 2019
 #define XYPOS_Y_POS                 (  4.5)  // Value used by Will (our production Tech) for batch 6 units, set in Dec 2019
+#define XYPOS_Z_POS                 ( -4.0)
 #define OFFSET_FROM_XYPOS_TO_MINZ_X      (-29.60) // Distance between center of Min Z and XY Positioner - Taken from PCB and Solidworks CAD files
 #define OFFSET_FROM_XYPOS_TO_MINZ_Y      (2.5)  // Distance between center of Min Z and XY Positioner - Taken from PCB and Solidworks CAD files
 #define MIN_Z_X_POS       (XYPOS_X_POS + OFFSET_FROM_XYPOS_TO_MINZ_X)
@@ -75,8 +77,6 @@
 #define XY_MIN_Y_VIRTUAL_ENDSTOP  false
 
 #endif
-
-#define XYPOS_Z_POS       (-3.0)//(-4.0)
 
 // Default Serial number for the Voltera V-One
 // Note: Use a recent batch number so that deduced properties are more likely

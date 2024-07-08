@@ -12,10 +12,12 @@ const float defaultXyPositionerCycles = 2;
 static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
   switch (howToMoveToZ) {
     case useConfiguredZ:
+      log << 123 << endl;
       return moveZ(tool, xypos_z_pos);
 
     case usePlateBackOffForZ: {
       const auto& calibrationPlate = vone->endstops.calibrationPlate;
+      log << 124 << endl;
       return (
         // Lower until plate triggers
         moveToEndstop(calibrationPlate) ||

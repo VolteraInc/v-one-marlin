@@ -64,7 +64,7 @@ uint8_t XYZSensor::isXYZTouch(const Endstop& endstop) //currently implemented to
     int32_t compReading = 0;
     setChannel(endstop);
     analogReading = xyzSensor.getADCData();
-    log << analogReading << endl;
+    //log << analogReading << endl;
 
     if(endstop.axis == X_AXIS)
     {
@@ -90,7 +90,7 @@ uint8_t XYZSensor::isXYZTouch(const Endstop& endstop) //currently implemented to
 
 void XYZSensor::setChannel(const Endstop& endstop)
 {
-    xyzSensor.stop();
+    //xyzSensor.stop();
     
     if(endstop.axis == X_AXIS)
     {   
@@ -126,5 +126,5 @@ void XYZSensor::setChannel(const Endstop& endstop)
         }
     }
 
-    xyzSensor.start();
+    //xyzSensor.start();
 }
