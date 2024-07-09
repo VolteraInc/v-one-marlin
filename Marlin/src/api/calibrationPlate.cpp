@@ -41,7 +41,7 @@ int measureProbeDisplacement(tools::Probe& probe, float& o_displacement) {
 
   // Measure the calibration plate
   float plateZ;
-  float maxTravel = 2; // mm, should be within 2mm of the plate
+  float maxTravel = 2.5; // mm, should be within 2mm of the plate - todo this is different between B7 and B8
   if (s_measureCalibrationPlateZ(plateZ, maxTravel)) {
     logError
       << F("Unable to measure probe displacement, ")

@@ -12,12 +12,10 @@ const float defaultXyPositionerCycles = 2;
 static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
   switch (howToMoveToZ) {
     case useConfiguredZ:
-      log << 123 << endl;
       return moveZ(tool, xypos_z_pos);
 
     case usePlateBackOffForZ: {
       const auto& calibrationPlate = vone->endstops.calibrationPlate;
-      log << 124 << endl;
       return (
         // Lower until plate triggers
         moveToEndstop(calibrationPlate) ||
@@ -26,6 +24,19 @@ static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveT
         // Note: probe displacement can be ignored becuase the
         //       calibration plate triggers before the probe
         relativeMove(tool, 0, 0, .5, 0)
+      );
+    }
+
+    case findStrainZ: {
+      const auto& zSwitch = vone->endstops.zSwitch;
+      return (
+        // Lower until plate triggers
+        moveToEndstop(zSwitch) ||
+
+        // Retract .5mm above surface
+        // Note: probe displacement can be ignored becuase the
+        //       calibration plate triggers before the probe
+        relativeMove(tool, 0, 0, 2.5, 0)
       );
     }
 

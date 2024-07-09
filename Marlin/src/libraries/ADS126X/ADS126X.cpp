@@ -24,15 +24,7 @@ ADS126X::ADS126X(uint8_t CSPin, uint8_t STARTPin, uint8_t PWDNPin, uint8_t RESET
 	::pinMode(_DRDYPin, INPUT_PULLUP);
 
 	//configure and start ADC
-	//reset();
-	//SPI.begin();
-	//SPI.usingInterrupt(255); //account for timer that controls stepper
-
 	start();
-
-	log << F("start ADC126X") << endl;
-
-	
 }
 
 uint32_t ADS126X::getADCData()
@@ -40,28 +32,10 @@ uint32_t ADS126X::getADCData()
 	uint8_t cmdByte = ADS126X_RDATA, msbByte = 0x00, midByte = 0x00, lsbByte = 0x00;
 	uint32_t result = 0x00000000;
 	
-	//pauseSPI();
-
-	//check if conversions are underway
-	//if(!_conversionActive)
-	//{
-		//start();
-		//delay(10);
-	//}
-	//long time = micros();
 	beginSPI();
-	//time = micros();
 	while(!dataReady()); //wait for data ready signal, to-do must add timeout, currently taking 40ms...20Hz
-	//time = micros();
-	//beginSPI();
-	//time = micros() - time;
 
-	//log << dataReady() << endl;
-	
 	SPI.transfer(cmdByte);
-	//log << cmdByte << endl;
-	//msbByte = SPI.transfer(DUMMY_BYTE);
-	//log << msbByte << endl;
 	if(SPI.transfer(DUMMY_BYTE) == cmdByte) //verify we're talking to the chip
 	{
 		msbByte = SPI.transfer(DUMMY_BYTE);
@@ -77,7 +51,6 @@ uint32_t ADS126X::getADCData()
 		
 		result |= lsbByte;
 		
-		//log << time << endl;
 		pauseSPI();
 		return result;
 	}
@@ -324,8 +297,6 @@ bool ADS126X::setMux(uint8_t muxP, uint8_t muxN)
 {
 	uint8_t _addr = ADS126X_INPMUX;
 	uint8_t _payload = 0x00;
-
-	
 	
 	uint8_t muxOptions[] = {ADS126X_AIN0, ADS126X_AIN1, ADS126X_AIN2, ADS126X_AIN3, ADS126X_AIN4, ADS126X_AIN5, ADS126X_AIN6, ADS126X_AIN7, ADS126X_AIN8, ADS126X_AIN9, ADS126X_AINCOM};
 	
@@ -335,10 +306,8 @@ bool ADS126X::setMux(uint8_t muxP, uint8_t muxN)
 		return true; //already configured as requested
 	}
 
-	//long time = micros();
 	stop();
-	reset(); //seems to be necessary to change registers once ADC has been running for some time, investigate alternate stability later - todo
-	//delay(10); //waiting for a reset
+	reset(); //seems to be necessary to change registers once ADC has  running for some time, investigate alternate stability later - todo
 	setDataRate(7200); //reconfigure, expand this
 
 	if(muxP < 11 && muxN < 11) //check for legal choice, e.g. inputs 0-10
@@ -350,7 +319,7 @@ bool ADS126X::setMux(uint8_t muxP, uint8_t muxN)
 		writeRegister(_addr, _payload);
 		this->_muxP = muxP;
 		this->_muxN = muxN;
-		//log << (micros() - time) << endl;
+
 		start();
 		return true;
 	}
@@ -377,9 +346,9 @@ void ADS126X::reset()
 {
 	//sendCommand(ADS126X_RESET);
 	digitalWrite(_RESETPin, LOW);
-	delay(500);
+	delay(10);
 	digitalWrite(_RESETPin, HIGH);
-	delay(500);
+	delay(10);
 }
 
 void ADS126X::start() //using HW pin here

@@ -147,6 +147,7 @@ void EndstopMonitor::reportHits(
 
 void EndstopMonitor::enableXYZ()
 {
+  m_xyzsensor.tuneXYZEndstops(m_endstops);
   this->inXYZMode = true;
 }
 

@@ -279,15 +279,11 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   }
 
   #else
-
   // Check if already triggered
   if (endstop.readTriggered()) {
     return 0;
   }
-
   #endif
-
-  log << F("r we getting here or") << endl;
 
   // Enable endstop, if necessary
   ScopedEndstopEnable scopedEnable(endstopMonitor, endstop);

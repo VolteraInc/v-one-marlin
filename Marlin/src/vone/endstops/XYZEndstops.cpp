@@ -9,15 +9,22 @@
 
 XYZSensor::XYZSensor(const Endstops& endstops)
 {
+    xyzSensor.setDataRate(7200);
+    tuneXYZEndstops(endstops);
+}
+
+
+void XYZSensor::tuneXYZEndstops(const Endstops& endstops)
+{
     const auto& xyzFront = &endstops.xyPositionerForward;
     const auto& xyzBack = &endstops.xyPositionerBack;
     const auto& xyzLeft = &endstops.xyPositionerLeft;
     const auto& xyzRight = &endstops.xyPositionerRight;
     const auto& zMin = &endstops.zSwitch;
 
-    xyzSensor.setDataRate(7200);
+    //log << F("tune tune") << endl;
 
-    tuneXYZEndstop(*zMin); //PUT FIRST FOR TEST PURPOSES
+    tuneXYZEndstop(*zMin);
     tuneXYZEndstop(*xyzFront);
     tuneXYZEndstop(*xyzBack);
     tuneXYZEndstop(*xyzLeft);
@@ -34,7 +41,7 @@ void XYZSensor::tuneXYZEndstop(const Endstop& endstop)
         {
             _tuneXValue = _tuneXValue + xyzSensor.getADCData()/10;
         }
-        log << _tuneXValue << endl; //for dev
+        //log << _tuneXValue << endl;
     }
     else if (endstop.axis == Y_AXIS)
     {
@@ -44,7 +51,7 @@ void XYZSensor::tuneXYZEndstop(const Endstop& endstop)
         {
             _tuneYValue = _tuneYValue + xyzSensor.getADCData()/10;
         }
-        log << _tuneYValue << endl; //for dev
+        //log << _tuneYValue << endl;
     }
     else //Z_axis
     {
@@ -54,7 +61,7 @@ void XYZSensor::tuneXYZEndstop(const Endstop& endstop)
         {
             _tuneZValue = _tuneZValue + xyzSensor.getADCData()/10;
         }
-        log << _tuneZValue << endl; //for dev
+        //log << _tuneZValue << endl;
     }
 }
 
@@ -69,17 +76,17 @@ uint8_t XYZSensor::isXYZTouch(const Endstop& endstop) //currently implemented to
     if(endstop.axis == X_AXIS)
     {
         compReading = analogReading - _tuneXValue;
-        return (abs(compReading) > TRIGGER_THRESHOLD ) ? 1 : 0;
+        return (abs(compReading) > TRIGGER_THRESHOLD_X ) ? 1 : 0;
     }
     else if (endstop.axis == Y_AXIS)
     {
         compReading = analogReading - _tuneYValue;
-        return (abs(compReading) > TRIGGER_THRESHOLD ) ? 1 : 0;
+        return (abs(compReading) > TRIGGER_THRESHOLD_Y ) ? 1 : 0;
     }
     else if (endstop.axis == Z_AXIS)//Z_axis
     {
         compReading = analogReading - _tuneZValue;
-        return (abs(compReading) > TRIGGER_THRESHOLD ) ? 1 : 0;
+        return (abs(compReading) > TRIGGER_THRESHOLD_Z ) ? 1 : 0;
     }
     else
     {
@@ -90,7 +97,6 @@ uint8_t XYZSensor::isXYZTouch(const Endstop& endstop) //currently implemented to
 
 void XYZSensor::setChannel(const Endstop& endstop)
 {
-    //xyzSensor.stop();
     
     if(endstop.axis == X_AXIS)
     {   
@@ -126,5 +132,4 @@ void XYZSensor::setChannel(const Endstop& endstop)
         }
     }
 
-    //xyzSensor.start();
 }
