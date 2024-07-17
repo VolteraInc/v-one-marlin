@@ -69,7 +69,7 @@ static int s_homeZaxis(tools::Tool& tool, float offset, bool shouldEstablishSoft
   //enable XYZ endstops, this is just for test yo
   //endstopMonitor.enableXYZ();
   XYZModeEnable xyzEnable (endstopMonitor);
-  log << F("XYZ enabled") << endl;
+  //log << F("XYZ enabled") << endl;
 
   float zSwitchMeasurement;
   if (
@@ -82,6 +82,9 @@ static int s_homeZaxis(tools::Tool& tool, float offset, bool shouldEstablishSoft
     logError << F("Unable to home z-axis, could not measure") << zSwitch.name << endl;
     return -1;
   }
+
+  //post zSwitch location to logs, for development purposes
+  log << F("DEV - zSwitch detected at ") << zSwitchMeasurement << endl;
 
   // We are home!
   setHomedState(Z_AXIS, -1);

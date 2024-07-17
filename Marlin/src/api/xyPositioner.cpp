@@ -29,6 +29,11 @@ static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveT
 
     case findStrainZ: {
       const auto& zSwitch = vone->endstops.zSwitch;
+      auto& endstopMonitor = vone->stepper.endstopMonitor;
+
+      //enable XYZ endstops and readings
+      XYZModeEnable xyzEnable (endstopMonitor);
+
       return (
         // Lower until plate triggers
         moveToEndstop(zSwitch) ||
@@ -60,7 +65,6 @@ int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
       return -1;
     }
   }
-
   // Move to xy-positioner's x,y, then z
   return (
     moveXY(tool, xypos_x_pos, xypos_y_pos) ||
@@ -159,9 +163,22 @@ static int s_findCenter(tools::Tool& tool, long cycles, float& o_centerX, float&
       << F(" y:") << centerY
       << endl;
 
+    /*//for dev
+    log << F("xyzPositonerCenter")
+    << F(" x:") << centerX
+    << F(" y:") << centerY
+    << F(" z:") << current_position[Z_AXIS]
+    << endl;*/
+
     // Each cycle takes a non-trivial amount of time so reset the inactivity timer
     refresh_cmd_timeout();
   }
+
+  //for dev
+    log << F("DEV - XY center")
+    << F(" x:") << centerX
+    << F(" y:") << centerY
+    << endl;
 
   // Go to the computed position
   if (moveXY(tool, centerX, centerY)) {

@@ -411,6 +411,58 @@ int process_dcode(int command_code) {
       return checkExtents(tool, tolerance);
     }
 
+    case 201:  //entirely for dev
+      const long loopcycles = code_seen('C') ? code_value_long() : 1;
+      const long feedrate = code_seen('F') ? code_value_long() : getDefaultFeedrate();
+
+      // Set Tool
+      if (code_seen('P')) {
+        vone->toolBox.setTool(&vone->toolBox.probe);
+      } else if (code_seen('R')) {
+        vone->toolBox.setTool(&vone->toolBox.drill);
+      } else if (code_seen('D')) {
+          vone->toolBox.setTool(&vone->toolBox.dispenser);
+      } else {
+        vone->toolBox.setTool(&vone->toolBox.nullTool);
+      }
+
+      for(int j = 0; j < loopcycles; j++){
+        tool.prepareToMove();
+
+
+        log << F("xyzPositonerCenter")
+        << F(" x:") << centerX
+        << F(" y:") << centerY
+        << F(" z:") << current_position[Z_AXIS]
+
+        // Find the center
+        //float centerX;
+        //float centerY;
+        //const int returnValue = xyPositionerFindCenter(tool, 1, centerX, centerY);
+
+        // Output
+        //log
+          //<< F("xyPositionerFindCenter")
+          //<< F(" returnValue:") << returnValue
+          //<< F(" cycle number:") << j
+          //<< F(" x:") << centerX
+          //<< F(" y:") << centerY
+          //<< endl;
+
+        /*asyncRelativeMove(
+        tool,
+        0,
+        0,
+        -15,
+        0,
+        600
+      );*/
+
+
+          tool.resetPreparations();
+      }
+      
+
     //-------------------------------------------
     // List Commands
     default:
