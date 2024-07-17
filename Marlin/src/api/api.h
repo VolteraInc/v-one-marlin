@@ -16,8 +16,14 @@ namespace tools {
 extern const float defaultXyPositionerCycles;
 enum HowToMoveToZ { useConfiguredZ, usePlateBackOffForZ, findStrainZ, skipMoveInZ };
 int xyPositionerTouch(tools::Tool& tool, const Endstop& endstop, float& measurement);
+
+#ifdef XYZ_STRAIN
 int xyPositionerFindCenter(tools::Tool& tool, long cycles, float& centerX, float& centerY, enum HowToMoveToZ howToMoveToZ = findStrainZ);
 int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ = findStrainZ);
+#else
+int xyPositionerFindCenter(tools::Tool& tool, long cycles, float& centerX, float& centerY, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
+int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ = useConfiguredZ);
+#endif
 
 // Calibration plate
 extern const float MinDisplacement;

@@ -5,6 +5,7 @@
 #include "../vone/tools/Probe.h"
 #include "../vone/VOne.h"
 #include "../vone/endstops/ScopedEndstopEnable.h"
+#include "../../Configuration.h"
 
 const float MinDisplacement = 0.050f;
 const float MaxDisplacement = 0.500f;
@@ -41,7 +42,7 @@ int measureProbeDisplacement(tools::Probe& probe, float& o_displacement) {
 
   // Measure the calibration plate
   float plateZ;
-  float maxTravel = 3.0;//2.5; // mm, should be within 2mm of the plate - todo this is different between B7 and B8
+  float maxTravel = CALIB_PLATE_MAX_Z; // mm, z distance changes between B7 and B8 
   if (s_measureCalibrationPlateZ(plateZ, maxTravel)) {
     logError
       << F("Unable to measure probe displacement, ")

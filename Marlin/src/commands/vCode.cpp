@@ -387,7 +387,7 @@ int process_vcode(int command_code) {
       log << F("  Probe") << endl;
       log << F("    V101 P - attach probe, include 'F' to force change") << endl;
       log << F("    V4   - Probe point at current position (retract by probe displacement + R) -- V4 R1") << endl;
-      log << F("     - E1 to enable, E0 to disable height safety -- V201 E1") << endl;
+      log << F("    V201 - E1 to enable, E0 to disable height safety -- V201 E1") << endl;
       log << F("    V211 - Probe hole with diameter D centered at X,Y (default to current position) -- V211 D1.0") << endl;
       log << F("  Drill") << endl;
       log << F("    V101 R - attach drill, include 'F' to force change") << endl;

@@ -66,10 +66,8 @@ static int s_homeZaxis(tools::Tool& tool, float offset, bool shouldEstablishSoft
     }
   }
   
-  //enable XYZ endstops, this is just for test yo
-  //endstopMonitor.enableXYZ();
+  //enable XYZ endstops
   XYZModeEnable xyzEnable (endstopMonitor);
-  //log << F("XYZ enabled") << endl;
 
   float zSwitchMeasurement;
   if (

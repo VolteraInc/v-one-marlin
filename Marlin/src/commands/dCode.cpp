@@ -411,57 +411,49 @@ int process_dcode(int command_code) {
       return checkExtents(tool, tolerance);
     }
 
-    case 201:  //entirely for dev
+    case 201: { //entirely for dev
       const long loopcycles = code_seen('C') ? code_value_long() : 1;
-      const long feedrate = code_seen('F') ? code_value_long() : getDefaultFeedrate();
+      int toolType = 0;
 
       // Set Tool
       if (code_seen('P')) {
-        vone->toolBox.setTool(&vone->toolBox.probe);
+        toolType = 1;
       } else if (code_seen('R')) {
-        vone->toolBox.setTool(&vone->toolBox.drill);
+        toolType = 2;
       } else if (code_seen('D')) {
-          vone->toolBox.setTool(&vone->toolBox.dispenser);
+        toolType = 3;
       } else {
-        vone->toolBox.setTool(&vone->toolBox.nullTool);
+        log << F("Must specify tool") << endl;
+        return -1;
       }
 
-      for(int j = 0; j < loopcycles; j++){
+      for(uint8_t j = 0; j < loopcycles; j++){
+        
+        //Set tool
+        switch(toolType){
+          case 1:
+            vone->toolBox.setTool(&vone->toolBox.probe);
+            break;
+          case 2:
+            vone->toolBox.setTool(&vone->toolBox.drill);
+            break;
+          case 3:
+            vone->toolBox.setTool(&vone->toolBox.dispenser);
+            break;
+          default:
+            break;
+        }
+        delay(100);
+
+        //perform XYZ localization
         tool.prepareToMove();
+        delay(100);
 
-
-        log << F("xyzPositonerCenter")
-        << F(" x:") << centerX
-        << F(" y:") << centerY
-        << F(" z:") << current_position[Z_AXIS]
-
-        // Find the center
-        //float centerX;
-        //float centerY;
-        //const int returnValue = xyPositionerFindCenter(tool, 1, centerX, centerY);
-
-        // Output
-        //log
-          //<< F("xyPositionerFindCenter")
-          //<< F(" returnValue:") << returnValue
-          //<< F(" cycle number:") << j
-          //<< F(" x:") << centerX
-          //<< F(" y:") << centerY
-          //<< endl;
-
-        /*asyncRelativeMove(
-        tool,
-        0,
-        0,
-        -15,
-        0,
-        600
-      );*/
-
-
-          tool.resetPreparations();
+        //Forget tool
+        vone->toolBox.setTool(&vone->toolBox.nullTool);
+        delay(100);
       }
-      
+    }
 
     //-------------------------------------------
     // List Commands

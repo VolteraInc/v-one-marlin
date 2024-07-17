@@ -46,6 +46,7 @@
 #define CALIB_TAN_THETA   (0.0)
 #define CALIB_X_BACKLASH  (0.0) // Default assumed backlash
 #define CALIB_Y_BACKLASH  (0.0)
+#define CALIB_PLATE_MAX_Z           (  3.0)
 
 #define Z_MIN_VIRTUAL_ENDSTOP     true
 #define XY_MAX_X_VIRTUAL_ENDSTOP  true
@@ -69,6 +70,7 @@
 #define CALIB_TAN_THETA   (0.0)
 #define CALIB_X_BACKLASH  (0.0) // Default assumed backlash
 #define CALIB_Y_BACKLASH  (0.0)
+#define CALIB_PLATE_MAX_Z           (  2.0)
 
 #define Z_MIN_VIRTUAL_ENDSTOP     false
 #define XY_MAX_X_VIRTUAL_ENDSTOP  false
@@ -161,9 +163,6 @@ const bool XY_MIN_X_ENDSTOP_INVERTING = true;
 const bool XY_MAX_X_ENDSTOP_INVERTING = true;
 const bool XY_MIN_Y_ENDSTOP_INVERTING = true;
 const bool XY_MAX_Y_ENDSTOP_INVERTING = true;
-
-const bool XYZ_DATA_RDY_ENDSTOP_INVERTING = true;
-
 #define READ_PIN(PIN) (READ(PIN ## _PIN) ^ (PIN ## _ENDSTOP_INVERTING))
 
 // For Inverting Stepper Enable Pins (Active Low) use 0, Non Inverting (Active High) use 1
