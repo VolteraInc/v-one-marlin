@@ -25,10 +25,11 @@ void XYZSensor::tuneXYZEndstops(const Endstops& endstops)
     //log << F("tune tune") << endl;
 
     tuneXYZEndstop(*zMin);
-    tuneXYZEndstop(*xyzFront);
-    tuneXYZEndstop(*xyzBack);
     tuneXYZEndstop(*xyzLeft);
     tuneXYZEndstop(*xyzRight);
+    tuneXYZEndstop(*xyzFront);
+    tuneXYZEndstop(*xyzBack);
+
 }
 
 void XYZSensor::tuneXYZEndstop(const Endstop& endstop)
@@ -69,9 +70,17 @@ uint8_t XYZSensor::isXYZTouch(const Endstop& endstop) //currently implemented to
 {
     uint32_t analogReading = 0;
     int32_t compReading = 0;
+    
+    
+
+    //if we are far from XYZ, no need to check collision
+    //if(!isNearXYZ()) {//log << analogReading << endl;
+        //log << current_position[2] << endl;
+        //log << st_get_position_mm(2) << endl;
+    //    return(0);
+    //}
     setChannel(endstop);
     analogReading = xyzSensor.getADCData();
-    //log << analogReading << endl;
 
     if(endstop.axis == X_AXIS)
     {
@@ -131,5 +140,11 @@ void XYZSensor::setChannel(const Endstop& endstop)
             xyzSensor.setMux(Z_MUX_P, Z_MUX_N);
         }
     }
+}
 
+bool XYZSensor::isNearXYZ()
+{
+    return  ((      abs(current_position[0] - MIN_Z_X_POS) < XYZ_PROX_X &&
+                    abs(current_position[1] - MIN_Z_Y_POS) < XYZ_PROX_Y &&
+                    abs(current_position[2]) > XYZ_PROX_Z) ? true : false);
 }

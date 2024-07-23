@@ -62,11 +62,11 @@ class EndstopMonitor {
     EndstopFilter m_yMax;
     #endif
 
-    #ifdef XYZ_STRAIN
+    //#ifdef XYZ_STRAIN
     XYZSensor m_xyzsensor;
     //XYZ Mode
     bool inXYZMode = false;
-    #endif
+    //#endif
 
     const EndstopFilter* lookup(const Endstop& endstop) const;
     EndstopFilter* lookup(const Endstop& endstop);
@@ -98,6 +98,7 @@ class EndstopMonitor {
       updateEndstop(m_xMax, READ_PIN(X_LIM), m_endstops.xMax, stepCounts);
 
       #ifdef XYZ_STRAIN
+      //updateEndstop(m_xyPositionerLeft, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerLeft), m_endstops.xyPositionerLeft, stepCounts);
       if(inXYZMode) { updateEndstop(m_xyPositionerLeft, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerLeft), m_endstops.xyPositionerLeft, stepCounts); } //read strain guage
       #else
       updateEndstop(m_xyPositionerLeft, READ_PIN(XY_MAX_X), m_endstops.xyPositionerLeft, stepCounts);
@@ -119,6 +120,7 @@ class EndstopMonitor {
       updateEndstop(m_xMin, READ_PIN(X_MIN), m_endstops.xMin, stepCounts);
       
       #ifdef XYZ_STRAIN
+      //updateEndstop(m_xyPositionerRight, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerRight), m_endstops.xyPositionerRight, stepCounts);
       if(inXYZMode) { updateEndstop(m_xyPositionerRight, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerRight), m_endstops.xyPositionerRight, stepCounts); } //read strain guage
       #else
       updateEndstop(m_xyPositionerRight, READ_PIN(XY_MIN_X), m_endstops.xyPositionerRight, stepCounts);
@@ -144,6 +146,7 @@ class EndstopMonitor {
       updateEndstop(m_yMax, READ_PIN(Y_LIM), m_endstops.yMax, stepCounts);
       
       #ifdef XYZ_STRAIN
+      //updateEndstop(m_xyPositionerForward, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerForward), m_endstops.xyPositionerForward, stepCounts);
       if(inXYZMode) { updateEndstop(m_xyPositionerForward, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerForward), m_endstops.xyPositionerForward, stepCounts);}//read strain guage
       #else
       updateEndstop(m_xyPositionerForward, READ_PIN(XY_MAX_Y), m_endstops.xyPositionerForward, stepCounts);
@@ -165,6 +168,7 @@ class EndstopMonitor {
       updateEndstop(m_yMin, READ_PIN(Y_MIN), m_endstops.yMin, stepCounts);
 
       #ifdef XYZ_STRAIN
+      //updateEndstop(m_xyPositionerBack, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerBack), m_endstops.xyPositionerBack, stepCounts);
       if(inXYZMode) { updateEndstop(m_xyPositionerBack, m_xyzsensor.isXYZTouch(m_endstops.xyPositionerBack), m_endstops.xyPositionerBack, stepCounts); } //read strain guage
       #else
       updateEndstop(m_xyPositionerBack, READ_PIN(XY_MIN_Y), m_endstops.xyPositionerBack, stepCounts);
@@ -205,6 +209,7 @@ class EndstopMonitor {
       //to do need to implement the zmin/z-switch############################################################################
       
       #ifdef XYZ_STRAIN
+      //updateEndstop(m_zSwitch, m_xyzsensor.isXYZTouch(m_endstops.zSwitch), m_endstops.zSwitch, stepCounts);
       if(inXYZMode) { updateEndstop(m_zSwitch, m_xyzsensor.isXYZTouch(m_endstops.zSwitch), m_endstops.zSwitch, stepCounts); } //read strain guage
       #else
       updateEndstop(m_zSwitch, READ_PIN(Z_MIN), m_endstops.zSwitch, stepCounts);

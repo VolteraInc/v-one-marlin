@@ -143,7 +143,7 @@ void EndstopMonitor::reportHits(
   }
 }
 
-#ifdef XYZ_STRAIN
+//#ifdef XYZ_STRAIN
 
 void EndstopMonitor::enableXYZ()
 {
@@ -155,4 +155,4 @@ void EndstopMonitor::disableXYZ()
 {
   this->inXYZMode = false;
 }
-#endif
+//#endif

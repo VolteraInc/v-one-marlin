@@ -16,13 +16,12 @@ int moveToZSwitchXY(tools::Tool& tool) {
       << endl;
     return -1;
   }
-
+  
   if (min_z_x_pos != current_position[X_AXIS] || min_z_y_pos != current_position[Y_AXIS]) {
     if (raise(tool)) {
       return -1;
     }
   }
-
   return moveXY(tool, min_z_x_pos, min_z_y_pos);
 }
 
@@ -67,7 +66,9 @@ static int s_homeZaxis(tools::Tool& tool, float offset, bool shouldEstablishSoft
   }
   
   //enable XYZ endstops
-  XYZModeEnable xyzEnable (endstopMonitor);
+  #ifdef XYZ_STRAIN
+  //XYZModeEnable xyzEnable (endstopMonitor);
+  #endif
 
   float zSwitchMeasurement;
   if (

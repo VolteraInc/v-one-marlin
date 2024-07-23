@@ -25,7 +25,9 @@ Endstops::Endstops(ZSwitch::Type zSwitchType)
   , yMax(F("front (y-max)"), Y_LIM_PIN, Y_AXIS, 1, Y_LIM_ENDSTOP_INVERTING, false)
    #endif
 {
+  #ifdef XYZ_STRAIN
   pinMode(P_BOT_PIN, INPUT_PULLUP); //To stop P-Bot from floating, previously an external resistor
+  #endif
 }
 
 const Endstop* Endstops::lookup(const int pin) const {

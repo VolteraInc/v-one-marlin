@@ -32,7 +32,7 @@ static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveT
       auto& endstopMonitor = vone->stepper.endstopMonitor;
 
       //enable XYZ endstops and readings
-      XYZModeEnable xyzEnable (endstopMonitor);
+      //XYZModeEnable xyzEnable (endstopMonitor);
 
       return (
         // Lower until plate triggers
@@ -80,7 +80,9 @@ int xyPositionerTouch(tools::Tool& tool, const Endstop& endstop, float& measurem
   const auto& xyPositionerBack = vone->endstops.xyPositionerBack;
 
   //enable XYZ endstops and readings
-  XYZModeEnable xyzEnable (endstopMonitor);
+  #ifdef XYZ_STRAIN
+  //XYZModeEnable xyzEnable (endstopMonitor);
+  #endif
 
   if (&endstop != &xyPositionerBack) {
     if (moveToEndstop(endstop, slow, 6.0f)) {

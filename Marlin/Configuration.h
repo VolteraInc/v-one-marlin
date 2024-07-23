@@ -6,7 +6,7 @@
 #define EXPERIMENTAL 9999
 
 //#define MODEL VONE_batch_0_TO_5
-//#define MODEL VONE_batch_6_to_7
+//define MODEL VONE_batch_6_to_7
 #define MODEL VONE_batch_8_to_present
 // #define MODEL EXPERIMENTAL
 

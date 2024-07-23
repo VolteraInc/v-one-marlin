@@ -9,14 +9,24 @@ struct ScopedEndstopEnable {
   )
     : monitor(monitor)
     , m_e1(monitor.ignoring(e1) ? (monitor.ignore(e1, false), &e1) : nullptr)
-  {}
+  {    
+    if ((m_e1 != nullptr) && (m_e1->virtualEndstop)) {
+      monitor.enableXYZ();
+      m_virtEs = true;
+    }
+  }
 
   FORCE_INLINE ~ScopedEndstopEnable() {
-    if (m_e1) { monitor.ignore(*m_e1); }
+    if (m_e1) 
+    { 
+      monitor.ignore(*m_e1);
+      if (m_virtEs) {monitor.disableXYZ();}
+    }
   }
 private:
   EndstopMonitor& monitor;
   const Endstop* m_e1;
+  bool m_virtEs = false;
 };
 
 // Note: Disabling switches should not be overlooked
@@ -29,7 +39,12 @@ struct ScopedEndstop_DISABLE {
   )
     : monitor(monitor)
     , m_e1(monitor.ignoring(e1) ?  nullptr : (monitor.ignore(e1), &e1))
-  { }
+  { 
+    if ((m_e1 != nullptr) && (m_e1->virtualEndstop)) {
+      monitor.disableXYZ();
+      m_virtEs = true;
+    }
+  }
 
   // Convenience constructor, if the given endstop is null, this is a no-op
   FORCE_INLINE ScopedEndstop_DISABLE(
@@ -38,14 +53,24 @@ struct ScopedEndstop_DISABLE {
   )
     : monitor(monitor)
     , m_e1(!e1 || monitor.ignoring(*e1) ?  nullptr : (monitor.ignore(*e1), e1))
-  { }
+  { 
+    if ((m_e1 != nullptr) && (m_e1->virtualEndstop)) {
+      monitor.disableXYZ();
+      m_virtEs = true;
+    }
+  }
 
   FORCE_INLINE ~ScopedEndstop_DISABLE() {
-    if (m_e1) { monitor.ignore(*m_e1, false); }
+    if (m_e1)
+    { 
+      monitor.ignore(*m_e1, false); 
+      if (m_virtEs) {monitor.enableXYZ();}
+    }
   }
 private:
   EndstopMonitor& monitor;
   const Endstop* m_e1;
+  bool m_virtEs = false;
 };
 
 //added to control the XYZ mode for endstop monitor
