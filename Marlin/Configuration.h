@@ -47,6 +47,7 @@
 #define CALIB_X_BACKLASH  (0.0) // Default assumed backlash
 #define CALIB_Y_BACKLASH  (0.0)
 #define CALIB_PLATE_MAX_Z           (  3.0)
+#define XYZPOS_Z_RAISE              ( 1.75)
 
 #define Z_MIN_VIRTUAL_ENDSTOP     true
 #define XY_MAX_X_VIRTUAL_ENDSTOP  true
