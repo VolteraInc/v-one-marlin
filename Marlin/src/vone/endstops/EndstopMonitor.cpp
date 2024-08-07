@@ -5,8 +5,10 @@
 
 EndstopMonitor::EndstopMonitor(
   Endstops& endstops
-) : m_endstops(endstops),
-    m_xyzsensor(XYZSensor(endstops))
+) : m_endstops(endstops)
+  #ifdef XYZ_STRAIN
+  , m_xyzsensor(XYZSensor(endstops))
+  #endif
 {
   m_toolSwitch.ignore();
   m_calibrationPlate.ignore();
@@ -143,7 +145,7 @@ void EndstopMonitor::reportHits(
   }
 }
 
-//#ifdef XYZ_STRAIN
+#ifdef XYZ_STRAIN
 
 void EndstopMonitor::enableXYZ()
 {
@@ -155,4 +157,4 @@ void EndstopMonitor::disableXYZ()
 {
   this->inXYZMode = false;
 }
-//#endif
+#endif

@@ -29,9 +29,11 @@ class EndstopMonitor {
     void reportHits(void (*reportHit)(const Endstop& endstop, float triggeringPosition));
 
     //Toggle XYZ Mode (saves communication time when talking to ADC chip)
+    #ifdef XYZ_STRAIN
     void enableXYZ();
     void disableXYZ();
-
+    #endif
+    
     // Step handlers
     FORCE_INLINE void onSteppingInX(int direction, volatile long stepCounts[NUM_AXIS], bool& triggered);
     FORCE_INLINE void onSteppingInY(int direction, volatile long stepCounts[NUM_AXIS], bool& triggered);
@@ -62,11 +64,11 @@ class EndstopMonitor {
     EndstopFilter m_yMax;
     #endif
 
-    //#ifdef XYZ_STRAIN
+    #ifdef XYZ_STRAIN
     XYZSensor m_xyzsensor;
     //XYZ Mode
     bool inXYZMode = false;
-    //#endif
+    #endif
 
     const EndstopFilter* lookup(const Endstop& endstop) const;
     EndstopFilter* lookup(const Endstop& endstop);

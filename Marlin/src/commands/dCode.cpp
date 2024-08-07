@@ -411,50 +411,6 @@ int process_dcode(int command_code) {
       return checkExtents(tool, tolerance);
     }
 
-    case 201: { //entirely for dev
-      const long loopcycles = code_seen('C') ? code_value_long() : 1;
-      int toolType = 0;
-
-      // Set Tool
-      if (code_seen('P')) {
-        toolType = 1;
-      } else if (code_seen('R')) {
-        toolType = 2;
-      } else if (code_seen('D')) {
-        toolType = 3;
-      } else {
-        log << F("Must specify tool") << endl;
-        return -1;
-      }
-
-      for(uint8_t j = 0; j < loopcycles; j++){
-        
-        //Set tool
-        switch(toolType){
-          case 1:
-            vone->toolBox.setTool(&vone->toolBox.probe);
-            break;
-          case 2:
-            vone->toolBox.setTool(&vone->toolBox.drill);
-            break;
-          case 3:
-            vone->toolBox.setTool(&vone->toolBox.dispenser);
-            break;
-          default:
-            break;
-        }
-        delay(100);
-
-        //perform XYZ localization
-        tool.prepareToMove();
-        delay(100);
-
-        //Forget tool
-        vone->toolBox.setTool(&vone->toolBox.nullTool);
-        delay(100);
-      }
-    }
-
     //-------------------------------------------
     // List Commands
     default:

@@ -6,8 +6,8 @@
 #define EXPERIMENTAL 9999
 
 //#define MODEL VONE_batch_0_TO_5
-//define MODEL VONE_batch_6_to_7
-#define MODEL VONE_batch_8_to_present
+#define MODEL VONE_batch_6_to_7
+//#define MODEL VONE_batch_8_to_present
 // #define MODEL EXPERIMENTAL
 
 #if MODEL == VONE_batch_0_TO_5
@@ -32,7 +32,7 @@
 
 #endif
 
-#ifdef MODEL == 8
+#if MODEL == 8
 #define XYPOS_X_POS                 ( 27.9)
 #define XYPOS_Y_POS                 (  8.5)
 #define XYPOS_Z_POS                 (  2.5)
@@ -72,6 +72,7 @@
 #define CALIB_X_BACKLASH  (0.0) // Default assumed backlash
 #define CALIB_Y_BACKLASH  (0.0)
 #define CALIB_PLATE_MAX_Z           (  2.0)
+#define XYZPOS_Z_RAISE              ( 1.75)
 
 #define Z_MIN_VIRTUAL_ENDSTOP     false
 #define XY_MAX_X_VIRTUAL_ENDSTOP  false

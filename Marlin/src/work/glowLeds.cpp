@@ -1,6 +1,7 @@
 #include "../../Configuration.h"
 #include "../vone/VOne.h" // temperatures
 #include "work.h" // previous_millis_serial_rx HACK
+#include "../../serial.h"
 
 bool pending_temp_change = false;
 
@@ -101,6 +102,7 @@ void glow_leds() {
   }
 
   if ((now - glow_led_last_tick) > glow_led_pace) {
+    //log << F("yessup") << endl;
     glow_led_last_tick = now;
     if (glow_led_counter == 0) {
       // To avoid abrupt changes, we wait for zero-crossing before updating the actual state (_hold) from the input

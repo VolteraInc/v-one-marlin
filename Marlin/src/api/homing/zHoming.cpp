@@ -64,11 +64,6 @@ static int s_homeZaxis(tools::Tool& tool, float offset, bool shouldEstablishSoft
       return -1;
     }
   }
-  
-  //enable XYZ endstops
-  #ifdef XYZ_STRAIN
-  //XYZModeEnable xyzEnable (endstopMonitor);
-  #endif
 
   float zSwitchMeasurement;
   if (

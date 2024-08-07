@@ -8,6 +8,8 @@ class ZSwitch : public Endstop {
     enum class Type {
       UseDefault = -1,
 
+      //For full docmentation on batch diffs: https://app.tettra.co/teams/voltera/pages/v-one-production-batch-differences
+
       // The original z-switch had a weaker spring
       // than the probe, so it would trigger before
       // the probe -- in 2019 data revealed that was
@@ -59,7 +61,7 @@ class ZSwitch : public Endstop {
       {
         return zt::StrainGauge;
       } 
-      else if (batchNumber > 6)
+      else if (batchNumber > 5)
       {
         return zt::StrongerSpring;
       }
