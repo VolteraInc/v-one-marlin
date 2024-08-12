@@ -6,7 +6,7 @@
 #error Oops!  Make sure you have 'Arduino Mega 2560' selected from the 'Tools -> Boards' menu.
 #endif
 
-#ifdef MODEL == 8
+#if MODEL == 8
   #define X_STEP_PIN         36
   #define X_DIR_PIN          37
   #define X_ENABLE_PIN       41

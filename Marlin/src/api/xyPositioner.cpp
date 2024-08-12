@@ -157,22 +157,9 @@ static int s_findCenter(tools::Tool& tool, long cycles, float& o_centerX, float&
       << F(" y:") << centerY
       << endl;
 
-    /*//for dev
-    log << F("xyzPositonerCenter")
-    << F(" x:") << centerX
-    << F(" y:") << centerY
-    << F(" z:") << current_position[Z_AXIS]
-    << endl;*/
-
     // Each cycle takes a non-trivial amount of time so reset the inactivity timer
     refresh_cmd_timeout();
   }
-
-  //for dev
-    log << F("DEV - XY center")
-    << F(" x:") << centerX
-    << F(" y:") << centerY
-    << endl;
 
   // Go to the computed position
   if (moveXY(tool, centerX, centerY)) {
