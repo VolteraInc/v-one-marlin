@@ -8,7 +8,7 @@ static const float MinDistance = 0.500;
 
 int s_measure(const Endstop& endstop, float measurements[], unsigned int numMeasurements) {
   for (auto i = 0u; i < numMeasurements; ++i) {
-    if (measureAtSwitch(endstop, 10.0, measurements[i])) {
+    if (measureAtSwitch(endstop, BACKSW_MAX_SEPARATION, measurements[i])) {
       return -1;
     }
   }

@@ -4,5 +4,6 @@ applet/
 *.orig
 *.rej
 *.bak
+build/
 
 .vscode

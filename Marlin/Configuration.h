@@ -48,6 +48,7 @@
 #define CALIB_Y_BACKLASH  (0.0)
 #define CALIB_PLATE_MAX_Z           (  3.0)
 #define XYZPOS_Z_RAISE              ( 1.75)
+#define BACKSW_MAX_SEPARATION       ( 14.0)
 
 #define Z_MIN_VIRTUAL_ENDSTOP     true
 #define XY_MAX_X_VIRTUAL_ENDSTOP  true
@@ -73,6 +74,7 @@
 #define CALIB_Y_BACKLASH  (0.0)
 #define CALIB_PLATE_MAX_Z           (  2.0)
 #define XYZPOS_Z_RAISE              ( 1.75)
+#define BACKSW_MAX_SEPARATION       ( 10.0)
 
 #define Z_MIN_VIRTUAL_ENDSTOP     false
 #define XY_MAX_X_VIRTUAL_ENDSTOP  false
