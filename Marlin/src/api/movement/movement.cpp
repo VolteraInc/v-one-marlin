@@ -9,6 +9,8 @@
 #include "../../vone/endstops/ScopedEndstopEnable.h"
 
 static bool s_establishedSoftMaxZ = false;
+static const int maxVirtualEndstopCycles = 10;
+static bool forceConsistency = true;
 
 static const float s_defaultRetractDistance[] = {
   X_HOME_RETRACT_MM,
@@ -263,6 +265,7 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   auto& endstopMonitor = vone->stepper.endstopMonitor;
   const auto axis = endstop.axis;
   const auto direction = endstop.direction;
+  const auto isVirtual = endstop.virtualEndstop;
 
   if (logging_enabled) {
     log << F("Move to end-stop: ") << endstop.name << endl;
@@ -272,12 +275,10 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   st_synchronize();
 
   #ifdef XYZ_STRAIN
-
   // Check if already triggered
   if (endstopMonitor.isTriggered(endstop)) {
     return 0;
   }
-
   #else
   // Check if already triggered
   if (endstop.readTriggered()) {
@@ -292,28 +293,78 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   const auto clampedMaxTravel = min(maxTravel, s_maxTravelInAxis(axis, direction));
   const auto travel = direction < 0 ? -clampedMaxTravel : clampedMaxTravel;
   const float clampedSpeed = f < 0 ? homing_feedrate[axis] : min(f, homing_feedrate[axis]);
-  if (relativeRawMoveXYZ(
+  const float initial_position = current_position[axis]; //record where we start the move, to prevent
+  float measurements[2] = {initial_position, initial_position};
+  float measurement_initial_position = initial_position;
+  float retractDistance = s_defaultRetractDistance[axis];
+  bool consisent = isVirtual ? !forceConsistency : true; //if we want to check for consistency, set 'consistent' to false initially
+  
+  for (int i = 0; i < maxVirtualEndstopCycles; i++){
+
+    //note our location before movement
+    measurement_initial_position = current_position[axis];
+
+    //perform movement
+    if (relativeRawMoveXYZ(
       axis == X_AXIS ? travel : 0.0f,
       axis == Y_AXIS ? travel : 0.0f,
       axis == Z_AXIS ? travel : 0.0f,
       clampedSpeed,
       skipMovementSafetyCheck
     )) {
-    return -1;
-  }
+      return -1;
+    }
 
   // Confirm we triggered
-  if (endstopMonitor.acknowledgeTriggered(endstop)) {
-    logError
-      << F("Unable to move to ")
-      << endstop.name
-      << F(", switch did not trigger")
-      << endl;
-    return -1;
+    if (endstopMonitor.acknowledgeTriggered(endstop)) {
+      logError
+        << F("Unable to move to ")
+        << endstop.name
+        << F(", switch did not trigger")
+        << endl;
+      return -1;
+    }
+    
+    if(consisent){ //if we have reached consistency, or if forceConsistency = False, or if this is a physical endstop, we skip all the checks for false triggers
+      // Resync with stepper position
+      return vone->stepper.resyncWithStepCount(axis);
+    } else {
+      //record the position of this trigger
+      measurements[i % 2] = current_position[axis];
+
+      //make sure that we cannot retract past our initial start point
+      retractDistance = min(s_defaultRetractDistance[axis], abs(measurements[i % 2] - initial_position));
+
+      if (logging_enabled) {
+        log << F("Measured at switch") << endl;
+        log << F("  initial_position: ") << initial_position << endl;
+        log << F("  measurement: ") << measurements[i % 2] << endl;
+        log << F("  retraction: ") << retractDistance << endl;
+      }
+
+      //If we triggered near this attempt's initial starting position, we could be false triggering and should reject
+      if (abs(measurements[i % 2] - measurement_initial_position) <= (abs(retractDistance)*0.25)){
+        log << F("Measurement matched initial position") << endl;
+        retractFromSwitch(endstop, retractionDistance);
+        delay(500);
+        continue;
+      } else if(abs(measurements[0] - measurements[1]) < 0.01) {
+        //have found consistent measurment
+        consistent = true;
+      } else {
+        //pull back from edge of cup
+        retractFromSwitch(endstop, retractionDistance);
+      }
+    }
   }
 
-  // Resync with stepper position
-  return vone->stepper.resyncWithStepCount(axis);
+  //if after maxVirtualEndstopCycles iterations consistency is not found, then we error out
+  logError
+    << F("Unable to move to find consistent measurement for ")
+    << endstop.name
+    << F(", aborting sequence")
+    << endl;
+  return -1;
 }
 
 

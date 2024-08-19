@@ -75,8 +75,9 @@ int xyPositionerTouch(tools::Tool& tool, const Endstop& endstop, float& measurem
   auto& endstopMonitor = vone->stepper.endstopMonitor;
   const auto& yMin = vone->endstops.yMin;
   const auto& xyPositionerBack = vone->endstops.xyPositionerBack;
+  const auto isVirtual = endstop.virtualEndstop;
 
-  if (&endstop != &xyPositionerBack) {
+  if ((&endstop != &xyPositionerBack) || isVirtual) { //for carbon XYZ, separation of back endstop increased so no need to run xyBack separately
     if (moveToEndstop(endstop, slow, 6.0f)) {
       return -1;
     }
@@ -90,9 +91,7 @@ int xyPositionerTouch(tools::Tool& tool, const Endstop& endstop, float& measurem
     if (moveToLimit(axis, endstop.direction, slow, 6.0f)) {
       return -1;
     }
-
-    // Warn if yMin triggered instead of xyBack
-    // Note: eventually this will be made an error
+    //Check if instead of the back XY, we triggered yMin
     if (
       !endstopMonitor.isTriggered(xyPositionerBack) &&
       endstopMonitor.isTriggered(yMin)
