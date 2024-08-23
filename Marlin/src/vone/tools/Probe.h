@@ -23,7 +23,7 @@ class Probe : public Tool {
     // years without issue.
     static constexpr float DefaultRetract = 0.7f;
 
-    static constexpr float DefaultSpeed = 30;
+    static constexpr float DefaultSpeed = 200;
     static constexpr float DefaultMaxSamples = 1u; // 30u;
     static constexpr float DefaultMaxTouchesPerSample = 1u; // 10u;
     // TODO: restore multi-touch for beta ^

@@ -274,17 +274,15 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
-  #ifdef XYZ_STRAIN
-  // Check if already triggered
-  if (endstopMonitor.isTriggered(endstop)) {
-    return 0;
+  if(isVirtual){
+    if (endstopMonitor.isTriggered(endstop)) {
+      return 0;
+    }
+  } else {
+    if (endstop.readTriggered()) {
+      return 0;
+    }
   }
-  #else
-  // Check if already triggered
-  if (endstop.readTriggered()) {
-    return 0;
-  }
-  #endif
 
   // Enable endstop, if necessary
   ScopedEndstopEnable scopedEnable(endstopMonitor, endstop);
@@ -297,7 +295,7 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
   float measurements[2] = {initial_position, initial_position};
   float measurement_initial_position = initial_position;
   float retractDistance = s_defaultRetractDistance[axis];
-  bool consisent = isVirtual ? !forceConsistency : true; //if we want to check for consistency, set 'consistent' to false initially
+  bool consistent = isVirtual ? !forceConsistency : true; //if we want to check for consistency, set 'consistent' to false initially
   
   for (int i = 0; i < maxVirtualEndstopCycles; i++){
 
@@ -324,11 +322,13 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
         << endl;
       return -1;
     }
-    
-    if(consisent){ //if we have reached consistency, or if forceConsistency = False, or if this is a physical endstop, we skip all the checks for false triggers
+
+    if(consistent){ //if we have reached consistency, or if forceConsistency = False, or if this is a physical endstop, we skip all the checks for false triggers
       // Resync with stepper position
       return vone->stepper.resyncWithStepCount(axis);
     } else {
+      vone->stepper.resyncWithStepCount(axis);
+      
       //record the position of this trigger
       measurements[i % 2] = current_position[axis];
 
@@ -345,15 +345,15 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
       //If we triggered near this attempt's initial starting position, we could be false triggering and should reject
       if (abs(measurements[i % 2] - measurement_initial_position) <= (abs(retractDistance)*0.25)){
         log << F("Measurement matched initial position") << endl;
-        retractFromSwitch(endstop, retractionDistance);
+        retractFromSwitch(endstop, retractDistance);
         delay(500);
         continue;
-      } else if(abs(measurements[0] - measurements[1]) < 0.01) {
+      } else if(abs(measurements[0] - measurements[1]) < 0.1) {
         //have found consistent measurment
         consistent = true;
       } else {
         //pull back from edge of cup
-        retractFromSwitch(endstop, retractionDistance);
+        retractFromSwitch(endstop, retractDistance);
       }
     }
   }
@@ -428,27 +428,24 @@ int retractFromSwitch(const Endstop& endstop, float retractDistance) {
   //       rely on the stepper's endstop monitor
   //       becuase it will not check switches when
   //       moving away from them.
-#ifdef XYZ_STRAIN
-  if (endstopMonitor.isTriggered(endstop)) {
-    logError
-      << F("Unable to retract from ")
-      << endstop.name
-      << F(", switch did not release during retract movement")
-      << endl;
-    return -1;
+  if(endstop.virtualEndstop){
+    if (endstopMonitor.isTriggered(endstop)) {
+      logError
+        << F("Unable to retract from ")
+        << endstop.name
+        << F(", switch did not release during retract movement")
+        << endl;
+      return -1;
+    }
+  } else {
+    if (endstop.readTriggered()) {
+      logError
+        << F("Unable to retract from ")
+        << endstop.name
+        << F(", switch did not release during retract movement")
+        << endl;
+      return -1;
+    }
   }
-#else
-
-  if (endstop.readTriggered()) {
-    logError
-      << F("Unable to retract from ")
-      << endstop.name
-      << F(", switch did not release during retract movement")
-      << endl;
-    return -1;
-  }
-
-#endif
-
   return 0;
 }
