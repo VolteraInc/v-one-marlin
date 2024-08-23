@@ -77,11 +77,6 @@ void Endstops::outputStatus() const {
   log << sp << s_pinStatusToString(READ_PIN(XY_MIN_Y)) << sp << xyPositionerBack.pin    << sp << xyPositionerBack.name    << endl;
   log << sp << s_pinStatusToString(READ_PIN(XY_MAX_Y)) << sp << xyPositionerForward.pin << sp << xyPositionerForward.name << endl;
   #endif
-
-  #ifdef TRINAMIC_MOTORS
-  log << sp << s_pinStatusToString(READ_PIN(X_LIM)) << sp << xMax.pin << sp << xMax.name << endl;
-  log << sp << s_pinStatusToString(READ_PIN(Y_LIM)) << sp << yMax.pin << sp << yMax.name << endl;
-  #endif
 }
 
 static void s_reportAndUpdateStatus(

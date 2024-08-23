@@ -20,6 +20,17 @@ static int s_run() {
   }
 }
 
+bool s_isZSwitchPressed(){
+  auto& endstopMonitor = vone->stepper.endstopMonitor;
+  const auto& zSwitch = vone->endstops.zSwitch;
+
+  #ifdef XYZ_STRAIN
+    return endstopMonitor.isTriggered(zSwitch);
+  #else
+    return READ_PIN(Z_MIN);
+  #endif
+}
+
 void manufacturing_procedures() {
   if (s_runAt == 0 || s_runAt > millis()) {
     return;
@@ -27,7 +38,7 @@ void manufacturing_procedures() {
   s_runAt = 0;
 
   // Check z-switch to determine if we should run a manufactuing procedure
-  if (READ_PIN(X_MIN)) {
+  if (s_isZSwitchPressed()) {
     log << F("Z-switch is triggered, raising");
     auto& currentTool = vone->toolBox.currentTool();
     if (
@@ -40,7 +51,7 @@ void manufacturing_procedures() {
 
     // Note: the tool may have been pressing the switch,
     //       so we re-check it here (after raising)
-    if (!READ_PIN(X_MIN)) { //temp set to X-MIN ################################################################
+    if (!s_isZSwitchPressed()) {
       log << F("Released z-switch");
       return;
     }
