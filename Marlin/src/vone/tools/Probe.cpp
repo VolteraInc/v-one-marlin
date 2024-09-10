@@ -151,6 +151,10 @@ int tools::Probe::probe(
   auto samplesTaken = 0u;
   auto totalTouches = 0u;
   if (
+    
+    measureAtSwitch(m_toolSwitch, 100.0, rawMeasurement)
+
+    /*
     // Get close to surface using a fast-touch
     // Note: could make this conditional on probe speed,
     // but I'd rather not have the extra code path
@@ -164,7 +168,7 @@ int tools::Probe::probe(
       speed,
       maxSamples, maxTouchesPerSample,
       &samplesTaken, &totalTouches
-    )
+    )*/
   ) {
     return -1;
   }
