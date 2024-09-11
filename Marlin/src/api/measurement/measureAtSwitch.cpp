@@ -5,7 +5,7 @@
 #include "../movement/movement.h"
 #include "../../vone/endstops/Endstop.h"
 
-int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement) {
+int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement, bool forceConsistency) {
   const auto axis = endstop.axis;
   log
     << F("Measure at switch: ")
@@ -24,29 +24,45 @@ int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement)
       << endl;
     return -1;
   }
-  const float triggerPos = current_position[axis];
+  const float initialTriggerPos = current_position[axis];
+  float measurements[2] = {initialTriggerPos, initialTriggerPos};
 
-  // Retract slightly
-  if (retractFromSwitch(endstop)) {
-    return -1;
+  for (int i = 0; i < maxTouchCount; i++){
+    // Retract slightly
+    if (retractFromSwitch(endstop)) {
+      return -1;
+    }
+    const float retractPos = current_position[axis];
+
+    //limit retraction distance to the initial touch-retraction movement, don't let it continuously back off
+    const float retractDistance = abs(retractPos - measurements[i % 2]);
+
+    // Approach again, slowly
+    // NOTE: this gives us a more accurate reading
+    const auto slow = homing_feedrate[axis] / 6;
+    if (moveToEndstop(endstop, slow, 2 * retractDistance)) {
+      logError
+        << F("Unable to measure at ") << endstop.name
+        << F(" switch, switch did not trigger during second approach")
+        << endl;
+      return -1;
+    }
+
+    //record measurement
+    measurements[(i + 1) % 2] = current_position[axis];
+
+    //if our measurements are consistent(within tolerance) or we don't care about consistency, return measurement
+    if(!forceConsistency || abs(measurements[0] - measurements[1]) < touchTolerance){
+      // Record the measurement, lets take the average
+      measurement = (measurements[0] + measurements[1]) / 2;
+      log << F("Measurement: ") << measurement << endl;
+
+      return 0;
+    }
   }
-  const float retractPos = current_position[axis];
-  const float retractDistance = abs(retractPos - triggerPos);
-
-  // Approach again, slowly
-  // NOTE: this gives us a more accurate reading
-  const auto slow = homing_feedrate[axis] / 6;
-  if (moveToEndstop(endstop, slow, 2 * retractDistance)) {
-    logError
-      << F("Unable to measure at ") << endstop.name
-      << F(" switch, switch did not trigger during second approach")
-      << endl;
-    return -1;
-  }
-
-  // Record the measurement
-  measurement = current_position[axis];
-  log << F("Measurement: ") << measurement << endl;
-
-  return 0;
+  
+  logError
+    << F("Unable to obtain consistent measurements for ") << endstop.name
+    << endl;
+  return -1;
 }

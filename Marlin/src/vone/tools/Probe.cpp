@@ -152,7 +152,7 @@ int tools::Probe::probe(
   auto totalTouches = 0u;
   if (
     
-    measureAtSwitch(m_toolSwitch, 100.0, rawMeasurement)
+    measureAtSwitch(m_toolSwitch, 100.0, rawMeasurement, true)
 
     /*
     // Get close to surface using a fast-touch
