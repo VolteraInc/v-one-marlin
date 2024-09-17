@@ -114,6 +114,7 @@ int process_vcode(int command_code) {
         return -1;
       }
 
+      const bool useOldProbe = code_seen('O');
       const auto additionalRetractDistance = code_seen('R') ? code_value() : tools::Probe::DefaultRetract;
       const auto speed = code_seen('F') ? code_value() : tools::Probe::DefaultSpeed;
       const auto maxSamples = code_seen('S') ? code_value() : tools::Probe::DefaultMaxSamples;
@@ -133,7 +134,7 @@ int process_vcode(int command_code) {
           measurement,
           speed, additionalRetractDistance,
           maxSamples, maxTouchesPerSample,
-          &samplesTaken, &touchesUsed
+          &samplesTaken, &touchesUsed, useOldProbe
         )
       ) {
         return -1;

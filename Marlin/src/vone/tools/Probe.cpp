@@ -141,7 +141,8 @@ int tools::Probe::probe(
   unsigned maxSamples,
   unsigned maxTouchesPerSample,
   unsigned* o_samplesTaken,
-  unsigned* o_touchesUsed
+  unsigned* o_touchesUsed,
+  bool oldProbe
 ) {
   const auto startTime = millis();
 
@@ -152,7 +153,8 @@ int tools::Probe::probe(
   float rawMeasurement;
   auto samplesTaken = 0u;
   auto totalTouches = 0u;
-  if (
+  if(oldProbe){
+    if (
     // Get close to surface using a fast-touch
     // Note: could make this conditional on probe speed,
     // but I'd rather not have the extra code path
@@ -167,9 +169,15 @@ int tools::Probe::probe(
       maxSamples, maxTouchesPerSample,
       &samplesTaken, &totalTouches
     )
-  ) {
-    return -1;
+    ) {
+      return -1;
+    }
+  } else {
+    if ( measureAtSwitch(m_toolSwitch, useDefaultMaxTravel, rawMeasurement, true)) {
+      return -1;
+    }
   }
+  
 
   // Return to a safe travel height (unless 'NoRetract' given)
   if (additionalRetractDistance != NoRetract) {
