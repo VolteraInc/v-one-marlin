@@ -5,16 +5,10 @@
 #define VONE_batch_8_to_present 8
 #define EXPERIMENTAL 8
 
-<<<<<<< HEAD
 //#define MODEL VONE_batch_0_TO_5
 //#define MODEL VONE_batch_6_to_7
 #define MODEL VONE_batch_8_to_present
 //#define MODEL EXPERIMENTAL
-=======
-// #define MODEL VONE_batch_0_TO_5
-#define MODEL VONE_batch_6_to_present
-// #define MODEL EXPERIMENTAL
->>>>>>> consistent-probe-timing
 
 #if MODEL == VONE_batch_0_TO_5
   #define FIRMARE_VARIANT_SUFFIX "_batch0to5"
