@@ -114,6 +114,7 @@ int process_vcode(int command_code) {
         return -1;
       }
 
+      const bool useOldProbe = code_seen('O');
       const auto additionalRetractDistance = code_seen('R') ? code_value() : tools::Probe::DefaultRetract;
       const auto speed = code_seen('F') ? code_value() : tools::Probe::DefaultSpeed;
       const auto maxSamples = code_seen('S') ? code_value() : tools::Probe::DefaultMaxSamples;
@@ -133,7 +134,7 @@ int process_vcode(int command_code) {
           measurement,
           speed, additionalRetractDistance,
           maxSamples, maxTouchesPerSample,
-          &samplesTaken, &touchesUsed
+          &samplesTaken, &touchesUsed, useOldProbe
         )
       ) {
         return -1;
@@ -347,63 +348,6 @@ int process_vcode(int command_code) {
         << endl;
       return 0;
     }
-
-    //for development/testing
-    case 901: {
-      auto& probe = vone->toolBox.probe;
-      int numCycles = code_seen('N') ? code_value() : 1;
-      bool useOldProbe = code_seen('O');
-      
-      //these are from the probe V4 method...don't think they're needed
-      const auto additionalRetractDistance = code_seen('R') ? code_value() : tools::Probe::DefaultRetract;
-      const auto speed = code_seen('F') ? code_value() : tools::Probe::DefaultSpeed;
-      const auto maxSamples = code_seen('S') ? code_value() : tools::Probe::DefaultMaxSamples;
-      const auto maxTouchesPerSample = code_seen('T') ? code_value() : tools::Probe::DefaultMaxTouchesPerSample;
-
-      if (probe.detached()) {
-          logError
-            << F("Unable to probe, current tool is a ")
-            << currentTool.type() << F(" ") << currentTool.version()
-            << endl;
-          return -1;
-        }
-
-      // Note: id should not contain R, F, S or T
-      //       if it does,, arguments may be parsed from the id
-      char idBuffer[MAX_CMD_SIZE];
-      const char* id = parseStringArg('I', idBuffer, MAX_CMD_SIZE, nullptr);
-
-      auto samplesTaken = 0u;
-      auto touchesUsed = 0u;
-      auto measurement = -9999.9f;
-      
-      for (int i = 0; i < numCycles; i++){
-        
-        currentTool.prepareToMove();
-        raiseToSoftMax(currentTool);
-
-        if (
-          probe.prepareToMove() ||
-          probe.probe(
-            measurement,
-            speed, additionalRetractDistance,
-            maxSamples, maxTouchesPerSample,
-            &samplesTaken, &touchesUsed, useOldProbe
-          )
-        ) {
-          return -1;
-        }
-
-        // Output position
-        protocol
-          << F("probeMeasurement")
-          << F(" z:") << measurement
-          << endl;
-
-      }
-      return 0;
-    }
-    
 
     //-------------------------------------------
     // Deprecated

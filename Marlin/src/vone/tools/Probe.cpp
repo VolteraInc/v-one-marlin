@@ -171,7 +171,7 @@ int tools::Probe::probe(
       return -1;
     }
   } else {
-    if ( measureAtSwitch(m_toolSwitch, 100.0, rawMeasurement, true)) {
+    if ( measureAtSwitch(m_toolSwitch, useDefaultMaxTravel, rawMeasurement, true)) {
       return -1;
     }
   }
@@ -203,8 +203,8 @@ int tools::Probe::probe(
       << F("probe height: ") << rawMeasurement
       << F(", displacement: ") << m_probeDisplacement
       << F(", measurement: ") << measurement
-      //<< F(", samplesTaken: ") << samplesTaken
-      //<< F(", totalTouches: ") << totalTouches
+      << F(", samplesTaken: ") << samplesTaken
+      << F(", totalTouches: ") << totalTouches
       << F(", duration: ") << duration
       << endl;
   }
