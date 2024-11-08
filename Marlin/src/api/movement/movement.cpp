@@ -316,16 +316,12 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
     return vone->stepper.resyncWithStepCount(axis);
     
   } else {
-    const float initial_position = current_position[axis]; //record where we start the move, to prevent
-    float measurements[2] = {initial_position, initial_position};
-    float measurement_initial_position = initial_position;
+    float initial_position = current_position[axis]; //record where we start the move, to prevent
     float retractDistance = s_defaultRetractDistance[axis];
-    bool consistent = isVirtual ? !forceConsistency : true; //if we want to check for consistency, set 'consistent' to false initially
-    
+    float lastMeasurement = MAXFLOAT;
     for (int i = 0; i < maxVirtualEndstopCycles; i++){
-
       //note our location before movement
-      measurement_initial_position = current_position[axis];
+      initial_position = current_position[axis];
 
       //perform movement
       if (relativeRawMoveXYZ(
@@ -348,17 +344,10 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
         return -1;
       }
 
-      if(consistent){ //if we have reached consistency, or if forceConsistency = False, or if this is a physical endstop, we skip all the checks for false triggers
-        // Resync with stepper position
-        return vone->stepper.resyncWithStepCount(axis);
-      } else {
         vone->stepper.resyncWithStepCount(axis);
         
         //record the position of this trigger
-        measurements[i % 2] = current_position[axis];
-
-        //make sure that we cannot retract past our initial start point
-        retractDistance = min(s_defaultRetractDistance[axis], abs(measurements[i % 2] - initial_position));
+        float currentMeasurement = current_position[axis];
 
         if (logging_enabled) {
           log << F("Measured at switch") << endl;
@@ -367,19 +356,24 @@ int moveToEndstop(const Endstop& endstop, float f, float maxTravel) {
           log << F("  retraction: ") << retractDistance << endl;
         }
 
-        //If we triggered near this attempt's initial starting position, we could be false triggering and should reject
-        if (abs(measurements[i % 2] - measurement_initial_position) <= (abs(retractDistance)*0.25)){
-          log << F("Measurement matched initial position") << endl;
-          retractFromSwitch(endstop, retractDistance);
-          delay(500);
-          continue;
-        } else if(abs(measurements[0] - measurements[1]) < 0.1) {
+        if(!forceConsistency  || lastMeasurement - currentMeasurement < 0.1) {
           //have found consistent measurment
-          consistent = true;
-        } else {
-          //pull back from edge of cup
-          retractFromSwitch(endstop, retractDistance);
+          //always take average of two measurements 
+          return 0
         }
+
+        //make sure that we cannot retract past our initial start point
+        retractDistance = min(s_defaultRetractDistance[axis], abs(currentMeasurement - initial_position));
+        retractFromSwitch(endstop, retractDistance);
+
+        //If we triggered near this attempt's initial starting position, we could be false triggering and should reject
+        if (retractDistance <= s_defaultRetractDistance[axis] *0.25){
+          log << F("Measurement matched initial position") << endl;
+          delay(500);
+          continue; //don't record the measurement
+        }
+
+        lastMeasurement = currentMeasurement;
       }
     }
 

@@ -54,8 +54,7 @@ int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement,
     //if our measurements are consistent(within tolerance) or we don't care about consistency, return measurement
     if(!forceConsistency || abs(last_measurement - current_measurement) < touchTolerance){
       // Record the measurement, lets take the average
-      measurement = (last_measurement + current_measurement) / 2;
-      log << F("Measurement: ") << measurement << endl;
+      log << F("Measurement: ") << currentMeasurement << endl;
       return 0;
     }
 
