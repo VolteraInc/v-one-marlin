@@ -15,32 +15,22 @@ int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement,
   // Finish any pending moves (prevents crashes)
   st_synchronize();
 
-  // Move to limit
-  if (moveToEndstop(endstop, useDefaultFeedrate, maxTravel) != 0) {
-    logError
-      << F("Unable to measure at ")
-      << endstop.name
-      << F(", switch did not trigger during initial approach")
-      << endl;
-    return -1;
-  }
-  const float initialTriggerPos = current_position[axis];
-  float measurements[2] = {initialTriggerPos, initialTriggerPos};
+  float last_measurement = MAXFLOAT;
+  float retractDistance = useDefaultRetractDistance;
+  float retraction = retractDistance;
+  const auto slow = homing_feedrate[axis] / 6;
 
   for (int i = 0; i < maxTouchCount; i++){
-    // Retract slightly
-    if (retractFromSwitch(endstop)) {
-      return -1;
-    }
-    const float retractPos = current_position[axis];
+    //Reset initial position before the each advance iteration;
+    //Each retract should retract either the retract distance or the distance moved before the "false" trigger.
+    float initialPosition = current_position[axis];
 
-    //limit retraction distance to the initial touch-retraction movement, don't let it continuously back off
-    const float retractDistance = abs(retractPos - measurements[i % 2]);
+    //have we taken a measurement?  then we should be close -- otherwise travel the full stroke.
+    float travel =  last_measurement != MAXFLOAT ? 2 * retractDistance : maxTravel;
 
     // Approach again, slowly
     // NOTE: this gives us a more accurate reading
-    const auto slow = homing_feedrate[axis] / 6;
-    if (moveToEndstop(endstop, slow, 2 * retractDistance)) {
+    if (moveToEndstop(endstop, slow, travel)) {
       logError
         << F("Unable to measure at ") << endstop.name
         << F(" switch, switch did not trigger during second approach")
@@ -48,17 +38,28 @@ int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement,
       return -1;
     }
 
-    //record measurement
-    measurements[(i + 1) % 2] = current_position[axis];
+    float current_measurement = current_position[axis];
+    
+    retraction =  min(retractDistance, abs(measurements[i % 2] - initialPosition));
+    if (retractFromSwitch(endstop, retraction)) {
+      return -1;
+    }
+
+    if(last_measurement === MAXFLOAT){
+      //always collect at least 2 measurements.
+      last_measurement = current_measurement;
+      continue;
+    }
 
     //if our measurements are consistent(within tolerance) or we don't care about consistency, return measurement
-    if(!forceConsistency || abs(measurements[0] - measurements[1]) < touchTolerance){
+    if(!forceConsistency || abs(last_measurement - current_measurement) < touchTolerance){
       // Record the measurement, lets take the average
-      measurement = (measurements[0] + measurements[1]) / 2;
+      measurement = (last_measurement + current_measurement) / 2;
       log << F("Measurement: ") << measurement << endl;
-
       return 0;
     }
+
+    last_measurement = current_measurement;
   }
   
   logError
