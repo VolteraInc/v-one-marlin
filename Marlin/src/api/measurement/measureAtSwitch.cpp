@@ -5,6 +5,8 @@
 #include "../movement/movement.h"
 #include "../../vone/endstops/Endstop.h"
 
+
+/** This function should not retract after its final measurement. */
 int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement, bool forceConsistency) {
   const auto axis = endstop.axis;
   log
@@ -28,9 +30,8 @@ int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement,
     //have we taken a measurement?  then we should be close -- otherwise travel the full stroke.
     float travel =  last_measurement != MAXFLOAT ? 2 * retractDistance : maxTravel;
 
-    // Approach again, slowly
     // NOTE: this gives us a more accurate reading
-    if (moveToEndstop(endstop, slow, travel)) {
+    if (moveToEndstop(endstop, i==0 ? useDefaultFeedrate : slow, travel)) {
       logError
         << F("Unable to measure at ") << endstop.name
         << F(" switch, switch did not trigger during second approach")
@@ -40,25 +41,26 @@ int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement,
 
     float current_measurement = current_position[axis];
     
-    retraction =  min(retractDistance, abs(measurements[i % 2] - initialPosition));
-    if (retractFromSwitch(endstop, retraction)) {
-      return -1;
-    }
-
-    if(last_measurement === MAXFLOAT){
-      //always collect at least 2 measurements.
-      last_measurement = current_measurement;
-      continue;
-    }
-
     //if our measurements are consistent(within tolerance) or we don't care about consistency, return measurement
     if(!forceConsistency || abs(last_measurement - current_measurement) < touchTolerance){
+      //if we aren't forcing consistancy then we will only use one measurement.
+      if(last_measurement === MAXFLOAT){
+        measurement = current_measurement;
+      }
+
       // Record the measurement, lets take the average
       measurement = (last_measurement + current_measurement) / 2;
       log << F("Measurement: ") << measurement << endl;
       return 0;
     }
 
+    
+    //We are going into another measurement-- so retract the probe.
+    retraction =  min(retractDistance, abs(measurements[i % 2] - initialPosition));
+    if (retractFromSwitch(endstop, retraction)) {
+      return -1;
+    }
+    
     last_measurement = current_measurement;
   }
   
