@@ -4,22 +4,23 @@
 #define VONE_batch_6_to_present 6
 #define EXPERIMENTAL 9999
 
-// #define MODEL VONE_batch_0_TO_5
-#define MODEL VONE_batch_6_to_present
-// #define MODEL EXPERIMENTAL
+#ifndef MODEL
+#error "MODEL is not defined. Please define it via compiler flags."
+#endif
+
+#ifndef FIRMWARE_VARIANT_SUFFIX
+#error "FIRMWARE_VARIANT_SUFFIX is not defined. Please define it via compiler flags."
+#endif
 
 #if MODEL == VONE_batch_0_TO_5
-  #define FIRMARE_VARIANT_SUFFIX "_batch0to5"
   #define checkForFirmwareVariantMismatch(batchNumber) (batchNumber >= 6)
 
 #elif MODEL == VONE_batch_6_to_present
   #define TRINAMIC_MOTORS 1
-  #define FIRMARE_VARIANT_SUFFIX "_batch6"
   #define checkForFirmwareVariantMismatch(batchNumber) (batchNumber < 6)
 
 #else
   #define TRINAMIC_MOTORS 1
-  #define FIRMARE_VARIANT_SUFFIX "_experimental"
   #define checkForFirmwareVariantMismatch(batchNumber) (false)
 
 #endif

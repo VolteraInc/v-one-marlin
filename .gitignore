@@ -6,3 +6,4 @@ applet/
 *.bak
 
 .vscode
+build/

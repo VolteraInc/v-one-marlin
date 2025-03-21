@@ -89,8 +89,7 @@ void setup() {
   }
   MCUSR = 0;
 
-
-  protocol << F("firmwareVersionReport: ") << VERSION_STRING << FIRMARE_VARIANT_SUFFIX << endl;
+  protocol << F("firmwareVersionReport: ") << VERSION_STRING << FIRMWARE_VARIANT_SUFFIX << endl;
 
   // loads data from EEPROM if available, otherwise,
   // uses defaults (and resets step acceleration rate)
