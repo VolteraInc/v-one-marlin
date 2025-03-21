@@ -35,7 +35,8 @@ class Probe : public Tool {
       unsigned maxSamples = DefaultMaxSamples,
       unsigned maxTouchesPerSample = DefaultMaxTouchesPerSample,
       unsigned* o_samplesTaken = nullptr,
-      unsigned* o_touchesUsed = nullptr
+      unsigned* o_touchesUsed = nullptr,
+      bool oldProbe = false
     );
 
     float displacement() const;
