@@ -74,11 +74,13 @@ int tools::Probe::prepareToMoveImpl_CalibrateXYZ() {
   // Confirm the probe triggers before the z-switch
   {
     log << F("Lowering probe toward z-switch until ") << m_toolSwitch.name << F(" triggers")<< endl;
+    if (moveToZSwitchXY(*this)) {
+      return -1;
+    }
+
     ScopedEndstopEnable scopedEnable(endstopMonitor, m_zSwitch);
-    if (
-      moveToZSwitchXY(*this) ||
-      moveToEndstop(m_toolSwitch)
-    ) {
+
+    if (moveToEndstop(m_toolSwitch)) {
       return -1;
     }
   }

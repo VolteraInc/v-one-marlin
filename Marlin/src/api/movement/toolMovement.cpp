@@ -42,6 +42,7 @@ int moveXY(tools::Tool& tool, float x, float y, float f) {
   if (tool.enqueueMove(x, y, current_position[Z_AXIS], current_position[E_AXIS], f)) {
     return -1;
   }
+  
   st_synchronize();
 
   // Check for endstop hits in X or Y-axis

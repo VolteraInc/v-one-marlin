@@ -24,7 +24,7 @@ int touch(
 
   if (logging_enabled) {
     const auto duration = millis() - startTime;
-    log << F("touch duration: ") << duration << endl;
+    log << duration << endl;
   }
 
   return 0;

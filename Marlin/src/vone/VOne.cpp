@@ -1,6 +1,7 @@
 #include "VOne.h"
 
 #include "../libraries/MemoryFree/MemoryFree.h"
+#include "../vone/endstops/ScopedEndstopEnable.h"
 
 VOne::VOne(
   int ptopDigitalPin,
@@ -45,6 +46,7 @@ void VOne::start() {
   ENABLE_TEMPERATURE_INTERRUPT();
 
   stepper.start();
+
 }
 
 void VOne::updateStats() {

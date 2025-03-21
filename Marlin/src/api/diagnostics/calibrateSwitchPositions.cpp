@@ -8,7 +8,10 @@
 static int s_calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeResults) {
   auto& endstopMonitor = vone->stepper.endstopMonitor;
   auto& toolSwitch = vone->endstops.toolSwitch;
+
+  #ifndef XYZ_STRAIN
   auto& zSwitch = vone->endstops.zSwitch;
+  #endif
 
   if (probe.prepareToMove(tools::PrepareToMove::Option::skipCalibrateXYZ)) {
     logError << F("Unable to calibrate positions, could not prepare probe") << endl;
@@ -36,8 +39,10 @@ static int s_calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool
   ScopedEndstop_DISABLE sed(endstopMonitor, toolSwitch);
   if (
     raiseToEndstop() ||
-    moveXY(probe, zSwitchX, zSwitchY) ||
-    measureAtSwitch(zSwitch, useDefaultMaxTravel, zSwitchMeasurement)
+    moveXY(probe, zSwitchX, zSwitchY) 
+    #ifndef XYZ_STRAIN
+    || measureAtSwitch(zSwitch, useDefaultMaxTravel, zSwitchMeasurement)
+    #endif
   ) {
     logError << F("Unable to calibrate positions, could not test computed position of z-switch") << endl;
     return -1;

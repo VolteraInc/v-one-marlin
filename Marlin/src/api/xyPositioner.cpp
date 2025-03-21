@@ -27,6 +27,21 @@ static int s_moveToXyPositionerZ(tools::Tool& tool, enum HowToMoveToZ howToMoveT
       );
     }
 
+    case findStrainZ: {
+      const auto& zSwitch = vone->endstops.zSwitch;
+      auto& endstopMonitor = vone->stepper.endstopMonitor;
+
+      return (
+        // Lower until plate triggers
+        moveToEndstop(zSwitch) ||
+
+        // Retract above surface by the configued amount (was previously 2.5mm hardcoded)
+        // Note: probe displacement can be ignored becuase the
+        //       calibration plate triggers before the probe
+        relativeMove(tool, 0, 0, XYZPOS_Z_RAISE, 0)
+      );
+    }
+
     case skipMoveInZ:
       return 0;
 
@@ -47,7 +62,6 @@ int moveToXyPositioner(tools::Tool& tool, enum HowToMoveToZ howToMoveToZ) {
       return -1;
     }
   }
-
   // Move to xy-positioner's x,y, then z
   return (
     moveXY(tool, xypos_x_pos, xypos_y_pos) ||
@@ -61,8 +75,9 @@ int xyPositionerTouch(tools::Tool& tool, const Endstop& endstop, float& measurem
   auto& endstopMonitor = vone->stepper.endstopMonitor;
   const auto& yMin = vone->endstops.yMin;
   const auto& xyPositionerBack = vone->endstops.xyPositionerBack;
+  const auto isVirtual = endstop.virtualEndstop;
 
-  if (&endstop != &xyPositionerBack) {
+  if ((&endstop != &xyPositionerBack) || isVirtual) { //for carbon XYZ, separation of back endstop increased so no need to run xyBack separately
     if (moveToEndstop(endstop, slow, 6.0f)) {
       return -1;
     }
@@ -76,9 +91,7 @@ int xyPositionerTouch(tools::Tool& tool, const Endstop& endstop, float& measurem
     if (moveToLimit(axis, endstop.direction, slow, 6.0f)) {
       return -1;
     }
-
-    // Warn if yMin triggered instead of xyBack
-    // Note: eventually this will be made an error
+    //Check if instead of the back XY, we triggered yMin
     if (
       !endstopMonitor.isTriggered(xyPositionerBack) &&
       endstopMonitor.isTriggered(yMin)

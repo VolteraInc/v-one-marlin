@@ -2,6 +2,7 @@
 #include "TMC2130Stepper_MACROS.h"
 #include <SPI.h>
 #include "SW_SPI.h"
+//#include "../../../../../serial.h"
 
 TMC2130Stepper::TMC2130Stepper(uint16_t pinCS) : _pinCS(pinCS) { _started = false; }
 
@@ -95,6 +96,7 @@ void TMC2130Stepper::send2130(uint8_t addressByte, uint32_t *config) {
 		}
 
 		digitalWrite(_pinCS, HIGH);
+
 	} else {
 		SPI.begin();
 		SPI.beginTransaction(SPISettings(16000000/8, MSBFIRST, SPI_MODE3));
@@ -127,6 +129,7 @@ void TMC2130Stepper::send2130(uint8_t addressByte, uint32_t *config) {
 
 		digitalWrite(_pinCS, HIGH);
 		SPI.endTransaction();
+		SPI.end(); //fully release SPI bus
 	}
 }
 

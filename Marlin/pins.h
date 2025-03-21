@@ -6,7 +6,65 @@
 #error Oops!  Make sure you have 'Arduino Mega 2560' selected from the 'Tools -> Boards' menu.
 #endif
 
-#ifdef TRINAMIC_MOTORS
+#if MODEL == 8
+  #define X_STEP_PIN         36
+  #define X_DIR_PIN          37
+  #define X_ENABLE_PIN       41
+  #define X_CS_PIN           35
+  #define X_MIN_PIN          20
+  #define X_LIM_PIN          40
+
+  #define Y_STEP_PIN         24
+  #define Y_DIR_PIN          25
+  #define Y_ENABLE_PIN       27
+  #define Y_CS_PIN           23
+  #define Y_MIN_PIN          65
+  #define Y_LIM_PIN          26
+
+  #define Z_STEP_PIN        29
+  #define Z_DIR_PIN         39
+  #define Z_ENABLE_PIN      15
+  #define Z_CS_PIN          28
+  #define Z_MAX_PIN         19
+
+  #define E_STEP_PIN        31
+  #define E_DIR_PIN         32
+  #define E_LIM_PIN         33
+  #define E_ENABLE_PIN      34
+  #define E_CS_PIN          30
+
+  //wip
+  #define SCK_PIN           52
+  #define MOSI_PIN          51
+  #define MISO_PIN          50
+
+  #define ADC_PWDN          57
+  #define ADC_RST           58
+  #define XYZ_START         60
+  #define XYZ_DATA_RDY      62
+  #define P_BOT_PIN         64
+  #define XYZ_CS_PIN        67
+
+  //these define virtual endstops, negative is a useful shorthand here, to-do refactor
+  #define XY_MIN_X_PIN      80//-1
+  #define XY_MAX_X_PIN      81//-2
+  #define XY_MIN_Y_PIN      82//-3
+  #define XY_MAX_Y_PIN      83//-4
+  #define Z_MIN_PIN         84//-5
+
+  //end of wip
+
+  #define P_TOP_PIN         56
+  #define P_TOP_ANALOG_PIN  2
+
+  #define LED_RED_PIN        5
+  #define LED_GREEN_PIN      2
+  #define LED_BLUE_PIN       4
+
+  #define HEATER_BED_PIN   3   // ANALOG NUMBERING
+  #define TEMP_BED_PIN     1   // ANALOG NUMBERING
+
+#elif MODEL == 6
   #define X_STEP_PIN         36
   #define X_DIR_PIN          37
   #define X_ENABLE_PIN       41

@@ -136,7 +136,7 @@ void setup() {
     HEATER_BED_PIN,
     zSwitchType
   );
-
+  log << F("vone object success") << endl;
   sendHomedStatusUpdate();
   vone->endstops.outputStatus();
 

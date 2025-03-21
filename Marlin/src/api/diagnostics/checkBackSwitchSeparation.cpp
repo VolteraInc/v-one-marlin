@@ -8,12 +8,14 @@ static const float MinDistance = 0.500;
 
 int s_measure(const Endstop& endstop, float measurements[], unsigned int numMeasurements) {
   for (auto i = 0u; i < numMeasurements; ++i) {
-    if (measureAtSwitch(endstop, 10.0, measurements[i])) {
+    if (measureAtSwitch(endstop, BACKSW_MAX_SEPARATION, measurements[i])) {
       return -1;
     }
   }
   return 0;
 }
+
+
 
 // Confirm the minY and xyMinY switches are far enough apart.
 // If these switches are too close it's possible we'll hit the
@@ -109,3 +111,5 @@ int checkBackSwitchSeparation(tools::Tool& tool) {
     returnValue
   );
 }
+
+

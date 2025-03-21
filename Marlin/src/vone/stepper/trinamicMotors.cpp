@@ -11,10 +11,10 @@
 #define E_STEALTH_MAX_SPEED (400)
 #define E_COOLSTEP_MIN_SPEED (160)
 
-TMC2130Stepper m_x(X_ENABLE_PIN, X_DIR_PIN, X_STEP_PIN, X_CS_PIN);
-TMC2130Stepper m_y(Y_ENABLE_PIN, Y_DIR_PIN, Y_STEP_PIN, Y_CS_PIN);
-TMC2130Stepper m_z(Z_ENABLE_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_CS_PIN);
-TMC2130Stepper m_e(E_ENABLE_PIN, E_DIR_PIN, E_STEP_PIN, E_CS_PIN);
+TMC2130Stepper m_x(X_ENABLE_PIN, X_DIR_PIN, X_STEP_PIN, X_CS_PIN, MOSI_PIN, MISO_PIN, SCK_PIN); //this instantiation will use SW SPI, preventing conflicts with later use of SPI by XYZ system
+TMC2130Stepper m_y(Y_ENABLE_PIN, Y_DIR_PIN, Y_STEP_PIN, Y_CS_PIN, MOSI_PIN, MISO_PIN, SCK_PIN);
+TMC2130Stepper m_z(Z_ENABLE_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_CS_PIN, MOSI_PIN, MISO_PIN, SCK_PIN);
+TMC2130Stepper m_e(E_ENABLE_PIN, E_DIR_PIN, E_STEP_PIN, E_CS_PIN, MOSI_PIN, MISO_PIN, SCK_PIN);
 
 TMC2130Stepper& lookup(AxisEnum axis) {
   switch(axis) {
@@ -151,6 +151,8 @@ void trinamicInit() {
   m_e.diag1_active_high(1);
   m_e.diag1_stall(1); // Enable DIAG0 active on motor stall
   m_e.sg_stall_value(0); // -63...0....63 - Tunes sensitivity
+
+  log << F("Motors config'd") << endl;
 }
 
 // SETTERs

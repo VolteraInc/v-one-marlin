@@ -92,7 +92,7 @@ AnalogDigitalConverter::AnalogDigitalConverter(
 
   // Use prescale of 128 which gives us approximately 104us per reading
   ADCSRA |= _BV(ADPS0) | _BV(ADPS1) | _BV(ADPS2);
-
+  
   // Start first conversion
   // Note: must match initial state
   state = State::ReceiveBedTemp;

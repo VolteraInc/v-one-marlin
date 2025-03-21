@@ -8,6 +8,8 @@ class ZSwitch : public Endstop {
     enum class Type {
       UseDefault = -1,
 
+      //For full docmentation on batch diffs: https://app.tettra.co/teams/voltera/pages/v-one-production-batch-differences
+
       // The original z-switch had a weaker spring
       // than the probe, so it would trigger before
       // the probe -- in 2019 data revealed that was
@@ -16,7 +18,11 @@ class ZSwitch : public Endstop {
 
       // Used from batch 7 on, also
       // available as an hardware upgrade
-      StrongerSpring = 1
+      StrongerSpring = 1,
+
+      // Used for batch 8 on, new control board and
+      //XYZ using carbon strain gauges
+      StrainGauge = 2
 
     };
 
@@ -35,6 +41,9 @@ class ZSwitch : public Endstop {
         case zt::StrongerSpring:
           return F("stronger spring");
 
+        case zt::StrainGauge:
+          return F("XYZ strain gauge");
+
         case zt::UseDefault:
         default:
           return F("use default");
@@ -48,7 +57,18 @@ class ZSwitch : public Endstop {
         return type;
       }
 
-      return batchNumber < 7 ? zt::Original : zt::StrongerSpring;
+      if (batchNumber > 7 )
+      {
+        return zt::StrainGauge;
+      } 
+      else if (batchNumber > 5)
+      {
+        return zt::StrongerSpring;
+      }
+      else
+      {
+        return zt::Original;
+      }
     }
 
     static ZSwitch::Type toType(int value) {
@@ -57,6 +77,7 @@ class ZSwitch : public Endstop {
       switch(value) {
         case 0: return zt::Original;
         case 1: return zt::StrongerSpring;
+        case 2: return zt::StrainGauge;
         default: return zt::UseDefault;
       }
     }
@@ -68,9 +89,10 @@ class ZSwitch : public Endstop {
       int pin,
       AxisEnum axis,
       int direction,
-      bool inverted
+      bool inverted,
+      bool virtualEndstop
     )
-      : Endstop(name, pin, axis, direction, inverted)
+      : Endstop(name, pin, axis, direction, inverted, virtualEndstop)
       , m_type(type)
     {}
 

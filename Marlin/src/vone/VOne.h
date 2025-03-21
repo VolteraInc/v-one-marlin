@@ -11,8 +11,9 @@
 
 #include "tools/ToolBox.h"
 #include "toolDetection/ToolDetector.h"
-
 #include "motors/Motors.h"
+
+#include "endstops/EndstopMonitor.h"
 
 // DEFER: ideally these would live in the cpp file,
 //        but slicing up stepper_isr into h-files is

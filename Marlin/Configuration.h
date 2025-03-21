@@ -1,21 +1,29 @@
 #pragma once
 
 #define VONE_batch_0_TO_5 1
-#define VONE_batch_6_to_present 6
-#define EXPERIMENTAL 9999
+#define VONE_batch_6_to_7 6
+#define VONE_batch_8_to_present 8
+#define EXPERIMENTAL 8
 
-// #define MODEL VONE_batch_0_TO_5
-#define MODEL VONE_batch_6_to_present
-// #define MODEL EXPERIMENTAL
+//#define MODEL VONE_batch_0_TO_5
+//#define MODEL VONE_batch_6_to_7
+#define MODEL VONE_batch_8_to_present
+//#define MODEL EXPERIMENTAL
 
 #if MODEL == VONE_batch_0_TO_5
   #define FIRMARE_VARIANT_SUFFIX "_batch0to5"
   #define checkForFirmwareVariantMismatch(batchNumber) (batchNumber >= 6)
 
-#elif MODEL == VONE_batch_6_to_present
+#elif MODEL == VONE_batch_6_to_7
   #define TRINAMIC_MOTORS 1
   #define FIRMARE_VARIANT_SUFFIX "_batch6"
   #define checkForFirmwareVariantMismatch(batchNumber) (batchNumber < 6)
+
+#elif MODEL ==  VONE_batch_8_to_present
+  #define XYZ_STRAIN 1
+  #define TRINAMIC_MOTORS 1
+  #define FIRMARE_VARIANT_SUFFIX "_batch8" //this has to be spelt incorrectly to match above pattern, todo refactor "FIRMARE" to "FIRMWARE"
+  #define checkForFirmwareVariantMismatch(batchNumber) (batchNumber < 8)
 
 #else
   #define TRINAMIC_MOTORS 1
@@ -24,9 +32,36 @@
 
 #endif
 
+#if MODEL == 8
+#define XYPOS_X_POS                 ( 27.9)
+#define XYPOS_Y_POS                 (  8.5)
+#define XYPOS_Z_POS                 (  2.5)
+#define OFFSET_FROM_XYPOS_TO_MINZ_X      (0) //now in the same position
+#define OFFSET_FROM_XYPOS_TO_MINZ_Y      (0) //now in the same position
+#define MIN_Z_X_POS       (XYPOS_X_POS + OFFSET_FROM_XYPOS_TO_MINZ_X)
+#define MIN_Z_Y_POS       (XYPOS_Y_POS + OFFSET_FROM_XYPOS_TO_MINZ_Y)
+#define CALIB_X_SCALE     (1.0)
+#define CALIB_Y_SCALE     (1.0)
+#define CALIB_COS_THETA   (1.0)
+#define CALIB_TAN_THETA   (0.0)
+#define CALIB_X_BACKLASH  (0.0) // Default assumed backlash
+#define CALIB_Y_BACKLASH  (0.0)
+#define CALIB_PLATE_MAX_Z           (  3.0)
+#define XYZPOS_Z_RAISE              ( 1.75)
+#define BACKSW_MAX_SEPARATION       ( 14.0)
+
+#define Z_MIN_VIRTUAL_ENDSTOP     true
+#define XY_MAX_X_VIRTUAL_ENDSTOP  true
+#define XY_MIN_X_VIRTUAL_ENDSTOP  true
+#define XY_MAX_Y_VIRTUAL_ENDSTOP  true
+#define XY_MIN_Y_VIRTUAL_ENDSTOP  true
+
+
+#else
 // Default Calibration offsets for the Voltera V-One
 #define XYPOS_X_POS                 ( 34.1)  // Value used by Will (our production Tech) for batch 6 units, set in Dec 2019
 #define XYPOS_Y_POS                 (  4.5)  // Value used by Will (our production Tech) for batch 6 units, set in Dec 2019
+#define XYPOS_Z_POS                 ( -4.0)
 #define OFFSET_FROM_XYPOS_TO_MINZ_X      (-29.60) // Distance between center of Min Z and XY Positioner - Taken from PCB and Solidworks CAD files
 #define OFFSET_FROM_XYPOS_TO_MINZ_Y      (2.5)  // Distance between center of Min Z and XY Positioner - Taken from PCB and Solidworks CAD files
 #define MIN_Z_X_POS       (XYPOS_X_POS + OFFSET_FROM_XYPOS_TO_MINZ_X)
@@ -37,15 +72,25 @@
 #define CALIB_TAN_THETA   (0.0)
 #define CALIB_X_BACKLASH  (0.0) // Default assumed backlash
 #define CALIB_Y_BACKLASH  (0.0)
+#define CALIB_PLATE_MAX_Z           (  2.0)
+#define XYZPOS_Z_RAISE              ( 1.75)
+#define BACKSW_MAX_SEPARATION       ( 10.0)
 
-#define XYPOS_Z_POS       (-4.0)
+#define Z_MIN_VIRTUAL_ENDSTOP     false
+#define XY_MAX_X_VIRTUAL_ENDSTOP  false
+#define XY_MIN_X_VIRTUAL_ENDSTOP  false
+#define XY_MAX_Y_VIRTUAL_ENDSTOP  false
+#define XY_MIN_Y_VIRTUAL_ENDSTOP  false
+
+#endif
 
 // Default Serial number for the Voltera V-One
 // Note: Use a recent batch number so that deduced properties are more likely
 //       to be correct. As of this writing the most recent change was that
 //       batch7 has a stronger z-switch
-#define PRODUCT_SERIAL    ("V1-07-0000-120")
+//#define PRODUCT_SERIAL    ("V1-07-0000-120")
 
+#define PRODUCT_SERIAL ("V1-08-0000-120")
 
 //===========================================================================
 //=============================Serial Settings===========================
@@ -117,7 +162,6 @@ const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 const bool X_LIM_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Y_LIM_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool E_LIM_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-
 
 const bool XY_MIN_X_ENDSTOP_INVERTING = true;
 const bool XY_MAX_X_ENDSTOP_INVERTING = true;

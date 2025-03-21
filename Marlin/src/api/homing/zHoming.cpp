@@ -4,6 +4,7 @@
 #include "../../vone/VOne.h"
 
 #include "internal.h"
+#include "../../vone/endstops/ScopedEndstopEnable.h"
 
 int moveToZSwitchXY(tools::Tool& tool) {
   log << F("Move to z-switch's x,y position") << endl;
@@ -15,13 +16,12 @@ int moveToZSwitchXY(tools::Tool& tool) {
       << endl;
     return -1;
   }
-
+  
   if (min_z_x_pos != current_position[X_AXIS] || min_z_y_pos != current_position[Y_AXIS]) {
     if (raise(tool)) {
       return -1;
     }
   }
-
   return moveXY(tool, min_z_x_pos, min_z_y_pos);
 }
 
@@ -29,6 +29,7 @@ static const bool skipEstablishSoftMaxZ = false;
 static int s_homeZaxis(tools::Tool& tool, float offset, bool shouldEstablishSoftMaxZ = true) {
   const auto& zSwitch = vone->endstops.zSwitch;
   const auto& zMax = vone->endstops.zMax;
+  auto& endstopMonitor = vone->stepper.endstopMonitor;
 
   log << F("homing z-axis") << endl;
 
@@ -76,6 +77,9 @@ static int s_homeZaxis(tools::Tool& tool, float offset, bool shouldEstablishSoft
     return -1;
   }
 
+  //post zSwitch location to logs, for development purposes
+  log << F("DEV - zSwitch detected at ") << zSwitchMeasurement << endl;
+
   // We are home!
   setHomedState(Z_AXIS, -1);
 
@@ -83,7 +87,7 @@ static int s_homeZaxis(tools::Tool& tool, float offset, bool shouldEstablishSoft
     // Set max-z
     // NOTE: The offset is already included in current_position
     //       when we compute max_pos
-    float delta = zMaxMeasurement - zSwitchMeasurement;
+    float delta = zMaxMeasurement - zSwitchMeasurement; 
     float triggerAvoidanceBuffer = 0.5;
     log << F("distance between zMax and zSwitch is ") << delta << endl;
     establishSoftMaxZ(current_position[Z_AXIS] + delta - triggerAvoidanceBuffer);

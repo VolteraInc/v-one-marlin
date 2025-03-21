@@ -1,6 +1,82 @@
 #include "SW_SPI.h"
+#include <stdint.h>
+#include "../../../../../pins.h"
 
 SW_SPIClass TMC_SW_SPI;
+
+void SW_SPIClass::setPins(uint16_t sw_mosi_pin, uint16_t sw_miso_pin, uint16_t sw_sck_pin)
+{
+  // Doesn't do anything!
+  // mosi_pin = sw_mosi_pin;
+  // miso_pin = sw_miso_pin;
+  // sck_pin = sw_sck_pin;
+}
+
+void SW_SPIClass::init()
+{
+  pinMode(SCK_PIN, OUTPUT);
+  pinMode(MOSI_PIN, OUTPUT);
+  pinMode(MISO_PIN, INPUT_PULLUP);
+  
+  //FastGPIO::Pin<L_SCK_PINc>::setOutput(0);
+  //FastGPIO::Pin<L_MOSI_PINc>::setOutput(0);
+  //FastGPIO::Pin<L_MISO_PINc>::setInputPulledUp();
+}
+
+//Combined shiftOut and shiftIn from Arduino wiring_shift.c
+byte SW_SPIClass::transfer(uint8_t ulVal, uint8_t ulBitOrder)
+{
+  uint8_t value = 0;
+
+  for (uint8_t i = 0; i < 8; ++i)
+  {
+    // delayMicroseconds(8);
+
+    if (ulBitOrder == LSBFIRST)
+    {
+      !!(ulVal & (1 << i)) ? digitalWrite(MOSI_PIN, 1) : digitalWrite(MOSI_PIN, 0);
+      //!!(ulVal & (1 << i)) ? FastGPIO::Pin<L_MOSI_PINc>::setOutput(1) : FastGPIO::Pin<L_MOSI_PINc>::setOutput(0);
+    }
+    else
+    {
+      !!(ulVal & (1 << (7 - i))) ? digitalWrite(MOSI_PIN, 1) : digitalWrite(MOSI_PIN, 0); 
+      //!!(ulVal & (1 << (7 - i))) ? FastGPIO::Pin<L_MOSI_PINc>::setOutput(1) : FastGPIO::Pin<L_MOSI_PINc>::setOutput(0);
+    }
+
+    // Start clock pulse
+    // delayMicroseconds(2);
+    digitalWrite(SCK_PIN, 1);
+    //FastGPIO::Pin<L_SCK_PINc>::setOutput(1);
+    // delayMicroseconds(10);
+
+    // Read bit
+    if (ulBitOrder == LSBFIRST)
+    {
+      value |= (digitalRead(MISO_PIN) ? 1 : 0) << i;
+      //value |= (FastGPIO::Pin<L_MISO_PINc>::isInputHigh() ? 1 : 0) << i;
+    }
+    else
+    {
+      value |= (digitalRead(MISO_PIN) ? 1 : 0) << (7 - i);
+      //value |= (FastGPIO::Pin<L_MISO_PINc>::isInputHigh() ? 1 : 0) << (7 - i);
+    }
+    // Stop clock pulse
+    digitalWrite(SCK_PIN, 0);
+    //FastGPIO::Pin<L_SCK_PINc>::setOutput(0);
+  }
+  digitalWrite(MOSI_PIN, 0);
+  //FastGPIO::Pin<L_MOSI_PINc>::setOutput(0);
+  // delayMicroseconds(50);
+  return value;
+}
+
+uint16_t SW_SPIClass::transfer16(uint16_t data) {
+  uint16_t returnVal = 0x0000;
+  returnVal |= transfer((data>>8)&0xFF) << 8;
+  returnVal |= transfer(data&0xFF) & 0xFF;
+  return returnVal;
+}
+/*
 
 #if defined(ARDUINO_ARCH_AVR)
   #define getPort(P) digitalPinToPort(P)
@@ -73,11 +149,4 @@ byte SW_SPIClass::transfer(uint8_t ulVal, uint8_t ulBitOrder) {
   }
 
   return value;
-}
-
-uint16_t SW_SPIClass::transfer16(uint16_t data) {
-  uint16_t returnVal = 0x0000;
-  returnVal |= transfer((data>>8)&0xFF) << 8;
-  returnVal |= transfer(data&0xFF) & 0xFF;
-  return returnVal;
-}
+}*/
