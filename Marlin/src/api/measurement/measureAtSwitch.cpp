@@ -48,9 +48,11 @@ int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement,
       {
         measurement = current_measurement;
       }
-
-      // Record the measurement, lets take the average
-      measurement = (last_measurement + current_measurement) / 2;
+      else
+      {
+        // Record the measurement, lets take the average
+        measurement = (last_measurement + current_measurement) / 2;
+      }
       log << F("Measurement: ") << measurement << endl;
       return 0;
     }
