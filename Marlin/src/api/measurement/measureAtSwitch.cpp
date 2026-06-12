@@ -18,7 +18,7 @@ int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement,
   st_synchronize();
 
   float last_measurement = FLT_MAX;
-  float retractDistance = useDefaultRetractDistance;
+  float retractDistance = Z_HOME_RETRACT_MM;
   float retraction = retractDistance;
   const auto slow = homing_feedrate[axis] / 6;
 
