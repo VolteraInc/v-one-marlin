@@ -158,8 +158,23 @@ static int s_findCenter(tools::Tool& tool, long cycles, float& o_centerX, float&
   return 0;
 }
 
+static int s_checkSwitches() {
+  if (
+    vone->endstops.xyPositionerBack.readTriggered() || 
+    vone->endstops.xyPositionerForward.readTriggered() || 
+    vone->endstops.xyPositionerLeft.readTriggered() || 
+    vone->endstops.xyPositionerRight.readTriggered()
+  ) {
+    logError << F("Unable to move to xy-positioner, one or more positioning switches is already triggered") << endl;
+    return -1;
+  }
+  return 0;
+}
+
 int xyPositionerFindCenter(tools::Tool& tool, long cycles, float& centerX, float& centerY, enum HowToMoveToZ howToMoveToZ) {
   return (
+    moveToXyPositioner(tool, skipMoveInZ) ||
+    s_checkSwitches() ||
     moveToXyPositioner(tool, howToMoveToZ) ||
     s_findCenter(tool, cycles, centerX, centerY)
   );
