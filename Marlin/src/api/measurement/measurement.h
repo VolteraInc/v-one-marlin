@@ -2,6 +2,7 @@
 
 #include "../../../MarlinConfig.h"
 #include "../../../Axis.h"
+#include "../movement/movement.h"
 
 class Endstop;
 
@@ -44,5 +45,11 @@ const auto DefaultMeasureAtSwitchReleaseDelay = 0u;
 const int maxTouchCount = 20;
 const float touchTolerance = 0.01;
 
-int measureAtSwitch(const Endstop& endstop, float maxTravel, float& measurement, bool forceConsistency = false);
+int measureAtSwitch(
+  const Endstop& endstop,
+  float maxTravel,
+  float& measurement,
+  bool forceConsistency = false,
+  float measurementFeedrate = useDefaultFeedrate
+);
 int measureAtSwitchRelease(const Endstop& endstop, float& releaseStartedAt, float& releaseCompletedAt, unsigned delay_ms = DefaultMeasureAtSwitchReleaseDelay);

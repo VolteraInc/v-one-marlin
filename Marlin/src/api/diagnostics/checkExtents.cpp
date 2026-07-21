@@ -1,6 +1,7 @@
 #include "../../api/api.h"
 #include "../../../Marlin.h"
 #include "../../vone/VOne.h"
+#include "diagnostics.h"
 
 static int s_checkMeasurements(
   const __FlashStringHelper* context,
@@ -69,7 +70,7 @@ static int s_checkExtent(
 
     // Measure at min_pos
     moveXY(tool, min_pos[X_AXIS], min_pos[Y_AXIS]) ||
-    measureAtSwitch(endstop, useDefaultMaxTravel, measurement1) ||
+    measureAtSwitchForDiagnostic(endstop, useDefaultMaxTravel, measurement1) ||
 
     // Move to start, then to end
     // Note: should not loose any steps
@@ -79,7 +80,7 @@ static int s_checkExtent(
 
     // Measure again
     moveXY(tool, min_pos[X_AXIS], min_pos[Y_AXIS]) ||
-    measureAtSwitch(endstop, useDefaultMaxTravel, measurement2) ||
+    measureAtSwitchForDiagnostic(endstop, useDefaultMaxTravel, measurement2) ||
 
     // Check measurements
     s_checkMeasurements(context, tool, endstop, measurement1, measurement2, tolerance)

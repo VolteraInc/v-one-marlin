@@ -4,6 +4,7 @@
 #include "../../vone/tools/Probe.h"
 #include "../../vone/VOne.h"
 #include "../../vone/endstops/ScopedEndstopEnable.h"
+#include "diagnostics.h"
 
 static int s_calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool storeResults) {
   auto& endstopMonitor = vone->stepper.endstopMonitor;
@@ -37,7 +38,7 @@ static int s_calibrateSwitchPositions(tools::Probe& probe, unsigned cycles, bool
   if (
     raiseToEndstop() ||
     moveXY(probe, zSwitchX, zSwitchY) ||
-    measureAtSwitch(zSwitch, useDefaultMaxTravel, zSwitchMeasurement)
+    measureAtSwitchForDiagnostic(zSwitch, useDefaultMaxTravel, zSwitchMeasurement)
   ) {
     logError << F("Unable to calibrate positions, could not test computed position of z-switch") << endl;
     return -1;
