@@ -171,7 +171,8 @@ int tools::Probe::probe(
       return -1;
     }
   } else {
-    if ( measureAtSwitch(m_toolSwitch, useDefaultMaxTravel, rawMeasurement, true)) {
+    // TODO: we have speed passed in here, but we are not using it. I'm keeping behaviour same here.
+    if (measureAtSwitch(m_toolSwitch, useDefaultMaxTravel, rawMeasurement, true)) {
       return -1;
     }
   }

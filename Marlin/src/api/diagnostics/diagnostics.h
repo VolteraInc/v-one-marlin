@@ -1,5 +1,6 @@
 #pragma once
 
+class Endstop;
 namespace tools {
   class Tool;
   class NullTool;
@@ -13,6 +14,12 @@ int burnInSequence(tools::NullTool& noTool, int steps = 5);
 
 //-----------------------------------------------
 // Switch calibration
+
+int measureAtSwitchForDiagnostic(
+  const Endstop& endstop,
+  float maxTravel,
+  float& measurement
+);
 
 // Back switch separation
 int checkBackSwitchSeparation(tools::Tool& tool);

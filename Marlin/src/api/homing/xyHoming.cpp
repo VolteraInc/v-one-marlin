@@ -3,9 +3,59 @@
 #include "homing.h"
 #include "internal.h"
 
+#include "../../../Marlin.h"
 #include "../../../serial.h"
 #include "../../vone/endstops/Endstop.h"
 #include "../../vone/stepper/Stepper.h"
+
+static int s_measureAtSwitchForHoming(const Endstop& endstop, float& measurement) {
+  const auto axis = endstop.axis;
+
+  // A prior failed home can leave the switch triggered. Release it first so
+  // the fast measurement below is a real approach rather than a no-op.
+  if (endstop.readTriggered() && retractFromSwitch(endstop)) {
+    return -1;
+  }
+
+  float fastMeasurement;
+  if (measureAtSwitch(
+    endstop,
+    useDefaultMaxTravel,
+    fastMeasurement,
+    false,
+    homing_feedrate[axis]
+  )) {
+    return -1;
+  }
+
+  const float fastTriggerPosition = current_position[axis];
+  if (retractFromSwitch(endstop)) {
+    return -1;
+  }
+  const float retractDistance = abs(current_position[axis] - fastTriggerPosition);
+
+  const float slowFeedrate = homing_feedrate[axis] / 6;
+  float slowMeasurement;
+  if (measureAtSwitch(
+    endstop,
+    2 * retractDistance,
+    slowMeasurement,
+    true,
+    slowFeedrate
+  )) {
+    return -1;
+  }
+
+  log
+    << F("Homing fast/slow switch comparison: ") << endstop.name
+    << F(", fast=") << fastMeasurement
+    << F(", slow=") << slowMeasurement
+    << F(", delta=") << abs(slowMeasurement - fastMeasurement)
+    << endl;
+
+  measurement = slowMeasurement;
+  return 0;
+}
 
 int homeHorizontalAxis(Stepper& stepper, const Endstop& endstop, float offset) {
   int returnValue = -1;
@@ -34,7 +84,7 @@ int homeHorizontalAxis(Stepper& stepper, const Endstop& endstop, float offset) {
 
     // Move to the switch
     // Note: we use measureAtSwitch so that we contact the switch accurately
-    measureAtSwitch(endstop, useDefaultMaxTravel, measurement) ||
+    s_measureAtSwitchForHoming(endstop, measurement) ||
 
     // For X and Y we move away from switch slightly
     // Note: Otherwise we will not be able to go to 0,0 without
