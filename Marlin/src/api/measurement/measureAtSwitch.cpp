@@ -27,6 +27,7 @@ int measureAtSwitch(
   float travel = maxTravel;
 
   for (int i = 0; i < maxTouchCount; ++i) {
+    // when pass in -1 for feedrate (useDefaultFeedrate is -1), the moveToEndtop uses homeing_feedrate
     if (moveToEndstop(endstop, measurementFeedrate, travel)) {
       logError
         << F("Unable to measure at ") << endstop.name
